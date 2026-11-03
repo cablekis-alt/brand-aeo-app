@@ -1711,7 +1711,7 @@ const AUTO_PHOTO_BATCH = 10
 /**
  * 자동 채우기(src/lib/photoAutoPick.ts)가 고른 사진을 저장한다 — 글 AUTO_PHOTO_BATCH편씩 나눠 보내고(한 번에 drafts.json 쓰기 한 번),
  * 결과를 합친다. 그사이 다시 만들어진 글은 서버가 건너뛰고 changed로 알린다. 판정 호출 없음. 중간에 실패하면 그때까지 저장된 것은 남고
- * throw.
+ * throw — 오류 응답이든 요청 자체가 끊긴 것이든(서버 재시작 · 연결 끊김) 앞 묶음까지의 결과를 partial로 붙인다(화면이 그 초안을 반영).
  */
 export async function saveDraftPhotosAuto(
   tenantId: string,
@@ -1720,11 +1720,16 @@ export async function saveDraftPhotosAuto(
   const total: AutoPhotoSaveResult = { drafts: [], saved: 0, skipped: 0, changed: [], missing: [] }
   const list = articles.filter((a) => a.picks.length > 0)
   for (let i = 0; i < list.length; i += AUTO_PHOTO_BATCH) {
-    const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photos`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ op: 'auto', articles: list.slice(i, i + AUTO_PHOTO_BATCH) }),
-    })
+    let res: Response
+    try {
+      res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photos`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ op: 'auto', articles: list.slice(i, i + AUTO_PHOTO_BATCH) }),
+      })
+    } catch (e) {
+      throw Object.assign(e instanceof Error ? e : new Error(String(e)), { partial: total })
+    }
     const out = (await res.json().catch(() => ({}))) as Partial<AutoPhotoSaveResult> & { error?: string }
     if (!res.ok) throw Object.assign(new Error(out.error || `사진 저장 실패 (HTTP ${res.status})`), { status: res.status, partial: total })
     total.drafts.push(...(out.drafts ?? []))

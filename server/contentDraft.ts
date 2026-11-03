@@ -578,13 +578,30 @@ export interface AutoPhotoSaveResult {
  * 자동 채우기를 여러 글에 한 번에 저장한다 — drafts.json 쓰기 한 번(updateDrafts). 판정 호출이 없다. 글마다 화면이 본 초안과 지금
  * 초안을 대조해 다르면 그 글만 건너뛴다(통째로 거절하지 않는다 — 작성자 일괄 실행이 그사이 한 편을 다시 만들 수 있다).
  * 쓰기 안에서 다시 확인한다: 사진이 있는 자리 · 사람이 뺀 자리는 덮지 않고, 글 하나에 PHOTO_LIMITS.picks장, 같은 사진은 글 하나에
- * 한 번, 브랜드 전체에서 brandRepeat번까지(사람이 고른 것 포함).
+ * 한 번, 같은 작성자(groupOf)의 글 사이에 한 번, 브랜드 전체에서 brandRepeat번까지(사람이 고른 것 포함). 작성자 상한을 여기서도 보는
+ * 까닭 — 화면의 미리보기는 계산한 때의 초안으로 골라, 그사이 다른 미리보기 · 사람이 고른 사진이 저장되면 같은 작성자의 두 글에 같은
+ * 사진이 들어갔다. groupOf가 없거나 작성자를 모르는 글은 글 · 브랜드 상한만.
  */
-export async function saveAutoPhotoPicks(tenantId: string, entries: AutoPhotoEntry[], brandRepeat: number): Promise<AutoPhotoSaveResult> {
+export async function saveAutoPhotoPicks(
+  tenantId: string,
+  entries: AutoPhotoEntry[],
+  brandRepeat: number,
+  groupOf: (actionId: string) => string | undefined = () => undefined,
+): Promise<AutoPhotoSaveResult> {
   return updateDrafts(tenantId, (map) => {
     const result: AutoPhotoSaveResult = { drafts: [], saved: 0, skipped: 0, changed: [], missing: [] };
     const brandCount = new Map<string, number>();
-    for (const d of Object.values(map)) for (const p of d.photos ?? []) brandCount.set(p.src, (brandCount.get(p.src) ?? 0) + 1);
+    const groupUsed = new Map<string, Set<string>>();
+    const markGroup = (group: string | undefined, src: string) => {
+      if (group !== undefined) groupUsed.set(group, (groupUsed.get(group) ?? new Set<string>()).add(src));
+    };
+    for (const [id, d] of Object.entries(map)) {
+      const group = groupOf(id);
+      for (const p of d.photos ?? []) {
+        brandCount.set(p.src, (brandCount.get(p.src) ?? 0) + 1);
+        markGroup(group, p.src);
+      }
+    }
     for (const entry of entries) {
       const current = map[entry.actionId];
       if (!current) {
@@ -597,12 +614,14 @@ export async function saveAutoPhotoPicks(tenantId: string, entries: AutoPhotoEnt
       }
       const photos = [...(current.photos ?? [])];
       const cleared = current.photoCleared ?? [];
+      const group = groupOf(entry.actionId);
       let added = 0;
       for (const pick of entry.picks) {
         const taken =
           photos.some((p) => samePhotoPlace(p, pick) || p.src === pick.src) ||
           cleared.some((c) => samePhotoPlace(c, pick)) ||
           photos.length >= PHOTO_LIMITS.picks ||
+          (group !== undefined && Boolean(groupUsed.get(group)?.has(pick.src))) ||
           (brandCount.get(pick.src) ?? 0) >= brandRepeat;
         if (taken) {
           result.skipped += 1;
@@ -610,6 +629,7 @@ export async function saveAutoPhotoPicks(tenantId: string, entries: AutoPhotoEnt
         }
         photos.push(pick);
         brandCount.set(pick.src, (brandCount.get(pick.src) ?? 0) + 1);
+        markGroup(group, pick.src);
         added += 1;
       }
       if (!added) continue;

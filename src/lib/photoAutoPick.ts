@@ -26,10 +26,14 @@ export const AUTO_PICK_RULES = {
 
 /** 웹사이트 화면 자리 — 사진이 아니라 화면 캡처가 맞는 자리라 비워 둔다. */
 const SCREEN_SLOT = /화면|웹사이트|사이트|앱|홈페이지|검색 결과|스크린|캡처/
-/** 사람이 찍힌 사진의 설명 — 초상권 확인이 필요해 자동으로 넣지 않는다(설명만으로 거르므로 완전하지 않다). */
-const PEOPLE_PHOTO = /여성|남성|아이(?!보리|콘|디어)|어린이|아기|사람|인물|포즈|관람객|가족|커플|연인|부부|얼굴|손님|모델|학생|여행자|일행|친구/
+/** 「아이」로 시작하지만 사람이 아닌 낱말(아이보리 · 아이콘 · 아이디어 · 아이스(크림 · 링크) · 아이폰 · 아이템)은 뺀다. */
+const CHILD = '아이(?!보리|콘|디어|스|폰|템)'
+/** 사람을 가리키는 흔한 낱말 — 손님 · 일하는 사람 · 가족 호칭(관람객과 같은 부류). */
+const PEOPLE_WORDS = '관람객|관광객|방문객|투숙객|숙박객|이용객|탐방객|손님|여행자|일행|직원|셰프|요리사|바리스타|어르신|손주|신랑|신부'
+/** 사람이 찍힌 사진의 설명 — 초상권 확인이 필요해 자동으로 넣지 않는다(설명만으로 거르므로 완전하지 않다). 「모델하우스」 · 「모델명」은 사람이 아니다. */
+const PEOPLE_PHOTO = new RegExp(`여성|남성|${CHILD}|어린이|아기|사람|인물|포즈|가족|커플|연인|부부|얼굴|모델(?!하우스|룸|명)|학생|친구|${PEOPLE_WORDS}`)
 /** 사람이 나오는 장면 자리 — 풍경 사진이 맞아도 장면과 어긋날 수 있어 「확인 필요」로 표시한다. */
-const PEOPLE_SCENE = /가족|둘이|두 사람|여행자|관람객|커플|연인|부부|친구|아이(?!보리|콘|디어)|어린이|사람|뒷모습|인물|손님|일행|혼자|여성|남성/
+const PEOPLE_SCENE = new RegExp(`가족|둘이|두 사람|커플|연인|부부|친구|${CHILD}|어린이|사람|뒷모습|인물|혼자|여성|남성|${PEOPLE_WORDS}`)
 /** 출처 표시가 필요한 공공 사진의 호스트(공공누리 · 한국관광공사 · 정부 기관) — 출처 줄이 생기는 2단계 전에는 넣지 않는다. */
 const CREDIT_HOSTS = ['visitkorea.or.kr', 'knto.or.kr', 'kogl.or.kr', 'go.kr']
 
@@ -127,8 +131,14 @@ function sameWord(a: string, b: string): boolean {
   return a === b || (a.length >= 2 && b.length >= 2 && (a.includes(b) || b.includes(a)))
 }
 
-function bigrams(text: string): Set<string> {
-  const s = normSlotAlt(text).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+/** 글자 2-gram — stop 낱말(브랜드 이름 · 조사가 붙은 꼴 포함)은 빼고 센다. 장면을 가르지 못하는 글자가 점수를 올리지 않게. */
+function bigrams(text: string, stop: ReadonlySet<string>): Set<string> {
+  const s = normSlotAlt(text)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .split(' ')
+    .filter((w) => ![...stop].some((x) => w.startsWith(x)))
+    .join('')
   const out = new Set<string>()
   for (let i = 0; i + 2 <= s.length; i += 1) out.add(s.slice(i, i + 2))
   return out
@@ -160,7 +170,7 @@ export function scoreSlot(slot: { key: string; caption: string; heading: string 
   const caption = hits(contentWords(slot.caption, stop))
   const heading = hits(contentWords(slot.heading, stop))
   const w = AUTO_PICK_RULES.weights
-  const raw = w.key * key.length + w.caption * caption.length + w.heading * heading.length + w.bigram * jaccard(bigrams(slot.key), bigrams(alt))
+  const raw = w.key * key.length + w.caption * caption.length + w.heading * heading.length + w.bigram * jaccard(bigrams(slot.key, stop), bigrams(alt, stop))
   const score = Math.round(raw * 100) / 100
   const coverage = keyWords.length ? key.length / keyWords.length : 0
   return {
@@ -366,6 +376,28 @@ export function otherPhotoUses(
     for (const p of d.photos ?? []) out.push({ src: p.src, ...(group ? { group } : {}) })
   }
   return out
+}
+
+/**
+ * 자동 채우기 미리보기가 기댄 초안 상태의 열쇠 — 미리보기를 계산한 때와 다르면 그 미리보기로 저장하지 않는다(다른 미리보기 · 사람이
+ * 고른 사진이 그사이 저장되면 작성자 · 브랜드 반복 상한이 달라진다). 사진이 있는 글과 미리보기 글(ids)의 초안 시각 · 고친 시각 · 고른
+ * 사진 · 사람이 뺀 자리를 본다 — 사진 없는 다른 글이 새로 생기는 것은 상관없다.
+ */
+export function photoStateKey(
+  drafts: Readonly<
+    Record<string, { generatedAt: string; editedAt?: string; photos?: readonly PhotoPick[]; photoCleared?: readonly PhotoPlace[] }>
+  >,
+  ids: ReadonlySet<string>,
+): string {
+  const place = (p: PhotoPlace) => `${p.slot}#${p.nth}#${p.heading}`
+  return Object.keys(drafts)
+    .filter((id) => ids.has(id) || (drafts[id]!.photos?.length ?? 0) > 0)
+    .sort()
+    .map((id) => {
+      const d = drafts[id]!
+      return JSON.stringify([id, d.generatedAt, d.editedAt ?? '', (d.photos ?? []).map((p) => `${place(p)}=${p.src}`), (d.photoCleared ?? []).map(place)])
+    })
+    .join('\n')
 }
 
 /** 사진 자리 셈 — 작성자 줄의 「사진 자리 n · 채움 m · 자동 k · 빈자리 j」. 채움은 지금 글에 실제로 들어가는 사진이다. */

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { isExtraArticleId, type ExtraArticleRules } from '../src/lib/extraArticles.js';
 import { todayKst } from '../src/lib/publishedUrl.js';
-import { parseWriterPlan, topicGuard, writerExtraRules, type WriterPlan } from '../src/lib/probePlan.js';
+import { isActive, parseWriterPlan, topicGuard, writerArticle, writerExtraRules, type WriterPlan } from '../src/lib/probePlan.js';
 
 /**
  * 작성자 배정 — data/<tenant>/probe-plan.json(src/lib/probePlan.ts 주석). scripts/writer-plan.ts만 쓰고 앱은 요청마다 읽기만 한다 —
@@ -66,6 +66,17 @@ export async function checkProbeTopic(
 export function checkProbeAction(tenantId: string, actionId: string, requestBankVersion: unknown, now = Date.now()): Promise<string | null> {
   const bankVersion = typeof requestBankVersion === 'string' && requestBankVersion.trim() ? requestBankVersion.trim() : undefined;
   return checkProbeTopic(tenantId, actionId, bankVersion, now);
+}
+
+/**
+ * 사진 자동 채우기 저장(server/contentDraft.ts saveAutoPhotoPicks)의 작성자 상한 — 운영 기간 안의 배정 글이면 그 작성자 key, 아니면
+ * undefined. 화면(GapActions WriterRuns)이 미리보기를 고를 때와 같은 기준이다. 배정 파일이 없거나 깨졌으면 작성자 상한 없이 글 ·
+ * 브랜드 상한만. 읽기 자체가 실패하면 throw.
+ */
+export async function writerGroupOf(tenantId: string, now = Date.now()): Promise<(actionId: string) => string | undefined> {
+  const { plan } = await readProbePlan(tenantId);
+  const active = isActive(plan, todayKst(now)) ? plan : null;
+  return (actionId) => writerArticle(active, actionId)?.writer.key;
 }
 
 export interface ExtraArticleGate {

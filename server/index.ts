@@ -11,7 +11,7 @@ import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDo
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
 import { readPublishSettings, updatePublishSettings } from './publishSettingsStore.js';
 import { createExtraArticle, ExtraArticlesError, patchExtraArticle, readExtraArticles } from './extraArticles.js';
-import { checkProbeAction, readProbePlan } from './probePlanStore.js';
+import { checkProbeAction, readProbePlan, writerGroupOf } from './probePlanStore.js';
 import { normalizePublishSettings } from '../src/lib/publishSettings.js';
 import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
@@ -924,7 +924,8 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         }
         if (clean.length) entries.push({ actionId: id, generatedAt: at, picks: clean });
       }
-      const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat);
+      // 같은 작성자의 글 사이에 같은 사진 한 번 — 화면의 미리보기가 오래됐어도 쓰기 안에서 다시 본다(작성자 배정 기간에만).
+      const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat, await writerGroupOf(tenant.tenantId));
       res.json({ ...saved, skipped: saved.skipped + rejected });
       return;
     }

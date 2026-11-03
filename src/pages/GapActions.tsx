@@ -44,6 +44,7 @@ import {
   type GapAction,
 } from '../lib/gapActions'
 import { useMeasureStatus } from '../lib/measureStatus'
+import { photosAllowed, photoSlotsOf } from '../lib/articlePhotos'
 import { photoSlotStats } from '../lib/photoAutoPick'
 import {
   extraArticleCap,
@@ -455,7 +456,8 @@ function BulkDrafts({
  * 각도」로 들어가 브리프 각도가 된다.
  *
  * 초안이 있으면 그 작성자 몫을 한 폴더로 받는 단추도 둔다(src/lib/writerBundle.ts — 글마다 홈페이지용 .html과 사진 파일). 그 아래
- * 「사진 자동 채우기」(PhotoAutoFill)는 작성자 글의 빈 사진 자리를 홈페이지 사진으로 채운다 — 브랜드 전부 단추도 맨 위에 둔다.
+ * 「사진 자동 채우기」(PhotoAutoFill)는 작성자 글의 빈 사진 자리를 홈페이지 사진으로 채운다 — 브랜드 전부 단추도 맨 위에 둔다. 사진을
+ * 쓸 수 없는 브랜드(사진 사용 확인 전 · 의료 업종은 의료광고 확인 전)에는 사진 셈과 그 단추를 그리지 않는다(글의 「홈페이지 사진」 칸과 같은 기준).
  */
 function WriterRuns({
   tenantId,
@@ -475,6 +477,7 @@ function WriterRuns({
   locked,
   onBusyChange,
   onPhotosBusyChange,
+  photosOn,
 }: {
   tenantId: string
   /** 묶음의 .html이 쓰는 브랜드(글 끝 · JSON-LD · 사진의 업종 확인). */
@@ -503,6 +506,8 @@ function WriterRuns({
   onBusyChange: (busy: boolean) => void
   /** 사진 자동 채우기 저장 시작 · 끝(BulkKind photos). */
   onPhotosBusyChange: (busy: boolean) => void
+  /** 이 브랜드에 홈페이지 사진을 쓸 수 있다(photosAllowed) — 아니면 사진 셈 · 자동 채우기 단추를 그리지 않는다. */
+  photosOn: boolean
 }) {
   const status = useMeasureStatus()
   const measuringRun = status.runs?.current[0] ?? null
@@ -522,14 +527,19 @@ function WriterRuns({
     return stored ? [{ stored, title: draftTitle(effectiveDraft(stored)) }] : []
   }
   // 작성자 줄의 「사진 자리 n · 채움 m · 자동 k · 빈자리 j」 — 초안이 바뀔 때만 다시 센다(글마다 발행 원고를 만든다).
-  const photoStats = useMemo(() => {
+  // 브랜드 전부 단추는 사진 자리가 하나라도 있을 때만(배정에 없는 자사 글 포함).
+  const { photoStats, brandPhotoSlots } = useMemo(() => {
     const out = new Map<string, ReturnType<typeof photoSlotStats>>()
+    const statsOf = (ids: string[]) => photoSlotStats(ids.map((id) => ({ markdown: publishMarkdownOf(drafts[id]!), picks: drafts[id]!.photos })))
+    let slots = 0
     for (const w of planWriters(writerPlan)) {
-      const mine = writerPlan.articles.filter((a) => a.writer.key === w.key && drafts[a.id])
-      out.set(w.key, photoSlotStats(mine.map((a) => ({ markdown: publishMarkdownOf(drafts[a.id]!), picks: drafts[a.id]!.photos }))))
+      const stats = statsOf(writerPlan.articles.filter((a) => a.writer.key === w.key && drafts[a.id]).map((a) => a.id))
+      out.set(w.key, stats)
+      slots += stats.slots
     }
-    return out
-  }, [writerPlan, drafts])
+    slots += statsOf(actions.filter((a) => a.kind === 'content' && !writerArticle(writerPlan, a.id) && drafts[a.id]).map((a) => a.id)).slots
+    return { photoStats: out, brandPhotoSlots: slots }
+  }, [writerPlan, drafts, actions])
   // 브랜드 전부 — 배정 순서의 작성자 글, 그다음 배정에 없는 자사 글(본 글 등).
   const brandPhotoArticles = [
     ...writerPlan.articles.flatMap((a) => photoArticle(a.id)),
@@ -591,7 +601,7 @@ function WriterRuns({
         이어서 합니다. 도는 동안에는 글 카드의 단추와 「글 더 만들기」를 잠급니다. 운영 기간(~{writerPlan.activeUntil})에는 추가 글을{' '}
         {cap}편까지 둘 수 있어요(지금 {alive.size}편).
       </p>
-      {brandPhotoArticles.length > 0 && (
+      {photosOn && brandPhotoArticles.length > 0 && brandPhotoSlots > 0 && (
         <PhotoAutoFill
           tenantId={tenantId}
           brand={brand}
@@ -622,7 +632,7 @@ function WriterRuns({
                 {w.key} · {w.name}
               </b>
               {w.blog && ` · ${w.blog}`} · 만든 글 {ids.length - missing}/{ids.length} · 초안 {drafted}/{ids.length}
-              {photos && photos.slots > 0 && ` · 사진 자리 ${photos.slots} · 채움 ${photos.filled} · 자동 ${photos.auto} · 빈자리 ${photos.empty}`}
+              {photosOn && photos && photos.slots > 0 && ` · 사진 자리 ${photos.slots} · 채움 ${photos.filled} · 자동 ${photos.auto} · 빈자리 ${photos.empty}`}
             </p>
             <BulkDrafts
               tenantId={tenantId}
@@ -662,7 +672,7 @@ function WriterRuns({
                 )}
               </div>
             )}
-            {drafted > 0 && photos && photos.slots > 0 && (
+            {photosOn && drafted > 0 && photos && photos.slots > 0 && (
               <PhotoAutoFill
                 tenantId={tenantId}
                 brand={brand}
@@ -1163,6 +1173,8 @@ export default function GapActions() {
     return () => window.removeEventListener(PHOTO_RIGHTS_EVENT, onRights)
   }, [tenant?.tenantId])
   const publishSettings = settingsState.key === tenant?.tenantId ? settingsState.value : null
+  // 홈페이지 사진을 쓸 수 있는 브랜드 — 아니면 일괄 사진 자동 채우기 · 작성자 줄 사진 셈을 그리지 않는다(글의 「홈페이지 사진」 칸과 같은 기준).
+  const photosOn = publishSettings !== null && photosAllowed(publishSettings, tenant?.industry)
   const onAdapted = (a: ChannelAdaptation) =>
     setAdaptState((st) => ({
       ...st,
@@ -1459,6 +1471,7 @@ export default function GapActions() {
             locked={bulkRunning !== null}
             onBusyChange={bulkBusy(tenant.tenantId, 'writer')}
             onPhotosBusyChange={bulkBusy(tenant.tenantId, 'photos')}
+            photosOn={photosOn}
           />
         </section>
       )}
@@ -1566,7 +1579,11 @@ export default function GapActions() {
                   />
                 )}
                 {/* 작성자 배정이 없는 브랜드의 사진 자동 채우기 — 배정이 있으면 위 작성자 칸에 있다. 한 편이면 글의 「홈페이지 사진」 칸에서. */}
-                {!activePlan && photoCards.length > 1 && drafts !== null && (
+                {!activePlan &&
+                  photosOn &&
+                  photoCards.length > 1 &&
+                  drafts !== null &&
+                  photoCards.some(({ stored }) => photoSlotsOf(publishMarkdownOf(stored)).length > 0) && (
                   <PhotoAutoFill
                     tenantId={tenant.tenantId}
                     brand={tenant}

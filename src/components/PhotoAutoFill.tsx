@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { loadPublishSettings, saveDraftPhotosAuto, type AutoPhotoSaveResult, type StoredDraft, type TenantSummary } from '../lib/api'
 import { photosAllowed } from '../lib/articlePhotos'
 import { publishMarkdownOf } from '../lib/draftGaps'
@@ -7,6 +7,7 @@ import {
   AUTO_SLOT_STATE_TEXT,
   autoPickPhotos,
   otherPhotoUses,
+  photoStateKey,
   type AutoPickResult,
   type AutoSlotRow,
   type AutoSlotState,
@@ -17,6 +18,9 @@ import { loadSitePhotos, photoPageOf, type SitePhotoResult } from '../lib/sitePh
  * 사진 자리 자동 채우기(1단계 — 홈페이지 사진) — 단추를 누르면 홈페이지 사진 후보로 빈 사진 자리를 맞춰(src/lib/photoAutoPick.ts)
  * 미리보기 표를 먼저 보이고, 운영자가 「저장」을 눌러야 저장한다(PUT …/photos op auto). 자리마다 따로 확인받지 않는다 — 대신 저장된
  * 사진에 「자동」 표시가 붙고 글의 「홈페이지 사진」 칸에서 바꾸거나 뺄 수 있다. AI를 부르지 않는다.
+ *
+ * 미리보기는 계산한 때의 초안으로 고른다 — 그사이 다른 미리보기 · 사람이 고른 사진이 저장되거나 글이 바뀌면(photoStateKey) 그
+ * 미리보기로는 저장하지 않고 다시 맞추게 한다(작성자 · 브랜드 반복 상한이 달라진다). 서버도 쓰기 안에서 상한을 다시 본다.
  *
  * 글 하나(SitePhotoPanel), 작성자 한 명 · 브랜드 전부(GapActions WriterRuns), 작성자 배정이 없는 브랜드의 「① 글 확인」에서 쓴다.
  */
@@ -54,11 +58,13 @@ export default function PhotoAutoFill({
 }) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [preview, setPreview] = useState<{ result: AutoPickResult; pageUrl: string } | null>(null)
+  const [preview, setPreview] = useState<{ result: AutoPickResult; pageUrl: string; key: string } | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const titleOf = new Map(articles.map((a) => [a.stored.actionId, a.title]))
+  const previewIds = useMemo(() => new Set(preview?.result.articles.map((a) => a.actionId) ?? []), [preview])
+  const stale = useMemo(() => preview !== null && photoStateKey(drafts, previewIds) !== preview.key, [preview, drafts, previewIds])
 
   const run = async () => {
     setLoading(true)
@@ -93,7 +99,7 @@ export default function PhotoAutoFill({
         others: otherPhotoUses(drafts, ids, groupOf),
         brandName: brand.brandName,
       })
-      setPreview({ result, pageUrl })
+      setPreview({ result, pageUrl, key: photoStateKey(drafts, ids) })
       setShowAll(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -103,7 +109,7 @@ export default function PhotoAutoFill({
   }
 
   const save = async () => {
-    if (!preview) return
+    if (!preview || stale) return
     setSaving(true)
     onBusyChange?.(true)
     setError(null)
@@ -203,7 +209,7 @@ export default function PhotoAutoFill({
             </div>
           )}
           <div className="brief-bar" style={{ margin: 0 }}>
-            <button type="button" disabled={filled === 0 || saving || locked} onClick={() => void save()}>
+            <button type="button" disabled={filled === 0 || saving || locked || stale} onClick={() => void save()}>
               {saving ? '저장 중…' : `저장 — ${filled}자리`}
             </button>
             <button type="button" className="ghost" disabled={saving} onClick={() => setPreview(null)}>
@@ -215,6 +221,11 @@ export default function PhotoAutoFill({
               </button>
             )}
           </div>
+          {stale && !saving && (
+            <p className="error" role="alert" style={{ margin: 0 }}>
+              그사이 초안이나 고른 사진이 바뀌어 이 미리보기로는 저장하지 않아요 — 위 단추를 다시 눌러 새로 맞춰 주세요.
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -22,6 +22,7 @@ import {
   needsPhotoCredit,
   otherPhotoUses,
   photoSlotStats,
+  photoStateKey,
   scoreSlot,
   type AutoArticle,
   type AutoCandidate,
@@ -186,6 +187,51 @@ ok('저장된 자동 사진은 고른 자리에 그대로 짝지어진다', plac
 const stats = photoSlotStats([{ markdown: article('a1', md1).markdown, picks: [saved.find((p) => p.src === C.garden.src)!, { ...human, slot: '서까래 천장 아래 거실과 테이블', heading: '거실' }] }])
 ok('작성자 줄 셈 — 사진 자리 4 · 채움 2 · 자동 1 · 빈자리 2', stats.slots === 4 && stats.filled === 2 && stats.auto === 1 && stats.empty === 2)
 ok('사진이 없으면 원고는 바이트까지 그대로', withPhotos(article('a1', md1).markdown, []).markdown === article('a1', md1).markdown)
+
+// 사람 사진 후보 · 사람 장면 자리 — 흔한 사람 낱말(관광객 · 투숙객 · 직원 …)도 사람으로 본다
+const peopleAlts = [
+  '관광객들이 해변을 걷는 모습',
+  '방문객이 정원을 둘러보는 모습',
+  '직원이 커피를 내리는 모습',
+  '셰프가 요리하는 주방',
+  '투숙객이 테라스에서 쉬는 모습',
+  '어르신과 손주가 산책하는 길',
+  '신랑 신부 웨딩 촬영',
+]
+ok('관광객 · 방문객 · 직원 · 셰프 · 투숙객 · 어르신 · 신랑 신부 사진은 뺀다', peopleAlts.every((alt) => autoCandidateSkip(cand('p', alt)) === 'people'))
+ok('관광객 · 방문객이 나오는 자리는 사람 장면', isPeopleScene('해변을 걷는 관광객') && isPeopleScene('정원을 둘러보는 방문객'))
+const beach = ['## 1. 해변', '', '![가상해변 해변 산책로](#image-slot)']
+const r9 = autoPickPhotos({ articles: [article('b', beach)], candidates: [cand('tourists', '관광객들이 가상해변 해변 산책로를 걷는 모습')] })
+ok('관광객 사진은 산책로 자리에 자동으로 넣지 않는다', r9.articles[0]!.picks.length === 0 && r9.skipped[0]?.reason === 'people')
+
+// 「아이스」 · 「모델하우스」는 사람 낱말이 아니다(사람 없는 사진을 「사람이 찍힘」으로 빼지 않는다)
+ok('「아이스 아메리카노」 · 「아이스링크」 · 「모델하우스」 사진은 사람 사진이 아니다', ['아이스 아메리카노와 디저트', '아이스링크', '모델하우스 거실'].every((alt) => autoCandidateSkip(cand('n', alt)) === null))
+ok('「아이스크림 가게 앞」 자리는 사람 장면이 아니다', !isPeopleScene('아이스크림 가게 앞'))
+ok('아이 · 모델이 나오면 여전히 사람 사진', autoCandidateSkip(cand('k', '아이스크림을 든 아이')) === 'people' && autoCandidateSkip(cand('m', '화보 모델 촬영')) === 'people')
+
+// 브랜드 이름은 2-gram 점수에도 넣지 않는다 — 내용어 하나만 맞는 사진이 브랜드 이름 덕에 문턱을 넘지 않게
+const gstop = new Set(contentWords('군산각'))
+const brandSlot = { key: '군산각 객실 창밖 바다 전망', caption: '', heading: '' }
+const withBrand = scoreSlot(brandSlot, '군산각 바다', gstop)
+const noBrand = scoreSlot(brandSlot, '바다', gstop)
+ok('브랜드 이름이 양쪽에 있어도 점수는 같다(낱말 하나만 맞으면 넣지 않는다)', withBrand.score === noBrand.score && !withBrand.pass)
+ok('브랜드 이름에 조사가 붙어도 2-gram에서 뺀다', scoreSlot({ key: '군산각의 객실 창밖 바다 전망', caption: '', heading: '' }, '군산각에서 바다', gstop).score === noBrand.score)
+const r10 = autoPickPhotos({ articles: [article('g', ['## 1. 객실', '', '![군산각 객실 창밖 바다 전망](#image-slot)'])], candidates: [cand('sea', '군산각 바다')], brandName: '군산각' })
+ok('객실 창밖 전망 자리에 바다 사진만 맞으면 비워 둔다', r10.articles[0]!.rows[0]!.state === 'nomatch')
+
+// 미리보기를 계산한 뒤 사진 · 초안이 바뀌었는지 — 바뀌면 그 미리보기로 저장하지 않는다
+const base = {
+  a1: { generatedAt: '2026-11-03T00:00:00.000Z', photos: [] as PhotoPick[] },
+  a2: { generatedAt: '2026-11-03T00:00:00.000Z' },
+  other: { generatedAt: '2026-11-03T00:00:00.000Z' },
+}
+const k0 = photoStateKey(base, new Set(['a1', 'a2']))
+ok('같은 초안이면 같은 열쇠', k0 === photoStateKey({ ...base }, new Set(['a1', 'a2'])))
+ok('다른 글에 사진을 고르면 열쇠가 바뀐다', k0 !== photoStateKey({ ...base, other: { ...base.other, photos: [{ ...human, src: C.garden.src }] } }, new Set(['a1', 'a2'])))
+ok('미리보기 글에 사진을 고르면 열쇠가 바뀐다', k0 !== photoStateKey({ ...base, a2: { ...base.a2, photos: [{ ...human, src: C.garden.src }] } }, new Set(['a1', 'a2'])))
+ok('사람이 자리를 빼면 열쇠가 바뀐다', k0 !== photoStateKey({ ...base, a1: { ...base.a1, photoCleared: [{ slot: '정원', nth: 1, heading: '정원' }] } }, new Set(['a1', 'a2'])))
+ok('미리보기 글을 고치거나 다시 만들면 열쇠가 바뀐다', k0 !== photoStateKey({ ...base, a1: { ...base.a1, editedAt: '2026-11-03T02:00:00.000Z' } }, new Set(['a1', 'a2'])) && k0 !== photoStateKey({ ...base, a2: { generatedAt: '2026-11-03T03:00:00.000Z' } }, new Set(['a1', 'a2'])))
+ok('사진 없는 다른 글이 새로 생기는 것은 상관없다', k0 === photoStateKey({ ...base, fresh: { generatedAt: '2026-11-03T04:00:00.000Z' } }, new Set(['a1', 'a2'])))
 
 // 5) 홈페이지 사진의 출처 표시(sitePhotos.ts credit)
 const dom = new JSDOM('<!doctype html><html><body></body></html>')
