@@ -73,6 +73,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          TOURAPI_SERVICE_KEY: ${{ secrets.TOURAPI_SERVICE_KEY }}
           # 설치본 기본 설정. 수집 엔진은 앱에서 바꿀 수 있으므로 기존과 같은 기본값을 굽는다.
           COLLECT_ENGINES: ${{ secrets.COLLECT_ENGINES || 'gemini' }}
           JUDGE_ENGINE: ${{ secrets.JUDGE_ENGINE || 'gemini' }}
@@ -80,7 +81,7 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: |
           : > .env
-          for name in GEMINI_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY PERPLEXITY_API_KEY \
+          for name in GEMINI_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY PERPLEXITY_API_KEY TOURAPI_SERVICE_KEY \
                       COLLECT_ENGINES JUDGE_ENGINE GA4_PROPERTY_ID GOOGLE_SERVICE_ACCOUNT_JSON; do
             value="${!name}"
             if [ -n "$value" ]; then

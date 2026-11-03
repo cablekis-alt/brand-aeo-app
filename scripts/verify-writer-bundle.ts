@@ -131,6 +131,21 @@ const noCreditDrafts: Record<string, StoredDraft> = { ...drafts, [a4.id]: { ...d
 const ncb = writerBundle({ ...input, drafts: noCreditDrafts, settings: publicRights })
 ok('출처 없는 공공 사진(공공 사진 호스트 · 출처 없음)은 .html · 사진 파일에 넣지 않는다', ncb.photos === 1 && !ncb.files.some((f) => f.kind === 'html' && f.text.includes('tong.visitkorea')) && !ncb.files.some((f) => f.kind === 'credits'))
 
+// 1-c) 관광공사 사진(3단계 — TourAPI 관광사진, 촬영자 출처) — 같은 출처 줄 · ImageObject · 출처 파일
+const GALLERY_PAGE = 'https://www.data.go.kr/data/15101914/openapi.do'
+const TOUR_GAL = 'https://tong.visitkorea.or.kr/cms2/website/00/0000001.jpg'
+const tourPhoto = photo({ src: TOUR_GAL, alt: '가상해양테마공원', pageUrl: GALLERY_PAGE, origin: 'public', license: 'kogl-1', credit: '한국관광공사 가상촬영', creditUrl: KOGL1, auto: true })
+const tb = writerBundle({ ...input, drafts: { ...drafts, [a4.id]: { ...drafts[a4.id]!, photos: [tourPhoto] } }, settings: publicRights })
+const tourHtml = tb.files.find((f): f is Extract<typeof f, { kind: 'html' }> => f.kind === 'html' && f.name.startsWith('03-'))?.text ?? ''
+const tourCredits = tb.files.find((f): f is Extract<typeof f, { kind: 'credits' }> => f.kind === 'credits')
+const tourRow = (tourCredits ? photoCreditsText(tourCredits, () => undefined) : '').split('\r\n').find((l) => l.startsWith('03\t')) ?? ''
+ok(
+  '관광공사 사진 — .html 사진 설명에 촬영자 출처와 이용 허락 링크',
+  tourHtml.includes(`<figcaption>골목 입구 (사진: 한국관광공사 가상촬영, <a href="${KOGL1}" rel="noopener">공공누리 제1유형</a>)</figcaption>`),
+)
+ok('관광공사 사진 — JSON-LD ImageObject의 creditText', tourHtml.includes(`"creditText": "한국관광공사 가상촬영"`) && tourHtml.includes(`"contentUrl": "${TOUR_GAL}"`))
+ok('관광공사 사진 — 「00-사진 출처.txt」에 출처 · 원 주소', tourRow === ['03', '03-사진1-무엇부터-보나요.jpg', '한국관광공사 가상촬영', `공공누리 제1유형 (${KOGL1})`, TOUR_GAL, '2026-11-02'].join('\t'))
+
 // 2) 저장 — 폴더 고르기(가짜 창)
 type Written = Map<string, { type: string; size: number; blob?: Blob }>
 /** folders는 이번에 만든 폴더, existing은 처음부터 있던(또는 만든) 폴더, plainFiles는 고른 폴더에 있던 같은 이름의 파일. */

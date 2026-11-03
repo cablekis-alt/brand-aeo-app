@@ -1,8 +1,9 @@
 /**
  * 사진 자리 자동 채우기. 1단계 — 글의 사진 자리 글자와 홈페이지 사진 후보(src/lib/sitePhotos.ts)의 설명을 낱말로 맞춰 자리마다 사진을
  * 한 장 고른다. 2단계 — 그래도 빈 자리는 자리 글자에 나온 장소 이름(자사 사이트 sitemap의 /places/{이름}/, findPlaces 순서 — 앞 장소에
- * 쓸 사진이 없으면 다음 장소)으로 그 장소 페이지의 공공누리 제1유형 사진(공공 사진, 출처 줄과 함께 내보낸다)을 고른다. AI를 부르지
- * 않고, 같은 입력이면 늘 같은 결과다.
+ * 쓸 사진이 없으면 다음 장소)으로 그 장소 페이지의 공공누리 제1유형 사진(공공 사진, 출처 줄과 함께 내보낸다)을 고른다. 3단계 — 장소
+ * 페이지에 쓸 사진이 없던 장소 자리는 한국관광공사 TourAPI의 공공누리 제1유형 사진(관광공사 사진, src/lib/tourPhotos.ts — 역시 공공
+ * 사진)으로 채운다. AI를 부르지 않고, 같은 입력이면 늘 같은 결과다.
  *
  * 틀린 사진은 빈자리보다 나쁘다 — 사람이 고른 사진 3장이 이미 장면과 어긋났다(2026-11-03 점검). 그래서 문턱(AUTO_PICK_RULES)에
  * 못 미치면 비워 두고, 다음은 아예 보지 않는다.
@@ -30,6 +31,7 @@ import {
   type PhotoSlot,
   type PublicPhotoFields,
 } from './articlePhotos.js'
+import type { TourSource } from './tourPhotos.js'
 
 export { needsPhotoCredit }
 
@@ -94,8 +96,10 @@ export interface AutoCandidate {
   license?: PhotoLicense | null
   /** 공공 사진의 공공누리 유형(1~4) — 모르면 null. 미리보기에 뺀 이유로 보인다. */
   licenseType?: number | null
-  /** 공공 사진의 출처(구조화 데이터 creditText). */
+  /** 공공 사진의 출처(구조화 데이터 creditText · 관광공사 사진의 「한국관광공사 김지호」). */
   creditText?: string
+  /** 관광공사 사진(3단계)이면 그 서비스 — kor 국문 관광정보 · gallery 관광사진 정보(포토코리아). */
+  tour?: TourSource
 }
 
 /** 공공 사진 후보의 저장 모양(출처 · 이용 허락) — 맞지 않으면 null. */
@@ -155,6 +159,14 @@ function placeNameOfUrl(url: string | undefined): string | null {
   } catch {
     return null
   }
+}
+
+/**
+ * 사진 설명 · 검색어에 사람 낱말이 있는가 — 장소 이름들(places)을 걷어 낸 글자에서만 본다(「새만금어린이랜드」는 사람이 아니다).
+ * 관광공사 사진(server/tourPhotos.ts)의 사진 이름 · 검색 낱말도 같은 기준으로 거른다.
+ */
+export function hasPeopleWords(text: string, places: readonly string[] = []): boolean {
+  return PEOPLE_PHOTO.test(places.reduce((s, p) => withoutPlaceName(s, p), normSlotAlt(text).toLowerCase()))
 }
 
 /** 글자에서 장소 이름을 걷어 낸다 — 띄어쓰기 · 문장부호는 무시하고 맞춘다(「먹방이와친구들」도 「먹방이와 친구들」). */
@@ -386,6 +398,8 @@ export interface AutoSlotRow {
   place?: string
   /** 자리 글자에 나온 장소 전부(slotPlaces 순서) — 앞 장소에 쓸 공공 사진이 없으면 다음 장소의 사진을 본다. */
   places?: string[]
+  /** used인데 상한에 걸린 것이 홈페이지 사진 짝뿐이다 — 자리의 장소에 장소 페이지 · 관광공사 사진이 없었다(관광공사 사진을 찾을 자리). */
+  homeOnly?: true
 }
 
 /** 이미 고른 사진 가운데 출처가 없는 공공 사진(photoCreditState missing)에 붙일 출처 — 같은 사진이 장소 페이지에 제1유형으로 있다. */
@@ -412,8 +426,10 @@ export interface AutoPickResult {
   skipped: { candidate: AutoCandidate; reason: AutoCandidateSkip }[]
   /** 자동으로 쓸 수 있는 홈페이지 사진 수. */
   usable: number
-  /** 자동으로 쓸 수 있는 공공 사진 수(제1유형 · 출처 있음). */
+  /** 자동으로 쓸 수 있는 공공 사진 수(장소 페이지 · 제1유형 · 출처 있음). */
   usablePublic: number
+  /** 자동으로 쓸 수 있는 관광공사 사진 수(3단계). */
+  usableTour: number
 }
 
 /** 사진 자리 바로 아랫줄의 설명(`*설명*`) — 없으면 ''(articlePhotos.ts captionAfter와 같은 모양). */
@@ -457,11 +473,38 @@ export function placesToRead(articles: readonly Pick<AutoArticle, 'markdown' | '
   return [...new Set([...first, ...rest])]
 }
 
+/** 자리의 장소 페이지를 모두 읽었나 — 아니면 3단계(관광공사 사진)로 채우지 않는다(읽지 못한 장소의 페이지 사진이 먼저다). */
+function placesRead(places: readonly string[], pagesRead: ReadonlySet<string>): boolean {
+  return places.every((p) => pagesRead.has(p))
+}
+
+/**
+ * 장소 페이지(2단계)에 쓸 공공 사진이 없어 비어 있는 장소 자리의 장소들 — 관광공사 사진(3단계)을 찾을 장소. 자리마다 첫 장소를 모두
+ * 앞에, 다음 장소들은 그 뒤에(화면이 장소 수 상한으로 자른다). 맞는 사진 없음 · 제1유형 아님 자리와, 홈페이지 사진 짝만 반복 상한에 걸린
+ * 자리(used · homeOnly)를 본다 — 장소 페이지 · 관광공사 사진이 반복 상한에 걸린 자리(used) · 글이 다 찬 자리(full)는 묻지 않는다.
+ * pagesRead는 장소 페이지를 읽은 장소(2단계가 본 장소) — 자리의 장소 가운데 하나라도 읽지 못했으면(일시 실패 · 읽기 상한) 그 자리는 묻지
+ * 않는다(autoPickPhotos ③도 채우지 않는다). 다음에 눌러 그 페이지를 읽은 뒤에 묻는다.
+ */
+export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>, pagesRead: ReadonlySet<string>): string[] {
+  const first: string[] = []
+  const rest: string[] = []
+  for (const a of result.articles) {
+    for (const row of a.rows) {
+      const open = row.state === 'nomatch' || row.state === 'license' || (row.state === 'used' && row.homeOnly)
+      if (!open || !row.places?.length || !placesRead(row.places, pagesRead)) continue
+      row.places.forEach((place, i) => (i === 0 ? first : rest).push(place))
+    }
+  }
+  return [...new Set([...first, ...rest])]
+}
+
 /**
  * 글마다 빈 사진 자리에 사진을 고른다 — 글은 받은 순서(작성자 배정 순서)대로. 글 안에서는 먼저 홈페이지 사진을 점수가 높은 짝부터(같은
  * 점수면 앞 자리, 브랜드에서 덜 쓴 사진, 주소 사전순), 그래도 빈 자리는 자리 글자에 나온 장소의 공공 사진을(앞 장소부터 — 그 장소에 쓸
- * 사진이 없으면 다음 장소, 그 장소 페이지의 사진 순서, 앞 자리부터). others는 이번에 돌지 않는 글의 고른 사진(브랜드 · 작성자 반복 상한에
- * 센다). 공공 사진도 같은 상한을 쓴다. 넣은 공공 사진은 장소 이름으로만 맞췄으므로 늘 「확인 필요」다.
+ * 사진이 없으면 다음 장소, 그 장소 페이지의 사진 순서, 앞 자리부터), 그래도 빈 자리는 그 장소의 관광공사 사진을(앞 장소부터, 브랜드에서
+ * 가장 덜 쓴 사진 — 같은 장소의 여러 자리에 다른 사진이 가게, 같으면 국문 관광정보 사진 먼저 · 응답 순서). others는 이번에 돌지 않는 글의
+ * 고른 사진(브랜드 · 작성자 반복 상한에 센다). 공공 사진 · 관광공사 사진도 같은 상한을 쓴다. 넣은 공공 사진 · 관광공사 사진은 장소
+ * 이름으로만 맞췄으므로 늘 「확인 필요」다.
  * 이미 고른 사진 가운데 출처가 없는 공공 사진은, 같은 사진이 공공 사진 후보(제1유형 · 출처 있음)에 있으면 credits로 출처를 붙인다.
  */
 export function autoPickPhotos(input: {
@@ -469,6 +512,13 @@ export function autoPickPhotos(input: {
   candidates: readonly AutoCandidate[]
   /** 자사 사이트 장소 페이지의 공공 사진(origin 'public', 장소 · 유형 · 출처) — 제1유형이 아니거나 출처가 없으면 이유와 함께 뺀다. */
   publicCandidates?: readonly AutoCandidate[]
+  /**
+   * 관광공사 사진(3단계, origin 'public' · tour · 장소) — 장소 페이지 사진이 없던 장소에만(tourPlacesWanted). 국문 관광정보 사진이 앞.
+   * 사이트의 두 장소가 같은 관광공사 장소로 풀려 같은 사진이 두 장소에 오면 두 장소 모두에 둔다(반복 상한 · 한 글에 한 번은 그대로).
+   */
+  tourCandidates?: readonly AutoCandidate[]
+  /** 장소 페이지를 읽은 장소(2단계가 본 장소) — 주면 ③(관광공사 사진)은 자리의 장소 페이지를 모두 읽은 자리만 채운다(tourPlacesWanted와 같다). */
+  pagesRead?: ReadonlySet<string>
   /** 장소 사전(자사 사이트 sitemap의 /places/{이름}/) — 자리 글자에서 장소를 찾는다. */
   places?: readonly string[]
   others?: readonly { src: string; group?: string }[]
@@ -517,6 +567,23 @@ export function autoPickPhotos(input: {
     list.push({ ...raw, src, alt: cleanPhotoAlt(raw.alt) })
     publicByPlace.set(raw.place, list)
   }
+
+  // 관광공사 사진 — 장소별로, 받은 순서 그대로(국문 관광정보 사진이 앞). 이미 본 사진(홈페이지 · 장소 페이지)이나 같은 장소에 이미 받은
+  // 사진과 같으면 뺀다. 다른 장소에 같은 사진이 와도(두 장소가 같은 관광공사 장소로 풀렸다) 빼지 않는다 — 뒤 장소의 자리가 비지 않게.
+  const tourByPlace = new Map<string, AutoCandidate[]>()
+  const tourSrcs = new Set<string>()
+  for (const raw of input.tourCandidates ?? []) {
+    const src = canonicalPhotoSrc(raw.src)
+    const samePlace = Boolean(raw.place && tourByPlace.get(raw.place)?.some((c) => c.src === src))
+    const reason = autoCandidateSkip({ ...raw, origin: 'public' }) ?? (src && (seen.has(src) || publicSeen.has(src) || samePlace) ? 'duplicate' : null)
+    if (reason || !src || !raw.place) {
+      skipped.push({ candidate: raw, reason: reason ?? 'bad-src' })
+      continue
+    }
+    tourSrcs.add(src)
+    tourByPlace.set(raw.place, [...(tourByPlace.get(raw.place) ?? []), { ...raw, src, alt: cleanPhotoAlt(raw.alt) }])
+  }
+  const usableTour = tourSrcs.size
 
   const brandCount = new Map<string, number>()
   const groupUsed = new Map<string, Set<string>>()
@@ -609,18 +676,39 @@ export function autoPickPhotos(input: {
       }
     }
 
+    // ③ 관광공사 사진 — 아직 빈 자리를 앞에서부터, 자리의 장소(앞 장소부터) 사진 가운데 브랜드에서 가장 덜 쓴 첫 장. 장소 페이지를 다
+    // 읽지 못한 자리는 건너뛴다(pagesRead).
+    const tourOk = (row: AutoSlotRow) => !input.pagesRead || placesRead(row.places ?? [], input.pagesRead)
+    for (const row of rows) {
+      if (row.state !== 'nomatch' || !row.places || room === 0 || !tourOk(row)) continue
+      for (const place of row.places) {
+        const open = (tourByPlace.get(place) ?? []).filter((c) => !isBlocked(c.src))
+        if (!open.length) continue
+        const candidate = open.reduce((best, c) => ((brandCount.get(c.src) ?? 0) < (brandCount.get(best.src) ?? 0) ? c : best))
+        fill(row, candidate, placeScore(place))
+        row.place = place
+        break
+      }
+    }
+
     // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소의 공공 사진이 모두 「제1유형 아님」으로 빠졌으면 license.
+    // 홈페이지 사진 짝만 상한에 걸리고 장소 사진이 없던 자리는 homeOnly — 관광공사 사진을 찾을 자리다(tourPlacesWanted).
     const licenseOnly = (place: string) => {
       const reasons = skippedByPlace.get(place) ?? []
-      return reasons.length > 0 && !publicByPlace.get(place)?.length && reasons.every((r) => r === 'license')
+      return reasons.length > 0 && !publicByPlace.get(place)?.length && !tourByPlace.get(place)?.length && reasons.every((r) => r === 'license')
     }
     for (const row of rows) {
       if (row.state !== 'nomatch') continue
       const best = pairs.filter((p) => p.row === row).sort(better)[0]
-      const publicPlace = row.places?.find((place) => publicByPlace.get(place)?.length)
-      if (best) Object.assign(row, { state: room === 0 ? 'full' : 'used', candidate: best.candidate, score: best.score })
+      const publicPlace = row.places?.find((place) => publicByPlace.get(place)?.length || (tourOk(row) && tourByPlace.get(place)?.length))
+      if (best) Object.assign(row, { state: room === 0 ? 'full' : 'used', candidate: best.candidate, score: best.score, ...(room > 0 && !publicPlace ? { homeOnly: true } : {}) })
       else if (publicPlace)
-        Object.assign(row, { state: room === 0 ? 'full' : 'used', candidate: publicByPlace.get(publicPlace)![0], score: placeScore(publicPlace), place: publicPlace })
+        Object.assign(row, {
+          state: room === 0 ? 'full' : 'used',
+          candidate: publicByPlace.get(publicPlace)?.[0] ?? tourByPlace.get(publicPlace)![0],
+          score: placeScore(publicPlace),
+          place: publicPlace,
+        })
       else if (row.places?.some(licenseOnly)) row.state = 'license'
     }
 
@@ -633,7 +721,7 @@ export function autoPickPhotos(input: {
     }
     return { actionId: article.actionId, generatedAt: article.generatedAt, rows, picks: out, credits }
   })
-  return { articles, skipped, usable: usable.length, usablePublic }
+  return { articles, skipped, usable: usable.length, usablePublic, usableTour }
 }
 
 /** 이번에 돌지 않는 글의 고른 사진 — 브랜드 · 작성자 반복 상한에 센다. */

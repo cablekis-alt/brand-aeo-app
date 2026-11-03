@@ -1,4 +1,4 @@
-import { fetchDraftPhotoFile, type StoredDraft, type TenantSummary } from './api'
+import { fetchDraftPhotoFile, loadTourPhotos, type StoredDraft, type TenantSummary } from './api'
 import {
   canonicalPhotoSrc,
   cleanPhotoAlt,
@@ -14,7 +14,8 @@ import {
 import { publishMarkdownOf } from './draftGaps'
 import { downloadBlob, safeFileName } from './markdownFile'
 import { fetchPage } from './aeo/fetchPage'
-import { findPlace, placeNameOfPath, publicCandidateFields, type AutoCandidate } from './photoAutoPick'
+import { findPlace, placeKey, placeNameOfPath, publicCandidateFields, type AutoCandidate } from './photoAutoPick'
+import { TOUR_PLACE_LIMIT, type TourPhotoQuery, type TourPhotoResult } from './tourPhotos'
 import { todayKst } from './publishedUrl'
 import { brandSiteUrl } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
@@ -419,6 +420,64 @@ export function extractPublicPhotos(html: string, pageUrl: string): PublicPhoto[
   return out
 }
 
+/** 장소 페이지가 밝힌 장소 — 다른 이름(alternateName) · 주소 · 좌표. 관광공사 사진(3단계)을 찾는 단서다. */
+export interface PlaceInfo {
+  /** 페이지의 장소 이름 · 다른 이름 가운데 사전 이름과 다른 것(「진포해양테마공원」). */
+  names: string[]
+  /** 주소 — addressLocality · streetAddress(도시를 읽는다). 없으면 ''. */
+  address: string
+  lat?: number
+  lng?: number
+}
+
+/** 장소 노드의 종류 — 관광지 · 장소에 더해 식당 · 숙소(군산각 이성당 장소 페이지는 Restaurant 하나뿐이다). */
+const PLACE_TYPE =
+  /(Place|TouristAttraction|Landmark|Park|Museum|Beach|Mountain|Island|Market|Church|Temple|Zoo|Aquarium|Garden|Monument|Destination|Venue|Gallery|Restaurant|FoodEstablishment|CafeOrCoffeeShop|Bakery|BarOrPub|LodgingBusiness|Hotel|Motel|Resort|Hostel|BedAndBreakfast|Campground)/
+
+/**
+ * 장소 페이지의 장소 노드(좌표나 주소가 있는 관광지 · 장소)를 읽는다 — 이름이 사전 이름과 맞는 노드가 먼저, 없으면 첫 노드. 없으면 null
+ * (화면 전용 — DOMParser).
+ */
+export function extractPlaceInfo(html: string, place: string): PlaceInfo | null {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const nodes: JsonLdNode[] = []
+  const walk = (value: unknown, depth: number) => {
+    if (depth > 12 || !value || typeof value !== 'object') return
+    if (Array.isArray(value)) {
+      for (const v of value) walk(v, depth + 1)
+      return
+    }
+    const node = value as JsonLdNode
+    if (typesOf(node).some((t) => PLACE_TYPE.test(t)) && (node.geo || node.address)) nodes.push(node)
+    for (const [key, v] of Object.entries(node)) if (key !== '@context') walk(v, depth + 1)
+  }
+  for (const script of doc.querySelectorAll('script[type]')) {
+    if (!/ld\+json/i.test(script.getAttribute('type') ?? '')) continue
+    const raw = script.textContent?.trim()
+    if (!raw) continue
+    try {
+      walk(JSON.parse(raw), 0)
+    } catch (err) {
+      console.warn('[sitePhotos] 구조화 데이터를 읽지 못해 장소 정보를 건너뜁니다', err)
+    }
+  }
+  const key = placeKey(place)
+  const namesOf = (n: JsonLdNode) =>
+    [n.name, ...(Array.isArray(n.alternateName) ? n.alternateName : [n.alternateName])].filter((x): x is string => typeof x === 'string' && x.trim() !== '').map((x) => cleanPhotoAlt(x).slice(0, 60))
+  const node = nodes.find((n) => namesOf(n).some((x) => placeKey(x) === key)) ?? nodes[0]
+  if (!node) return null
+  const addr = (node.address && typeof node.address === 'object' ? node.address : {}) as JsonLdNode
+  const address = cleanPhotoAlt([addr.addressLocality, addr.streetAddress].filter((x): x is string => typeof x === 'string').join(' ')).slice(0, 120)
+  const geo = (node.geo && typeof node.geo === 'object' ? node.geo : {}) as JsonLdNode
+  const lat = Number(geo.latitude)
+  const lng = Number(geo.longitude)
+  return {
+    names: [...new Set(namesOf(node).filter((x) => placeKey(x) !== key && placeKey(x).length >= 3))].slice(0, 3),
+    address,
+    ...(Number.isFinite(lat) && Number.isFinite(lng) && geo.latitude !== undefined && geo.longitude !== undefined ? { lat, lng } : {}),
+  }
+}
+
 /** 장소 사전의 한 곳 — 자사 사이트 sitemap의 /places/{이름}/ 페이지. */
 export interface PlaceEntry {
   /** 주소의 이름(하이픈은 띄어쓰기로). */
@@ -489,6 +548,8 @@ export interface PublicPhotoPage {
   place: string
   pageUrl: string
   photos: PublicPhoto[]
+  /** 페이지가 밝힌 장소(다른 이름 · 주소 · 좌표) — 관광공사 사진을 찾는 단서. 없으면 null. */
+  info: PlaceInfo | null
 }
 
 const publicPageCache = new Map<string, Promise<PublicPhotoPage>>()
@@ -500,7 +561,7 @@ function loadPublicPage(entry: PlaceEntry): Promise<PublicPhotoPage> {
     if (page.fetchError) throw new Error(page.fetchError)
     if (page.status >= 400) throw new Error(`페이지를 읽지 못했어요 (HTTP ${page.status})`)
     const pageUrl = page.finalUrl || entry.url
-    return { place: entry.name, pageUrl, photos: extractPublicPhotos(page.html, pageUrl) }
+    return { place: entry.name, pageUrl, photos: extractPublicPhotos(page.html, pageUrl), info: extractPlaceInfo(page.html, entry.name) }
   })
   publicPageCache.set(entry.url, task)
   task.catch(() => publicPageCache.delete(entry.url))
@@ -554,6 +615,95 @@ export function publicCandidatesOf(pages: readonly PublicPhotoPage[]): AutoCandi
       license: p.license,
       licenseType: p.licenseType,
       creditText: p.creditText,
+    })),
+  )
+}
+
+/** 관광공사 사진을 찾을 단서 — 장소 이름과, 읽은 장소 페이지가 있으면 그 페이지의 다른 이름 · 주소 · 좌표. */
+export function tourQueryOf(place: string, pages: readonly PublicPhotoPage[]): TourPhotoQuery {
+  const info = pages.find((p) => p.place === place)?.info
+  if (!info) return { place }
+  return {
+    place,
+    ...(info.names.length ? { names: info.names } : {}),
+    ...(info.address ? { address: info.address } : {}),
+    ...(info.lat !== undefined && info.lng !== undefined ? { lat: info.lat, lng: info.lng } : {}),
+  }
+}
+
+export interface TourPhotoLoad {
+  results: TourPhotoResult[]
+  /** 알림 — 장소마다 찾지 못한 이유 · 서비스 오류(같은 글은 한 번). */
+  notes: string[]
+  /** 상한(TOUR_PLACE_LIMIT)에 걸리거나 오류로 멈춰 묻지 않은 장소 수. */
+  skipped: number
+  /** 오류(한도 · 키 · 시간 초과 · 되풀이된 응답 오류 · 요청 실패)로 남은 장소를 묻지 않았다 — 알림은 notes에. */
+  stopped: boolean
+}
+
+/** 이 오류가 나면 남은 장소는 묻지 않는다 — 한도 · 키는 다음 장소도 같고, 시간 초과면 장소마다 10초씩 기다리게 된다. */
+const TOUR_STOP_ERRORS: ReadonlySet<string> = new Set(['QUOTA', 'KEY', 'NO_KEY', 'TIMEOUT'])
+/** 그 밖의 응답 오류(UPSTREAM)가 이만큼 되풀이되면 남은 장소는 묻지 않는다. */
+const TOUR_UPSTREAM_STOP = 2
+
+/**
+ * 장소들의 관광공사 사진을 서버(/api/tourapi/photos)에 묻는다 — 앞에서부터, 둘씩. TourAPI를 새로 부른 장소(liveCalls가 0이 아닌 장소)가
+ * TOUR_PLACE_LIMIT곳에 닿으면 멈춘다 — 캐시에서 온 장소(이미 찾았거나 사진이 없다고 나온 곳)는 세지 않으므로, 다시 누르면 뒤 장소를 이어서
+ * 묻는다. 한도 · 키 · 시간 초과(TOUR_STOP_ERRORS) 오류가 나거나 응답 오류가 되풀이되면 남은 장소는 묻지 않는다. 장소 페이지를 읽었으면 그
+ * 페이지의 다른 이름 · 주소 · 좌표를 함께 보낸다(tourQueryOf).
+ */
+export async function loadTourPhotosFor(tenantId: string, places: readonly string[], pages: readonly PublicPhotoPage[]): Promise<TourPhotoLoad> {
+  const wanted = [...new Set(places)]
+  const results: (TourPhotoResult | null)[] = new Array<TourPhotoResult | null>(wanted.length).fill(null)
+  const notes: string[] = []
+  const note = (n: string) => {
+    if (!notes.includes(n)) notes.push(n)
+  }
+  let stopped = false
+  let upstream = 0
+  /** TourAPI를 새로 부른 장소 수와 아직 답을 기다리는 장소 수 — 기다리는 장소도 새로 부를 수 있으니 상한에 함께 센다. */
+  let live = 0
+  let running = 0
+  let next = 0
+  const worker = async () => {
+    while (!stopped && next < wanted.length && live + running < TOUR_PLACE_LIMIT) {
+      const i = next
+      next += 1
+      running += 1
+      try {
+        const r = await loadTourPhotos(tenantId, tourQueryOf(wanted[i]!, pages))
+        results[i] = r
+        if (r.liveCalls !== 0) live += 1
+        if (r.error === 'UPSTREAM') upstream += 1
+        if ((r.error && TOUR_STOP_ERRORS.has(r.error)) || upstream >= TOUR_UPSTREAM_STOP) stopped = true
+        if (r.error && r.note) note(r.note)
+      } catch (err) {
+        live += 1
+        stopped = true
+        note(err instanceof Error ? err.message : String(err))
+      } finally {
+        running -= 1
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(2, wanted.length) }, worker))
+  const done = results.filter((r): r is TourPhotoResult => r !== null)
+  return { results: done, notes, skipped: wanted.length - done.length, stopped }
+}
+
+/** 관광공사 사진 → 자동 채우기 후보(origin 'public' · tour). 장소 순서 · 받은 순서 그대로(국문 관광정보 사진이 앞). */
+export function tourCandidatesOf(results: readonly TourPhotoResult[]): AutoCandidate[] {
+  return results.flatMap((r) =>
+    r.photos.map((p) => ({
+      src: p.src,
+      alt: p.title || r.place,
+      pageUrl: p.sourcePageUrl,
+      origin: 'public' as const,
+      place: r.place,
+      license: p.license,
+      licenseType: p.licenseType,
+      creditText: p.creditText,
+      tour: p.source,
     })),
   )
 }

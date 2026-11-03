@@ -65,10 +65,12 @@ import {
   photoCreditState,
   photosAllowed,
   publicPhotoFields,
+  publicPhotosAllowed,
   type PhotoPick,
   type PublicPhotoFields,
 } from '../src/lib/articlePhotos.js';
-import { AUTO_PICK_RULES, autoCandidateSkip } from '../src/lib/photoAutoPick.js';
+import { AUTO_PICK_RULES, autoCandidateSkip, placeKey } from '../src/lib/photoAutoPick.js';
+import { findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
@@ -192,6 +194,8 @@ app.get('/api/health', (_req, res) => {
     // 엔진 선택 화면이 쓰는 값. 키는 존재 여부만 나간다 — 값은 절대 싣지 않는다.
     engineKeys: engineKeyStatus(),
     collectEngines: globalCollectEngines(),
+    // 관광공사 사진(3단계)을 쓸 수 있는가 — 이 PC에 TourAPI 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 건너뛴다.
+    tourApi: tourApiConfigured(),
   });
 });
 
@@ -890,7 +894,9 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     if (f && typeof f === 'object' && !guard.guardSentence(f.credit)) return '공공 사진의 출처 글자를 쓸 수 없어요.';
     return f;
   }
-  // 출처 붙이기 하나 — 자리 · 사진 주소 · 공공 사진 표시 · 찾은 페이지. 맞지 않으면 이유(글자).
+  const TOUR_NOT_TYPE1 = '공공누리 제1유형이 아닌 관광공사 사진이에요 — 제1유형 사진만 쓸 수 있어요.';
+  // 출처 붙이기 하나 — 자리 · 사진 주소 · 공공 사진 표시 · 찾은 페이지. 맞지 않으면 이유(글자). 사진 넣기처럼, 받은 적 있는 관광공사
+  // 사진이면 서버의 제1유형 색인을 다시 본다(화면 · 사이트가 단 「제1유형」 표시를 믿지 않는다).
   const creditOf = (v: unknown): PhotoCreditPatch | string => {
     const raw = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
     const place = placeOf(raw.place);
@@ -899,6 +905,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     const pub = publicOf(raw);
     if (!place || !src || !pageUrl) return '출처를 붙일 사진 자리(place) · 사진 주소(src) · 찾은 페이지(pageUrl)가 필요합니다.';
     if (!pub || typeof pub === 'string') return pub ?? '공공 사진 표시(origin public)가 필요합니다.';
+    if (tourPhotoInfo(src)?.type1 === false) return TOUR_NOT_TYPE1;
     return { place, src, fields: pub, pageUrl };
   };
   if (!op || (op !== 'auto' && (!actionId || !generatedAt))) {
@@ -983,10 +990,17 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
             res.status(409).json({ error: PUBLIC_NEEDED });
             return;
           }
+          // 받은 적 있는 관광공사 사진이면 그 장소 제목으로 사람 낱말을 보고(장소 이름을 뗀다), 제1유형이 아니면 뺀다.
+          const tour = p ? tourPhotoInfo(p.src) : null;
           const candidate = p
-            ? { src: p.src, alt: p.siteAlt, pageUrl: p.pageUrl, ...(pub ? { origin: 'public' as const, license: pub.license, creditText: pub.credit } : {}) }
+            ? {
+                src: p.src,
+                alt: p.siteAlt,
+                pageUrl: p.pageUrl,
+                ...(pub ? { origin: 'public' as const, license: pub.license, creditText: pub.credit, ...(tour ? { place: tour.title } : {}) } : {}),
+              }
             : null;
-          if (!p || typeof p.pub === 'string' || !candidate || autoCandidateSkip(candidate, owned)) {
+          if (!p || typeof p.pub === 'string' || !candidate || (tour && !tour.type1) || autoCandidateSkip(candidate, owned)) {
             rejected += 1;
             continue;
           }
@@ -1026,6 +1040,10 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       res.status(409).json({ error: PUBLIC_NEEDED });
       return;
     }
+    if (pub && tourPhotoInfo(src)?.type1 === false) {
+      res.status(400).json({ error: TOUR_NOT_TYPE1 });
+      return;
+    }
     if (!pub && needsPhotoCredit(src, owned)) {
       res.status(400).json({ error: '출처 표시가 필요한 공공 사진이에요 — 「공공 사진」에서 출처와 함께 골라 주세요.' });
       return;
@@ -1049,6 +1067,55 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   } catch (err) {
     const status = err instanceof DraftChangedError ? 409 : err instanceof RangeError ? 400 : 500;
     res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 관광공사 사진(3단계) — 사이트 장소 하나(이름 · 다른 이름 · 주소 · 좌표)에 맞는 한국관광공사 TourAPI의 공공누리 제1유형 사진 후보.
+// 공공 사진 사용 확인(photoRights.publicAt)이 있어야 하고, 키는 이 PC의 TOURAPI_SERVICE_KEY(server/tourPhotos.ts — 응답 7일 캐시).
+// 한 번에 장소 하나. 서비스 오류는 200의 note · error로 알린다(키 값은 어디에도 싣지 않는다). Express 전용(Vercel 함수 12/12 —
+// 웹은 /api/health에 tourApi가 없어 화면이 이 단계를 건너뛴다).
+app.get('/api/tourapi/photos/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  if (!tourApiConfigured()) {
+    res.status(503).json({ error: '이 PC에 관광공사 TourAPI 키가 없어요.' });
+    return;
+  }
+  const settings = await readPublishSettings(tenant.tenantId);
+  if (!publicPhotosAllowed(settings, tenant.industry)) {
+    res.status(409).json({ error: '먼저 이 브랜드의 공공 사진(공공누리) 사용 확인을 해 주세요 — 글의 「홈페이지 사진」 칸에 있습니다.' });
+    return;
+  }
+  const q = req.query as Record<string, unknown>;
+  const text = (v: unknown, max: number) => (typeof v === 'string' ? normSlotAlt(v).slice(0, max) : '');
+  const place = text(q.place, 60);
+  const names = (Array.isArray(q.name) ? q.name : [q.name]).map((n) => text(n, 60)).filter(Boolean).slice(0, 3);
+  const address = text(q.address, 120);
+  const num = (v: unknown, lo: number, hi: number) => {
+    const n = typeof v === 'string' && v.trim() ? Number(v) : NaN;
+    return Number.isFinite(n) && n >= lo && n <= hi ? n : undefined;
+  };
+  // 좌표는 한국 안(대략)만 받는다 — 둘 다 있어야 쓴다.
+  const lat = num(q.lat, 33, 39);
+  const lng = num(q.lng, 124, 132);
+  if (placeKey(place).length < 3) {
+    res.status(400).json({ error: '장소 이름(place, 3글자 이상)이 필요합니다.' });
+    return;
+  }
+  try {
+    res.json(
+      await findTourPhotos(
+        { place, ...(names.length ? { names } : {}), ...(address ? { address } : {}), ...(lat !== undefined && lng !== undefined ? { lat, lng } : {}) },
+        tenant.region,
+      ),
+    );
+  } catch (err) {
+    const message = scrubTourKey(err instanceof Error ? err.message : String(err));
+    console.warn(`[tourapi] ${tenant.tenantId} 「${place}」 관광공사 사진을 찾지 못했습니다: ${message}`);
+    res.status(502).json({ error: `관광공사 사진을 찾지 못했어요 — ${message.slice(0, 160)}` });
   }
 });
 
