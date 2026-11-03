@@ -1,9 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { stateFilePath } from './appPaths.js';
 import { planCohortTargets } from './cohortPlan.js';
-import { measureInFlight } from './measureTracker.js';
+import { removeMeasureRequest } from './measureRequests.js';
+import { clearMeasureFailures, measureInFlight } from './measureTracker.js';
 import { readOverlay, writeOverlay } from './tenantOverlay.js';
-import { findBakedTenant, isBakedTenant, loadRuntimeTenants, reconcileTenantCohorts } from './tenantRegistry.js';
+import { deleteTenantLocally, findBakedTenant, isBakedTenant, loadRuntimeTenants, reconcileTenantCohorts, removeOverlayTenant } from './tenantRegistry.js';
 import { removeDeletedTenant } from './tenantTombstone.js';
 import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
 import { sameCohort, sharesSite } from '../src/lib/brandVariant.js';
@@ -67,6 +68,53 @@ export function addRemovedTenant(entry: RemovedTenant): Promise<void> {
     const list = (await readRemovedTenants()).filter((r) => r.tenantId !== entry.tenantId);
     await writeJsonAtomic(FILE, [entry, ...list].slice(0, MAX_REMOVED));
   });
+}
+
+/**
+ * 이 PC(로컬 · 패키징)에서 브랜드를 지운다 — 화면의 「빼기」(DELETE /api/tenants)와 v0.4.49 시작 때 한 번 하는 군산각 전국형 지우기
+ * (brandUnify.ts removeNationalOnce)가 같이 쓴다. 측정 중인지는 부르는 쪽이 먼저 본다.
+ *
+ * 1. 되살리기용으로 지우기 **전에** 설정(오버레이)과 지우기 직전 모습을 남긴다. 남기지 못하면 지우지 않는다(지운 뒤에 남기다 실패하면
+ *    경쟁사 · 엔진 설정을 되돌릴 길이 없다).
+ * 2. 오버레이 · 측정 대기열에서 빼고, 툼스톤을 달고 그 브랜드가 든 코호트 순위를 다시 매기고(deleteTenantLocally), 「최근 실패」 줄을
+ *    지운다(다시 잴 길이 없어 남겨 두면 늘 보인다). 측정 기록(data/<id>/)은 지우지 않는다 — 「되살리기」로 돌아온다.
+ * 중간에 멈추면 브랜드가 아직 목록에 있을 때 남긴 백업을 거두고 던진다(설정이 이미 빠졌으면 되살리기용으로 둔다).
+ */
+export async function deleteTenantOnThisPc(tenantId: string, store: ResultStore): Promise<{ removedFromOverlay: boolean; ranksUpdated: number }> {
+  const findTenant = async () => (await loadRuntimeTenants()).find((t) => t.tenantId === tenantId);
+  let before: TenantConfig | undefined;
+  try {
+    before = await findTenant();
+    if (before) {
+      const overlayEntry = (await readOverlay()).find((t) => t.tenantId === tenantId) ?? null;
+      await addRemovedTenant({
+        tenantId,
+        brandName: before.brandName,
+        industry: before.industry,
+        region: before.region,
+        removedAt: new Date().toISOString(),
+        overlay: overlayEntry,
+        snapshot: before,
+      });
+    }
+  } catch (err) {
+    throw new Error(`되살릴 수 있게 설정을 남기지 못해 지우지 않았습니다: ${err instanceof Error ? err.message : String(err)}`, { cause: err });
+  }
+  try {
+    const { removed } = await removeOverlayTenant(tenantId);
+    await removeMeasureRequest(tenantId);
+    // 베이크 여부와 관계없이 툼스톤으로 즉시 삭제 — 앱에서 등록한 브랜드도 측정 데이터가 남으므로 툼스톤이 없으면 코호트 순위에 계속 낀다.
+    const { ranksUpdated } = await deleteTenantLocally(tenantId, store);
+    clearMeasureFailures(tenantId);
+    return { removedFromOverlay: removed, ranksUpdated };
+  } catch (err) {
+    if (before) {
+      await findTenant()
+        .then((still) => (still ? dropRemovedTenant(tenantId) : undefined))
+        .catch((dropErr: unknown) => console.error(`[tenants] 멈춘 삭제의 백업을 거두지 못했습니다 ${tenantId}:`, dropErr));
+    }
+    throw err;
+  }
 }
 
 /** 지우기 전 미리보기 — 측정 기록이 든 코호트와 주 수, 이 브랜드를 경쟁사로 재는 고객, 지금 측정 중인가. */

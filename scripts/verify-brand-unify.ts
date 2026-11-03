@@ -17,9 +17,14 @@
  *               거절한다 — 덧붙이면 그 PC 질문지가 동봉본과 달라져 그 판의 측정이 멈춘다.
  *   id-collision 구운 id를 이 PC가 다른 업체(경쟁사로 잰 gunsan.go.kr 등)로 쓰고 있다 — 점검이 알리고 정리는 그 id를 건너뛴다.
  *   retry       첫 정리가 멈춘 PC — 다음 시작은 첫 시도의 대상만 다시 하고, 그 사이 사람이 앱에서 저장한 파일은 옮기지 않는다.
- *   vercel      웹 — 동봉 폴더가 없어 아무것도 하지 않는다. 정리 · 점검도 하지 않는다.
- *   real        이 운영 PC 데이터의 사본(있으면) — web4ai v6 66문항 · gunsan v7 62문항을 AI 없이 재고, 실증이었던 질문이 점수에 든다.
- *               정리는 옮길 파일이 없고, 점검 결과를 찍는다.
+ *   national    오버레이에 군산각 전국형(gunsan-national)이 있는 PC — 시작 때 한 번, 화면의 「빼기」와 같이 지운다(툼스톤 · 되살리기
+ *               백업 · 대기열 · 최근 실패 · 순위 다시 매김). 측정 기록과 gunsan은 그대로. 되살린 뒤 다시 시작해도 다시 지우지 않는다.
+ *   national-absent  gunsan-national이 없는 PC — 없음을 남기고 아무것도 하지 않는다(그 뒤 새로 만든 것도 지우지 않는다).
+ *   national-busy    측정 중에 시작 — 지우지 않고 다음 시작으로 미룬다.
+ *   national-dev     dev · CI(APP_DATA_DIR 없음) — 지우지 않는다.
+ *   vercel      웹 — 동봉 폴더가 없어 아무것도 하지 않는다. 정리 · 점검 · gunsan-national 지우기도 하지 않는다.
+ *   real        이 운영 PC 데이터의 사본(있으면) — 시작 때 gunsan-national을 지우고(기록 · data/ 그대로, gunsan · web4ai 그대로),
+ *               web4ai v6 66문항 · gunsan v7 62문항을 AI 없이 재고, 실증이었던 질문이 점수에 든다. 정리는 옮길 파일이 없다.
  *
  *   npx tsx scripts/verify-brand-unify.ts [--real-app-data <userData>]
  *     --real-app-data  운영 PC 앱 데이터(읽기만 — 필요한 폴더만 임시 폴더로 복사). 없으면 //localhost/C$/Users/<사용자>/AppData/Roaming/brand-aeo-app
@@ -91,6 +96,39 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     }
   };
   const sameQuestions = (a: { questions: Q[] } | null, b: { questions: Q[] }) => JSON.stringify(a?.questions ?? null) === JSON.stringify(b.questions);
+  /** 폴더 아래 모든 파일의 내용(상대 경로 → 내용) — 지우기 전후를 견준다. 없으면 빈 객체. */
+  const snapshot = (rel: string): Record<string, string> => {
+    const base = path.join(root, rel);
+    const out: Record<string, string> = {};
+    const walk = (dir: string) => {
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const file = path.join(dir, e.name);
+        if (e.isDirectory()) walk(file);
+        else out[path.relative(base, file).split(path.sep).join('/')] = readFileSync(file, 'utf8');
+      }
+    };
+    if (existsSync(base)) walk(base);
+    return out;
+  };
+  const sameSnapshot = (a: Record<string, string>, b: Record<string, string>) => JSON.stringify(a) === JSON.stringify(b);
+  /** 시작 때 정리 · 점검을 돌리며 로그를 모은다 — 결과 표식(@@RESULTS@@) 앞의 출력을 늘리지 않는다. */
+  const unifyWithLogs = async (): Promise<string[]> => {
+    const logs: string[] = [];
+    const { log, warn } = console;
+    const collect = (...args: unknown[]) => void logs.push(args.map(String).join(' '));
+    console.log = collect;
+    console.warn = collect;
+    try {
+      await unify.runBrandUnify(store);
+    } finally {
+      console.log = log;
+      console.warn = warn;
+    }
+    return logs;
+  };
+  const NATIONAL = 'gunsan-national';
+  type NationalRemoval = import('../server/brandUnify').NationalRemoval;
+  const nationalMarker = () => path.join(root, unify.NATIONAL_REMOVAL_MARKER_FILE);
 
   /** 가짜 엔진 — 실증이었던 질문의 답에서만 브랜드를 말한다(가짜 판정은 「뷰성형외과」가 있으면 언급으로 본다). */
   const measure = async (tenant: TenantConfig, probeTexts: string[]) => {
@@ -217,6 +255,11 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
         ['brand-page.json', 'competitors.json', 'engines.json', 'fact-graph.json', 'owned-domains.json', 'publish-settings.json'].every((n) => check.tenants.gunsan!.files.includes(n)) &&
         !('gunsan-national' in check.tenants),
       JSON.stringify(check.tenants.gunsan),
+    );
+    ok(
+      '이미 지운(툼스톤) gunsan-national — 없음(absent · hidden)으로 남기고 건드리지 않음',
+      check.nationalRemoval?.action === 'absent' && check.nationalRemoval.hidden === true && readJson<string[]>(path.join(root, 'tenants.deleted.json')).join() === NATIONAL,
+      JSON.stringify(check.nationalRemoval),
     );
     return;
   }
@@ -400,7 +443,133 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     ok('웹 — 동봉 폴더 없음(null)', appPaths.BUNDLED_BANK_DIR === null);
     ok('웹 — 없는 판은 null · 아무것도 쓰지 않음', (await store.getQuestionBank('web4ai', 'v6')) === null && !existsSync(path.join(root, 'data')));
     await unify.runBrandUnify(store);
-    ok('웹 — 정리 · 점검 안 함(파일 없음)', !existsSync(path.join(root, unify.UNIFY_CHECK_FILE)) && !existsSync(path.join(root, unify.UNIFY_MARKER_FILE)));
+    ok(
+      '웹 — 정리 · 점검 · gunsan-national 지우기 안 함(파일 없음 · 오버레이 그대로)',
+      !existsSync(path.join(root, unify.UNIFY_CHECK_FILE)) &&
+        !existsSync(path.join(root, unify.UNIFY_MARKER_FILE)) &&
+        !existsSync(nationalMarker()) &&
+        !existsSync(path.join(root, 'tenants.deleted.json')) &&
+        readJson<{ tenantId: string }[]>(path.join(root, 'tenants.overlay.json')).some((t) => t.tenantId === NATIONAL),
+    );
+    return;
+  }
+
+  if (scenario === 'national') {
+    const { readRemovedTenants, restoreRemovedTenant } = await import('../server/tenantRemovedStore');
+    const { readDeletedTenants } = await import('../server/tenantTombstone');
+    const { readOverlay } = await import('../server/tenantOverlay');
+    const { readMeasureRequests } = await import('../server/measureRequests');
+    const { flushMeasureFailures } = await import('../server/measureTracker');
+    const overlayBefore = await readOverlay();
+    const nationalEntry = overlayBefore.find((t) => t.tenantId === NATIONAL);
+    ok('지우기 전 — 오버레이의 gunsan-national이 목록에 있음(저장소 설정에는 없음)', Boolean(await tenantNow(NATIONAL)) && Boolean(nationalEntry) && !(await findBakedTenant(NATIONAL)));
+    const nationalBefore = snapshot(`data/${NATIONAL}`);
+    const gunsanBefore = snapshot('data/gunsan');
+    const cohortBefore = snapshot('cohort-banks');
+    const gunsanEntryBefore = JSON.stringify(overlayBefore.find((t) => t.tenantId === 'gunsan'));
+    const logs = await unifyWithLogs();
+    await flushMeasureFailures();
+    ok(
+      '시작 — gunsan-national을 화면의 「빼기」처럼 지움: 목록에서 빠짐 · 툼스톤 · 오버레이에서 빠짐',
+      !(await tenantNow(NATIONAL)) && (await readDeletedTenants()).includes(NATIONAL) && !(await readOverlay()).some((t) => t.tenantId === NATIONAL),
+    );
+    const backup = (await readRemovedTenants()).find((r) => r.tenantId === NATIONAL);
+    ok('되살리기용 — 지우기 전 오버레이 설정을 「지운 브랜드」에 남김', JSON.stringify(backup?.overlay) === JSON.stringify(nationalEntry) && backup?.snapshot?.tenantId === NATIONAL, JSON.stringify(backup));
+    const queued = (await readMeasureRequests()).map((r) => r.tenant.tenantId).join();
+    ok('측정 대기열 — gunsan-national 요청만 빠지고 gunsan 요청은 그대로', queued === 'gunsan', queued);
+    const failures = readJson<{ tenantId: string }[]>(path.join(root, 'measure-failures.json')).map((f) => f.tenantId).join();
+    ok('「최근 실패」 — gunsan-national 줄만 빠지고 gunsan 줄은 그대로', failures === 'gunsan', failures);
+    ok('측정 기록 — data/gunsan-national/의 파일이 모두 그대로(카드 · 주차 폴더 · 질문지 · 사실 · 올린 글)', sameSnapshot(snapshot(`data/${NATIONAL}`), nationalBefore), Object.keys(nationalBefore).join());
+    const gunsan = await tenantNow('gunsan');
+    ok(
+      'gunsan(지역형)은 그대로 — data/gunsan(카드 · 추가 글 · 올린 글 · 작성자 배정) · 오버레이 항목 · 코호트 공통 질문지 · 목록의 v7',
+      sameSnapshot(snapshot('data/gunsan'), gunsanBefore) &&
+        sameSnapshot(snapshot('cohort-banks'), cohortBefore) &&
+        JSON.stringify((await readOverlay()).find((t) => t.tenantId === 'gunsan')) === gunsanEntryBefore &&
+        gunsan?.questionBankVersion === 'v7',
+    );
+    const comp = (await store.getScorecardHistory('comp-nat', 10))[0];
+    ok('같은 코호트 순위를 다시 매김(화면의 빼기와 같음) — 남은 경쟁사 2/2 → 1/1', comp?.cohortRank?.position === 1 && comp.cohortRank.totalTenants === 1, JSON.stringify(comp?.cohortRank));
+    const marker = readJson<NationalRemoval>(nationalMarker());
+    const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
+    ok(
+      '표식 — 지웠음(deleted)을 남김 · 점검 파일에도 적음 · 알릴 것 없음',
+      marker.action === 'deleted' && check.nationalRemoval?.action === 'deleted' && check.issues.length === 0,
+      JSON.stringify({ marker, issues: check.issues }),
+    );
+    ok('로그 — gunsan-national을 지운 것을 남김', logs.some((l) => l.startsWith('[unify]') && l.includes(NATIONAL) && l.includes('지움')), logs.join('\n'));
+    const markerRaw = readFileSync(nationalMarker(), 'utf8');
+
+    // 운영자가 「되살리기」를 누른 뒤 다시 시작 — 다시 지우지 않는다.
+    await restoreRemovedTenant(NATIONAL, store);
+    ok('되살리기 — 목록에 다시 있음(측정 기록 그대로)', Boolean(await tenantNow(NATIONAL)) && sameSnapshot(snapshot(`data/${NATIONAL}`), nationalBefore));
+    const logs2 = await unifyWithLogs();
+    const check2 = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
+    ok(
+      '되살린 뒤 다시 시작 — 다시 지우지 않음(표식 그대로) · 툼스톤 없음',
+      Boolean(await tenantNow(NATIONAL)) && !(await readDeletedTenants()).includes(NATIONAL) && readFileSync(nationalMarker(), 'utf8') === markerRaw && !logs2.some((l) => l.includes('지움')),
+      logs2.join('\n'),
+    );
+    ok(
+      '되살린 뒤 점검 — 지난번에 지운 기록(deleted)을 그대로 보이고, 같은 홈페이지의 다른 id로 알림(예전 점검 그대로)',
+      check2.nationalRemoval?.action === 'deleted' && check2.issues.map((i) => `${i.kind}:${i.tenantId}`).join() === `same-site:${NATIONAL}`,
+      JSON.stringify(check2.issues),
+    );
+    return;
+  }
+
+  if (scenario === 'national-absent') {
+    const { readOverlay, writeOverlay } = await import('../server/tenantOverlay');
+    const overlayBefore = readFileSync(path.join(root, 'tenants.overlay.json'), 'utf8');
+    const logs = await unifyWithLogs();
+    const marker = readJson<NationalRemoval>(nationalMarker());
+    ok(
+      '없는 PC — 없음(absent)을 남기고 아무것도 하지 않음(툼스톤 · 지운 브랜드 파일 없음 · 오버레이 그대로)',
+      marker.action === 'absent' &&
+        marker.hidden === false &&
+        !existsSync(path.join(root, 'tenants.deleted.json')) &&
+        !existsSync(path.join(root, 'tenants.removed.json')) &&
+        readFileSync(path.join(root, 'tenants.overlay.json'), 'utf8') === overlayBefore,
+      JSON.stringify(marker),
+    );
+    ok(
+      '없는 PC — 점검 · 로그에 적음',
+      readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE)).nationalRemoval?.action === 'absent' && logs.some((l) => l.includes(NATIONAL) && l.includes('없음')),
+      logs.join('\n'),
+    );
+    // 그 뒤 운영자가 「하나 더 등록」으로 전국형을 다시 만들었다 — 다음 시작은 지우지 않는다.
+    const gunsanEntry = (await readOverlay()).find((t) => t.tenantId === 'gunsan')!;
+    await writeOverlay([...(await readOverlay()), { ...gunsanEntry, tenantId: NATIONAL, industry: '관광안내', region: '국내', marketScope: 'national', questionBankVersion: 'v1' }]);
+    await unifyWithLogs();
+    ok('그 뒤 새로 만든 gunsan-national은 다음 시작에도 지우지 않음', Boolean(await tenantNow(NATIONAL)) && readJson<NationalRemoval>(nationalMarker()).action === 'absent');
+    return;
+  }
+
+  if (scenario === 'national-busy') {
+    const tracker = await import('../server/measureTracker');
+    tracker.beginMeasureRun();
+    await unifyWithLogs();
+    tracker.endMeasureRun();
+    const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
+    ok(
+      '측정 중에 시작 — 지우지 않고 표식 없이 미룸 · 점검이 알림',
+      Boolean(await tenantNow(NATIONAL)) && !existsSync(nationalMarker()) && check.nationalRemoval === null && check.issues.some((i) => i.kind === 'national-deferred' && i.tenantId === NATIONAL),
+      JSON.stringify(check.issues),
+    );
+    await unifyWithLogs();
+    ok('측정이 끝난 뒤 다음 시작 — 지움', !(await tenantNow(NATIONAL)) && readJson<NationalRemoval>(nationalMarker()).action === 'deleted');
+    return;
+  }
+
+  if (scenario === 'national-dev') {
+    await unify.runBrandUnify(store);
+    ok(
+      'dev · CI(APP_DATA_DIR 없음) — 지우지 않음 · 표식 · 툼스톤 · 점검 파일 없음',
+      Boolean(await tenantNow(NATIONAL)) &&
+        !existsSync(path.join(root, 'server', unify.NATIONAL_REMOVAL_MARKER_FILE)) &&
+        !existsSync(path.join(root, 'server', 'tenants.deleted.json')) &&
+        !existsSync(path.join(root, 'server', unify.UNIFY_CHECK_FILE)),
+    );
     return;
   }
 
@@ -415,26 +584,47 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     const snap = (rel: string) => readFileSync(path.join(root, rel), 'utf8');
     const keep = ['data/web4ai/question-bank/v5.json', 'data/gunsan/question-bank/v6.json', 'data/gunsan-national/question-bank/v3.json', 'cohort-banks/펜션__전북_군산/c1.json', 'cohort-banks/관광정보서비스__전북_군산/c1.json', 'cohort-banks/관광안내__국내/c1.json'];
     const before = keep.map(snap);
-    // 실증이었던 질문은 이 PC의 옛 판(web4ai v5 · gunsan v6)의 probe 표시로 고른다.
+    const { readDeletedTenants } = await import('../server/tenantTombstone');
+    const { readRemovedTenants } = await import('../server/tenantRemovedStore');
+    const nationalBefore = snapshot(`data/${NATIONAL}`);
+    const gunsanBefore = snapshot('data/gunsan');
+    const webBefore = snapshot('data/web4ai');
+    const nationalWeeks = (await store.getScorecardHistory(NATIONAL, Number.MAX_SAFE_INTEGER)).map((c) => c.weekOf).join();
+    // 시작 — 한 번 하는 정리 · gunsan-national 지우기 · 점검.
+    const logs = await unifyWithLogs();
+    const marker = readJson<{ moved: unknown[] }>(path.join(root, unify.UNIFY_MARKER_FILE));
+    const removal = readJson<NationalRemoval>(nationalMarker());
+    const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
+    ok(
+      '운영 PC 사본 — 시작: gunsan-national을 지움(목록에서 빠짐 · 툼스톤 · 되살리기 백업 · 표식 deleted · 로그)',
+      !(await tenantNow(NATIONAL)) &&
+        (await readDeletedTenants()).includes(NATIONAL) &&
+        (await readRemovedTenants()).some((r) => r.tenantId === NATIONAL && r.overlay?.tenantId === NATIONAL) &&
+        removal.action === 'deleted' &&
+        check.nationalRemoval?.action === 'deleted' &&
+        logs.some((l) => l.includes(NATIONAL) && l.includes('지움')),
+      JSON.stringify({ removal, logs }),
+    );
+    ok(
+      `운영 PC 사본 — data/gunsan-national/ 파일이 모두 그대로 · 카드 ${nationalWeeks} 남음(측정 기록)`,
+      sameSnapshot(snapshot(`data/${NATIONAL}`), nationalBefore) && nationalWeeks !== '' && existsSync(path.join(root, 'data', NATIONAL, 'scorecard-history.json')),
+    );
+    ok('운영 PC 사본 — 지우기가 data/gunsan · data/web4ai를 건드리지 않음(카드 · 추가 글 · 올린 글 · 작성자 배정 포함)', sameSnapshot(snapshot('data/gunsan'), gunsanBefore) && sameSnapshot(snapshot('data/web4ai'), webBefore));
+    ok('운영 PC 사본 — 정리할 엔진 · 시장 범위 파일 없음', marker.moved.length === 0);
+    ok(
+      '운영 PC 사본 — 점검: 알릴 것 없음 · 질문지는 아직 없음(측정 때 가져옴) · 코호트 공통 질문지 모두 동봉본과 같음',
+      check.issues.length === 0 && Object.values(check.tenants).every((t) => t.banks.every((b) => b.state === 'missing')) && check.cohortBanks.every((c) => c.state === 'same'),
+      JSON.stringify({ issues: check.issues, banks: Object.fromEntries(Object.entries(check.tenants).map(([k, v]) => [k, v.banks])), cohorts: check.cohortBanks }),
+    );
+    // 지운 뒤 측정 — 실증이었던 질문은 이 PC의 옛 판(web4ai v5 · gunsan v6)의 probe 표시로 고른다.
     const probesOf = (id: string, v: string) => readJson<Bank>(bankFile(id, v)).questions.filter((q) => q.probe === true).map((q) => q.text);
     const probeWeb = probesOf('web4ai', 'v5');
     const probeGunsan = probesOf('gunsan', 'v6');
     ok('운영 PC 사본 — 옛 판의 실증 질문 web4ai 24개 · gunsan 26개', probeWeb.length === 24 && probeGunsan.length === 26, `${probeWeb.length} ${probeGunsan.length}`);
     await measureBundled('web4ai', 'v6', { questions: 66, agnostic: 50 }, probeWeb);
     await measureBundled('gunsan', 'v7', { questions: 62, agnostic: 48 }, probeGunsan);
-    const national = await ensureQuestionBank(t('gunsan-national')!, store);
-    ok('운영 PC 사본 — gunsan-national은 이 PC의 v3 36문항 그대로(동봉하지 않아 가져오거나 멈추지 않음)', national.length === 36);
     ok('운영 PC 사본 — 옛 판 · 코호트 공통 질문지 파일이 한 바이트도 안 바뀜', keep.map(snap).every((s, i) => s === before[i]));
-    const factBefore = ['gunsan', 'gunsan-national', 'web4ai'].map((id) => snap(`data/${id}/fact-graph.json`));
-    await unify.runBrandUnify(store);
-    const marker = readJson<{ moved: unknown[] }>(path.join(root, unify.UNIFY_MARKER_FILE));
-    const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
-    ok('운영 PC 사본 — 정리할 엔진 · 시장 범위 파일 없음 · 사실 파일 그대로', marker.moved.length === 0 && ['gunsan', 'gunsan-national', 'web4ai'].every((id, i) => snap(`data/${id}/fact-graph.json`) === factBefore[i]));
-    ok(
-      '운영 PC 사본 — 점검: 같은 홈페이지의 gunsan-national(통일에서 뺌)만 알림 · 질문지 · 코호트 공통 질문지 모두 동봉본과 같음',
-      check.issues.map((i) => `${i.kind}:${i.tenantId}`).join() === 'same-site:gunsan-national' && Object.values(check.tenants).every((t) => t.banks.every((b) => b.state === 'same')) && check.cohortBanks.every((c) => c.state === 'same'),
-      JSON.stringify({ issues: check.issues, banks: Object.fromEntries(Object.entries(check.tenants).map(([k, v]) => [k, v.banks])), cohorts: check.cohortBanks }),
-    );
+    ok('운영 PC 사본 — 측정 뒤에도 gunsan-national은 목록에 없고 기록은 그대로', !(await tenantNow(NATIONAL)) && sameSnapshot(snapshot(`data/${NATIONAL}`), nationalBefore));
     return;
   }
   ok(`모르는 상태: ${scenario}`, false);
@@ -469,9 +659,10 @@ async function parent(): Promise<void> {
     SEED_DATA_DIR: path.join(repoRoot, 'src', 'data'),
     BUNDLED_COHORT_BANK_DIR: REPO_COHORT_DIR,
   });
-  const runChild = (scenario: string, root: string, env: NodeJS.ProcessEnv) => {
+  /** cwd — dev 체크아웃 흉내(APP_DATA_DIR 없음)는 임시 폴더를 저장소 자리로 삼아 저장소의 data/ · server/ 상태 파일을 건드리지 않는다. */
+  const runChild = (scenario: string, root: string, env: NodeJS.ProcessEnv, cwd: string = repoRoot) => {
     mkdirSync(root, { recursive: true });
-    const r = spawnSync(process.execPath, [tsxCli, SELF, '--child', scenario, root], { cwd: repoRoot, encoding: 'utf8', env: { ...baseEnv, ...env }, maxBuffer: 64 * 1024 * 1024 });
+    const r = spawnSync(process.execPath, [tsxCli, SELF, '--child', scenario, root], { cwd, encoding: 'utf8', env: { ...baseEnv, ...env }, maxBuffer: 64 * 1024 * 1024 });
     const marker = r.stdout.lastIndexOf('@@RESULTS@@');
     if (marker < 0) {
       checks.push({ label: `[${scenario}] 하위 프로세스가 결과를 냄`, pass: false, detail: `${r.status}\n${r.stdout.slice(-3000)}\n${r.stderr.slice(-3000)}` });
@@ -625,17 +816,82 @@ async function parent(): Promise<void> {
       runChild('retry-edited', root, packaged(root));
     }
 
-    // vercel — 웹.
+    // gunsan-national 한 번 지우기 — 「하나 더 등록」으로 만든 군산각 전국형이 오버레이에 있는 PC(운영 PC와 같은 모양).
+    const gunsanEntry = { ...baked('gunsan') };
+    const nationalEntry = { ...baked('gunsan'), tenantId: 'gunsan-national', industry: '관광안내', region: '국내', marketScope: 'national', questionBankVersion: 'v3', engines: ['openai', 'perplexity'] };
+    const template = readJson<Record<string, unknown>[]>(path.join(repoRoot, 'src', 'data', 'demo-scorecards.json'))[0]!;
+    const card = (tenantId: string, industry: string, region: string, score: number, members: { tenantId: string; aeoScore: number }[]) => {
+      const position = 1 + members.filter((m) => m.aeoScore > score).length;
+      return { ...template, tenantId, brandName: tenantId, industry, region, weekOf: '2026-W44', aeoScore: { current: score, ma4: score, previousWeek: null, ciLow: score, ciHigh: score }, cohortRank: { position, totalTenants: members.length, tiedCount: 1, members } };
+    };
+    const nationalMembers = [
+      { tenantId: 'comp-nat', aeoScore: 2 },
+      { tenantId: 'gunsan-national', aeoScore: 4 },
+    ];
+    const withNational = (root: string, entries: Record<string, unknown>[]) => {
+      put(path.join(root, 'tenants.overlay.json'), entries);
+      put(path.join(root, 'data', 'gunsan', 'scorecard-history.json'), [card('gunsan', '관광정보서비스', '전북 군산', 5, [{ tenantId: 'gunsan', aeoScore: 5 }])]);
+      put(path.join(root, 'data', 'gunsan', 'extra-articles.json'), { articles: [{ id: 'fake-extra-1', title: '가짜 추가 글' }] });
+      put(path.join(root, 'data', 'gunsan', 'published-posts.json'), [{ id: 'fake-post-1', url: 'https://example.com/fake-post' }]);
+      put(path.join(root, 'data', 'gunsan', 'probe-plan.json'), { format: 'fake', articles: [] });
+      put(path.join(root, 'data', 'gunsan-national', 'scorecard-history.json'), [card('gunsan-national', '관광안내', '국내', 4, nationalMembers)]);
+      put(path.join(root, 'data', 'gunsan-national', '2026-W44', 'scorecard.json'), card('gunsan-national', '관광안내', '국내', 4, nationalMembers));
+      put(path.join(root, 'data', 'gunsan-national', 'question-bank', 'v3.json'), { ...bundled('gunsan', 'v7'), version: 'v3' });
+      put(path.join(root, 'data', 'gunsan-national', 'fact-graph.json'), [{ id: 'fact-other-x', type: 'other', claim: '가짜 사실', value: '가짜 값', updatedAt: '2026-10-20' }]);
+      put(path.join(root, 'data', 'gunsan-national', 'published-posts.json'), [{ id: 'fake-post-2', url: 'https://example.com/fake-post-2' }]);
+      put(path.join(root, 'data', 'comp-nat', 'scorecard-history.json'), [card('comp-nat', '관광안내', '국내', 2, nationalMembers)]);
+      put(path.join(root, 'measure-requests.json'), [
+        { tenant: nationalEntry, requestedAt: '2026-11-02T00:00:00.000Z' },
+        { tenant: gunsanEntry, requestedAt: '2026-11-02T00:00:00.000Z' },
+      ]);
+      put(path.join(root, 'measure-failures.json'), [
+        { tenantId: 'gunsan-national', brandName: '군산각', at: '2026-11-02T00:00:00.000Z', error: '가짜 실패' },
+        { tenantId: 'gunsan', brandName: '군산각', at: '2026-11-02T00:00:00.000Z', error: '가짜 실패' },
+      ]);
+    };
+    const compNat = { ...nationalEntry, tenantId: 'comp-nat', brandName: '가상 전국여행', aliases: ['가상 전국여행'], ownedDomains: ['comp-nat.example'], cohortOnly: true, competitors: [] };
+    {
+      const root = path.join(tmp, 'national');
+      withNational(root, [gunsanEntry, nationalEntry, compNat]);
+      runChild('national', root, packaged(root));
+    }
+    {
+      const root = path.join(tmp, 'national-absent');
+      put(path.join(root, 'tenants.overlay.json'), [gunsanEntry]);
+      runChild('national-absent', root, packaged(root));
+    }
+    {
+      const root = path.join(tmp, 'national-busy');
+      withNational(root, [gunsanEntry, nationalEntry, compNat]);
+      runChild('national-busy', root, packaged(root));
+    }
+    {
+      // dev · CI — APP_DATA_DIR 없이 임시 폴더를 저장소 자리로(server/ 아래 상태 파일 · data/).
+      const root = path.join(tmp, 'national-dev');
+      put(path.join(root, 'server', 'tenants.config.json'), config);
+      put(path.join(root, 'server', 'tenants.overlay.json'), [nationalEntry]);
+      runChild('national-dev', root, {}, root);
+    }
+
+    // vercel — 웹(오버레이에 gunsan-national이 있어도 지우지 않는다).
+    put(path.join(tmp, 'vercel', 'tenants.overlay.json'), [nationalEntry]);
     runChild('vercel', path.join(tmp, 'vercel'), { APP_DATA_DIR: path.join(tmp, 'vercel'), VERCEL: '1' });
 
     // real — 운영 PC 앱 데이터의 사본(읽기만 하고 필요한 폴더만 복사).
     if (existsSync(path.join(realAppData, 'tenants.overlay.json'))) {
       const root = path.join(tmp, 'real');
       mkdirSync(root, { recursive: true });
-      for (const name of ['tenants.overlay.json', 'tenants.deleted.json']) {
+      for (const name of ['tenants.overlay.json', 'tenants.deleted.json', 'tenants.removed.json', 'measure-requests.json', 'measure-failures.json']) {
         if (existsSync(path.join(realAppData, name))) cpSync(path.join(realAppData, name), path.join(root, name));
       }
-      for (const id of ['web4ai', 'gunsan', 'gunsan-national']) cpSync(path.join(realAppData, 'data', id), path.join(root, 'data', id), { recursive: true });
+      // 세 브랜드와, 그 카드의 코호트 순위에 든 브랜드(지우기가 순위를 다시 매긴다).
+      const ids = new Set(['web4ai', 'gunsan', 'gunsan-national']);
+      for (const id of [...ids]) {
+        for (const c of readJson<{ cohortRank?: { members?: { tenantId: string }[] } }[]>(path.join(realAppData, 'data', id, 'scorecard-history.json'))) {
+          for (const m of c.cohortRank?.members ?? []) ids.add(m.tenantId);
+        }
+      }
+      for (const id of ids) if (existsSync(path.join(realAppData, 'data', id))) cpSync(path.join(realAppData, 'data', id), path.join(root, 'data', id), { recursive: true });
       for (const key of ['펜션__전북_군산', '관광정보서비스__전북_군산', '관광안내__국내']) {
         cpSync(path.join(realAppData, 'cohort-banks', key), path.join(root, 'cohort-banks', key), { recursive: true });
       }

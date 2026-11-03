@@ -5,18 +5,21 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { BUNDLED_COHORT_BANK_DIR, COHORT_BANK_DIR, packagedDataMode, PIPELINE_DATA_DIR, stateFilePath } from './appPaths.js';
 import { bankQuestionsDiffer, listBundledVersions, readBundledBank } from './bundledBanks.js';
 import { cohortKey } from './cohortQuestionBank.js';
-import type { QuestionBank } from './store.js';
+import { measureInFlight } from './measureTracker.js';
+import type { QuestionBank, ResultStore } from './store.js';
 import { findBakedTenant, loadRuntimeTenants } from './tenantRegistry.js';
 import { readOverlay } from './tenantOverlay.js';
+import { deleteTenantOnThisPc } from './tenantRemovedStore.js';
 import { readDeletedTenants } from './tenantTombstone.js';
 import { writeJsonAtomic } from './tenantWriteQueue.js';
 import type { TenantConfig } from './types.js';
 import { sharesSite } from '../src/lib/brandVariant.js';
 
 /**
- * v0.4.49 브랜드 통일 — 스테이,머뭄(web4ai) · 군산각 지역형(gunsan)을 모든 PC에서 같은 설정 · 같은 질문지로 잰다. 군산각 전국형
- * (gunsan-national)은 통일에서 뺐다(2026-11-03 결정). 설정은 저장소 설정(server/tenants.config.json)에 굽고, 질문지는 설치본에 담는다(bundledBanks.ts). 여기서는 그 둘로
- * 통일되지 않는 PC별 파일을 다룬다(서버 시작 때, seedFirstRunIfEmpty 바로 뒤 — server/index.ts).
+ * v0.4.49 브랜드 통일 — 스테이,머뭄(web4ai) · 군산각 지역형(gunsan)을 모든 PC에서 같은 설정 · 같은 질문지로 잰다. 설정은 저장소
+ * 설정(server/tenants.config.json)에 굽고, 질문지는 설치본에 담는다(bundledBanks.ts). 여기서는 그 둘로 통일되지 않는 PC별 파일을
+ * 다룬다(서버 시작 때, seedFirstRunIfEmpty 바로 뒤 — server/index.ts). 군산각 전국형(gunsan-national)은 통일에서 빼고 모든 PC에서
+ * 한 번 지운다(2026-11-03 결정, 아래 3).
  *
  * 1. 한 번만 하는 정리 — 두 브랜드의 engines.json · market-scope.json을 data/<id>/before-unify-0.4.49/로 옮긴다(이름 바꾸기 — 지우지
  *    않는다). 두 파일은 저장소 설정의 엔진 · 시장 범위를 PC마다 덮는다(tenantRegistry.ts mergeRuntimeTenants). 표식 파일
@@ -27,6 +30,11 @@ import { sharesSite } from '../src/lib/brandVariant.js';
  * 2. 읽기만 하는 점검 — 시작할 때마다 userData/unify-check.json(과 로그)에 남긴다. 같은 홈페이지를 쓰는 다른 id(군산각을 다른 id로
  *    등록한 PC — 운영자가 지운다), 두 브랜드를 숨긴 툼스톤, 저장소 설정과 다른 오버레이 항목(그 id를 다른 업체로 쓰고 있으면 알린다),
  *    동봉본과 다른 코호트 공통 질문지 · 질문지, 남아 있는 PC별 파일, 마치지 못한 정리.
+ * 3. 한 번만 하는 군산각 전국형 지우기 — id가 정확히 gunsan-national인 브랜드가 목록에 있으면 화면의 「빼기」와 같은 함수로 지운다
+ *    (tenantRemovedStore.ts deleteTenantOnThisPc — 되살리기 백업 · 오버레이 · 측정 대기열 · 툼스톤 · 코호트 순위 · 최근 실패). 측정 기록
+ *    (data/gunsan-national/)은 남아 「되살리기」로 돌아온다. 표식(userData/remove-gunsan-national-0.4.49.json)이 있으면 다시 하지 않는다
+ *    — 그 뒤 되살리거나 새로 만든 것은 사람이 한 것이다. 없는 PC도 없음을 표식에 남긴다. 측정 중이면 미룬다. 다른 id의 군산각
+ *    전국형은 지우지 않고 점검이 같은 홈페이지로 알린다.
  * 패키징(설치본)에서만 한다 — dev 체크아웃의 data/는 개발자 것이고, 웹은 이 서버를 쓰지 않는다.
  */
 export const UNIFY_VERSION = '0.4.49';
@@ -36,6 +44,10 @@ export const UNIFY_MARKER_FILE = `brand-unify-${UNIFY_VERSION}.json`;
 /** 정리하는 중의 기록 — 첫 시도의 대상을 고정한다(unifyCleanupOnce). 정리가 끝나면 표식이 이긴다. */
 export const UNIFY_PENDING_FILE = `brand-unify-${UNIFY_VERSION}.pending.json`;
 export const UNIFY_CHECK_FILE = 'unify-check.json';
+/** 모든 PC에서 한 번 지우는 브랜드 — 군산각 전국형(2026-11-03 결정). 이 id만 지운다. */
+export const NATIONAL_REMOVED_TENANT = 'gunsan-national';
+/** 그 지우기를 했다는 표식 — 있으면 다시 하지 않는다(되살린 뒤에도). */
+export const NATIONAL_REMOVAL_MARKER_FILE = `remove-${NATIONAL_REMOVED_TENANT}-${UNIFY_VERSION}.json`;
 /** 정리에서 옮기는 파일 — 저장소 설정의 엔진 · 시장 범위를 PC마다 덮는다. */
 const MOVED_FILES = ['engines.json', 'market-scope.json'] as const;
 /** 점검에서 있는지만 보는 PC별 파일 — 저장소 설정을 이기거나(사실 · 브랜드 페이지 · 경쟁사) 더한다(자사 주소). */
@@ -182,10 +194,69 @@ export async function unifyCleanupOnce(now: Date = new Date()): Promise<{ ran: b
   return { ran: true, cleanup };
 }
 
+/** 군산각 전국형 한 번 지우기의 표식(userData/remove-gunsan-national-0.4.49.json). */
+export interface NationalRemoval {
+  version: string;
+  tenantId: string;
+  at: string;
+  /** deleted — 화면의 「빼기」와 같이 지웠다. absent — 이 PC 목록에 없어 아무것도 하지 않았다. */
+  action: 'deleted' | 'absent';
+  /** absent일 때 — 이미 지운 브랜드(툼스톤)였는가. */
+  hidden?: boolean;
+  /** deleted일 때 — 지운 브랜드의 모습과 지우기 결과. */
+  brandName?: string;
+  industry?: string;
+  region?: string;
+  removedFromOverlay?: boolean;
+  /** 순위를 다시 매긴 같은 코호트 카드 수. */
+  ranksUpdated?: number;
+}
+
+/**
+ * 한 번만 하는 군산각 전국형 지우기. 이미 했으면 그때의 표식을 돌려준다. 측정 중이면 표식 없이 미룬다(deferred — 화면의 「빼기」도
+ * 측정 중에는 지우지 않는다). 지우다 멈추면 표식 없이 던진다 — 다음 시작 때 아직 목록에 있으면 다시 지운다.
+ */
+export async function removeNationalOnce(store: ResultStore, now: Date = new Date()): Promise<{ ran: boolean; removal: NationalRemoval | null; deferred?: string }> {
+  const markerFile = stateFilePath(NATIONAL_REMOVAL_MARKER_FILE);
+  if (await exists(markerFile)) return { ran: false, removal: JSON.parse(await readFile(markerFile, 'utf-8')) as NationalRemoval };
+  if (measureInFlight()) {
+    return { ran: false, removal: null, deferred: `측정이 진행 중이라 ${NATIONAL_REMOVED_TENANT}를 지우지 않았습니다 — 다음 시작 때 다시 합니다.` };
+  }
+  const base = { version: UNIFY_VERSION, tenantId: NATIONAL_REMOVED_TENANT, at: now.toISOString() };
+  const tenant = (await loadRuntimeTenants()).find((t) => t.tenantId === NATIONAL_REMOVED_TENANT);
+  let removal: NationalRemoval;
+  if (!tenant) {
+    removal = { ...base, action: 'absent', hidden: (await readDeletedTenants()).includes(NATIONAL_REMOVED_TENANT) };
+  } else {
+    const { removedFromOverlay, ranksUpdated } = await deleteTenantOnThisPc(NATIONAL_REMOVED_TENANT, store);
+    removal = { ...base, action: 'deleted', brandName: tenant.brandName, industry: tenant.industry, region: tenant.region, removedFromOverlay, ranksUpdated };
+  }
+  await writeJsonAtomic(markerFile, removal);
+  return { ran: true, removal };
+}
+
 export interface UnifyIssue {
-  kind: 'same-site' | 'tombstone' | 'bank-differs' | 'bank-unreadable' | 'cohort-differs' | 'not-baked' | 'id-collision' | 'cleanup-failed';
+  kind:
+    | 'same-site'
+    | 'tombstone'
+    | 'bank-differs'
+    | 'bank-unreadable'
+    | 'cohort-differs'
+    | 'not-baked'
+    | 'id-collision'
+    | 'cleanup-failed'
+    /** 측정 중이라 군산각 전국형 지우기를 다음 시작으로 미뤘다. */
+    | 'national-deferred'
+    /** 군산각 전국형을 지우다 멈췄다 — 다음 시작 때 다시. */
+    | 'national-delete-failed';
   tenantId: string;
   message: string;
+}
+
+/** 이번 시작의 군산각 전국형 지우기 결과(removeNationalOnce) — 점검 파일에 싣는다. */
+export interface NationalRemovalOutcome {
+  removal: NationalRemoval | null;
+  problem?: { kind: 'national-deferred' | 'national-delete-failed'; message: string };
 }
 
 export interface UnifyTenantReport {
@@ -212,6 +283,8 @@ export interface UnifyCheck {
   sameSite: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string; cohortOnly: boolean; hidden: boolean; sharesWith: string[] }[];
   /** 두 브랜드가 쓰는 코호트 공통 질문지 — 이 PC 것과 동봉 기준본. 동봉 기준본이 없는 실행(dev)이면 비교하지 않는다. */
   cohortBanks: { key: string; version: string; state: 'same' | 'differs' | 'missing' | 'unreadable' | 'not-compared'; detail?: string }[];
+  /** 군산각 전국형 한 번 지우기의 표식 — 지웠다(deleted) · 없었다(absent). 아직 못 했으면(미룸 · 멈춤) null이고 issues에 까닭. */
+  nationalRemoval: NationalRemoval | null;
 }
 
 const scopeOf = (t: Pick<TenantConfig, 'marketScope'>) => t.marketScope ?? 'local';
@@ -232,12 +305,21 @@ async function readJsonState<T>(file: string): Promise<T | null | 'unreadable'> 
   }
 }
 
-/** 읽기만 하는 점검 — 아무 파일도 쓰지 않는다(질문지를 가져오지도 않는다). cleanupFailure는 이번 시작의 정리가 던진 까닭. */
-export async function checkBrandUnify(cleanup: UnifyCleanup | null, now: Date = new Date(), cleanupFailure?: string): Promise<UnifyCheck> {
+/**
+ * 읽기만 하는 점검 — 아무 파일도 쓰지 않는다(질문지를 가져오지도 않는다). cleanupFailure는 이번 시작의 정리가 던진 까닭, national은
+ * 이번 시작의 군산각 전국형 지우기 결과.
+ */
+export async function checkBrandUnify(
+  cleanup: UnifyCleanup | null,
+  now: Date = new Date(),
+  cleanupFailure?: string,
+  national: NationalRemovalOutcome = { removal: null },
+): Promise<UnifyCheck> {
   const [runtime, overlay, deleted] = await Promise.all([loadRuntimeTenants(), readOverlay(), readDeletedTenants()]);
   const deletedSet = new Set(deleted);
   const issues: UnifyIssue[] = [];
   if (cleanupFailure) issues.push({ kind: 'cleanup-failed', tenantId: UNIFIED_TENANTS.join(','), message: cleanupFailure });
+  if (national.problem) issues.push({ kind: national.problem.kind, tenantId: NATIONAL_REMOVED_TENANT, message: national.problem.message });
   const tenants: Record<string, UnifyTenantReport> = {};
   const cohortBanks: UnifyCheck['cohortBanks'] = [];
   const unified = new Set<string>(UNIFIED_TENANTS);
@@ -346,11 +428,34 @@ export async function checkBrandUnify(cleanup: UnifyCleanup | null, now: Date = 
     }
   }
 
-  return { version: UNIFY_VERSION, checkedAt: now.toISOString(), cleanup, issues, tenants, sameSite, cohortBanks };
+  return { version: UNIFY_VERSION, checkedAt: now.toISOString(), cleanup, issues, tenants, sameSite, cohortBanks, nationalRemoval: national.removal };
 }
 
-/** 서버 시작 때 — 정리(한 번) 뒤 점검을 userData/unify-check.json과 로그에 남긴다. 패키징이 아니면 아무것도 하지 않는다. */
-export async function runBrandUnify(): Promise<void> {
+/** 군산각 전국형 한 번 지우기를 하고 로그를 남긴다 — 미루거나 멈추면 점검이 알린다(던지지 않는다). */
+async function runNationalRemoval(store: ResultStore): Promise<NationalRemovalOutcome> {
+  try {
+    const { ran, removal, deferred } = await removeNationalOnce(store);
+    if (deferred) return { removal: null, problem: { kind: 'national-deferred', message: deferred } };
+    if (ran && removal?.action === 'deleted') {
+      console.log(
+        `[unify] 군산각 전국형(${NATIONAL_REMOVED_TENANT})을 지움 — 화면의 「빼기」와 같음(툼스톤 · 되살리기 가능), ` +
+          `측정 기록은 data/${NATIONAL_REMOVED_TENANT}/에 남음 · 순위 다시 매긴 카드 ${removal.ranksUpdated ?? 0}장`,
+      );
+    } else if (ran && removal) {
+      console.log(`[unify] 군산각 전국형(${NATIONAL_REMOVED_TENANT}) — 이 PC 목록에 없음${removal.hidden ? '(이미 지운 브랜드)' : ''}, 지울 것 없음`);
+    }
+    return { removal };
+  } catch (err) {
+    const message = `${NATIONAL_REMOVED_TENANT}를 지우지 못했습니다(${err instanceof Error ? err.message : String(err)}) — 다음 시작 때 다시 합니다.`;
+    return { removal: null, problem: { kind: 'national-delete-failed', message } };
+  }
+}
+
+/**
+ * 서버 시작 때 — 정리(한 번) · 군산각 전국형 지우기(한 번) 뒤 점검을 userData/unify-check.json과 로그에 남긴다. 패키징이 아니면
+ * 아무것도 하지 않는다.
+ */
+export async function runBrandUnify(store: ResultStore): Promise<void> {
   if (!packagedDataMode() || process.env.VERCEL) return;
   let cleanup: UnifyCleanup | null = null;
   let cleanupFailure: string | undefined;
@@ -366,7 +471,8 @@ export async function runBrandUnify(): Promise<void> {
     // 점검(unify-check.json)의 cleanup-failed로 올리고 로그에도 남긴다(아래 issues 출력).
     cleanupFailure = err instanceof Error ? err.message : String(err);
   }
-  const check = await checkBrandUnify(cleanup, new Date(), cleanupFailure);
+  const national = await runNationalRemoval(store);
+  const check = await checkBrandUnify(cleanup, new Date(), cleanupFailure, national);
   await writeJsonAtomic(stateFilePath(UNIFY_CHECK_FILE), check);
   if (check.issues.length === 0) {
     console.log(`[unify] 점검 — 알릴 것 없음(${stateFilePath(UNIFY_CHECK_FILE)})`);
