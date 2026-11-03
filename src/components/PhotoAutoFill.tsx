@@ -28,7 +28,7 @@ import {
   type AutoSlotState,
   type SceneSkip,
 } from '../lib/photoAutoPick'
-import { SCENE_SETTING_TEXT, sceneMeta, type PhotoScene } from '../lib/photoScenes'
+import { SCENE_SETTING_TEXT, sceneMeta, type PhotoScene, type SceneWant } from '../lib/photoScenes'
 import {
   loadPlaceDirectory,
   loadPublicPhotos,
@@ -37,6 +37,7 @@ import {
   loadTourPhotosFor,
   newSceneBudget,
   photoPageOf,
+  pickReadingScenes,
   publicCandidatesOf,
   siteRootOf,
   tourCandidatesOf,
@@ -57,10 +58,12 @@ import { TOUR_PLACE_LIMIT, TOUR_SOURCES } from '../lib/tourPhotos'
  * 남을 때만 알린다.
  *
  * 사진 장면 — 이 PC에 Claude 키가 있으면(/api/health photoScenes) 후보를 모은 뒤 아직 고를 자리의 후보 사진 장면을 서버에 묻고(읽어 둔
- * 장면은 그대로, 없는 사진은 비전 모델로 — 「사진 장면 읽는 중 n/m」, src/lib/sitePhotos.ts loadScenesFor) 장면으로 다시 고른다. 장소만
- * 맞고 장면이 어긋난 사진(외관 자리에 실내 전시 사진)은 넣지 않는다 — 틀린 사진보다 빈자리. 키가 없으면 알리고 지금처럼 고른다.
+ * 장면은 그대로, 없는 사진은 비전 모델로 — 「사진 장면 읽는 중 n/m」, src/lib/sitePhotos.ts loadScenesFor) 장면으로 다시 고른다 — 다시
+ * 고르면 새로 쓰일 사진(홈페이지 사진의 장면이 어긋나 빠진 자리의 장소 사진)이 생기므로, 새 사진이 없을 때까지 되풀이한다
+ * (pickReadingScenes). 장소만 맞고 장면이 어긋난 사진(외관 자리에 실내 전시 사진)은 넣지 않는다 — 틀린 사진보다 빈자리. 장면을 읽지 못한
+ * 사진은 장소 사진이면 쓰지 않는다(그 자리는 관광공사 사진을 찾는다). 키가 없으면 알리고 지금처럼 고른다.
  * 「사람이 뺀 자리도 다시 채우기」(기본 꺼짐)를 켜면 사람이 뺀 자리도 다시 보되, 그 자리에서 뺀 사진은 고르지 않는다(서버도 저장할 때
- * 다시 본다).
+ * 다시 본다). 뺀 사진을 적어 두기 전에 뺀 자리(옛 기록)는 무엇을 뺐는지 몰라 장면을 읽을 수 있을 때만 다시 채운다.
  *
  * 미리보기는 계산한 때의 초안으로 고른다 — 그사이 다른 미리보기 · 사람이 고른 사진이 저장되거나 글이 바뀌면(photoStateKey) 그
  * 미리보기로는 저장하지 않고 다시 맞추게 한다(작성자 · 브랜드 반복 상한이 달라진다). 서버도 쓰기 안에서 상한을 다시 본다.
@@ -152,25 +155,26 @@ export default function PhotoAutoFill({
         }
       })
       const publicOk = publicPhotosAllowed(settings, brand.industry)
-      setProgress('사진 후보 모으는 중…')
-      const pub = await publicFor(autoArticles, found, publicOk, refillOn)
-      // 장소 페이지를 읽은 장소 — 읽지 못한(일시 실패 · 읽기 상한) 장소의 자리는 관광공사 사진으로 먼저 채우지 않는다(다음에 눌러 그 페이지부터).
-      const pagesRead = new Set(pub.pages.map((p) => p.place))
       // 사진 장면 — 이 PC에 키가 있으면 장면으로 고른다(없으면 지금처럼). 장면을 다 읽지 못해도 장면으로 고른다(읽지 못한 장소 사진은 비워 둔다).
       const scenes = (await loadPhotoScenesStatus()) ? new Map<string, PhotoScene>() : null
-      // 남긴 수는 마지막 읽기의 것(뒤 읽기가 앞 읽기의 사진을 다시 본다), 읽지 못한 사진은 한 번씩.
+      setProgress('사진 후보 모으는 중…')
+      const pub = await publicFor(autoArticles, found, publicOk, refillOn, scenes !== null)
+      // 장소 페이지를 읽은 장소 — 읽지 못한(일시 실패 · 읽기 상한) 장소의 자리는 관광공사 사진으로 먼저 채우지 않는다(다음에 눌러 그 페이지부터).
+      const pagesRead = new Set(pub.pages.map((p) => p.place))
+      // 읽기마다 새로 물은 사진만 묻는다(asked) — 남긴 수는 읽기마다 그 읽기에서 남긴 수를 더하고, 읽지 못한 사진은 한 번씩.
       const sceneSum = { calls: 0, described: 0, cached: 0, left: 0, failed: new Set<string>() }
       const sceneBudget = newSceneBudget()
       const sceneNotes: string[] = []
-      const readScenes = async (r: AutoPickResult) => {
-        if (!scenes || !r.sceneWanted.length) return
+      const asked = new Set<string>()
+      const readScenes = async (wanted: readonly SceneWant[]) => {
+        if (!scenes || !wanted.length) return
         setProgress('사진 장면 확인 중…')
         try {
-          const load = await loadScenesFor(r.sceneWanted, scenes, (n, m) => setProgress(`사진 장면 읽는 중 ${n}/${m}`), sceneBudget)
+          const load = await loadScenesFor(wanted, scenes, (n, m) => setProgress(`사진 장면 읽는 중 ${n}/${m}`), sceneBudget)
           sceneSum.calls += load.calls
           sceneSum.described += load.described
           sceneSum.cached += load.cached
-          sceneSum.left = load.left
+          sceneSum.left += load.left
           for (const src of load.failed) sceneSum.failed.add(src)
           for (const n of load.notes) if (!sceneNotes.includes(n)) sceneNotes.push(n)
         } catch (e) {
@@ -189,14 +193,13 @@ export default function PhotoAutoFill({
           others: otherPhotoUses(drafts, ids, groupOf),
           brandName: brand.brandName,
           ownedDomains: brand.ownedDomains,
-          ...(scenes ? { scenes } : {}),
+          ...(scenes ? { scenes, sceneFailed: sceneSum.failed } : {}),
           refillCleared: refillOn,
         })
-      let result = pick()
-      if (scenes) {
-        await readScenes(result)
-        result = pick()
-      }
+      // 장면으로 고르기 — 고르고, 새로 쓰일 사진의 장면을 읽고, 다시 고른다(새 사진이 없을 때까지).
+      const pickScenes = (tourCandidates: AutoCandidate[] = []) =>
+        scenes ? pickReadingScenes(() => pick(tourCandidates), readScenes, asked) : Promise.resolve(pick(tourCandidates))
+      let result = await pickScenes()
       // 3단계 — 장소 페이지에 쓸 사진이 없던(또는 장면이 맞지 않던) 장소 자리를 관광공사 사진으로.
       const tourWanted = publicOk ? tourPlacesWanted(result, pagesRead) : []
       const tourNotes: string[] = []
@@ -204,12 +207,7 @@ export default function PhotoAutoFill({
         if (await loadTourApiStatus()) {
           setProgress('관광공사 사진 찾는 중…')
           const tour = await loadTourPhotosFor(tenantId, tourWanted, pub.pages)
-          const tourCandidates = tourCandidatesOf(tour.results)
-          result = pick(tourCandidates)
-          if (scenes) {
-            await readScenes(result)
-            result = pick(tourCandidates)
-          }
+          result = await pickScenes(tourCandidatesOf(tour.results))
           const none = tour.results.filter((r) => !r.photos.length && !r.error).map((r) => r.place)
           tourNotes.push(...tour.notes)
           if (none.length) {
@@ -230,17 +228,25 @@ export default function PhotoAutoFill({
         ...(pub.off && placeRows > 0 ? [`장소가 나온 빈 자리 ${placeRows}곳은 글의 「홈페이지 사진」 칸에서 공공 사진 사용 확인을 한 뒤 다시 누르면 공공 사진으로 채울 수 있어요.`] : []),
       ]
       const publicNote = notes.length ? notes.join(' ') : null
-      const placeFilled = result.articles.flatMap((a) => a.rows).some((r) => r.state === 'filled' && r.pick?.origin === 'public')
+      const allRows = result.articles.flatMap((a) => a.rows)
+      const placeFilled = allRows.some((r) => r.state === 'filled' && r.pick?.origin === 'public')
+      // 장면 없이 「사람이 뺀 자리도 다시 채우기」 — 뺀 사진을 적기 전에 뺀 자리는 그대로 둔다(photoAutoPick.ts refills).
+      const oldCleared = refillOn && !scenes ? allRows.filter((r) => r.state === 'cleared').length : 0
       const sceneNote = scenes
         ? [
             `사진 장면 — 읽어 둔 장면 ${sceneSum.cached}장 · 새로 읽음 ${sceneSum.described}장(Claude 호출 ${sceneSum.calls}번).`,
             ...(sceneSum.left ? [`이번에 읽지 않고 남긴 사진 ${sceneSum.left}장 — 다시 누르면 이어서 읽어요.`] : []),
-            ...(sceneSum.failed.size ? [`장면을 읽지 못한 사진 ${sceneSum.failed.size}장(받지 못함 · 형식)은 쓰지 않아요.`] : []),
+            ...(sceneSum.failed.size
+              ? [`장면을 읽지 못한 사진 ${sceneSum.failed.size}장(받지 못함 · 형식 · 모델이 읽지 않음) — 장소 사진이면 쓰지 않고, 홈페이지 사진이면 설명 낱말로만 견줬어요.`]
+              : []),
             ...sceneNotes,
           ].join(' ')
-        : placeFilled
-          ? '이 PC에 Claude 키가 없어 사진 장면을 읽지 않고 골랐어요 — 장소 사진(공공 · 관광공사)은 장면까지 맞는지 썸네일로 꼭 확인해 주세요.'
-          : null
+        : [
+            ...(placeFilled ? ['이 PC에 Claude 키가 없어 사진 장면을 읽지 않고 골랐어요 — 장소 사진(공공 · 관광공사)은 장면까지 맞는지 썸네일로 꼭 확인해 주세요.'] : []),
+            ...(oldCleared
+              ? [`뺀 사진을 적어 두기 전에 사람이 뺀 자리 ${oldCleared}곳은 무엇을 뺐는지 몰라 다시 채우지 않았어요 — 사진 장면을 읽을 수 있는 PC(Claude 키)에서는 장면으로 걸러 다시 채워요.`]
+              : []),
+          ].join(' ') || null
       setPreview({ result, pageUrl, key: photoStateKey(drafts, ids), publicNote, sceneNote, refill: refillOn })
       setShowAll(false)
     } catch (e) {
@@ -261,6 +267,7 @@ export default function PhotoAutoFill({
     site: SitePhotoResult,
     allowed: boolean,
     refillCleared: boolean,
+    withScenes: boolean,
   ): Promise<{ candidates: AutoCandidate[]; places: string[]; pages: PublicPhotoPage[]; off: boolean; note: string | null }> => {
     const root = siteRootOf(site.pageUrl)
     if (!root) return { candidates: [], places: [], pages: [], off: !allowed, note: null }
@@ -281,7 +288,7 @@ export default function PhotoAutoFill({
         photoCreditState(p) === 'missing' ? [p.alt, siteAlt.get(canonicalPhotoSrc(p.src) ?? p.src) ?? ''].flatMap((h) => findPlace(h, places) ?? []) : [],
       ),
     )
-    const wanted = [...new Set([...placesToRead(list, places, refillCleared), ...hinted])]
+    const wanted = [...new Set([...placesToRead(list, places, refillCleared, withScenes), ...hinted])]
     const directory = await loadPlaceDirectory(root)
     const load = await loadPublicPhotos(directory, wanted)
     const notes = [
@@ -362,7 +369,7 @@ export default function PhotoAutoFill({
         {hasCleared && (
           <label
             className="doc-meta"
-            title="사람이 사진을 뺀 자리도 다시 채웁니다 — 그 자리에서 뺀 사진은 다시 고르지 않아요(뺀 사진을 적어 두기 전에 뺀 자리는 무엇을 뺐는지 몰라 장면으로만 걸러요)."
+            title="사람이 사진을 뺀 자리도 다시 채웁니다 — 그 자리에서 뺀 사진은 다시 고르지 않아요. 뺀 사진을 적어 두기 전에 뺀 자리는 무엇을 뺐는지 몰라, 사진 장면을 읽을 수 있을 때(이 PC에 Claude 키)만 장면으로 걸러 다시 채워요."
           >
             <input type="checkbox" checked={refill} disabled={loading || saving} onChange={(e) => setRefill(e.target.checked)} /> 사람이 뺀 자리도 다시 채우기
           </label>

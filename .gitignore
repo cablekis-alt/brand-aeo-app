@@ -43,3 +43,4 @@ server/tenants.removed.json
 dist-electron
 server/engine-pricing.json
 server/tourapi-cache.json
+server/photo-scenes.json

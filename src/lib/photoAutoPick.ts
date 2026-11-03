@@ -180,8 +180,11 @@ export function hasPeopleWords(text: string, places: readonly string[] = []): bo
   return PEOPLE_PHOTO.test(places.reduce((s, p) => withoutPlaceName(s, p), normSlotAlt(text).toLowerCase()))
 }
 
-/** 글자에서 장소 이름을 걷어 낸다 — 띄어쓰기 · 문장부호는 무시하고 맞춘다(「먹방이와친구들」도 「먹방이와 친구들」). */
-function withoutPlaceName(text: string, place: string): string {
+/**
+ * 글자에서 장소 이름을 걷어 낸다 — 띄어쓰기 · 문장부호는 무시하고 맞춘다(「먹방이와친구들」도 「먹방이와 친구들」). mark를 주면 걷어 낸
+ * 자리의 첫 글자를 mark로 둔다(장소 이름 바로 뒤의 「앞 · 밖」을 알아보게 — slotSceneWants).
+ */
+function withoutPlaceName(text: string, place: string, mark = ' '): string {
   const key = placeKey(place)
   const s = normSlotAlt(text).toLowerCase()
   if (!key) return s
@@ -193,10 +196,12 @@ function withoutPlaceName(text: string, place: string): string {
     hay += s[i]
   }
   const gone = new Set<number>()
+  const starts = new Set<number>()
   for (let at = hay.indexOf(key); at >= 0; at = hay.indexOf(key, at + key.length)) {
+    starts.add(kept[at]!)
     for (let k = at; k < at + key.length; k += 1) gone.add(kept[k]!)
   }
-  return Array.from(s, (ch, i) => (gone.has(i) ? ' ' : ch)).join('')
+  return Array.from(s, (ch, i) => (starts.has(i) ? mark : gone.has(i) ? ' ' : ch)).join('')
 }
 
 /** 장소 이름이 이보다 짧으면(띄어쓰기를 뺀 글자 수) 맞추지 않는다 — 「달」 · 「하늘」 · 「연도」 같은 이름이 아무 글에나 걸린다. */
@@ -274,9 +279,12 @@ export function isScreenSlot(slotKey: string): boolean {
   return SCREEN_SLOT.test(slotKey)
 }
 
-/** 사람이 나오는 장면 자리인가 — 자동으로 넣은 사진에 「확인 필요」를 단다. */
-export function isPeopleScene(slotKey: string): boolean {
-  return PEOPLE_SCENE.test(slotKey)
+/**
+ * 사람이 나오는 장면 자리인가 — 자동으로 넣은 사진에 「확인 필요」를 달고, 사람을 알아볼 수 있는 사진도 받는다(sceneFit). places(자리에
+ * 나온 장소 이름)를 걷어 낸 글자에서만 본다 — 「새만금어린이랜드 입구」 · 「먹방이와 친구들 매장 외관」은 사람 장면이 아니다.
+ */
+export function isPeopleScene(slotKey: string, places: readonly string[] = []): boolean {
+  return PEOPLE_SCENE.test(places.reduce((s, p) => withoutPlaceName(s, p), normSlotAlt(slotKey).toLowerCase()))
 }
 
 /** 낱말 하나를 비교할 모양으로 — 조사를 떼고, 꾸밈말 · 불용어 · 숫자 낱말 · 한 글자는 버린다(빈 글자). */
@@ -331,60 +339,83 @@ function jaccard(a: ReadonlySet<string>, b: ReadonlySet<string>): number {
 
 /**
  * 자리 글자가 바라는 장면의 낱말 — 자리 글자에서 장소 이름을 걷어 낸 뒤 본다(「진포해양공원」의 「공원」 · 「어린이체험관」의
- * 「체험관」이 장면 낱말로 읽히지 않게). 바깥과 실내가 함께 나오면 종류를 정하지 않는다(외관 · 외벽은 늘 바깥).
+ * 「체험관」이 장면 낱말로 읽히지 않게). 걷어 낸 자리에는 PLACE_MARK를 두어 장소 이름 바로 뒤의 「앞 · 밖」(「근대역사박물관 앞」)을
+ * 바깥으로 본다. 「전시관 · 전시장」은 건물 이름이라 실내 낱말이 아니다(「전시관 입구」는 바깥). 바깥과 실내가 함께 나오면 종류를 정하지
+ * 않는다(외관 · 외벽은 늘 바깥).
  */
+const PLACE_MARK = '§'
 const WANT_OUTSIDE_STRONG = /외관|외벽/
 const WANT_OUTSIDE =
-  /외관|외벽|건물\s?앞|건물\s?밖|앞마당|마당|(^|\s)거리|골목|입구|정문|출입구|매표소|산책로|산책길|둘레길|보행로|풍경|전경|야외|광장|해변|바닷가|해안|바다|호수|하늘|노을|석양|일몰|야경|공원|(^|\s)숲|정원|(^|\s)다리|항구|포구|등대|바깥|외부/
-const WANT_INSIDE = /전시|실내|내부|안쪽|객실|로비|체험실|침실|욕실|주방|열람실|강당|(매장|가게|카페|식당)\s?안/
+  /외관|외벽|건물\s?앞|건물\s?밖|§\s*(앞|밖)|앞마당|마당|(^|\s)거리|골목|입구|정문|출입구|매표소|산책로|산책길|둘레길|보행로|풍경|전경|야외|광장|해변|바닷가|해안|바다|호수|하늘|노을|석양|일몰|야경|공원|(^|\s)숲|정원|(^|\s)다리|항구|포구|등대|바깥|외부/
+const WANT_INSIDE = /전시(?!관|장)|실내|내부|안쪽|객실|로비|체험실|침실|욕실|주방|열람실|강당|(매장|가게|카페|식당)\s?안/
 const WANT_CLOSE = /음식|요리|메뉴|디저트|(^|\s)빵|커피|음료|접시|상차림|그릇|소품/
-/** 안내판 · 간판 자리 — 가까이 찍은 사진도 받는다. */
+/** 안내판 · 간판 자리 — 가까이 찍은 사진도 받는다(바깥 자리면 안내판 · 간판 사진만 — SIGN_SCENE). */
 const WANT_SIGN = /안내판|표지판|간판|팻말|요금표|안내문/
+/** 장면(낱말 · 설명)이 안내판 · 간판인가 — 바깥 안내판 자리가 받는 가까이 찍은 사진. */
+const SIGN_SCENE = /안내판|표지판|간판|팻말|요금표|안내문|현판|알림판|게시판/
+/** 장면이 실내 전시 · 진열인가 — 바깥 안내판 자리에 실내 전시 설명판 · 유물 근접이 들어가지 않게. */
+const INSIDE_SCENE = /전시|디오라마|모형|유물|진열|실내|내부|객실|로비/
 const WANT_NIGHT = /야경|(^|\s)밤|야간|불빛|불\s?켜진|조명이\s?켜진/
 const WANT_DUSK = /해\s?질\s?(무렵|녘)|해질녘|노을|일몰|석양|황혼|어스름/
+/** 저녁 · 해가 진 뒤 — 해 질 무렵이나 밤. */
+const WANT_EVENING = /저녁|해\s?가?\s?진\s?(뒤|후|직후|다음|무렵)/
 const WANT_DAY = /(^|\s)한?낮(에|의)?(\s|$)|오전|오후|햇살|햇빛|맑은\s?날|파란\s?하늘/
 /** 장면 설명의 「사람 없음」 — 자리의 「사람」 낱말과 맞지 않게 지운다. */
 const NO_PEOPLE_TEXT = /(사람|인물|인적)\s?(없음|없이|없는|없다)/g
 
 /** 자리 하나가 바라는 장면(slotSceneWants). */
 export interface SceneWants {
-  /** 받는 장면 종류 — 앞이 바라는 종류. null이면 화면 · 그림만 아니면 된다. */
+  /** 받는 장면 종류 — 앞이 바라는 종류. null이면 화면 · 그림만 아니면 된다(장소 사진은 맞은 낱말이 있어야 한다 — autoPickPhotos). */
   settings: readonly SceneSetting[] | null
-  /** 받는 시간 — 앞이 바라는 시간. null이면 상관없다. */
+  /**
+   * 가까이 찍은 사진(closeup)은 안내판 · 간판 사진만 받는다 — 바깥 자리(입구 · 매표소)에 안내판 낱말이 있어 closeup을 받는 자리. 실내
+   * 전시물 · 디오라마 · 유물 근접이나 실내 전시 설명판은 받지 않는다.
+   */
+  closeupSign: boolean
+  /** 받는 시간 — 앞이 바라는 시간. null이면 상관없다. 실내 · 가까이 자리면 시간 모름(unknown)도 받는다(실내 사진은 시간을 모른다). */
   times: readonly SceneTime[] | null
-  /** 사람이 나오는 장면 자리(isPeopleScene) — 사람을 알아볼 수 있는 사진도 받되 「확인 필요」. */
+  /** 사람이 나오는 장면 자리(isPeopleScene — 장소 이름을 걷어 낸 글자) — 사람을 알아볼 수 있는 사진도 받되 「확인 필요」. */
   people: boolean
   /** 장면 글자 · 설명 줄의 내용어(장소 이름 · 브랜드 이름을 뺀). */
   key: string[]
   caption: string[]
 }
 
-/** 장면을 보고 뺀 이유 — kind 화면 · 그림, setting 장면 종류가 다름(외관 자리에 실내), time 시간이 다름, people 사람을 알아볼 수 있음, unread 장면을 아직 읽지 않음. */
-export type SceneSkip = 'kind' | 'setting' | 'time' | 'people' | 'unread'
+/**
+ * 장면을 보고 뺀 이유 — kind 화면 · 그림, setting 장면 종류가 다름(외관 자리에 실내), time 시간이 다름, people 사람을 알아볼 수 있음,
+ * words 자리 글자로 종류를 정하지 못했는데 장면과 맞은 낱말도 없음(장소 사진), unread 장면을 아직 읽지 않음, failed 장면을 읽지
+ * 못함(받지 못함 · 형식 · 모델이 읽지 않음 — 다시 눌러도 한동안 읽지 않는다).
+ */
+export type SceneSkip = 'kind' | 'setting' | 'time' | 'people' | 'words' | 'unread' | 'failed'
 
 export const SCENE_SKIP_TEXT: Record<SceneSkip, string> = {
   kind: '화면 · 그림',
   setting: '장면 종류가 다름',
   time: '시간대가 다름',
   people: '사람을 알아볼 수 있음',
+  words: '장면과 맞는 낱말 없음',
   unread: '장면을 아직 읽지 않음',
+  failed: '장면을 읽지 못함',
 }
 
 /** 사진 장면 하나가 자리와 맞는 정도. ok가 아니면 miss가 이유. */
 export interface SceneFit {
   ok: boolean
-  miss?: Exclude<SceneSkip, 'unread'>
+  miss?: Exclude<SceneSkip, 'words' | 'unread' | 'failed'>
   /** 맞은 낱말(장면 글자 2 · 설명 줄 1) + 바라는 종류 1 + 바라는 시간 1. */
   score: number
   /** 장면(낱말 · 설명)과 맞은 자리 낱말. */
   words: string[]
 }
 
-/** 글자가 바라는 장면 종류 — 장면 낱말이 없으면 undefined, 바깥과 실내가 함께 나오면 null(정하지 않는다). */
-function settingWants(text: string): SceneSetting[] | null | undefined {
+/**
+ * 글자가 바라는 장면 종류 — 장면 낱말이 없으면 undefined, 바깥과 실내가 함께 나오면 null(정하지 않는다). sign은 바깥 자리에 안내판 ·
+ * 간판 낱말이 있어 가까이 찍은 사진(closeup)을 더 받는 자리 — 그 closeup은 안내판 · 간판 사진만(SceneWants.closeupSign).
+ */
+function settingWants(text: string): { settings: SceneSetting[] | null | undefined; sign: boolean } {
   const outside = WANT_OUTSIDE.test(text)
   const inside = WANT_INSIDE.test(text)
-  let settings: SceneSetting[] | null | undefined = WANT_OUTSIDE_STRONG.test(text) || (outside && !inside)
+  const settings: SceneSetting[] | null | undefined = WANT_OUTSIDE_STRONG.test(text) || (outside && !inside)
     ? ['exterior', 'aerial']
     : inside && !outside
       ? ['interior', 'closeup']
@@ -393,44 +424,64 @@ function settingWants(text: string): SceneSetting[] | null | undefined {
         : outside && inside
           ? null
           : undefined
-  if (settings && WANT_SIGN.test(text) && !settings.includes('closeup')) settings = [...settings, 'closeup']
-  return settings
+  if (settings && WANT_SIGN.test(text) && !settings.includes('closeup')) return { settings: [...settings, 'closeup'], sign: true }
+  return { settings, sign: false }
 }
 
-/** 글자가 바라는 시간 — 시간 낱말이 없으면 undefined, 낮과 밤이 함께 나오면 null. */
+/** 글자가 바라는 시간 — 시간 낱말이 없으면 undefined, 낮과 밤이 함께 나오면 null. 저녁 · 해가 진 뒤는 해 질 무렵이나 밤. */
 function timeWants(text: string): SceneTime[] | null | undefined {
   const night = WANT_NIGHT.test(text)
+  const evening = WANT_EVENING.test(text)
   const dusk = WANT_DUSK.test(text)
   const day = WANT_DAY.test(text)
-  if (day && (night || dusk)) return null
-  return night ? ['night', 'dusk'] : dusk ? ['dusk'] : day ? ['day', 'unknown'] : undefined
+  if (day && (night || evening || dusk)) return null
+  return night ? ['night', 'dusk'] : evening ? ['dusk', 'night'] : dusk ? ['dusk'] : day ? ['day', 'unknown'] : undefined
 }
 
 /**
  * 자리 하나가 바라는 장면 — places는 자리에 나온 장소 이름(글자에서 걷어 낸다), stop은 브랜드 이름 낱말. 종류 · 시간은 장면 글자가 정하고,
  * 장면 글자에 그 낱말이 없을 때만 바로 아랫줄 설명이 정한다 — 설명 줄은 사진이 아니라 본문을 풀어 쓰기도 한다(2026-11-04 군산각 「낮 시간에
  * 근대역사박물관 건물 앞을 둘이 걸어가는 장면」의 설명 「입장 마감이 있는 실내 명소는 …」 — 「실내」 때문에 실내 디오라마 사진이 들어갔다).
+ * 실내 · 가까이 자리에 시간 낱말(불빛 · 조명이 켜진)이 있으면 시간 모름도 받는다 — 실내 사진은 시간을 모른다(unknown).
  */
 export function slotSceneWants(slot: { key: string; caption: string }, places: readonly string[] = [], stop: ReadonlySet<string> = new Set()): SceneWants {
-  const strip = (t: string) => places.reduce((s, p) => withoutPlaceName(s, p), normSlotAlt(t).toLowerCase())
+  const strip = (t: string) => places.reduce((s, p) => withoutPlaceName(s, p, PLACE_MARK), normSlotAlt(t).toLowerCase())
   const key = strip(slot.key)
   const caption = strip(slot.caption)
   const fromKey = settingWants(key)
-  const settings = fromKey !== undefined ? fromKey : (settingWants(caption) ?? null)
+  const decided = fromKey.settings !== undefined ? fromKey : settingWants(caption)
+  const settings = decided.settings ?? null
   const timeFromKey = timeWants(key)
-  const times = timeFromKey !== undefined ? timeFromKey : (timeWants(caption) ?? null)
-  return { settings, times, people: isPeopleScene(slot.key), key: contentWords(key, stop), caption: contentWords(caption, stop) }
+  const wantedTimes = timeFromKey !== undefined ? timeFromKey : (timeWants(caption) ?? null)
+  const indoor = settings?.[0] === 'interior' || settings?.[0] === 'closeup'
+  const times = wantedTimes && indoor && !wantedTimes.includes('unknown') ? [...wantedTimes, 'unknown' as const] : wantedTimes
+  return {
+    settings,
+    closeupSign: decided.sign,
+    times,
+    people: isPeopleScene(slot.key, places),
+    key: contentWords(key, stop),
+    caption: contentWords(caption, stop),
+  }
+}
+
+/** 장면이 바깥 안내판 자리에 넣을 안내판 · 간판 사진인가 — 안내판 낱말이 있고 실내 전시 · 진열 낱말은 없다. */
+function signScene(scene: Pick<PhotoScene, 'text' | 'tags'>): boolean {
+  const seen = [scene.text, ...scene.tags].join(' ')
+  return SIGN_SCENE.test(seen) && !INSIDE_SCENE.test(seen)
 }
 
 /**
  * 사진 장면 하나를 자리에 견준다 — 화면 · 그림은 늘 빼고, 자리가 바라는 종류 · 시간과 다르면 빼고(틀린 사진보다 빈자리), 사람을 알아볼 수
- * 있는 사진은 사람이 나오는 장면 자리가 아니면 뺀다. 맞으면 맞은 낱말로 점수를 낸다(장면 글자 낱말 2 · 설명 줄 낱말 1 · 바라는 종류 1 ·
- * 바라는 시간 1).
+ * 있는 사진은 사람이 나오는 장면 자리가 아니면 뺀다. 바깥 안내판 자리(closeupSign)의 가까이 찍은 사진은 안내판 · 간판 사진만 받는다
+ * (2026-11-04 — 「입구와 이용시간 안내판」 자리에 디오라마 · 유물 근접 사진이 점수 0으로 들어갔다). 맞으면 맞은 낱말로 점수를 낸다(장면
+ * 글자 낱말 2 · 설명 줄 낱말 1 · 바라는 종류 1 · 바라는 시간 1).
  */
 export function sceneFit(wants: SceneWants, scene: Pick<PhotoScene, 'text' | 'setting' | 'people' | 'time' | 'tags'>): SceneFit {
-  const miss = (m: Exclude<SceneSkip, 'unread'>): SceneFit => ({ ok: false, miss: m, score: 0, words: [] })
+  const miss = (m: NonNullable<SceneFit['miss']>): SceneFit => ({ ok: false, miss: m, score: 0, words: [] })
   if (scene.setting === 'screen' || scene.setting === 'illustration') return miss('kind')
   if (wants.settings && !wants.settings.includes(scene.setting)) return miss('setting')
+  if (wants.closeupSign && scene.setting === 'closeup' && !signScene(scene)) return miss('setting')
   if (wants.times && !wants.times.includes(scene.time)) return miss('time')
   if (scene.people === 'identifiable' && !wants.people) return miss('people')
   const seen = [...new Set([...scene.tags.map((t) => t.toLowerCase()), ...contentWords(scene.text.replace(NO_PEOPLE_TEXT, ' '))])]
@@ -492,7 +543,8 @@ export interface AutoArticle {
  * 자리 하나의 결과.
  * filled 넣음 · kept 이미 사진이 있음(제안 대기 포함) · cleared 사람이 뺀 자리 · screen 웹사이트 화면 자리 · nomatch 맞는 사진 없음 ·
  * used 맞는 사진이 반복 상한에 걸림 · full 글 하나에 사진 PHOTO_LIMITS.picks장이 다 참 · license 자리의 장소 사진이 공공누리 제1유형이 아님 ·
- * scene 후보는 있었는데 장면이 자리와 맞지 않음 · unread 장면을 아직 읽지 않은 사진뿐(다시 누르면 이어서 읽는다).
+ * scene 후보는 있었는데 장면이 자리와 맞지 않음(장면을 읽지 못한 사진 포함) · unread 장면을 아직 읽지 않은 사진이 남음(읽기 상한 ·
+ * 키 · 한도 · Claude 과부하로 멈춤 — 다시 누르면 이어서 읽는다).
  */
 export type AutoSlotState = 'filled' | 'kept' | 'cleared' | 'screen' | 'nomatch' | 'used' | 'full' | 'license' | 'scene' | 'unread'
 
@@ -526,6 +578,11 @@ export interface AutoSlotRow {
   places?: string[]
   /** used인데 상한에 걸린 것이 홈페이지 사진 짝뿐이다 — 자리의 장소에 장소 페이지 · 관광공사 사진이 없었다(관광공사 사진을 찾을 자리). */
   homeOnly?: true
+  /**
+   * used인데 장면으로 고를 때 장면이 맞는 장소 페이지 사진이 모두 반복 상한에 걸렸고 자리의 장소에 관광공사 사진은 아직 없다 — 관광공사
+   * 사진을 찾을 자리(장면으로 거르면 맞는 장소 사진이 몇 장 남지 않아 상한에 자주 걸린다).
+   */
+  askTour?: true
   /** 넣은(filled) · 가장 잘 맞은(used · full) 사진의 장면 — 장면을 읽었을 때. */
   scene?: PhotoScene
   /** 그 장면이 자리와 맞은 정도(맞은 낱말 · 점수). */
@@ -582,9 +639,13 @@ function clearedAt(slot: PhotoSlot, cleared: readonly ClearedPhotoPlace[] | unde
   return (cleared ?? []).filter((c) => clearedMatches(c, { slot: slot.key, nth: slot.nth, heading: slot.heading }))
 }
 
-/** 사람이 뺀 자리인가(clearedAt). */
-function isCleared(slot: PhotoSlot, cleared: readonly ClearedPhotoPlace[] | undefined): boolean {
-  return clearedAt(slot, cleared).length > 0
+/**
+ * 사람이 뺀 자리를 다시 볼 것인가 — refillCleared(「사람이 뺀 자리도 다시 채우기」)이고, 그 자리의 뺀 기록이 모두 뺀 사진(removed)을
+ * 알거나 장면으로 고를 때(withScenes). 뺀 사진을 적기 전의 옛 기록은 무엇을 뺐는지 몰라 장면으로만 거른다 — 장면 없이 고르면 같은
+ * 입력에서 v0.4.52가 넣었던(사람이 뺀) 그 사진을 다시 고른다.
+ */
+function refills(cleared: readonly ClearedPhotoPlace[], refillCleared: boolean, withScenes: boolean): boolean {
+  return refillCleared && (withScenes || cleared.every((c) => (c.removed?.length ?? 0) > 0))
 }
 
 /** 자리의 장소들 — 장면 글자에 나온 장소(findPlaces 순서) 다음에 바로 아랫줄 설명에 나온 장소(소제목은 절 전체라 보지 않는다). */
@@ -599,13 +660,15 @@ export function slotPlace(slot: { key: string; caption: string }, places: readon
 
 /**
  * 공공 사진을 찾으러 읽을 장소 — 글들의 빈 사진 자리(화면 자리 · 사진이 있는 자리 · 사람이 뺀 자리 제외 — refillCleared면 사람이 뺀
- * 자리도 본다)에 나온 장소, 나온 순서대로 중복 없이. 자리마다 첫 장소를 모두 앞에, 다음 장소들은 그 뒤에 둔다(읽기 상한에 걸리면 다음
- * 장소부터 빠진다). 장소 페이지는 이것만 읽는다(src/lib/sitePhotos.ts loadPublicPhotos).
+ * 자리도 본다, 장면으로 고르지 않으면(withScenes false) 뺀 사진을 적기 전의 옛 기록 자리는 빼고)에 나온 장소, 나온 순서대로 중복 없이.
+ * 자리마다 첫 장소를 모두 앞에, 다음 장소들은 그 뒤에 둔다(읽기 상한에 걸리면 다음 장소부터 빠진다). 장소 페이지는 이것만 읽는다
+ * (src/lib/sitePhotos.ts loadPublicPhotos).
  */
 export function placesToRead(
   articles: readonly Pick<AutoArticle, 'markdown' | 'picks' | 'cleared'>[],
   places: readonly string[],
   refillCleared = false,
+  withScenes = true,
 ): string[] {
   const first: string[] = []
   const rest: string[] = []
@@ -614,7 +677,8 @@ export function placesToRead(
     const match = matchPhotos(a.markdown, a.picks ?? [])
     const occupied = new Set([...match.applied, ...match.suggested].map((m) => m.slot.line))
     for (const slot of photoSlotsOf(a.markdown)) {
-      if (occupied.has(slot.line) || (!refillCleared && isCleared(slot, a.cleared)) || isScreenSlot(slot.key)) continue
+      const cleared = clearedAt(slot, a.cleared)
+      if (occupied.has(slot.line) || (cleared.length > 0 && !refills(cleared, refillCleared, withScenes)) || isScreenSlot(slot.key)) continue
       slotPlaces({ key: slot.key, caption: captionOf(lines, slot) }, places).forEach((place, i) => (i === 0 ? first : rest).push(place))
     }
   }
@@ -628,9 +692,10 @@ function placesRead(places: readonly string[], pagesRead: ReadonlySet<string>): 
 
 /**
  * 장소 페이지(2단계)에 쓸 공공 사진이 없어 비어 있는 장소 자리의 장소들 — 관광공사 사진(3단계)을 찾을 장소. 자리마다 첫 장소를 모두
- * 앞에, 다음 장소들은 그 뒤에(화면이 장소 수 상한으로 자른다). 맞는 사진 없음 · 제1유형 아님 · 장면이 맞는 사진 없음 자리와, 홈페이지
- * 사진 짝만 반복 상한에 걸린 자리(used · homeOnly)를 본다 — 장소 페이지 · 관광공사 사진이 반복 상한에 걸린 자리(used) · 글이 다 찬
- * 자리(full) · 장면을 아직 읽지 않은 자리(unread)는 묻지 않는다.
+ * 앞에, 다음 장소들은 그 뒤에(화면이 장소 수 상한으로 자른다). 맞는 사진 없음 · 제1유형 아님 · 장면이 맞는 사진 없음(장면을 읽지 못한
+ * 사진뿐인 자리 포함) 자리와, 홈페이지 사진 짝만 반복 상한에 걸린 자리(used · homeOnly), 장면으로 고를 때 장면이 맞는 장소 페이지 사진이
+ * 반복 상한에 걸린 자리(used · askTour)를 본다 — 장면 없이 고를 때 장소 페이지 · 관광공사 사진이 반복 상한에 걸린 자리(used) · 글이 다
+ * 찬 자리(full) · 장면을 아직 읽지 않은 자리(unread)는 묻지 않는다.
  * pagesRead는 장소 페이지를 읽은 장소(2단계가 본 장소) — 자리의 장소 가운데 하나라도 읽지 못했으면(일시 실패 · 읽기 상한) 그 자리는 묻지
  * 않는다(autoPickPhotos ③도 채우지 않는다). 다음에 눌러 그 페이지를 읽은 뒤에 묻는다.
  */
@@ -639,7 +704,7 @@ export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>, pages
   const rest: string[] = []
   for (const a of result.articles) {
     for (const row of a.rows) {
-      const open = row.state === 'nomatch' || row.state === 'license' || row.state === 'scene' || (row.state === 'used' && row.homeOnly)
+      const open = row.state === 'nomatch' || row.state === 'license' || row.state === 'scene' || (row.state === 'used' && (row.homeOnly || row.askTour))
       if (!open || !row.places?.length || !placesRead(row.places, pagesRead)) continue
       row.places.forEach((place, i) => (i === 0 ? first : rest).push(place))
     }
@@ -657,8 +722,11 @@ export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>, pages
  * 이미 고른 사진 가운데 출처가 없는 공공 사진은, 같은 사진이 공공 사진 후보(제1유형 · 출처 있음)에 있으면 credits로 출처를 붙인다.
  *
  * scenes를 주면(장면으로 고르기) — 장면을 읽은 후보는 자리와 장면이 어긋나면(sceneFit) 빼고, 장소 사진(②③)은 장면을 읽은 사진만 장면
- * 점수가 높은 것부터(같으면 ②는 페이지 순서, ③은 브랜드에서 덜 쓴 사진 · 받은 순서) 고른다. 홈페이지 사진(①)은 설명 낱말이 이미 장면을
- * 말하므로 장면을 읽지 않았어도 쓰고, 읽었으면 설명 점수에 장면 점수를 더한다. 같은 점수면 지금까지의 순서 그대로다.
+ * 점수가 높은 것부터(같으면 ②는 페이지 순서, ③은 브랜드에서 덜 쓴 사진 · 받은 순서) 고른다. 자리 글자로 종류를 정하지 못한 자리(「근대역사
+ * 박물관 건물」)의 장소 사진은 장면과 맞은 낱말이 있어야 한다(아무 실내 사진이나 들어가지 않게). 홈페이지 사진(①)은 설명 낱말이 이미
+ * 장면을 말하므로 장면을 읽지 않았어도 쓰고, 읽었으면 설명 점수에 장면 점수를 더한다. 같은 점수면 지금까지의 순서 그대로다. 장면을 읽지
+ * 못한 사진(sceneFailed)은 「아직 읽지 않음」(unread — 다시 누르면 읽는다)이 아니라 장면이 맞지 않은 사진으로 센다(관광공사 사진을 찾는다).
+ * 장면 없이 고를 때 「사람이 뺀 자리도 다시 채우기」는 뺀 사진을 아는 자리만 다시 채운다(refills).
  */
 export function autoPickPhotos(input: {
   articles: readonly AutoArticle[]
@@ -681,7 +749,9 @@ export function autoPickPhotos(input: {
   ownedDomains?: readonly string[]
   /** 사진 장면(열쇠는 canonicalPhotoSrc) — 주면 장면으로도 고른다. 비어 있어도 주면 장소 사진(②③)은 장면을 읽은 뒤에만 쓴다. */
   scenes?: ReadonlyMap<string, PhotoScene>
-  /** 사람이 뺀 자리도 다시 채운다 — 그 자리에서 뺀 사진(ClearedPhotoPlace.removed)은 고르지 않는다. */
+  /** 장면을 읽지 못한 사진(받지 못함 · 형식 · 모델이 읽지 않음, 열쇠는 canonicalPhotoSrc) — 장소 사진이면 쓰지 않되 「아직 읽지 않음」으로 세지 않는다. */
+  sceneFailed?: ReadonlySet<string>
+  /** 사람이 뺀 자리도 다시 채운다 — 그 자리에서 뺀 사진(ClearedPhotoPlace.removed)은 고르지 않는다(장면이 없으면 뺀 사진을 아는 자리만). */
   refillCleared?: boolean
 }): AutoPickResult {
   const stop = new Set(contentWords(input.brandName ?? ''))
@@ -776,7 +846,7 @@ export function autoPickPhotos(input: {
       const cleared = clearedAt(slot, article.cleared)
       const state: AutoSlotState = occupied.has(slot.line)
         ? 'kept'
-        : cleared.length && !input.refillCleared
+        : cleared.length && !refills(cleared, Boolean(input.refillCleared), Boolean(scenes))
           ? 'cleared'
           : isScreenSlot(slot.key)
             ? 'screen'
@@ -825,7 +895,7 @@ export function autoPickPhotos(input: {
         score,
         ...(seen?.scene ? { scene: seen.scene } : {}),
         ...(seen?.fit ? { fit: seen.fit } : {}),
-        ...(isPeopleScene(row.slot.key) || credit ? { review: true } : {}),
+        ...(isPeopleScene(row.slot.key, row.places ?? []) || credit ? { review: true } : {}),
       })
       out.push(pick)
       inArticle.add(candidate.src)
@@ -879,12 +949,17 @@ export function autoPickPhotos(input: {
         }
         const scene = scenes.get(candidate.src)
         if (!scene) {
-          skipScene(row, 'unread')
+          skipScene(row, input.sceneFailed?.has(candidate.src) ? 'failed' : 'unread')
           return
         }
-        const fit = sceneFit(wantsOf(row), scene)
+        const wants = wantsOf(row)
+        const fit = sceneFit(wants, scene)
         if (!fit.ok) {
           skipScene(row, fit.miss!)
+          return
+        }
+        if (!wants.settings && !fit.words.length) {
+          skipScene(row, 'words')
           return
         }
         opts.push({ candidate, order, scene, fit })
@@ -934,8 +1009,9 @@ export function autoPickPhotos(input: {
     }
 
     // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소의 공공 사진이 모두 「제1유형 아님」으로 빠졌으면 license.
-    // 홈페이지 사진 짝만 상한에 걸리고 장소 사진이 없던 자리는 homeOnly — 관광공사 사진을 찾을 자리다(tourPlacesWanted). 장면으로 고를 때
-    // 후보가 장면 때문에 모두 빠졌으면 scene, 장면을 아직 읽지 않은 후보가 있으면 unread(다시 누르면 이어서 읽는다).
+    // 홈페이지 사진 짝만 상한에 걸리고 장소 사진이 없던 자리는 homeOnly, 장면으로 고를 때 장면이 맞는 장소 페이지 사진이 상한에 걸리고 그
+    // 장소들의 관광공사 사진은 아직 없는 자리는 askTour — 관광공사 사진을 찾을 자리다(tourPlacesWanted). 장면으로 고를 때 후보가 장면
+    // 때문에 모두 빠졌으면(장면을 읽지 못한 사진 포함) scene, 장면을 아직 읽지 않은 후보가 있으면 unread(다시 누르면 이어서 읽는다).
     const licenseOnly = (place: string) => {
       const reasons = skippedByPlace.get(place) ?? []
       return reasons.length > 0 && !publicByPlace.get(place)?.length && !tourByPlace.get(place)?.length && reasons.every((r) => r === 'license')
@@ -944,6 +1020,7 @@ export function autoPickPhotos(input: {
       if (row.state !== 'nomatch') continue
       const best = pairs.filter((p) => p.row === row).sort(better)[0]
       const publicPlace = row.places?.find((place) => optsAt(publicOpts, row, place).length || optsAt(tourOpts, row, place).length)
+      const askTour = Boolean(scenes) && room > 0 && Boolean(publicPlace) && !row.places?.some((place) => tourByPlace.get(place)?.length)
       if (best)
         Object.assign(row, {
           state: room === 0 ? 'full' : 'used',
@@ -952,6 +1029,7 @@ export function autoPickPhotos(input: {
           ...(best.scene ? { scene: best.scene } : {}),
           ...(best.fit ? { fit: best.fit } : {}),
           ...(room > 0 && !publicPlace ? { homeOnly: true } : {}),
+          ...(askTour ? { askTour: true } : {}),
         })
       else if (publicPlace) {
         const o = optsAt(publicOpts, row, publicPlace)[0] ?? optsAt(tourOpts, row, publicPlace)[0]!
@@ -962,6 +1040,7 @@ export function autoPickPhotos(input: {
           place: publicPlace,
           ...(o.scene ? { scene: o.scene } : {}),
           ...(o.fit ? { fit: o.fit } : {}),
+          ...(askTour ? { askTour: true } : {}),
         })
       } else if (row.places?.some(licenseOnly)) row.state = 'license'
       else if (row.sceneSkips?.unread) row.state = 'unread'

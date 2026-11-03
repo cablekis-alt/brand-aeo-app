@@ -14,7 +14,8 @@
  *
  *   npx tsx scripts/verify-photo-scenes.ts
  */
-import { spawn, type ChildProcess } from 'node:child_process'
+import Anthropic from '@anthropic-ai/sdk'
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import net from 'node:net'
@@ -22,6 +23,8 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import {
   autoPickPhotos,
+  isPeopleScene,
+  placesToRead,
   sceneFit,
   slotSceneWants,
   tourPlacesWanted,
@@ -30,6 +33,7 @@ import {
   type AutoPickResult,
 } from '../src/lib/photoAutoPick'
 import { parseScene, scenesToRead, spreadByMonth, validScene, type PhotoScene, type SceneWant } from '../src/lib/photoScenes'
+import { loadScenesFor, newSceneBudget, pickReadingScenes } from '../src/lib/sitePhotos'
 import { TOUR_SOURCES } from '../src/lib/tourPhotos'
 
 const checks: [string, boolean][] = []
@@ -197,6 +201,151 @@ const a7 = doc('a7', ['## 1. 구도심', '', `![${EXT_SLOT}](#image-slot)`], { c
 ok('뺀 사진을 적기 전의 옛 기록 — 막을 사진을 몰라 장면으로만 고른다', rowsOf(run([a7], { candidates: [], scenes, refillCleared: true }), 'a7')[0]!.pick?.src === T.t5.src)
 const a6only = run([doc('a8', ['## 1. 구도심', '', `![${EXT_SLOT}](#image-slot)`], { cleared: [{ ...clearedAt, removed: [T.t5.src, T.t7.src] }] })], { candidates: [], scenes, refillCleared: true })
 ok('뺀 사진을 빼면 맞는 사진이 없을 때 — 비워 둔다', rowsOf(a6only, 'a8')[0]!.state === 'scene' && !rowsOf(a6only, 'a8')[0]!.pick)
+// 장면을 읽지 못하면(키 없음) 옛 기록 자리는 다시 채우지 않는다 — 무엇을 뺐는지 몰라 v0.4.52가 넣었던 그 사진(관광공사 첫 사진)을 다시 고른다.
+const oldNoScenes = run([a7], { candidates: [], tourCandidates: [T.t1, T.t2, T.t5], refillCleared: true })
+ok('장면 없이 다시 채우기 — 뺀 사진을 적기 전의 옛 기록 자리는 그대로(사람이 뺀 그 사진을 다시 넣지 않게)', rowsOf(oldNoScenes, 'a7')[0]!.state === 'cleared' && !rowsOf(oldNoScenes, 'a7')[0]!.pick)
+ok('장면 없이 다시 채우기 — 뺀 사진을 아는 기록 자리는 다시 채운다(그 사진은 빼고)', rowsOf(run([a6], { candidates: [], tourCandidates: [T.t5, T.t7], refillCleared: true }), 'a6')[0]!.pick?.src === T.t7.src)
+ok('장면 없이 다시 채우기 — 옛 기록 자리의 장소 페이지는 읽지 않는다', placesToRead([a7], PLACES, true, false).length === 0 && placesToRead([a7], PLACES, true, true).includes('근대역사박물관'))
+
+// 5b) 2026-11-04 검토 — 장면으로 고르기의 빈틈
+const freshScenes = (pairs: [AutoCandidate, PhotoScene][]) => new Map(pairs.map(([c, s]) => [c.src, s]))
+// 안내판 자리 — 가까이 찍은 사진은 안내판 · 간판만, 실내 전시물 · 설명판은 아니다.
+const SIGN_SLOT = '근대역사박물관 입구와 이용시간 안내판'
+const TICKET_SLOT = '근대역사박물관 매표소 앞에 붙은 요금과 이용시간 안내판'
+const DIORAMA_CLOSE = S({ setting: 'closeup', time: 'unknown', text: '옛 군산 거리를 재현한 디오라마 모형 근접', tags: ['디오라마', '모형', '전시물'] })
+const RELIC_CLOSE = S({ setting: 'closeup', time: 'unknown', text: '전시 유물 근접', tags: ['유물'] })
+const PANEL_INSIDE = S({ setting: 'closeup', time: 'unknown', text: '전시실 벽에 붙은 전시 설명 안내판', tags: ['안내판', '전시', '설명'] })
+const GATE_SIGN = S({ setting: 'closeup', text: '박물관 입구 옆 이용시간 안내판', tags: ['안내판', '입구', '이용시간'] })
+const signWants = [wantsOf(SIGN_SLOT), wantsOf(TICKET_SLOT)]
+ok('안내판 자리 — 가까이 찍은 디오라마 · 유물 사진은 뺀다', signWants.every((w) => sceneFit(w, DIORAMA_CLOSE).miss === 'setting' && sceneFit(w, RELIC_CLOSE).miss === 'setting'))
+ok('안내판 자리 — 실내 전시 설명판 근접도 뺀다', signWants.every((w) => !sceneFit(w, PANEL_INSIDE).ok))
+ok('안내판 자리 — 입구 안내판 근접 · 외관 사진은 받는다', signWants.every((w) => sceneFit(w, GATE_SIGN).ok && sceneFit(w, S({})).ok))
+const signDoc = doc('s1', ['## 1. 관람', '', `![${SIGN_SLOT}](#image-slot)`, '', '## 2. 요금', '', `![${TICKET_SLOT}](#image-slot)`])
+const sd = tour('sd1', '근대역사박물관', '201506')
+const sdRows = rowsOf(run([signDoc], { candidates: [], tourCandidates: [sd], scenes: freshScenes([[sd, DIORAMA_CLOSE]]) }), 's1')
+ok('안내판 자리 두 곳 — 디오라마 근접 사진뿐이면 비워 둔다', sdRows.every((r) => r.state === 'scene' && !r.pick))
+const sp = tour('sp1', '근대역사박물관', '201301')
+const se = tour('se1', '근대역사박물관', '201411')
+const spRow = rowsOf(run([doc('s2', [`![${SIGN_SLOT}](#image-slot)`])], { candidates: [], tourCandidates: [sp, se], scenes: freshScenes([[sp, PANEL_INSIDE], [se, S({ tags: ['외관', '건물'] })]]) }), 's2')[0]!
+ok('안내판 자리 — 실내 설명판보다 외관 사진', spRow.state === 'filled' && spRow.pick?.src === se.src)
+
+// 사람 장면 — 장소 이름 속 「어린이 · 친구」는 사람이 아니다.
+const kids = slotSceneWants({ key: '새만금어린이랜드 입구와 놀이기구', caption: '' }, ['새만금어린이랜드'])
+ok(
+  '장소 이름 속 「어린이 · 친구」로 사람 장면 자리가 되지 않는다 — 사람을 알아볼 수 있는 사진은 뺀다',
+  !kids.people && sceneFit(kids, S({ people: 'identifiable', tags: ['입구', '놀이기구'] })).miss === 'people' &&
+    !slotSceneWants({ key: '먹방이와 친구들 매장 외관', caption: '' }, ['먹방이와 친구들']).people && !isPeopleScene('새만금어린이랜드 입구', ['새만금어린이랜드']),
+)
+ok('장소 이름을 걷어도 사람 낱말이 남으면 사람 장면', slotSceneWants({ key: '새만금어린이랜드에서 뛰노는 아이', caption: '' }, ['새만금어린이랜드']).people && isPeopleScene('가족이 걷는 장면', []))
+
+// 종류를 정하지 못하는 자리 — 「전시관」은 건물 이름, 장소 이름 바로 뒤의 「앞 · 밖」은 바깥.
+ok('「전시관 입구 · 전시관 앞 광장」은 바깥', wantsOf('진포해양공원 전시관 입구').settings?.[0] === 'exterior' && wantsOf('근대역사박물관 전시관 앞 광장').settings?.[0] === 'exterior')
+ok('장소 이름 바로 뒤의 「앞 · 밖」은 바깥', wantsOf('근대역사박물관 앞에서 기념사진을 찍는 가족').settings?.[0] === 'exterior' && wantsOf('근대역사박물관 앞').settings?.[0] === 'exterior' && wantsOf('근대역사박물관 밖으로 나온 길').settings?.[0] === 'exterior')
+const vd = tour('vd1', '근대역사박물관', '201301')
+const ve = tour('ve1', '근대역사박물관', '201411')
+const vagueDoc = doc('v1', ['## 1. 건물', '', '![근대역사박물관 건물](#image-slot)'])
+const vagueOnly = rowsOf(run([vagueDoc], { candidates: [], tourCandidates: [vd], scenes: freshScenes([[vd, DIORAMA]]) }), 'v1')[0]!
+ok('종류를 정하지 못한 자리 — 맞는 낱말이 없는 장소 사진(실내 디오라마)은 넣지 않는다', vagueOnly.state === 'scene' && !vagueOnly.pick)
+const vagueBoth = rowsOf(run([vagueDoc], { candidates: [], tourCandidates: [vd, ve], scenes: freshScenes([[vd, DIORAMA], [ve, S({})]]) }), 'v1')[0]!
+ok('종류를 정하지 못한 자리 — 낱말이 맞는 외관 사진', vagueBoth.state === 'filled' && vagueBoth.pick?.src === ve.src)
+
+// 시간 낱말 — 저녁 · 해가 진 뒤 · 해 진 직후, 실내 자리의 불빛 · 조명.
+const DAY_WALK = S({ text: '낮의 바닷가 산책로', tags: ['산책로', '바다', '바닷가'] })
+ok('「저녁 · 해가 진 뒤 · 해 진 직후」 자리에 낮 사진 — 시간대가 달라 뺀다', ['저녁 무렵 은파호수 산책로', '해가 진 뒤 진포해양공원 산책로', '해 진 직후 바닷가 풍경'].every((k) => sceneFit(wantsOf(k), DAY_WALK).miss === 'time'))
+ok('「해가 진 뒤」 자리에 밤 사진은 받는다', sceneFit(wantsOf('해가 진 뒤 진포해양공원 산책로'), S({ time: 'night', tags: ['산책로', '야경'] })).ok)
+ok(
+  '불빛 · 조명이 켜진 실내 자리 — 시간 모름(실내) 사진도 받는다',
+  sceneFit(wantsOf('조명이 켜진 근대역사박물관 전시실 내부'), DIORAMA).ok && sceneFit(wantsOf('은은한 불빛이 비치는 객실'), S({ setting: 'interior', time: 'unknown', tags: ['객실'] })).ok,
+)
+
+// 읽지 못한 사진(failed)은 「아직 읽지 않음」이 아니다 — 장면이 맞는 사진 없음으로 관광공사 사진을 찾는다.
+const fa = pubInside[0]!
+const fb = pubInside[1]!
+const fc: AutoCandidate = { ...fb, src: 'https://gunsan.example/places/p3.jpg' }
+const failedPick = run([doc('f1', [`![${EXT_SLOT}](#image-slot)`])], {
+  candidates: [], publicCandidates: [fa, fb, fc], tourCandidates: [], scenes: freshScenes([[fa, DIORAMA], [fb, DIORAMA]]), sceneFailed: new Set([fc.src]),
+})
+const fRow = rowsOf(failedPick, 'f1')[0]!
+ok(
+  '장면을 읽지 못한 사진은 「아직 읽지 않음」으로 세지 않는다 — 장면이 맞는 사진 없음 · 관광공사 사진을 찾을 장소',
+  fRow.state === 'scene' && fRow.sceneSkips?.failed === 1 && !fRow.sceneSkips.unread && tourPlacesWanted(failedPick, new Set(['근대역사박물관'])).includes('근대역사박물관'),
+)
+
+// 장면이 맞는 장소 사진이 반복 상한에 걸린 자리(used)도 관광공사 사진을 찾는다(장면으로 고를 때).
+const ue: AutoCandidate = { ...pubInside[0]!, src: 'https://gunsan.example/places/ext.jpg' }
+const usedScenes = freshScenes([[ue, S({})], [pubInside[0]!, DIORAMA], [pubInside[1]!, DIORAMA], [T.t5, S({})], [T.t7, S({ text: '박물관 건물 외관', tags: ['외관', '건물'] })]])
+const usedDocs = ['ua', 'ub', 'uc', 'ud', 'ue'].map((id) => doc(id, [`![${EXT_SLOT}](#image-slot)`], { group: id }))
+const usedPick = run(usedDocs, { candidates: [], publicCandidates: [ue, ...pubInside], tourCandidates: [], scenes: usedScenes, pagesRead: new Set(['근대역사박물관']) })
+ok(
+  '장면이 맞는 장소 페이지 사진이 상한에 걸린 자리 — 관광공사 사진을 찾을 장소로',
+  usedDocs.map((d) => rowsOf(usedPick, d.actionId)[0]!.state).join(',') === 'filled,filled,filled,used,used' && tourPlacesWanted(usedPick, new Set(['근대역사박물관'])).includes('근대역사박물관'),
+)
+const usedTour = run(usedDocs, { candidates: [], publicCandidates: [ue, ...pubInside], tourCandidates: [T.t5, T.t7], scenes: usedScenes, pagesRead: new Set(['근대역사박물관']) })
+ok('그 자리는 관광공사 외관 사진으로 채운다', ['ud', 'ue'].every((id) => rowsOf(usedTour, id)[0]!.state === 'filled' && rowsOf(usedTour, id)[0]!.candidate?.tour === 'gallery'))
+const sameWriter = run([doc('wx', [`![${EXT_SLOT}](#image-slot)`], { group: 'w' }), doc('wy', [`![${EXT_SLOT}](#image-slot)`], { group: 'w' })], {
+  candidates: [], publicCandidates: [ue, ...pubInside], tourCandidates: [], scenes: usedScenes, pagesRead: new Set(['근대역사박물관']),
+})
+ok('같은 작성자의 둘째 글도 관광공사 사진을 찾는다', rowsOf(sameWriter, 'wy')[0]!.state === 'used' && tourPlacesWanted(sameWriter, new Set(['근대역사박물관'])).includes('근대역사박물관'))
+
+// 홈페이지 사진으로 채운 자리 — 그 사진의 장면이 어긋나 빠지면 장소 사진의 장면도 이어서 읽는다(다시 고르기를 되풀이).
+const homeArt: AutoCandidate = { src: 'https://gunsan.example/assets/art/museum.png', alt: '근대역사박물관 건물 외관과 앞마당', pageUrl: 'https://gunsan.example/' }
+const placePhoto: AutoCandidate = { ...pubInside[0]!, src: 'https://gunsan.example/places/m1.jpg' }
+const fixture = freshScenes([[homeArt, S({ setting: 'illustration', text: '박물관 그림', tags: ['그림'] })], [placePhoto, S({})]])
+const readLive = new Map<string, PhotoScene>()
+const readRounds: string[][] = []
+const homeDoc = doc('h1', ['## 1. 구도심', '', `![${EXT_SLOT}](#image-slot)`])
+const pickHome = () => autoPickPhotos({ articles: [homeDoc], candidates: [homeArt], publicCandidates: [placePhoto], places: PLACES, brandName: '군산각', scenes: readLive })
+const readFake = async (wanted: readonly SceneWant[]) => {
+  readRounds.push(wanted.map((w) => w.src))
+  for (const w of wanted) {
+    const s = fixture.get(w.src)
+    if (s) readLive.set(w.src, s)
+  }
+}
+const homeOnce = pickHome()
+ok('(재현) 첫 고르기는 홈페이지 짝으로 채워 장소 사진 장면을 묻지 않는다', homeOnce.sceneWanted.length === 1 && homeOnce.sceneWanted[0]!.src === homeArt.src)
+const homeResult = await pickReadingScenes(pickHome, readFake)
+const homeRow = rowsOf(homeResult, 'h1')[0]!
+ok(
+  '홈페이지 사진의 장면이 어긋나 빠지면 그 자리의 장소 사진 장면도 읽어 채운다',
+  homeRow.state === 'filled' && homeRow.pick?.src === placePhoto.src && readRounds.length === 2 && readRounds[1]!.includes(placePhoto.src) && !readRounds[1]!.includes(homeArt.src),
+)
+const neverRead: string[][] = []
+await pickReadingScenes(
+  () => autoPickPhotos({ articles: [homeDoc], candidates: [homeArt], publicCandidates: [placePhoto], places: PLACES, brandName: '군산각', scenes: new Map() }),
+  async (wanted) => {
+    neverRead.push(wanted.map((w) => w.src))
+  },
+)
+ok('장면을 읽지 못해도 같은 사진을 두 번 묻지 않고 끝난다', neverRead.length >= 1 && neverRead.length <= 3 && neverRead.flat().length === new Set(neverRead.flat()).size)
+
+// 장면 묶음 하나가 실패해도(시간 초과) 앞 묶음의 호출 수 · 읽은 수는 남긴다.
+const realFetch = globalThis.fetch
+let sceneRequests = 0
+globalThis.fetch = (async (_url: unknown, init?: { body?: unknown }) => {
+  const body = JSON.parse(String(init?.body ?? '{}')) as { srcs: string[]; limit: number }
+  if (body.limit === 0) {
+    return Response.json({ scenes: {}, missing: body.srcs, failed: {}, described: 0, calls: 0, pending: body.srcs.length, available: true, model: 'fake-vision', notes: [] })
+  }
+  sceneRequests += 1
+  if (sceneRequests === 2) throw new Error('사진 장면 요청이 180초 안에 끝나지 않았어요.')
+  return Response.json({
+    scenes: Object.fromEntries(body.srcs.map((s) => [s, S({})])), missing: [], failed: {}, described: body.srcs.length, calls: body.srcs.length, pending: 0, available: true, model: 'fake-vision', notes: [],
+  })
+}) as typeof fetch
+let partialLoad: Awaited<ReturnType<typeof loadScenesFor>> | null = null
+try {
+  partialLoad = await loadScenesFor(Array.from({ length: 30 }, (_, i) => ({ src: `https://gunsan.example/img/c${i}.jpg`, source: 'site' as const })), new Map(), undefined, newSceneBudget())
+} catch (e) {
+  console.warn('loadScenesFor가 던졌습니다', e)
+} finally {
+  globalThis.fetch = realFetch
+}
+ok(
+  '장면 묶음 하나가 실패해도 앞 묶음의 호출 수는 비용 안내에 남고, 남은 사진 · 이유를 알린다',
+  partialLoad?.calls === 12 && partialLoad.described === 12 && partialLoad.left === 18 && partialLoad.notes.some((n) => n.includes('180초')),
+)
+ok('dev 실행의 장면 캐시(server/photo-scenes.json)는 저장소에 올리지 않는다', spawnSync('git', ['check-ignore', '-q', 'server/photo-scenes.json']).status === 0)
 
 // 6) 서버 — 장면 읽기 · 캐시 · 원자적 쓰기(가짜 장면 읽기 함수)
 const { describePhotoScenes, SCENE_MAX_NEW } = await import('../server/photoScenes')
@@ -245,6 +394,64 @@ const noKey = await describePhotoScenes([photo(2), photo(300)])
 ok('키가 없으면 읽어 둔 장면만 주고 알린다(available false)', !noKey.available && Boolean(noKey.scenes[photo(2)]) && noKey.calls === 0 && noKey.notes.some((n) => n.includes('ANTHROPIC_API_KEY')) && JSON.stringify(noKey.missing) === JSON.stringify([photo(300)]))
 if (keyBefore === undefined) delete process.env.ANTHROPIC_API_KEY
 else process.env.ANTHROPIC_API_KEY = keyBefore
+
+// 6b) 오류 — 일시 · 계정 단위 오류(과부하 · 연결 · 크레딧 · 모델 없음)는 사진 한 장의 실패로 6시간 남기지 않고 멈춘다(다시 물으면 읽는다).
+// 사진 한 장의 문제(모델이 그 사진을 받지 않음)만 실패로 둔다.
+const sdkError = (status: number, type: string, message: string) => Anthropic.APIError.generate(status, { type: 'error', error: { type, message } }, message, new Headers())
+const errorCase = async (tag: string, make: () => unknown) => {
+  const srcs = Array.from({ length: 12 }, (_, i) => `https://photo.example/err/${tag}-${i}.jpg`)
+  const tries: string[] = []
+  const r = await describePhotoScenes(srcs, {
+    describer: async (src) => {
+      tries.push(src)
+      throw make()
+    },
+  })
+  const again = await describePhotoScenes(srcs, { describer: fakeDescriber })
+  return { r, tries, again }
+}
+const busy = await errorCase('busy', () => sdkError(529, 'overloaded_error', 'Overloaded'))
+ok(
+  'Claude 과부하(529) — 멈추고(동시에 시작한 3장까지만) 실패로 남기지 않아, 다시 물으면 읽는다',
+  busy.tries.length <= 3 && Object.keys(busy.r.failed).length === 0 && busy.r.pending === 12 && busy.r.calls === 0 && busy.r.notes.some((n) => n.includes('잠시 뒤')) && busy.again.described === 12,
+)
+const conn = await errorCase('conn', () => new Anthropic.APIConnectionError({ message: 'Connection error.' }))
+ok(
+  'Claude 연결 끊김 — 「연결하지 못했어요」로 알리고 멈춘다(실패로 남기지 않는다)',
+  conn.tries.length <= 3 && Object.keys(conn.r.failed).length === 0 && conn.r.notes.some((n) => n.includes('연결하지 못했')) && !conn.r.notes.some((n) => n.includes('HTTP ?')) && conn.again.described === 12,
+)
+const credit = await errorCase('credit', () => sdkError(400, 'invalid_request_error', 'Your credit balance is too low to access the Anthropic API.'))
+ok(
+  '크레딧 부족(400) — 멈추고 알린다(사진마다 실패로 남기지 않는다)',
+  credit.tries.length <= 3 && Object.keys(credit.r.failed).length === 0 && credit.r.pending === 12 && credit.r.notes.some((n) => n.includes('크레딧')) && credit.again.described === 12,
+)
+const model404 = await errorCase('model', () => sdkError(404, 'not_found_error', 'model: claude-typo'))
+ok('모델 없음(404) — 멈추고 PHOTO_SCENE_MODEL을 알린다', model404.tries.length <= 3 && Object.keys(model404.r.failed).length === 0 && model404.r.notes.some((n) => n.includes('PHOTO_SCENE_MODEL')))
+const imgSrcs = Array.from({ length: 4 }, (_, i) => `https://photo.example/err/img-${i}.jpg`)
+const img = await describePhotoScenes(imgSrcs, {
+  describer: async (src, onCall) => {
+    if (src === imgSrcs[1]) throw sdkError(400, 'invalid_request_error', 'Could not process image')
+    return fakeDescriber(src, onCall)
+  },
+})
+ok('모델이 사진 한 장을 받지 않으면(400 이미지) 그 사진만 실패로 두고 나머지는 읽는다', Object.keys(img.failed).length === 1 && Boolean(img.failed[imgSrcs[1]!]) && img.described === 3 && img.pending === 0)
+const gone = new AbortController()
+gone.abort()
+const abandoned = await describePhotoScenes(Array.from({ length: 5 }, (_, i) => `https://photo.example/err/gone-${i}.jpg`), { describer: fakeDescriber, signal: gone.signal })
+ok('화면이 요청을 버리면(연결 끊김) 새 사진을 읽기 시작하지 않는다', abandoned.calls === 0 && abandoned.described === 0)
+const { imageSourceOf } = await import('../server/photoScenes')
+let askedAccept: string | undefined
+const AVIF = Uint8Array.from([0, 0, 0, 0x1c, ...Buffer.from('ftypavif')])
+const WEBP = Uint8Array.from([...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WEBP')])
+const formatHost = async (_src: string, opts?: { accept?: string }) => {
+  askedAccept = opts?.accept
+  return (opts?.accept ?? 'image/avif').includes('image/avif') ? { bytes: AVIF, type: 'image/avif' as const, ext: 'avif' as const } : { bytes: WEBP, type: 'image/webp' as const, ext: 'webp' as const }
+}
+const fmt = await (async () => imageSourceOf('https://res.cdn.example/image/upload/f_auto/a.jpg', formatHost))().catch((e: unknown) => e)
+ok(
+  '장면 읽기용 사진은 avif를 청하지 않는다(형식을 고르는 CDN은 webp를 준다)',
+  !(fmt instanceof Error) && (fmt as { media_type?: string }).media_type === 'image/webp' && askedAccept !== undefined && !askedAccept.includes('avif'),
+)
 
 // 7) 저장 — 「사람이 뺀 자리도 다시 채우기」도 뺀 사진은 넣지 않는다(서버 쓰기 안에서)
 const TENANT = 'vscene'

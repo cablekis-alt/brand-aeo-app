@@ -13,12 +13,16 @@ import { parseScene, SCENE_JSON_SCHEMA, validScene, type PhotoScene } from '../s
  * 사진을 받지 않아(글자 전용) 대체로 쓰지 않는다. 키(ANTHROPIC_API_KEY)는 서버 안에서만 읽고 응답 · 로그 · 오류 글자에 싣지 않는다.
  *
  * 사진은 서버가 받아(server/sitePhoto.ts — 공개 주소 · https · 15초 · 10MB) base64로 보낸다. 3.75MB를 넘으면(base64가 5MB 한도를 넘는다)
- * 주소로 보낸다. avif는 모델이 받지 않아 읽지 않는다.
+ * 주소로 보낸다. avif는 모델이 받지 않아 avif를 빼고 청한다(SCENE_PHOTO_ACCEPT — 형식을 고르는 CDN은 webp를 준다). 그래도 avif가 오면
+ * 읽지 않는다.
  *
  * 읽은 장면은 userData의 photo-scenes.json에 사진 주소(canonicalPhotoSrc)마다 둔다 — 모델을 바꾸기 전까지 다시 읽지 않는다(사진 주소가
  * 같으면 사진도 같다고 본다). 쓰기는 원자적(writeJsonAtomic). 같은 사진을 동시에 물으면 한 번만 읽고, 이 PC 전체에서 동시에 CONCURRENCY장까지
- * 읽는다. 한 번에 SCENE_MAX_NEW장까지 새로 읽고 남은 수(pending)를 알린다 — 화면이 이어서 묻는다. 받지 못했거나 모양이 틀린 사진은
- * FAIL_RETRY_MS 동안 다시 읽지 않는다(그 사이에는 failed로 알린다).
+ * 읽는다. 한 번에 SCENE_MAX_NEW장까지 새로 읽고 남은 수(pending)를 알린다 — 화면이 이어서 묻는다.
+ * 사진 한 장의 문제(받지 못함 · 형식 · 모양이 틀림 · 모델이 그 사진을 읽지 않음)만 실패로 두고 FAIL_RETRY_MS 동안 다시 읽지 않는다(그
+ * 사이에는 failed로 알린다 — 사진 서버의 시간 초과 · 일시 오류는 FAIL_RETRY_SHORT_MS). 키 · 호출 한도 · 크레딧 · 모델 없음 · Claude
+ * 과부하 · 연결 끊김처럼 모든 사진에 같은 오류는 사진의 실패로 남기지 않고 멈춘다(남은 사진은 pending — 다시 누르면 이어서 읽는다).
+ * 화면이 요청을 버리면(연결이 끊기면) 새 사진을 읽기 시작하지 않는다.
  */
 
 /** 한 번에 새로 읽는 사진 수의 상한. */
@@ -33,6 +37,10 @@ const BASE64_MAX_BYTES = 3_750_000;
 const MAX_TOKENS = 2048;
 const CALL_TIMEOUT_MS = 60_000;
 const FAIL_RETRY_MS = 6 * 60 * 60 * 1000;
+/** 사진 서버의 시간 초과 · 연결 · 5xx — 잠깐의 문제일 수 있어 짧게만 다시 읽지 않는다. */
+const FAIL_RETRY_SHORT_MS = 10 * 60 * 1000;
+/** 장면 읽기용으로 사진을 받을 때 청하는 형식 — avif는 모델이 받지 않아 뺀다. */
+export const SCENE_PHOTO_ACCEPT = 'image/webp,image/png,image/jpeg,image/gif,*/*;q=0.5';
 const CACHE_MAX = 20_000;
 /** 추론 강도 · 거절 시 대체 모델을 받는 모델(5세대) — 그 밖의 모델에 보내면 400이거나 효과가 없다(engines/claudeJudgeClient.ts와 같다). */
 const SUPPORTS_EFFORT_AND_FALLBACK = /^claude-(opus-5|fable-5|sonnet-5-5)/;
@@ -67,7 +75,15 @@ export function scrubSceneKey(text: string): string {
   return key ? text.split(key).join('***') : text;
 }
 
-type SceneErrorCode = 'FETCH' | 'FORMAT' | 'INVALID' | 'REFUSED' | 'AUTH' | 'RATE' | 'UPSTREAM';
+/**
+ * 장면 읽기 오류 — 사진 한 장의 문제: FETCH 받지 못함 · FETCH_LATER 사진 서버의 시간 초과 · 연결 · 5xx(짧게만 다시 읽지 않는다) · FORMAT
+ * 형식 · INVALID 모양이 틀림 · REFUSED 모델이 거절 · REJECTED 모델이 그 사진을 받지 않음(400 이미지). 모든 사진에 같은 문제(STOP_CODES —
+ * 멈추고 남은 사진은 pending): AUTH 키 · 권한 · RATE 호출 한도 · ACCOUNT 크레딧 · 모델 없음 · 요청이 맞지 않음 · BUSY Claude 과부하 ·
+ * 5xx · 연결 끊김 · 시간 초과 · ERROR 예상하지 못한 오류.
+ */
+type SceneErrorCode = 'FETCH' | 'FETCH_LATER' | 'FORMAT' | 'INVALID' | 'REFUSED' | 'REJECTED' | 'AUTH' | 'RATE' | 'ACCOUNT' | 'BUSY' | 'ERROR';
+
+const STOP_CODES: ReadonlySet<SceneErrorCode> = new Set(['AUTH', 'RATE', 'ACCOUNT', 'BUSY', 'ERROR']);
 
 export class SceneError extends Error {
   readonly code: SceneErrorCode;
@@ -79,8 +95,8 @@ export class SceneError extends Error {
 }
 
 /**
- * 사진 한 장의 장면을 읽는다 — 모델 출력(검사 전)과 실제로 답한 모델. 모델을 부르기 직전에 onCall을 부른다(비용 셈). 확인 스크립트는
- * 가짜를 넣는다(describePhotoScenes opts.describer).
+ * 사진 한 장의 장면을 읽는다 — 모델 출력(검사 전)과 실제로 답한 모델. 모델이 답하면 onCall을 부른다(비용 셈 — 답하지 않은 호출은 세지
+ * 않는다). 확인 스크립트는 가짜를 넣는다(describePhotoScenes opts.describer).
  */
 export type SceneDescriber = (src: string, onCall: () => void) => Promise<{ raw: unknown; model: string }>;
 
@@ -96,7 +112,7 @@ interface CacheFile {
 
 let cache: CacheFile | null = null;
 let writing: Promise<void> = Promise.resolve();
-const failures = new Map<string, { at: number; reason: string }>();
+const failures = new Map<string, { at: number; reason: string; retryMs: number }>();
 const inflight = new Map<string, Promise<PhotoScene>>();
 
 function cacheFile(): string {
@@ -153,13 +169,25 @@ async function withSlot<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-async function imageSourceOf(src: string): Promise<Anthropic.Beta.BetaBase64ImageSource | Anthropic.Beta.BetaURLImageSource> {
+/** 사진 서버의 잠깐일 수 있는 문제 — 시간 초과 · 연결 끊김 · DNS 일시 실패 · 5xx. */
+const FETCH_LATER_CODES: ReadonlySet<string> = new Set(['TIMEOUT', 'CONNECT_TIMEOUT', 'CONNECTION_RESET', 'DNS_TEMPORARY', 'FETCH_FAILED']);
+
+/**
+ * 모델에 보낼 사진 — 받아서 base64로(avif를 빼고 청한다 — SCENE_PHOTO_ACCEPT), 10MB를 넘거나 3.75MB를 넘으면 주소로. fetchPhoto는 확인
+ * 스크립트가 가짜를 넣는다.
+ */
+export async function imageSourceOf(
+  src: string,
+  fetchPhoto: typeof fetchSitePhoto = fetchSitePhoto,
+): Promise<Anthropic.Beta.BetaBase64ImageSource | Anthropic.Beta.BetaURLImageSource> {
   let file: Awaited<ReturnType<typeof fetchSitePhoto>>;
   try {
-    file = await fetchSitePhoto(src);
+    file = await fetchPhoto(src, { accept: SCENE_PHOTO_ACCEPT });
   } catch (err) {
     if (err instanceof CollectorError && err.code === 'BODY_TOO_LARGE') return { type: 'url', url: src };
-    throw new SceneError('FETCH', `사진을 받지 못했어요 — ${publicCollectorError(err).message}`);
+    const pub = publicCollectorError(err);
+    const later = FETCH_LATER_CODES.has(pub.code) || /HTTP 5\d\d/.test(pub.message);
+    throw new SceneError(later ? 'FETCH_LATER' : 'FETCH', `사진을 받지 못했어요 — ${pub.message}`);
   }
   if (file.type === 'image/avif') throw new SceneError('FORMAT', '이 사진 형식(avif)은 장면을 읽지 못해요.');
   if (file.bytes.length > BASE64_MAX_BYTES) return { type: 'url', url: src };
@@ -175,7 +203,6 @@ function claudeDescriber(): SceneDescriber {
     client ??= new Anthropic({ apiKey: apiKey(), maxRetries: 2, timeout: CALL_TIMEOUT_MS });
     const model = sceneModel();
     const modern = SUPPORTS_EFFORT_AND_FALLBACK.test(model);
-    onCall();
     const response = await client.beta.messages.create({
       model,
       max_tokens: MAX_TOKENS,
@@ -192,6 +219,7 @@ function claudeDescriber(): SceneDescriber {
       output_config: { ...(modern ? { effort: 'low' as const } : {}), format: { type: 'json_schema', schema: SCENE_JSON_SCHEMA as unknown as Record<string, unknown> } },
       ...(modern ? { fallbacks: 'default' as const, betas: ['server-side-fallback-2026-07-01'] } : {}),
     });
+    onCall();
     if (response.stop_reason === 'refusal') throw new SceneError('REFUSED', `모델이 이 사진의 장면을 읽지 않았어요(${response.stop_details?.category ?? '분류 없음'}).`);
     if (response.stop_reason === 'max_tokens') throw new SceneError('INVALID', '모델 답이 출력 한도에서 잘렸어요.');
     const text = response.content
@@ -206,17 +234,36 @@ function claudeDescriber(): SceneDescriber {
   };
 }
 
-/** 오류를 화면에 보일 글자 · 종류로 — 키는 지운다. */
+/**
+ * 오류를 화면에 보일 글자 · 종류로 — 키는 지운다. 연결 오류(APIConnectionError · 시간 초과)는 APIError를 이어받아 먼저 본다. 400은
+ * 사진에 대한 말(image)이면 그 사진만(REJECTED), 아니면 모든 사진에 같은 문제다(크레딧 · 요청이 맞지 않음 — ACCOUNT).
+ */
 function sceneErrorOf(err: unknown): SceneError {
   if (err instanceof SceneError) return err;
+  if (err instanceof Anthropic.APIConnectionError) {
+    return new SceneError('BUSY', 'Claude에 연결하지 못했어요(네트워크 · 시간 초과) — 남은 사진은 잠시 뒤 다시 누르면 이어서 읽어요.');
+  }
   if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
     return new SceneError('AUTH', 'Claude 키가 맞지 않거나 이 모델을 쓸 권한이 없어 사진 장면을 읽지 못했어요 — 이 PC의 ANTHROPIC_API_KEY를 확인해 주세요.');
   }
   if (err instanceof Anthropic.RateLimitError) return new SceneError('RATE', 'Claude 호출 한도에 닿아 사진 장면을 다 읽지 못했어요 — 잠시 뒤 다시 눌러 주세요.');
-  if (err instanceof Anthropic.APIError) return new SceneError('UPSTREAM', `Claude 응답 오류(HTTP ${err.status ?? '?'})`);
-  if (err instanceof Anthropic.APIConnectionError) return new SceneError('UPSTREAM', 'Claude에 연결하지 못했어요.');
+  if (err instanceof Anthropic.APIError) {
+    const message = err.message ?? '';
+    if (err.type === 'billing_error' || /credit balance/i.test(message)) {
+      return new SceneError('ACCOUNT', 'Claude 크레딧이 부족해 사진 장면을 읽지 못했어요 — 충전한 뒤 다시 눌러 주세요.');
+    }
+    if (err instanceof Anthropic.NotFoundError) {
+      return new SceneError('ACCOUNT', `사진 장면 모델(${sceneModel()})을 찾지 못했어요 — 이 PC의 PHOTO_SCENE_MODEL을 확인해 주세요.`);
+    }
+    const status = err.status ?? 0;
+    if (status >= 500 || err.type === 'overloaded_error' || err.type === 'api_error' || err.type === 'timeout_error') {
+      return new SceneError('BUSY', `Claude가 지금 답하지 못해(HTTP ${status || '?'}) 사진 장면을 다 읽지 못했어요 — 남은 사진은 잠시 뒤 다시 누르면 이어서 읽어요.`);
+    }
+    if (status >= 400 && status < 500 && /image/i.test(message)) return new SceneError('REJECTED', `모델이 이 사진을 받지 않았어요(HTTP ${status}).`);
+    return new SceneError('ACCOUNT', `Claude가 사진 장면 요청을 받지 않았어요(HTTP ${status || '?'}) — 남은 사진은 읽지 않았어요.`);
+  }
   console.warn('[photo-scenes] 예상하지 못한 오류', scrubSceneKey(err instanceof Error ? err.message : String(err)));
-  return new SceneError('UPSTREAM', '사진 장면을 읽다가 오류가 났어요.');
+  return new SceneError('ERROR', '사진 장면을 읽다가 오류가 나 남은 사진은 읽지 않았어요 — 다시 눌러 주세요.');
 }
 
 /** 사진 한 장 — 같은 사진을 동시에 물으면 한 번만 읽는다. 읽으면 캐시에 넣는다(디스크 쓰기는 describePhotoScenes가 끝에 한 번). */
@@ -241,13 +288,13 @@ export interface PhotoScenesResult {
   scenes: Record<string, PhotoScene>;
   /** 장면이 없는 사진(남은 것 + 실패). */
   missing: string[];
-  /** 읽지 못한 사진과 이유(받지 못함 · 형식 · 모양이 틀림 — FAIL_RETRY_MS 동안 다시 읽지 않는다). */
+  /** 읽지 못한 사진과 이유(사진 한 장의 문제 — 받지 못함 · 형식 · 모양이 틀림 · 모델이 읽지 않음, 한동안 다시 읽지 않는다). */
   failed: Record<string, string>;
   /** 이번에 새로 읽은 사진 수. */
   described: number;
   /** 이번에 모델을 부른 횟수(비용). */
   calls: number;
-  /** 아직 읽지 않은 사진 수(실패 제외) — 다시 물으면 이어서 읽는다. */
+  /** 아직 읽지 않은 사진 수(실패 제외 — 상한 · 멈춤으로 남은 사진) — 다시 물으면 이어서 읽는다. */
   pending: number;
   /** 이 PC에서 새로 읽을 수 있는가(키가 있는가). */
   available: boolean;
@@ -257,9 +304,13 @@ export interface PhotoScenesResult {
 
 /**
  * 사진들의 장면 — 읽어 둔 장면은 그대로, 없는 사진은 앞에서부터 limit장(SCENE_MAX_NEW까지) 새로 읽는다(limit 0이면 읽어 둔 것만).
- * 키가 없으면 읽어 둔 장면만 주고 알린다. 키가 틀리거나 호출 한도에 닿으면 남은 사진은 읽지 않고 알린다(pending으로 남는다).
+ * 키가 없으면 읽어 둔 장면만 주고 알린다. 모든 사진에 같은 오류(STOP_CODES — 키 · 한도 · 크레딧 · 모델 없음 · 과부하 · 연결)가 나면 남은
+ * 사진은 읽지 않고 알린다(pending으로 남는다 — 실패로 적지 않는다). signal이 끊기면(화면이 요청을 버렸다) 새 사진을 읽기 시작하지 않는다.
  */
-export async function describePhotoScenes(srcs: readonly string[], opts: { limit?: number; describer?: SceneDescriber } = {}): Promise<PhotoScenesResult> {
+export async function describePhotoScenes(
+  srcs: readonly string[],
+  opts: { limit?: number; describer?: SceneDescriber; signal?: AbortSignal } = {},
+): Promise<PhotoScenesResult> {
   const model = sceneModel();
   const list = [...new Set(srcs.map((s) => canonicalPhotoSrc(s)).filter((s): s is string => Boolean(s)))];
   const c = loadCache();
@@ -274,7 +325,7 @@ export async function describePhotoScenes(srcs: readonly string[], opts: { limit
       continue;
     }
     const fail = failures.get(src);
-    if (fail && now - fail.at < FAIL_RETRY_MS) failed[src] = fail.reason;
+    if (fail && now - fail.at < fail.retryMs) failed[src] = fail.reason;
     else todo.push(src);
   }
   const available = Boolean(opts.describer) || photoScenesConfigured();
@@ -289,7 +340,7 @@ export async function describePhotoScenes(srcs: readonly string[], opts: { limit
     let stop: string | null = null;
     let next = 0;
     const worker = async () => {
-      while (next < batch.length && !stop) {
+      while (next < batch.length && !stop && !opts.signal?.aborted) {
         const src = batch[next]!;
         next += 1;
         try {
@@ -298,12 +349,12 @@ export async function describePhotoScenes(srcs: readonly string[], opts: { limit
         } catch (err) {
           const e = sceneErrorOf(err);
           const message = scrubSceneKey(e.message);
-          if (e.code === 'AUTH' || e.code === 'RATE') {
+          if (STOP_CODES.has(e.code)) {
             stop ??= message;
             continue;
           }
           failed[src] = message;
-          failures.set(src, { at: Date.now(), reason: message });
+          failures.set(src, { at: Date.now(), reason: message, retryMs: e.code === 'FETCH_LATER' ? FAIL_RETRY_SHORT_MS : FAIL_RETRY_MS });
         }
       }
     };

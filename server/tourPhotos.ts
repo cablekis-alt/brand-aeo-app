@@ -229,6 +229,8 @@ async function call(service: Service, op: string, params: Record<string, string>
 
 /**
  * 여러 쪽을 받는다 — rows건씩 1쪽부터, 받은 건이 rows보다 적거나 전체 건수(totalCount)에 닿거나 maxPages쪽이면 멈춘다. 쪽마다 캐시.
+ * 1쪽이 실패하면 throw. 다음 쪽이 실패하면(시간 초과 · 한도 · 응답 오류) 그때까지 받은 항목과 그 오류(error)를 돌려준다 — 받은 쪽의 사진은
+ * 쓰고 오류는 알린다(군산근대역사박물관 115건은 2쪽까지 — 2쪽이 실패해도 1쪽 100장은 쓴다).
  */
 async function callPages(
   service: Service,
@@ -237,14 +239,20 @@ async function callPages(
   stats: { live: number },
   rows: number,
   maxPages: number,
-): Promise<Record<string, unknown>[]> {
+): Promise<{ items: Record<string, unknown>[]; error?: unknown }> {
   const items: Record<string, unknown>[] = [];
   for (let pageNo = 1; pageNo <= maxPages; pageNo += 1) {
-    const page = await callPage(service, op, { ...params, numOfRows: String(rows), pageNo: String(pageNo) }, stats);
+    let page: Page;
+    try {
+      page = await callPage(service, op, { ...params, numOfRows: String(rows), pageNo: String(pageNo) }, stats);
+    } catch (err) {
+      if (pageNo === 1) throw err;
+      return { items, error: err };
+    }
     items.push(...page.items);
     if (page.items.length < rows || (page.total !== null && pageNo * rows >= page.total)) break;
   }
-  return items;
+  return { items };
 }
 
 function remember(src: string | null, title: string, type1: boolean): void {
@@ -357,9 +365,13 @@ export async function findTourPhotos(q: TourPhotoQuery, brandRegion: string): Pr
     const keywords = [...new Set([resolved?.title, names[0]].filter((k): k is string => Boolean(k)))];
     try {
       for (const keyword of keywords) {
-        const items = await callPages('PhotoGalleryService1', 'gallerySearchList1', { keyword }, stats, GALLERY_ROWS, GALLERY_PAGES);
-        gallery = galleryTourPhotos(items, q.place, allNames, region);
+        const pages = await callPages('PhotoGalleryService1', 'gallerySearchList1', { keyword }, stats, GALLERY_ROWS, GALLERY_PAGES);
+        gallery = galleryTourPhotos(pages.items, q.place, allNames, region);
         for (const p of gallery.photos) remember(p.src, p.title, true);
+        if (pages.error !== undefined) {
+          fail(pages.error);
+          break;
+        }
         if (gallery.photos.length) break;
       }
     } catch (err) {

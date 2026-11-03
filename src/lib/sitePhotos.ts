@@ -14,7 +14,7 @@ import {
 import { publishMarkdownOf } from './draftGaps'
 import { downloadBlob, safeFileName } from './markdownFile'
 import { fetchPage } from './aeo/fetchPage'
-import { findPlace, placeKey, placeNameOfPath, publicCandidateFields, type AutoCandidate } from './photoAutoPick'
+import { findPlace, placeKey, placeNameOfPath, publicCandidateFields, type AutoCandidate, type AutoPickResult } from './photoAutoPick'
 import { scenesToRead, type PhotoScene, type SceneWant } from './photoScenes'
 import { TOUR_PLACE_LIMIT, type TourPhotoQuery, type TourPhotoResult } from './tourPhotos'
 import { todayKst } from './publishedUrl'
@@ -751,8 +751,9 @@ export function newSceneBudget(): SceneBudget {
 /**
  * 자동 채우기가 견줄 사진(sceneWanted)의 장면을 scenes에 채운다 — 먼저 읽어 둔 장면을 받고(비용 없음), 없는 사진은 장소마다
  * SCENE_PER_PLACE장 · 모두 SCENE_RUN_LIMIT장까지(budget — 한 실행에서 함께 센다, scenesToRead — 관광공사 사진은 촬영 연월이 고루)
- * SCENE_CHUNK장씩 새로 읽는다. 키가 없거나 키 · 한도 오류가 나면 멈추고 알린다(그때까지 받은 장면은 쓴다). onProgress(n, m)는 새로
- * 읽기의 진행.
+ * SCENE_CHUNK장씩 새로 읽는다. 키가 없거나 서버가 멈추면(키 · 한도 · 크레딧 · Claude 과부하 — 남은 사진이 pending) 멈추고 알린다(그때까지
+ * 받은 장면은 쓴다). 새로 읽는 묶음 요청이 실패하면(시간 초과 등) 거기서 멈추되, 앞 묶음까지의 호출 수 · 읽은 수는 그대로 돌려주고 남은
+ * 사진 수와 이유를 알린다(비용 안내가 실제보다 적게 나오지 않게). onProgress(n, m)는 새로 읽기의 진행.
  */
 export async function loadScenesFor(
   wanted: readonly SceneWant[],
@@ -788,7 +789,14 @@ export async function loadScenesFor(
   let done = 0
   for (let i = 0; i < plan.read.length; i += SCENE_CHUNK) {
     const chunk = plan.read.slice(i, i + SCENE_CHUNK)
-    const r = await loadPhotoScenes(chunk, chunk.length)
+    let r: Awaited<ReturnType<typeof loadPhotoScenes>>
+    try {
+      r = await loadPhotoScenes(chunk, chunk.length)
+    } catch (e) {
+      out.left += plan.read.length - done
+      note(`사진 장면을 다 읽지 못했어요 — ${e instanceof Error ? e.message : String(e)} 남은 사진 ${plan.read.length - done}장은 다시 누르면 이어서 읽어요.`)
+      break
+    }
     for (const [src, scene] of Object.entries(r.scenes)) scenes.set(src, scene)
     out.calls += r.calls
     out.described += r.described
@@ -804,6 +812,31 @@ export async function loadScenesFor(
   }
   if (plan.cappedPlaces.length) note(`장소마다 한 번에 ${SCENE_PER_PLACE}장까지 장면을 읽어요(${plan.cappedPlaces.join(' · ')}) — 다시 누르면 남은 사진을 이어서 읽어요.`)
   return out
+}
+
+/** 장면을 읽고 다시 고르기를 되풀이하는 최대 횟수(pickReadingScenes). */
+const SCENE_PICK_ROUNDS = 3
+
+/**
+ * 장면으로 고르기 — 고르고(pick), 고르는 데 쓰일 사진(sceneWanted) 가운데 아직 묻지 않은 사진의 장면을 읽고(read) 다시 고른다. 장면이
+ * 생기면 고르는 길이 바뀌어 새 사진이 쓰일 수 있어(홈페이지 사진으로 채운 자리 — 그 사진의 장면이 어긋나 빠지면 처음에는 묻지 않은 그
+ * 자리의 장소 사진이 쓰인다) 새로 쓰일 사진이 없을 때까지 SCENE_PICK_ROUNDS번까지 되풀이한다. asked는 이미 물은 사진(실행 하나에서 함께 —
+ * 같은 사진을 두 번 묻지 않는다).
+ */
+export async function pickReadingScenes(
+  pick: () => AutoPickResult,
+  read: (wanted: readonly SceneWant[]) => Promise<void>,
+  asked: Set<string> = new Set(),
+): Promise<AutoPickResult> {
+  let result = pick()
+  for (let round = 0; round < SCENE_PICK_ROUNDS; round += 1) {
+    const fresh = result.sceneWanted.filter((w) => !asked.has(w.src))
+    if (!fresh.length) break
+    for (const w of fresh) asked.add(w.src)
+    await read(fresh)
+    result = pick()
+  }
+  return result
 }
 
 /** 사이트 출처 — 사진을 찾는 페이지(photoPageOf)의 루트. */

@@ -26,7 +26,7 @@ import {
 } from '../lib/articlePhotos'
 import { publishMarkdownOf } from '../lib/draftGaps'
 import type { PublishSettings } from '../lib/publishSettings'
-import { findPlace, isPeopleScene, publicCandidateFields } from '../lib/photoAutoPick'
+import { findPlace, findPlaces, isPeopleScene, publicCandidateFields } from '../lib/photoAutoPick'
 import { sceneMeta, type PhotoScene } from '../lib/photoScenes'
 import {
   findPublicCredit,
@@ -544,7 +544,7 @@ export default function SitePhotoPanel({
                     <span className="status-pill st-info no-glyph">{isTourSourcePage(picked.pageUrl) ? '관광공사 사진' : '공공 사진'}</span>
                   )}
                   {photoCreditState(picked) === 'missing' && <span className="status-pill st-warn">출처 없음</span>}
-                  {picked.auto && (isPeopleScene(slot.key) || photoCreditState(picked) === 'public') && (
+                  {picked.auto && (isPeopleScene(slot.key, findPlaces(slot.key, places ?? [])) || photoCreditState(picked) === 'public') && (
                     <span className="status-pill st-warn">확인 필요</span>
                   )}
                   {(picked.auto || photoCreditState(picked) !== 'site') && ' '}

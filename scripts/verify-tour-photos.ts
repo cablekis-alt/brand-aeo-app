@@ -192,6 +192,13 @@ const bigItems = Array.from({ length: BIG_TOTAL }, (_, i) => ({
   galContentId: String(5000 + i), galTitle: '가상시가상큰박물관', galWebImageUrl: GAL(`big${i}`), galPhotographyLocation: '전라북도 가상',
   galPhotographer: '한국관광공사 가상촬영', galSearchKeyword: '가상시가상큰박물관', galPhotographyMonth: i < 100 ? '201301' : '201411',
 }))
+/** 다음 쪽이 실패하는 장소 — 「가상반쪽관」 115장 중 1쪽(100장)만 받고 2쪽은 HTTP 500. */
+const HALF_TOTAL = 115
+const halfPages: number[] = []
+const halfItems = Array.from({ length: 100 }, (_, i) => ({
+  galContentId: String(7000 + i), galTitle: '가상반쪽관', galWebImageUrl: GAL(`half${i}`), galPhotographyLocation: '전라북도 가상',
+  galPhotographer: '한국관광공사 가상촬영', galSearchKeyword: '가상반쪽관', galPhotographyMonth: '201506',
+}))
 const mock = http.createServer((req, res) => {
   const url = new URL(req.url ?? '/', `http://127.0.0.1:${MOCK_PORT}`)
   const p = url.searchParams
@@ -209,6 +216,17 @@ const mock = http.createServer((req, res) => {
     bigPages.push(`${pageNo}/${rows}`)
     const item = bigItems.slice((pageNo - 1) * rows, pageNo * rows)
     json({ response: { header: { resultCode: '0000', resultMsg: 'OK' }, body: { items: item.length ? { item } : '', numOfRows: rows, pageNo, totalCount: BIG_TOTAL } } })
+    return
+  }
+  if (op === 'PhotoGalleryService1/gallerySearchList1' && kw === '가상반쪽관') {
+    const pageNo = Number(p.get('pageNo') ?? '1')
+    halfPages.push(pageNo)
+    if (pageNo > 1) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' })
+      res.end('Internal Server Error')
+      return
+    }
+    json({ response: { header: { resultCode: '0000', resultMsg: 'OK' }, body: { items: { item: halfItems }, numOfRows: Number(p.get('numOfRows') ?? '10'), pageNo, totalCount: HALF_TOTAL } } })
     return
   }
   if (kw === '가상금지관') {
@@ -508,6 +526,11 @@ try {
     )
     const bigAgain = await tour(TENANT, { place: '가상큰박물관' })
     ok('다시 물으면 쪽마다 캐시에서(TourAPI를 다시 부르지 않는다)', bigAgain.body.photos.length === BIG_TOTAL && bigPages.length === 2 && bigAgain.body.liveCalls === 0)
+    const half = await tour(TENANT, { place: '가상반쪽관' })
+    ok(
+      '관광사진 정보의 다음 쪽이 실패해도 이미 받은 쪽의 사진은 쓰고 오류는 알린다',
+      half.body.photos.length === 100 && JSON.stringify(halfPages) === JSON.stringify([1, 2]) && half.body.error === 'UPSTREAM' && String(half.body.note).includes('HTTP 500'),
+    )
 
     // 캐시 · 키 노출
     await new Promise((r) => setTimeout(r, 1500))

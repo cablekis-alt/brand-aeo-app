@@ -1153,8 +1153,13 @@ app.post('/api/photo-scenes', async (req, res) => {
     res.status(400).json({ error: `limit(0~${SCENE_MAX_NEW})이 맞지 않습니다.` });
     return;
   }
+  // 화면이 요청을 버리면(시간 초과 · 창 닫힘) 새 사진을 읽기 시작하지 않는다 — 받을 쪽이 없는 호출은 비용 안내에도 잡히지 않는다.
+  const gone = new AbortController();
+  res.on('close', () => {
+    if (!res.writableFinished) gone.abort();
+  });
   try {
-    res.json(await describePhotoScenes([...new Set(srcs as string[])], { limit }));
+    res.json(await describePhotoScenes([...new Set(srcs as string[])], { limit, signal: gone.signal }));
   } catch (err) {
     const message = scrubSceneKey(err instanceof Error ? err.message : String(err));
     console.warn(`[photo-scenes] 사진 장면을 읽지 못했습니다: ${message}`);
