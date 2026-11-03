@@ -730,22 +730,37 @@ export interface SceneLoad {
   cached: number
   /** 상한에 걸려 이번에 읽지 않고 남긴 사진 수. */
   left: number
-  /** 읽지 못한 사진 수(받지 못함 · 형식 · 모양이 틀림). */
-  failed: number
+  /** 읽지 못한 사진(받지 못함 · 형식 · 모양이 틀림). */
+  failed: string[]
   notes: string[]
+}
+
+/** 한 번 누를 때(실행 하나) 새로 읽을 수 있는 남은 수 — loadScenesFor를 여러 번 불러도(관광공사 사진 앞뒤) 함께 줄어든다. */
+export interface SceneBudget {
+  /** 남은 수(모두 합쳐). */
+  total: number
+  /** 장소마다 이미 읽은 수. */
+  perPlace: Map<string, number>
+}
+
+/** 실행 하나의 새 예산 — 모두 SCENE_RUN_LIMIT장, 장소마다 SCENE_PER_PLACE장. */
+export function newSceneBudget(): SceneBudget {
+  return { total: SCENE_RUN_LIMIT, perPlace: new Map() }
 }
 
 /**
  * 자동 채우기가 견줄 사진(sceneWanted)의 장면을 scenes에 채운다 — 먼저 읽어 둔 장면을 받고(비용 없음), 없는 사진은 장소마다
- * SCENE_PER_PLACE장 · 모두 SCENE_RUN_LIMIT장까지(scenesToRead — 관광공사 사진은 촬영 연월이 고루) SCENE_CHUNK장씩 새로 읽는다. 키가
- * 없거나 키 · 한도 오류가 나면 멈추고 알린다(그때까지 받은 장면은 쓴다). onProgress(n, m)는 새로 읽기의 진행.
+ * SCENE_PER_PLACE장 · 모두 SCENE_RUN_LIMIT장까지(budget — 한 실행에서 함께 센다, scenesToRead — 관광공사 사진은 촬영 연월이 고루)
+ * SCENE_CHUNK장씩 새로 읽는다. 키가 없거나 키 · 한도 오류가 나면 멈추고 알린다(그때까지 받은 장면은 쓴다). onProgress(n, m)는 새로
+ * 읽기의 진행.
  */
 export async function loadScenesFor(
   wanted: readonly SceneWant[],
   scenes: Map<string, PhotoScene>,
   onProgress?: (done: number, total: number) => void,
+  budget: SceneBudget = newSceneBudget(),
 ): Promise<SceneLoad> {
-  const out: SceneLoad = { available: true, calls: 0, described: 0, cached: 0, left: 0, failed: 0, notes: [] }
+  const out: SceneLoad = { available: true, calls: 0, described: 0, cached: 0, left: 0, failed: [], notes: [] }
   const note = (n: string) => {
     if (!out.notes.includes(n)) out.notes.push(n)
   }
@@ -756,13 +771,19 @@ export async function loadScenesFor(
     for (const [src, scene] of Object.entries(r.scenes)) scenes.set(src, scene)
     out.cached += Object.keys(r.scenes).length
     for (const src of r.missing) if (!r.failed[src]) missing.add(src)
-    out.failed += Object.keys(r.failed).length
+    out.failed.push(...Object.keys(r.failed))
     out.available &&= r.available
     r.notes.forEach(note)
   }
   if (!out.available || !missing.size) return out
-  const plan = scenesToRead(wanted, missing, { perPlace: SCENE_PER_PLACE, total: SCENE_RUN_LIMIT })
+  const plan = scenesToRead(wanted, missing, { perPlace: SCENE_PER_PLACE, total: Math.max(0, budget.total), used: budget.perPlace })
   out.left = plan.left
+  budget.total -= plan.read.length
+  const placeOf = new Map(wanted.map((w) => [w.src, w.place ?? '']))
+  for (const src of plan.read) {
+    const place = placeOf.get(src) ?? ''
+    if (place) budget.perPlace.set(place, (budget.perPlace.get(place) ?? 0) + 1)
+  }
   onProgress?.(0, plan.read.length)
   let done = 0
   for (let i = 0; i < plan.read.length; i += SCENE_CHUNK) {
@@ -771,7 +792,7 @@ export async function loadScenesFor(
     for (const [src, scene] of Object.entries(r.scenes)) scenes.set(src, scene)
     out.calls += r.calls
     out.described += r.described
-    out.failed += Object.keys(r.failed).length
+    out.failed.push(...Object.keys(r.failed))
     r.notes.forEach(note)
     done += chunk.length
     onProgress?.(Math.min(done, plan.read.length), plan.read.length)

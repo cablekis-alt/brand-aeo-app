@@ -123,13 +123,13 @@ export function spreadByMonth<T extends { month?: string }>(list: readonly T[]):
 
 /**
  * 새로 읽을 사진 — 장면이 없는(missing) 사진 가운데, 장소마다 perPlace장까지(관광공사 사진은 촬영 연월이 고루 섞이게 — spreadByMonth),
- * 모두 합쳐 total장까지. 홈페이지 사진 → 장소 페이지 사진 → 관광공사 사진 순서(앞 단계가 먼저 쓰인다). left는 읽지 않고 남긴 수,
- * cappedPlaces는 장소 상한에 걸린 장소.
+ * 모두 합쳐 total장까지. 홈페이지 사진 → 장소 페이지 사진 → 관광공사 사진 순서(앞 단계가 먼저 쓰인다). used는 같은 실행에서 이미 읽은
+ * 장소별 수(장소 상한에 함께 센다). left는 읽지 않고 남긴 수, cappedPlaces는 장소 상한에 걸린 장소.
  */
 export function scenesToRead(
   wanted: readonly SceneWant[],
   missing: ReadonlySet<string>,
-  limits: { perPlace: number; total: number },
+  limits: { perPlace: number; total: number; used?: ReadonlyMap<string, number> },
 ): { read: string[]; left: number; cappedPlaces: string[] } {
   const seen = new Set<string>()
   const todo: SceneWant[] = []
@@ -140,7 +140,7 @@ export function scenesToRead(
   }
   const order: SceneWant['source'][] = ['site', 'public', 'tour']
   const read: string[] = []
-  const perPlace = new Map<string, number>()
+  const perPlace = new Map<string, number>(limits.used ?? [])
   const capped = new Set<string>()
   for (const source of order) {
     const mine = todo.filter((w) => w.source === source)

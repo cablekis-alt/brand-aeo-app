@@ -35,6 +35,7 @@ import {
   loadScenesFor,
   loadSitePhotos,
   loadTourPhotosFor,
+  newSceneBudget,
   photoPageOf,
   publicCandidatesOf,
   siteRootOf,
@@ -157,18 +158,20 @@ export default function PhotoAutoFill({
       const pagesRead = new Set(pub.pages.map((p) => p.place))
       // 사진 장면 — 이 PC에 키가 있으면 장면으로 고른다(없으면 지금처럼). 장면을 다 읽지 못해도 장면으로 고른다(읽지 못한 장소 사진은 비워 둔다).
       const scenes = (await loadPhotoScenesStatus()) ? new Map<string, PhotoScene>() : null
-      const sceneSum = { calls: 0, described: 0, cached: 0, left: 0, failed: 0 }
+      // 남긴 수는 마지막 읽기의 것(뒤 읽기가 앞 읽기의 사진을 다시 본다), 읽지 못한 사진은 한 번씩.
+      const sceneSum = { calls: 0, described: 0, cached: 0, left: 0, failed: new Set<string>() }
+      const sceneBudget = newSceneBudget()
       const sceneNotes: string[] = []
       const readScenes = async (r: AutoPickResult) => {
         if (!scenes || !r.sceneWanted.length) return
         setProgress('사진 장면 확인 중…')
         try {
-          const load = await loadScenesFor(r.sceneWanted, scenes, (n, m) => setProgress(`사진 장면 읽는 중 ${n}/${m}`))
+          const load = await loadScenesFor(r.sceneWanted, scenes, (n, m) => setProgress(`사진 장면 읽는 중 ${n}/${m}`), sceneBudget)
           sceneSum.calls += load.calls
           sceneSum.described += load.described
           sceneSum.cached += load.cached
-          sceneSum.left += load.left
-          sceneSum.failed += load.failed
+          sceneSum.left = load.left
+          for (const src of load.failed) sceneSum.failed.add(src)
           for (const n of load.notes) if (!sceneNotes.includes(n)) sceneNotes.push(n)
         } catch (e) {
           console.warn('[PhotoAutoFill] 사진 장면을 다 읽지 못했습니다', e)
@@ -232,7 +235,7 @@ export default function PhotoAutoFill({
         ? [
             `사진 장면 — 읽어 둔 장면 ${sceneSum.cached}장 · 새로 읽음 ${sceneSum.described}장(Claude 호출 ${sceneSum.calls}번).`,
             ...(sceneSum.left ? [`이번에 읽지 않고 남긴 사진 ${sceneSum.left}장 — 다시 누르면 이어서 읽어요.`] : []),
-            ...(sceneSum.failed ? [`장면을 읽지 못한 사진 ${sceneSum.failed}장(받지 못함 · 형식)은 쓰지 않아요.`] : []),
+            ...(sceneSum.failed.size ? [`장면을 읽지 못한 사진 ${sceneSum.failed.size}장(받지 못함 · 형식)은 쓰지 않아요.`] : []),
             ...sceneNotes,
           ].join(' ')
         : placeFilled

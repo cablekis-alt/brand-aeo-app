@@ -73,6 +73,10 @@ ok(
   plan.read[0] === wanted[0]!.src && plan.read[1] === 'https://gunsan.example/places/p1.jpg' && plan.read.length === 41 && plan.left === 117 - 41 &&
     JSON.stringify(plan.cappedPlaces) === JSON.stringify(['근대역사박물관']),
 )
+ok(
+  '같은 실행에서 이미 읽은 장소별 수(used)도 장소 상한에 센다',
+  scenesToRead(gallery, new Set(gallery.map((w) => w.src)), { perPlace: 40, total: 150, used: new Map([['근대역사박물관', 30]]) }).read.length === 10,
+)
 ok('이미 읽은 사진은 다시 고르지 않고, 모두 합친 상한을 지킨다', scenesToRead(wanted, new Set([wanted[0]!.src]), { perPlace: 40, total: 150 }).read.length === 1 && scenesToRead(wanted, new Set(wanted.map((w) => w.src)), { perPlace: 40, total: 10 }).read.length === 10)
 
 // 3) 자리가 바라는 장면 · 장면 맞추기
