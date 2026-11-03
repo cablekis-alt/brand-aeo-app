@@ -54,6 +54,10 @@ export interface TourPhoto {
   photographer?: string
   /** 관광공사 콘텐츠 id(KorService2 contentid · 관광사진 galContentId). */
   contentId: string
+  /** 장소의 주소(국문 관광정보 addr1) 또는 촬영지(관광사진 galPhotographyLocation) — 도시 확인의 근거. */
+  location: string
+  /** 사진 이름(국문 관광정보 imgname — 대표 사진은 없다). */
+  imageName?: string
 }
 
 /** 장소 하나를 찾을 단서 — 사이트 장소 이름, 장소 페이지의 다른 이름 · 주소 · 좌표. */
@@ -220,7 +224,16 @@ export function pickTourPlace(items: readonly Record<string, unknown>[], names: 
   return hits[0]?.place ?? null
 }
 
-function tourPhoto(src: string, title: string, place: string, source: TourSource, contentId: string, photographer?: string): TourPhoto {
+function tourPhoto(
+  src: string,
+  title: string,
+  place: string,
+  source: TourSource,
+  contentId: string,
+  location: string,
+  extra: { photographer?: string; imageName?: string } = {},
+): TourPhoto {
+  const { photographer, imageName } = extra
   return {
     src,
     title,
@@ -233,6 +246,8 @@ function tourPhoto(src: string, title: string, place: string, source: TourSource
     sourcePageUrl: TOUR_SOURCES[source].page,
     ...(photographer ? { photographer } : {}),
     contentId,
+    location,
+    ...(imageName ? { imageName } : {}),
   }
 }
 
@@ -259,7 +274,9 @@ export function korTourPhotos(
       return
     }
     if (label && hasPeopleWords(label.replace(/\.(jpe?g|png|gif|webp)$/i, ''), [...names, resolved.title])) return
-    if (photos.length < TOUR_PHOTOS_PER_SOURCE) photos.push(tourPhoto(src, cleanPhotoAlt(resolved.title), place, 'kor', resolved.contentId))
+    if (photos.length < TOUR_PHOTOS_PER_SOURCE) {
+      photos.push(tourPhoto(src, cleanPhotoAlt(resolved.title), place, 'kor', resolved.contentId, resolved.addr, label ? { imageName: cleanPhotoAlt(label) } : {}))
+    }
   }
   if (first) add(first.firstimage, first.cpyrhtDivCd, '')
   for (const im of images) {
@@ -296,7 +313,10 @@ export function galleryTourPhotos(
       rejected += 1
       continue
     }
-    if (photos.length < TOUR_PHOTOS_PER_SOURCE) photos.push(tourPhoto(src, title, place, 'gallery', str(it.galContentId), cleanPhotoCredit(it.galPhotographer) || undefined))
+    if (photos.length < TOUR_PHOTOS_PER_SOURCE) {
+      const photographer = cleanPhotoCredit(it.galPhotographer)
+      photos.push(tourPhoto(src, title, place, 'gallery', str(it.galContentId), str(it.galPhotographyLocation), photographer ? { photographer } : {}))
+    }
   }
   return { photos, rejected }
 }

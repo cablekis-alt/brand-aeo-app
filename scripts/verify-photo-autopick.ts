@@ -537,7 +537,7 @@ ok('작성자 줄 셈 — 관광공사 사진도 공공 사진 채움', tourStat
 ok('관광공사 사진도 출처가 없으면 내보내지 않는다(공공 사진 호스트)', withPhotos(mdTourArt, [{ ...tourPick, origin: undefined, license: undefined, credit: undefined, creditUrl: undefined }]).markdown === mdTourArt)
 const tourResult = {
   place: '가상해양공원', city: '가상', resolved: { contentId: '9100', title: '가상해양테마공원', addr: '전북특별자치도 가상시 내항길 2' }, rejectedType: 0, rejectedGallery: 0,
-  photos: [{ src: galPark1.src, title: '가상해양테마공원', place: '가상해양공원', source: 'gallery' as const, license: 'kogl-1' as const, licenseType: 1 as const, creditText: '한국관광공사 가상촬영', creditUrl: KOGL1, sourcePageUrl: TOUR_SOURCES.gallery.page, photographer: '한국관광공사 가상촬영', contentId: '1' }],
+  photos: [{ src: galPark1.src, title: '가상해양테마공원', place: '가상해양공원', source: 'gallery' as const, license: 'kogl-1' as const, licenseType: 1 as const, creditText: '한국관광공사 가상촬영', creditUrl: KOGL1, sourcePageUrl: TOUR_SOURCES.gallery.page, photographer: '한국관광공사 가상촬영', contentId: '1', location: '전라북도 가상' }],
 }
 ok(
   '관광공사 사진 → 자동 채우기 후보(공공 사진 · 사이트 장소 이름 · 데이터 페이지)',
