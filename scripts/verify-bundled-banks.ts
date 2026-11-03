@@ -109,6 +109,7 @@ interface Tenant {
   cohortQuestionBank?: string;
   marketScope?: string;
   cohortOnly?: boolean;
+  engines?: string[];
   factGraph?: { id: string; value: string }[];
 }
 const config = readJson<Tenant[]>(path.join(repoRoot, 'server', 'tenants.config.json'));
@@ -137,6 +138,12 @@ ok(
     tenantOf('gunsan')?.region === '전북 군산' &&
     tenantOf('gunsan')?.marketScope === undefined &&
     !tenantOf('gunsan-national'),
+);
+// 결정(2026-11-03): 군산각 엔진은 운영 PC가 W43–W45에 실제로 잰 세 엔진(전역 COLLECT_ENGINES). 스테이,머뭄은 그대로.
+ok(
+  '저장소 설정 — 엔진 gunsan openai · gemini · perplexity, web4ai openai · gemini',
+  tenantOf('gunsan')?.engines?.join() === 'openai,gemini,perplexity' && tenantOf('web4ai')?.engines?.join() === 'openai,gemini',
+  `${tenantOf('gunsan')?.engines} / ${tenantOf('web4ai')?.engines}`,
 );
 ok(
   '저장소 cohort-banks/ — 군산각 전국형이 쓰던 관광안내__국내 기준본 없음(쓰는 구운 브랜드가 없다)',

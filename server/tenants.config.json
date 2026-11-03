@@ -1556,6 +1556,7 @@
     "region": "전북 군산",
     "engines": [
       "openai",
+      "gemini",
       "perplexity"
     ],
     "questionBankSize": 36,
