@@ -894,7 +894,9 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     if (f && typeof f === 'object' && !guard.guardSentence(f.credit)) return '공공 사진의 출처 글자를 쓸 수 없어요.';
     return f;
   }
-  // 출처 붙이기 하나 — 자리 · 사진 주소 · 공공 사진 표시 · 찾은 페이지. 맞지 않으면 이유(글자).
+  const TOUR_NOT_TYPE1 = '공공누리 제1유형이 아닌 관광공사 사진이에요 — 제1유형 사진만 쓸 수 있어요.';
+  // 출처 붙이기 하나 — 자리 · 사진 주소 · 공공 사진 표시 · 찾은 페이지. 맞지 않으면 이유(글자). 사진 넣기처럼, 받은 적 있는 관광공사
+  // 사진이면 서버의 제1유형 색인을 다시 본다(화면 · 사이트가 단 「제1유형」 표시를 믿지 않는다).
   const creditOf = (v: unknown): PhotoCreditPatch | string => {
     const raw = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
     const place = placeOf(raw.place);
@@ -903,6 +905,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     const pub = publicOf(raw);
     if (!place || !src || !pageUrl) return '출처를 붙일 사진 자리(place) · 사진 주소(src) · 찾은 페이지(pageUrl)가 필요합니다.';
     if (!pub || typeof pub === 'string') return pub ?? '공공 사진 표시(origin public)가 필요합니다.';
+    if (tourPhotoInfo(src)?.type1 === false) return TOUR_NOT_TYPE1;
     return { place, src, fields: pub, pageUrl };
   };
   if (!op || (op !== 'auto' && (!actionId || !generatedAt))) {
@@ -1038,7 +1041,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       return;
     }
     if (pub && tourPhotoInfo(src)?.type1 === false) {
-      res.status(400).json({ error: '공공누리 제1유형이 아닌 관광공사 사진이에요 — 제1유형 사진만 쓸 수 있어요.' });
+      res.status(400).json({ error: TOUR_NOT_TYPE1 });
       return;
     }
     if (!pub && needsPhotoCredit(src, owned)) {

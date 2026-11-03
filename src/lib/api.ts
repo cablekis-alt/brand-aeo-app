@@ -1775,9 +1775,12 @@ export function loadTourApiStatus(): Promise<boolean> {
   return tourApiStatus
 }
 
+/** 장소 하나의 관광공사 사진을 기다리는 최대 시간 — 서버가 TourAPI를 몇 번(한 번에 10초까지) 부른다. 넘으면 남은 장소는 묻지 않는다. */
+const TOUR_REQUEST_TIMEOUT_MS = 60_000
+
 /**
  * 사이트 장소 하나의 관광공사 사진 후보(server/tourPhotos.ts) — 공공 사진 사용 확인이 있어야 한다. 서비스 오류(승인 없음 · 한도 등)는
- * 결과의 note · error로 오고, 키가 없거나 요청이 틀리면 throw.
+ * 결과의 note · error로 오고, 키가 없거나 요청이 틀리거나 TOUR_REQUEST_TIMEOUT_MS 안에 답이 없으면 throw.
  */
 export async function loadTourPhotos(tenantId: string, q: import('./tourPhotos').TourPhotoQuery): Promise<import('./tourPhotos').TourPhotoResult> {
   const params = new URLSearchParams({ place: q.place })
@@ -1787,7 +1790,15 @@ export async function loadTourPhotos(tenantId: string, q: import('./tourPhotos')
     params.set('lat', String(q.lat))
     params.set('lng', String(q.lng))
   }
-  const res = await fetch(`/api/tourapi/photos/${encodeURIComponent(tenantId)}?${params.toString()}`)
+  let res: Response
+  try {
+    res = await fetch(`/api/tourapi/photos/${encodeURIComponent(tenantId)}?${params.toString()}`, { signal: AbortSignal.timeout(TOUR_REQUEST_TIMEOUT_MS) })
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'TimeoutError') {
+      throw new Error(`관광공사 사진 요청이 ${TOUR_REQUEST_TIMEOUT_MS / 1000}초 안에 끝나지 않아 남은 장소는 찾지 않았어요 — 잠시 뒤 다시 눌러 주세요.`, { cause: e })
+    }
+    throw e
+  }
   const out: unknown = await res.json().catch(() => ({}))
   if (!res.ok) {
     const error = (out as { error?: unknown }).error

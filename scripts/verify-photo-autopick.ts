@@ -8,6 +8,8 @@
  * - 같은 사진이 한 글 · 한 작성자 안에서 되풀이되거나 브랜드 전체에서 상한을 넘지 않아야 한다.
  * - 같은 입력이면 같은 결과여야 한다(운영자가 본 미리보기와 다시 돌린 결과가 같게).
  * - 공공 사진은 공공누리 제1유형 · 출처가 있을 때만, 내보낼 때 사진 바로 아래에 출처 줄이 붙어야 한다(출처 표시는 이용 조건이다).
+ * - 단계 순서(홈페이지 → 장소 페이지 → 관광공사)를 지켜야 한다 — 장소 페이지를 읽지 못한 장소의 자리를 관광공사 사진으로 먼저 채우면
+ *   다음에 눌러도 그 자리의 장소 페이지 사진을 다시 보지 않는다.
  *
  *   npx tsx scripts/verify-photo-autopick.ts
  */
@@ -479,7 +481,7 @@ const mdTour = [
 const stage2 = autoPickPhotos({ articles: [article('t', mdTour)], candidates: [], publicCandidates: [pub1, island3], places: tourPlaces })
 ok(
   '관광공사 사진을 찾을 장소 — 장소 페이지 사진이 없던(제1유형 아님 · 사진 없음) 장소 자리만, 화면 자리는 빼고',
-  JSON.stringify(tourPlacesWanted(stage2)) === JSON.stringify(['가상섬', '가상해양공원']) && stage2.articles[0]!.rows[0]!.pick?.src === pub1.src,
+  JSON.stringify(tourPlacesWanted(stage2, new Set(tourPlaces))) === JSON.stringify(['가상섬', '가상해양공원']) && stage2.articles[0]!.rows[0]!.pick?.src === pub1.src,
 )
 const korIsland1 = tourCand('k-island1', '가상섬', 'kor')
 const korIsland2 = tourCand('k-island2', '가상섬', 'kor')
@@ -560,6 +562,63 @@ ok(
   JSON.stringify(tourQueryOf('가상해양공원', [{ place: '가상해양공원', pageUrl: 'https://site.example/places/가상해양공원/', photos: [], info: parkInfo }])) ===
     JSON.stringify({ place: '가상해양공원', names: ['가상해양테마공원'], address: '가상 내항길 2 가상해양테마공원', lat: 35.98, lng: 126.71 }) &&
     JSON.stringify(tourQueryOf('가상섬', [])) === JSON.stringify({ place: '가상섬' }),
+)
+const restaurantInfo = extractPlaceInfo(
+  ld({ '@context': 'https://schema.org', '@type': 'Restaurant', name: '가상당', address: { '@type': 'PostalAddress', addressLocality: '가상시', streetAddress: '중앙로 1' }, geo: { '@type': 'GeoCoordinates', latitude: 35.98, longitude: 126.71 } }),
+  '가상당',
+)
+const hotelInfo = extractPlaceInfo(ld({ '@type': 'LodgingBusiness', name: '가상스테이', address: { '@type': 'PostalAddress', addressLocality: '가상시', streetAddress: '해변로 2' } }), '가상스테이')
+ok(
+  '식당 · 숙소 장소 페이지(Restaurant · LodgingBusiness)도 주소 · 좌표를 읽는다',
+  JSON.stringify(restaurantInfo) === JSON.stringify({ names: [], address: '가상시 중앙로 1', lat: 35.98, lng: 126.71 }) && hotelInfo?.address === '가상시 해변로 2',
+)
+
+// 13) 3단계는 2단계(장소 페이지)가 본 장소에만 — 읽지 못했거나(일시 실패) 상한에 걸려 읽지 않은 장소를 관광공사 사진으로 먼저 채우지 않는다.
+const mdLake = ['## 1. 호수', '', '![가상호수공원 물빛다리 풍경](#image-slot)']
+const rLake = autoPickPhotos({ articles: [article('lake', mdLake)], candidates: [], publicCandidates: [], places: ['가상호수공원'] })
+ok(
+  '장소 페이지를 읽지 못한 장소는 관광공사 사진을 찾지 않는다 — 읽은 장소만',
+  JSON.stringify(tourPlacesWanted(rLake, new Set())) === '[]' && JSON.stringify(tourPlacesWanted(rLake, new Set(['가상호수공원']))) === JSON.stringify(['가상호수공원']),
+)
+const mixPlaces = ['가상호수공원', '가상물빛다리']
+const mdMix = ['## 1. 다리', '', '![가상호수공원 가상물빛다리 야경](#image-slot)', '', '## 2. 난간', '', '![가상물빛다리 난간](#image-slot)']
+const bridgeTour = [tourCand('bridge1', '가상물빛다리', 'kor'), tourCand('bridge2', '가상물빛다리', 'kor')]
+const mixInput = { articles: [article('mix', mdMix)], candidates: [], places: mixPlaces, pagesRead: new Set(['가상물빛다리']) }
+const rMix = autoPickPhotos(mixInput)
+const rMixTour = autoPickPhotos({ ...mixInput, tourCandidates: bridgeTour })
+ok(
+  '자리의 장소 가운데 하나라도 페이지를 읽지 못했으면 그 자리는 관광공사 사진을 찾지도 채우지도 않는다(다른 자리는 그대로)',
+  JSON.stringify(tourPlacesWanted(rMix, mixInput.pagesRead)) === JSON.stringify(['가상물빛다리']) &&
+    JSON.stringify(rMixTour.articles[0]!.rows.map((r) => r.state)) === JSON.stringify(['nomatch', 'filled']) &&
+    autoPickPhotos({ ...mixInput, pagesRead: undefined, tourCandidates: bridgeTour }).articles[0]!.rows[0]!.state === 'filled',
+)
+
+// 14) 홈페이지 사진 짝만 반복 상한에 걸리고 장소 사진(장소 페이지 · 관광공사)이 없던 자리도 관광공사 사진을 찾는다.
+const homePark = cand('home-park', '가상해양공원')
+const mdShip = ['## 1. 함정', '', '![가상해양공원 위봉함](#image-slot)']
+const shipInput = { articles: [article('ship', mdShip)], candidates: [homePark], places: ['가상해양공원'], others: [{ src: homePark.src }, { src: homePark.src }, { src: homePark.src }] }
+const rShip = autoPickPhotos(shipInput)
+const rShipTour = autoPickPhotos({ ...shipInput, tourCandidates: [tourCand('k-ship', '가상해양공원', 'kor')] })
+ok(
+  '홈페이지 사진 짝이 상한에 걸린 자리(장소 사진 없음)의 장소도 관광공사 사진을 찾고 채운다',
+  rShip.articles[0]!.rows[0]!.state === 'used' && JSON.stringify(tourPlacesWanted(rShip, new Set(['가상해양공원']))) === JSON.stringify(['가상해양공원']) &&
+    rShipTour.articles[0]!.rows[0]!.state === 'filled' && rShipTour.articles[0]!.rows[0]!.candidate?.tour === 'kor',
+)
+const shipPub = pubCand('ship-pub', { place: '가상해양공원', alt: '가상해양공원', pageUrl: 'https://site.example/places/가상해양공원/' })
+const rShipPublic = autoPickPhotos({ ...shipInput, publicCandidates: [shipPub], others: [...shipInput.others, ...[0, 1, 2].map(() => ({ src: shipPub.src }))] })
+ok('장소 페이지 사진까지 상한에 걸린 자리(used)는 그대로 묻지 않는다', rShipPublic.articles[0]!.rows[0]!.state === 'used' && JSON.stringify(tourPlacesWanted(rShipPublic, new Set(['가상해양공원']))) === '[]')
+
+// 15) 사이트의 두 장소가 같은 관광공사 장소로 풀려 같은 사진을 받아도, 뒤 장소의 자리도 채운다(조회 순서와 무관).
+const peakPlaces = ['가상봉', '가상봉 전망대']
+const mdPeak = ['## 1. 봉우리', '', '![가상봉 능선](#image-slot)', '', '## 2. 전망대', '', '![가상봉 전망대에서 본 바다](#image-slot)']
+const peakA = [tourCand('peak1', '가상봉', 'kor'), tourCand('peak2', '가상봉', 'kor')]
+const peakB = peakA.map((c) => ({ ...c, place: '가상봉 전망대' }))
+const peakRows = (tourCandidates: AutoCandidate[]) =>
+  autoPickPhotos({ articles: [article('peak', mdPeak)], candidates: [], tourCandidates, places: peakPlaces }).articles[0]!.rows.map((r) => `${r.state}:${r.pick?.src ?? ''}`)
+ok(
+  '같은 관광공사 사진을 받은 두 장소 — 두 자리 모두 다른 사진으로',
+  JSON.stringify(peakRows([...peakA, ...peakB])) === JSON.stringify([`filled:${peakA[0]!.src}`, `filled:${peakA[1]!.src}`]) &&
+    JSON.stringify(peakRows([...peakB, ...peakA])) === JSON.stringify([`filled:${peakA[0]!.src}`, `filled:${peakA[1]!.src}`]),
 )
 
 let failed = 0

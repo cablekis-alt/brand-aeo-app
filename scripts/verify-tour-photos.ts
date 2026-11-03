@@ -3,10 +3,12 @@
  * 가짜 응답(고정 JSON)을 주는 가짜 TourAPI 서버를 127.0.0.1:4105에 띄우고, 임시 데이터 폴더 · 가짜 키로 앱 서버를 4104에 띄워 HTTP로 부른다.
  *
  * 왜:
- * - 사이트 장소 이름과 관광공사 제목이 다를 수 있다(「…해양공원」 ↔ 「…해양테마공원」) — 다른 이름 · 좌표로 찾되, 다른 도시의 장소는
- *   맞추지 않아야 한다.
- * - 공공누리 제1유형만 쓴다 — 국문 관광정보는 사진마다 Type1만, 관광사진은 촬영지 · 제목 · 사람 낱말을 본다.
- * - 개발계정 한도가 하루 1,000건쯤이다 — 같은 요청은 캐시에서, 한도 · 승인 없음(403)은 알림으로.
+ * - 사이트 장소 이름과 관광공사 제목이 다를 수 있다(「…해양공원」 ↔ 「…해양테마공원」) — 다른 이름 · 끝말을 뗀 낱말 · 좌표로 찾되, 다른
+ *   도시의 장소는 맞추지 않아야 한다. 구 · 군 이름은 여러 광역시 · 도에 있다(「부산 중구」 브랜드에 대구 중구의 장소 · 사진이 오면 안 된다).
+ * - 공공누리 제1유형만 쓴다 — 국문 관광정보는 사진마다 Type1만, 관광사진은 촬영지 · 제목 · 사람 낱말을 본다. 사진 넣기 · 출처 붙이기
+ *   모두 서버가 받은 적 있는 Type3 사진을 거절한다.
+ * - 개발계정 한도가 하루 1,000건쯤이다 — 같은 요청은 캐시에서, 한도 · 승인 없음(403) · 키 오류(401)는 알림으로. 화면은 캐시에서 온 장소를
+ *   상한에 세지 않고, 시간 초과 · 되풀이되는 응답 오류면 남은 장소를 묻지 않는다.
  * - 키는 서버 밖으로 나가지 않는다 — 응답 · 로그 · 캐시 파일 어디에도.
  *
  *   npx tsx scripts/verify-tour-photos.ts
@@ -27,6 +29,7 @@ import {
   TOUR_SOURCES,
   tourCreditOf,
   tourItems,
+  TOUR_PLACE_LIMIT,
   tourPhotoSrc,
   type TourPhotoResult,
 } from '../src/lib/tourPhotos'
@@ -94,6 +97,83 @@ ok(
     gal.rejected === 3 && gal.photos.every((p) => p.sourcePageUrl === TOUR_SOURCES.gallery.page && p.licenseType === 1),
 )
 
+// 1-2) 구 · 군 이름은 여러 광역시 · 도에 있다(중구 · 동구 · 강서 · 고성 · 광주) — 광역시 · 도까지 같아야 같은 도시.
+ok(
+  '같은 이름의 구 · 군이어도 광역시 · 도가 다르면 다른 도시',
+  [
+    cityMatches('부산광역시 중구 대청로 1', '부산 중구'),
+    !cityMatches('대구광역시 중구 남성로 1', '부산 중구'),
+    !cityMatches('인천광역시 중구 신포로 1', '부산 중구'),
+    !cityMatches('서울특별시 중구 세종대로 1', '울산 중구'),
+    cityMatches('부산 중구', '부산광역시 중구'),
+    !cityMatches('대구 중구', '부산 중구'),
+    cityMatches('경기도 광주시 퇴촌면', '경기 광주'),
+    !cityMatches('경기도 광주시 퇴촌면', '광주'),
+    cityMatches('광주광역시 동구 금남로 1', '광주'),
+    !cityMatches('광주광역시 동구 금남로 1', '경기 광주'),
+    cityMatches('강원특별자치도 고성군 토성면', '강원 고성'),
+    !cityMatches('경상남도 고성군 고성읍', '강원 고성'),
+    !cityMatches('부산광역시 강서구 가락대로 1', '서울 강서'),
+    cityMatches('전라북도 가상', '전북 가상'),
+  ].every(Boolean),
+)
+ok(
+  '통합한 광역 단체(전남광주통합특별시 — 2026-11 TourAPI 주소)는 옛 이름과 겹친다 — 광역시 · 도뿐인 지역은 넓은 단체를 품지 않는다',
+  [
+    cityMatches('전남광주통합특별시 목포시 영산로 1', '전남 목포'),
+    cityMatches('전남광주통합특별시 동구 금남로 1', '광주 동구'),
+    cityMatches('전라남도 목포', '전남광주통합특별시 목포'),
+    cityMatches('전남광주통합특별시 목포시 영산로 1', '전남광주통합특별시'),
+    !cityMatches('전남광주통합특별시 목포시 영산로 1', '광주'),
+    !cityMatches('전남광주통합특별시 동구 금남로 1', '부산 동구'),
+    !cityMatches('전남광주통합특별시 광산구 1', '경기 광주'),
+  ].every(Boolean),
+)
+ok(
+  '광역시 · 도 없이 여러 곳에 있는 구 · 군 이름만으로는 맞추지 않는다',
+  !cityMatches('대구광역시 중구 남성로 1', '중구') && !cityMatches('경상남도 고성군 고성읍', '고성') && !cityMatches('서울특별시 중구 세종대로 1', '부산 중') && cityMatches('부산광역시 중구 대청로 1', '부산'),
+)
+const sameGu = [
+  { contentid: '9701', title: '가상근대역사관', addr1: '대구광역시 중구 남성로 1', firstimage: IMG('9701'), cpyrhtDivCd: 'Type1' },
+  { contentid: '9702', title: '가상근대역사관', addr1: '부산광역시 중구 대청로 1', firstimage: IMG('9702'), cpyrhtDivCd: 'Type1' },
+]
+ok('지역이 「부산 중구」면 대구 중구의 같은 이름 장소는 맞추지 않는다', pickTourPlace(sameGu, ['가상근대역사관'], '부산 중구')?.contentId === '9702' && pickTourPlace(sameGu, ['가상근대역사관'], '중구') === null)
+const galGuItems = [
+  { galContentId: '71', galTitle: '가상근대역사관', galWebImageUrl: GAL('71'), galPhotographyLocation: '대구 중구', galPhotographer: '한국관광공사 가상촬영', galSearchKeyword: '가상근대역사관' },
+  { galContentId: '72', galTitle: '가상근대역사관', galWebImageUrl: GAL('72'), galPhotographyLocation: '부산광역시 중구', galPhotographer: '한국관광공사 가상촬영', galSearchKeyword: '가상근대역사관' },
+]
+const galGu = galleryTourPhotos(galGuItems, '가상근대역사관', ['가상근대역사관'], '부산 중구')
+ok('관광사진도 촬영지의 광역시 · 도까지 본다', JSON.stringify(galGu.photos.map((p) => p.src)) === JSON.stringify([GAL('72')]) && galGu.rejected === 1)
+
+// 1-3) 화면의 장소 묻기(src/lib/sitePhotos.ts loadTourPhotosFor) — 가짜 fetch로. 캐시에서 온 장소(TourAPI를 부르지 않음)는 장소 수 상한에
+// 세지 않고(다시 누르면 뒤 장소도 묻는다), 시간 초과 · 같은 응답 오류가 되풀이되면 남은 장소는 묻지 않는다.
+const { loadTourPhotosFor } = await import('../src/lib/sitePhotos')
+const realFetch = globalThis.fetch
+const askLoop = async (count: number, reply: (n: number) => Partial<TourPhotoResult>) => {
+  const asked: number[] = []
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const place = new URL(String(input), 'http://app.invalid').searchParams.get('place') ?? ''
+    const n = Number(place.replace(/\D/g, ''))
+    asked.push(n)
+    await new Promise((r) => setTimeout(r, 5))
+    const body = { place, city: '가상', resolved: null, photos: [], rejectedType: 0, rejectedGallery: 0, ...reply(n) }
+    return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } })
+  }) as typeof fetch
+  try {
+    return { asked, load: await loadTourPhotosFor('vtour', Array.from({ length: count }, (_, i) => `가상장소${i + 1}`), []) }
+  } finally {
+    globalThis.fetch = realFetch
+  }
+}
+const cachedFirst = await askLoop(TOUR_PLACE_LIMIT + 5, (n) => ({ liveCalls: n <= TOUR_PLACE_LIMIT ? 0 : 2, note: '찾지 못했어요' }))
+ok('캐시에서 온 장소는 장소 수 상한에 세지 않는다 — 앞 장소가 모두 사진 없음이어도 뒤 장소를 묻는다', cachedFirst.asked.length === TOUR_PLACE_LIMIT + 5 && cachedFirst.load.skipped === 0)
+const allLive = await askLoop(TOUR_PLACE_LIMIT + 5, () => ({ liveCalls: 2 }))
+ok('TourAPI를 새로 부르는 장소는 한 번에 상한까지', allLive.asked.length === TOUR_PLACE_LIMIT && allLive.load.skipped === 5)
+const timedOut = await askLoop(6, (n) => (n === 1 ? { liveCalls: 1, error: 'TIMEOUT', note: 'TourAPI가 10초 안에 답하지 않았어요.' } : { liveCalls: 2 }))
+ok('시간 초과가 나면 남은 장소는 묻지 않는다', timedOut.asked.length <= 2 && timedOut.load.skipped >= 4 && timedOut.load.notes.length === 1)
+const upstream = await askLoop(6, () => ({ liveCalls: 1, error: 'UPSTREAM', note: 'TourAPI 응답 오류' }))
+ok('같은 응답 오류가 되풀이되면 남은 장소는 묻지 않는다', upstream.asked.length <= 3 && upstream.load.skipped >= 3)
+
 // 2) 가짜 TourAPI 서버
 const FAKE_KEY = 'FAKE+key/abc=123'
 const MOCK_PORT = 4105
@@ -126,7 +206,30 @@ const mock = http.createServer((req, res) => {
     res.end(`<OpenAPI_ServiceResponse><cmmMsgHeader><returnAuthMsg>LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR</returnAuthMsg><echo>${FAKE_KEY}</echo></cmmMsgHeader></OpenAPI_ServiceResponse>`)
     return
   }
+  // data.go.kr 게이트웨이는 등록 · 승인되지 않은 키에 HTTP 401 'Unauthorized'를 준다.
+  if (kw === '가상인증관') {
+    res.writeHead(401, { 'Content-Type': 'text/plain' })
+    res.end('Unauthorized')
+    return
+  }
+  // 응답하지 않는 서비스 — 앱 서버가 10초에 끊는다.
+  if (kw === '가상지연관' && op === 'KorService2/searchKeyword2') {
+    const late = setTimeout(() => json(ok0('')), 10_500)
+    res.on('close', () => clearTimeout(late))
+    return
+  }
   switch (`${op}|${kw}`) {
+    case 'KorService2/searchKeyword2|가상근대역사관':
+      return json(ok0(sameGu))
+    case 'PhotoGalleryService1/gallerySearchList1|가상근대역사관':
+      return json(ok0(galGuItems))
+    case 'KorService2/searchKeyword2|가상바다':
+      return json(ok0([
+        { contentid: '9802', title: '가상바다테마공원', addr1: '부산광역시 다른구 바다길 1', mapx: '129.0300000', mapy: '35.1000000', firstimage: IMG('9802'), cpyrhtDivCd: 'Type1' },
+        { contentid: '9801', title: '가상바다테마공원', addr1: '전북특별자치도 가상시 바다길 1', mapx: '126.7000000', mapy: '35.9700000', firstimage: IMG('9801'), cpyrhtDivCd: 'Type1' },
+      ]))
+    case 'KorService2/detailImage2|9801':
+      return json(ok0([1, 2, 3, 4].map((i) => ({ contentid: '9801', originimgurl: IMG(`980${i}a`), imgname: `가상바다테마공원_${i}.jpg`, cpyrhtDivCd: 'Type1' }))))
     case 'KorService2/searchKeyword2|가상근대박물관':
       return json(ok0(museumItems))
     case 'KorService2/detailImage2|9001':
@@ -180,20 +283,33 @@ const dir = mkdtempSync(path.join(tmpdir(), 'verify-tour-photos-'))
 const TENANT = 'vtour'
 const NATIONAL = 'vtour-national'
 const NOPUBLIC = 'vtour-nopublic'
+const JUNGGU = 'vtour-junggu'
 const AT = '2026-11-03T00:00:00.000Z'
 const tenant = (tenantId: string, region: string) => ({
   tenantId, brandName: `가상 여행 ${tenantId}`, aliases: [`가상 여행 ${tenantId}`], ownedDomains: [`${tenantId}.example`], industry: '관광안내', region,
   engines: ['gemini'], questionBankSize: 4, questionBankVersion: 'v1', repeatsPerQuestion: 1, factGraph: [], competitors: [],
 })
-writeFileSync(path.join(dir, 'tenants.overlay.json'), JSON.stringify([tenant(TENANT, '전북 가상'), tenant(NATIONAL, '국내'), tenant(NOPUBLIC, '전북 가상')]))
-for (const t of [TENANT, NATIONAL, NOPUBLIC]) {
+writeFileSync(
+  path.join(dir, 'tenants.overlay.json'),
+  JSON.stringify([tenant(TENANT, '전북 가상'), tenant(NATIONAL, '국내'), tenant(NOPUBLIC, '전북 가상'), tenant(JUNGGU, '부산 중구')]),
+)
+for (const t of [TENANT, NATIONAL, NOPUBLIC, JUNGGU]) {
   mkdirSync(path.join(dir, 'data', t), { recursive: true })
   const rights = t === NOPUBLIC ? { confirmedAt: AT } : { confirmedAt: AT, publicAt: AT }
   writeFileSync(path.join(dir, 'data', t, 'publish-settings.json'), JSON.stringify({ photoRights: rights }))
 }
+// content:b — 출처 없이 저장된 옛 관광공사 사진(출처 붙이기 확인용). 9002x는 국문 관광정보에서 Type3, GAL('12')는 관광사진(제1유형).
+const PLACE_PAGE = 'https://vtour.example/places/가상근대박물관/'
+const legacyPick = (slot: string, src: string) => ({ slot, nth: 1, same: 1, heading: slot, src, alt: '가상시가상근대박물관', pageUrl: PLACE_PAGE, confirmedAt: AT })
+const draftOf = (actionId: string, photos?: unknown[]) => ({
+  actionId, generatedAt: AT, draft: { format: 'article', title: '가상 글', sections: [], gapCount: 0, usedFacts: [] }, ...(photos ? { photos } : {}),
+})
 writeFileSync(
   path.join(dir, 'data', TENANT, 'drafts.json'),
-  JSON.stringify({ 'content:a': { actionId: 'content:a', generatedAt: AT, draft: { format: 'article', title: '가상 글', sections: [], gapCount: 0, usedFacts: [] } } }),
+  JSON.stringify({
+    'content:a': draftOf('content:a'),
+    'content:b': draftOf('content:b', [legacyPick('가상근대박물관 옛 전시실', IMG('9002x')), legacyPick('가상근대박물관 옛 야경', GAL('12'))]),
+  }),
 )
 
 const envFor = (key: string) => {
@@ -290,6 +406,27 @@ try {
     ok('전국형 브랜드는 장소 주소의 도시로 확인한다(캐시에서 — TourAPI를 다시 부르지 않는다)', nat.body.city === '가상' && nat.body.photos.length === 2 && mockCalls.length === callsBefore)
     const natNoCity = await tour(NATIONAL, { place: '가상근대박물관' })
     ok('도시를 정하지 못하면 찾지 않는다', natNoCity.body.city === null && natNoCity.body.photos.length === 0 && mockCalls.length === callsBefore)
+    ok('같은 장소를 다시 물으면 캐시에서 — TourAPI를 부른 횟수(liveCalls)는 처음만', (m.body.liveCalls ?? 0) > 0 && nat.body.liveCalls === 0)
+
+    const gu = await tour(JUNGGU, { place: '가상근대역사관' })
+    ok(
+      '지역이 「부산 중구」인 브랜드 — 대구 중구의 같은 이름 장소 · 대구 중구에서 찍은 관광사진은 맞추지 않는다',
+      gu.body.resolved?.contentId === '9702' && JSON.stringify(gu.body.photos.map((p) => p.src)) === JSON.stringify([IMG('9702'), GAL('72')]),
+    )
+    const guCalls = mockCalls.length
+    const natGu = await tour(NATIONAL, { place: '가상근대역사관', address: '중구 대청로 1' })
+    ok('전국형 브랜드의 장소 주소가 여러 광역시에 있는 구 이름뿐이면 찾지 않는다', natGu.body.city === null && natGu.body.photos.length === 0 && mockCalls.length === guCalls)
+    const stem = await tour(TENANT, { place: '가상바다공원' })
+    ok(
+      '다른 이름(alternateName)이 없어도 — 이름 끝의 「공원」을 뗀 낱말로 찾아, 이름이 비슷한 같은 도시의 장소를',
+      stem.body.resolved?.contentId === '9801' && stem.body.photos.length === 5 && mockCalls.includes('KorService2/searchKeyword2|가상바다'),
+    )
+    const stemFar = await tour(TENANT, { place: '가상바다공원', lat: '37.5', lng: '127.0' })
+    ok('장소 페이지 좌표에서 먼 곳은 끝말을 뗀 낱말로 찾았어도 맞추지 않는다', stemFar.body.resolved === null && stemFar.body.photos.length === 0)
+    const unauthorized = await tour(TENANT, { place: '가상인증관' })
+    ok('키가 등록 · 승인되지 않아 HTTP 401이면 KEY 오류(화면이 남은 장소를 묻지 않는다)', unauthorized.body.error === 'KEY' && String(unauthorized.body.note).includes('키'))
+    const slow = await tour(TENANT, { place: '가상지연관' })
+    ok('국문 관광정보가 시간 초과면 관광사진 정보는 부르지 않는다', slow.body.error === 'TIMEOUT' && !mockCalls.includes('PhotoGalleryService1/gallerySearchList1|가상지연관'))
 
     const forbidden = await tour(TENANT, { place: '가상금지관' })
     ok('서비스 승인이 없으면(403) 알림 · 오류 코드', forbidden.status === 200 && forbidden.body.error === 'FORBIDDEN' && String(forbidden.body.note).includes('활용신청'))
@@ -331,6 +468,19 @@ try {
     ok('손으로 고르기도 받은 적 있는 Type3 관광공사 사진은 400', manual.status === 400 && String(manual.body.error).includes('제1유형'))
     const manualBare = await put({ actionId: 'content:a', generatedAt: AT, op: 'pick', pick: { ...pick('가상근대박물관 입구', GAL('12'), { origin: undefined, license: undefined, credit: undefined, creditUrl: undefined }), auto: undefined } })
     ok('출처 없이 고른 관광공사 사진은 400', manualBare.status === 400)
+
+    // 출처 붙이기(op credit · 자동 채우기의 credits)도 서버가 받은 적 있는 Type3 관광공사 사진이면 거절 — 화면이 보낸 「제1유형」 표시를 믿지 않는다.
+    const creditBody = (slot: string, src: string) => ({
+      place: { slot, nth: 1, heading: slot }, src, pageUrl: PLACE_PAGE, origin: 'public', license: 'kogl-1', credit: '한국관광공사', creditUrl: KOGL1,
+    })
+    const photosOfB = () =>
+      (JSON.parse(readFileSync(path.join(dir, 'data', TENANT, 'drafts.json'), 'utf-8')) as Record<string, { photos?: Record<string, unknown>[] }>)['content:b']?.photos ?? []
+    const creditType3 = await put({ actionId: 'content:b', generatedAt: AT, op: 'credit', ...creditBody('가상근대박물관 옛 전시실', IMG('9002x')) })
+    ok('출처 붙이기도 받은 적 있는 Type3 관광공사 사진은 400', creditType3.status === 400 && String(creditType3.body.error).includes('제1유형') && !photosOfB()[0]?.origin)
+    const autoCredit = await put({ op: 'auto', articles: [{ actionId: 'content:b', generatedAt: AT, picks: [], credits: [creditBody('가상근대박물관 옛 전시실', IMG('9002x'))] }] })
+    ok('자동 채우기의 출처 붙이기도 Type3 관광공사 사진은 빼고 센다', autoCredit.status === 200 && autoCredit.body.credited === 0 && autoCredit.body.skipped === 1 && !photosOfB()[0]?.origin)
+    const creditType1 = await put({ actionId: 'content:b', generatedAt: AT, op: 'credit', ...creditBody('가상근대박물관 옛 야경', GAL('12')) })
+    ok('제1유형 관광공사 사진에는 출처를 붙인다', creditType1.status === 200 && photosOfB()[1]?.origin === 'public' && photosOfB()[1]?.credit === '한국관광공사')
 
     // 캐시 · 키 노출
     await new Promise((r) => setTimeout(r, 1500))

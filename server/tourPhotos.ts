@@ -5,13 +5,17 @@ import { normSlotAlt } from '../src/lib/articlePhotos.js';
 import { placeKey } from '../src/lib/photoAutoPick.js';
 import {
   galleryTourPhotos,
+  knownRegion,
   korTourPhotos,
   pickTourPlace,
-  regionCityOf,
+  regionLabel,
+  regionsAgree,
   TOUR_SOURCES,
   tourItems,
   tourPhotoSrc,
+  tourRegionOf,
   tourResultCode,
+  tourStemKeywords,
   type TourApiErrorCode,
   type TourPhoto,
   type TourPhotoQuery,
@@ -166,6 +170,8 @@ async function callLive(service: Service, op: string, params: Record<string, str
     }
     throw new TourApiError('UPSTREAM', `TourAPI에 연결하지 못했어요 — ${scrubTourKey(err instanceof Error ? err.message : String(err)).slice(0, 120)}`);
   }
+  // data.go.kr 게이트웨이는 등록 · 승인되지 않은 키에 401 'Unauthorized'를 준다 — 다음 장소 · 다른 서비스도 같으니 KEY로 멈추게 한다.
+  if (res.status === 401) throw new TourApiError('KEY', 'TourAPI 키가 등록되지 않았거나 아직 승인되지 않았어요(HTTP 401) — 이 PC의 TOURAPI_SERVICE_KEY를 확인해 주세요.');
   if (res.status === 403) throw new TourApiError('FORBIDDEN', `「${SERVICE_NAME[service]}」 사용 승인이 이 키에 없어요(HTTP 403) — data.go.kr에서 활용신청을 확인해 주세요.`);
   if (res.status === 429) throw classify(service, 'LIMITED_NUMBER_OF_SERVICE_REQUESTS', '');
   const text = await res.text();
@@ -184,14 +190,15 @@ async function callLive(service: Service, op: string, params: Record<string, str
   return tourItems(json);
 }
 
-/** 서비스 하나를 부른다 — 7일 캐시, 같은 요청은 한 번만. */
-async function call(service: Service, op: string, params: Record<string, string>): Promise<Record<string, unknown>[]> {
+/** 서비스 하나를 부른다 — 7일 캐시, 같은 요청은 한 번만. 실제로 부르면 stats.live를 센다. */
+async function call(service: Service, op: string, params: Record<string, string>, stats: { live: number }): Promise<Record<string, unknown>[]> {
   const id = `${service}/${op}?${new URLSearchParams(Object.entries(params).sort(([a], [b]) => (a < b ? -1 : 1))).toString()}`;
   const c = loadCache();
   const hit = c.entries[id];
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.items;
   const running = inflight.get(id);
   if (running) return running;
+  stats.live += 1;
   const task = callLive(service, op, params).then((items) => {
     c.entries[id] = { at: Date.now(), items };
     scheduleSave();
@@ -227,71 +234,96 @@ function noteOf(err: unknown): { note: string; error: TourApiErrorCode } {
   return { note: 'TourAPI를 읽다가 오류가 났어요.', error: 'UPSTREAM' };
 }
 
+/** 국문 관광정보가 이 오류로 끝나면 관광사진 정보도 부르지 않는다 — 키는 두 서비스에 같고, 시간 초과면 또 10초를 기다리게 된다. */
+const SKIP_GALLERY_AFTER: ReadonlySet<TourApiErrorCode> = new Set(['KEY', 'NO_KEY', 'TIMEOUT']);
+
 /**
- * 장소 하나의 관광공사 사진 — 사이트 이름 → 다른 이름으로 키워드 검색(주소가 브랜드 도시이고 제목이 맞는 곳), 없으면 장소 페이지
- * 좌표 근처(1km)에서 이름이 비슷한 곳. 찾으면 상세 사진의 제1유형만, 그 사진이 GALLERY_WHEN_FEWER장보다 적으면 관광사진 정보도(촬영지 ·
- * 제목 · 사람 낱말 확인). 도시는 브랜드 지역(전국형이면 장소 주소)에서 정하고, 둘 다 있는데 다르면 찾지 않는다. 서비스 오류는 결과의
- * note · error로 돌려주고(다른 서비스 결과는 그대로) 던지지 않는다 — 키가 없을 때만 TourApiError('NO_KEY').
+ * 장소 하나의 관광공사 사진 — 사이트 이름 → 다른 이름으로 키워드 검색(주소가 브랜드 지역이고 제목이 맞는 곳), 없으면 이름 끝의 종류
+ * 낱말을 뗀 낱말로 키워드 검색(이름이 비슷한 곳 — 장소 페이지 좌표가 있으면 그 근처), 없으면 장소 페이지 좌표 근처(1km)에서 이름이 비슷한
+ * 곳. 찾으면 상세 사진의 제1유형만, 그 사진이 GALLERY_WHEN_FEWER장보다 적으면 관광사진 정보도(촬영지 · 제목 · 사람 낱말 확인). 지역은
+ * 브랜드 지역과 장소 주소를 합쳐 정하고(광역시 · 도까지 — 「중구」만으로는 찾지 않는다), 둘이 어긋나면 찾지 않는다. 서비스 오류는 결과의
+ * note · error로 돌려주고(다른 서비스 결과는 그대로) 던지지 않는다 — 키가 없을 때만 TourApiError('NO_KEY'). liveCalls는 이번에 실제로
+ * 부른 횟수(캐시 · 같은 요청 기다림은 세지 않는다).
  */
 export async function findTourPhotos(q: TourPhotoQuery, brandRegion: string): Promise<TourPhotoResult> {
   if (!tourApiConfigured()) throw new TourApiError('NO_KEY', '이 PC에 관광공사 TourAPI 키가 없어요.');
-  const brandCity = regionCityOf(brandRegion);
-  const placeCity = regionCityOf(q.address);
-  const empty = { place: q.place, resolved: null, photos: [], rejectedType: 0, rejectedGallery: 0 };
-  if (brandCity && placeCity && brandCity !== placeCity) {
-    return { ...empty, city: brandCity, note: `장소 주소의 도시(${placeCity})가 브랜드 지역(${brandCity})과 달라 관광공사 사진을 찾지 않았어요.` };
+  const brand = tourRegionOf(brandRegion);
+  const placeAt = tourRegionOf(q.address);
+  const empty = { place: q.place, resolved: null, photos: [], rejectedType: 0, rejectedGallery: 0, liveCalls: 0 };
+  if (brand && placeAt && !regionsAgree(brand, placeAt)) {
+    return {
+      ...empty,
+      city: regionLabel(brand),
+      note: `장소 주소의 도시(${regionLabel(placeAt)})가 브랜드 지역(${regionLabel(brand)})과 달라 관광공사 사진을 찾지 않았어요.`,
+    };
   }
-  const city = brandCity ?? placeCity;
-  if (!city) return { ...empty, city: null, note: '브랜드 지역이나 장소 주소에서 도시를 정하지 못해 관광공사 사진을 찾지 않았어요.' };
+  const merged = brand && placeAt ? { province: brand.province ?? placeAt.province, city: brand.city ?? placeAt.city } : (brand ?? placeAt);
+  if (!knownRegion(merged)) {
+    return { ...empty, city: null, note: '브랜드 지역이나 장소 주소에서 도시(광역시 · 도까지)를 정하지 못해 관광공사 사진을 찾지 않았어요.' };
+  }
+  const region = merged;
+  const city = regionLabel(region);
   const names = [...new Map([q.place, ...(q.names ?? [])].map((n) => [placeKey(n), normSlotAlt(n)] as const)).entries()]
     .filter(([k]) => k.length >= 3)
     .map(([, n]) => n)
     .slice(0, 4);
   if (!names.length) return { ...empty, city, note: '장소 이름이 너무 짧아 관광공사 사진을 찾지 않았어요.' };
 
+  const stats = { live: 0 };
   const notes: string[] = [];
   let error: TourApiErrorCode | undefined;
-  const fail = (err: unknown) => {
+  const fail = (err: unknown): TourApiErrorCode => {
     const n = noteOf(err);
     if (!notes.includes(n.note)) notes.push(n.note);
     error ??= n.error;
+    return n.error;
   };
+  const at = q.lat !== undefined && q.lng !== undefined ? { lat: q.lat, lng: q.lng } : null;
 
   let resolved: TourPlace | null = null;
   let first: Record<string, unknown> | null = null;
   let kor: { photos: TourPhoto[]; rejected: number } = { photos: [], rejected: 0 };
+  let korError: TourApiErrorCode | null = null;
+  const firstOf = (items: Record<string, unknown>[], place: TourPlace) => items.find((it) => str(it.contentid) === place.contentId) ?? null;
   try {
     for (const keyword of names.slice(0, 3)) {
-      const items = await call('KorService2', 'searchKeyword2', { keyword });
-      resolved = pickTourPlace(items, names, city);
+      const items = await call('KorService2', 'searchKeyword2', { keyword }, stats);
+      resolved = pickTourPlace(items, names, region);
       if (resolved) {
-        first = items.find((it) => str(it.contentid) === resolved!.contentId) ?? null;
+        first = firstOf(items, resolved);
         break;
       }
     }
-    if (!resolved && q.lat !== undefined && q.lng !== undefined) {
-      const items = await call('KorService2', 'locationBasedList2', { mapX: q.lng.toFixed(7), mapY: q.lat.toFixed(7), radius: '1000', arrange: 'E' });
-      resolved = pickTourPlace(items, names, city, true);
-      if (resolved) first = items.find((it) => str(it.contentid) === resolved!.contentId) ?? null;
+    // 이름이 다른 곳(「진포해양공원」 ↔ 「진포해양테마공원」) — 끝말을 뗀 낱말 하나로. 좌표 검색은 그 장소를 돌려주지 않을 때가 있다.
+    const stem = resolved ? undefined : tourStemKeywords(names)[0];
+    if (stem) {
+      const items = await call('KorService2', 'searchKeyword2', { keyword: stem }, stats);
+      resolved = pickTourPlace(items, names, region, { mode: 'stem', ...(at ? { at } : {}) });
+      if (resolved) first = firstOf(items, resolved);
+    }
+    if (!resolved && at) {
+      const items = await call('KorService2', 'locationBasedList2', { mapX: at.lng.toFixed(7), mapY: at.lat.toFixed(7), radius: '1000', arrange: 'E' }, stats);
+      resolved = pickTourPlace(items, names, region, { mode: 'near' });
+      if (resolved) first = firstOf(items, resolved);
     }
     if (resolved) {
-      const images = await call('KorService2', 'detailImage2', { contentId: resolved.contentId, imageYN: 'Y' });
+      const images = await call('KorService2', 'detailImage2', { contentId: resolved.contentId, imageYN: 'Y' }, stats);
       kor = korTourPhotos(resolved, first, images, q.place, [...names, resolved.title]);
       remember(tourPhotoSrc(first?.firstimage), resolved.title, str(first?.cpyrhtDivCd) === 'Type1');
       for (const im of images) remember(tourPhotoSrc(im.originimgurl), resolved.title, str(im.cpyrhtDivCd) === 'Type1');
     }
   } catch (err) {
-    fail(err);
+    korError = fail(err);
   }
 
   let gallery: { photos: TourPhoto[]; rejected: number } = { photos: [], rejected: 0 };
-  if (kor.photos.length < GALLERY_WHEN_FEWER) {
+  if (kor.photos.length < GALLERY_WHEN_FEWER && !(korError && SKIP_GALLERY_AFTER.has(korError))) {
     const allNames = resolved ? [...names, resolved.title] : names;
     const keywords = [...new Set([resolved?.title, names[0]].filter((k): k is string => Boolean(k)))];
     try {
       for (const keyword of keywords) {
-        const items = await call('PhotoGalleryService1', 'gallerySearchList1', { keyword });
-        gallery = galleryTourPhotos(items, q.place, allNames, city);
+        const items = await call('PhotoGalleryService1', 'gallerySearchList1', { keyword }, stats);
+        gallery = galleryTourPhotos(items, q.place, allNames, region);
         for (const p of gallery.photos) remember(p.src, p.title, true);
         if (gallery.photos.length) break;
       }
@@ -317,5 +349,6 @@ export async function findTourPhotos(q: TourPhotoQuery, brandRegion: string): Pr
     rejectedGallery: gallery.rejected,
     ...(notes.length ? { note: notes.join(' ') } : {}),
     ...(error ? { error } : {}),
+    liveCalls: stats.live,
   };
 }

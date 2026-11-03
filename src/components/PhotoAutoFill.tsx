@@ -30,7 +30,7 @@ import {
   type PublicPhotoPage,
   type SitePhotoResult,
 } from '../lib/sitePhotos'
-import { TOUR_SOURCES } from '../lib/tourPhotos'
+import { TOUR_PLACE_LIMIT, TOUR_SOURCES } from '../lib/tourPhotos'
 
 /**
  * 사진 자리 자동 채우기 — 단추를 누르면 홈페이지 사진 후보로 빈 사진 자리를 맞추고(1단계), 그래도 빈 자리는 자리 글자에 나온 장소의
@@ -39,8 +39,9 @@ import { TOUR_SOURCES } from '../lib/tourPhotos'
  * 사진에 「자동」 표시가 붙고 글의 「홈페이지 사진」 칸에서 바꾸거나 뺄 수 있다. 이미 고른 출처 없는 공공 사진은 같은 사진이 장소 페이지에
  * 제1유형으로 있으면 같은 저장에서 출처를 붙인다. AI를 부르지 않는다. 장소 페이지는 빈 자리에 나온 장소만 읽는다(PUBLIC_PAGE_LIMIT곳까지).
  * 장소 페이지에도 쓸 사진이 없던 장소 자리는, 이 PC에 TourAPI 키가 있으면(/api/health tourApi) 한국관광공사의 공공누리 제1유형 사진
- * (관광공사 사진 — 3단계, 서버 /api/tourapi/photos)으로 채운다(TOUR_PLACE_LIMIT곳까지). 키가 없으면 건너뛰고, 공공 사진 사용 확인이
- * 있는데 그런 자리가 남을 때만 알린다.
+ * (관광공사 사진 — 3단계, 서버 /api/tourapi/photos)으로 채운다(TourAPI를 새로 부르는 장소는 TOUR_PLACE_LIMIT곳까지). 장소 페이지를
+ * 읽지 못한(일시 실패 · 읽기 상한) 장소의 자리는 3단계로 채우지 않는다. 키가 없으면 건너뛰고, 공공 사진 사용 확인이 있는데 그런 자리가
+ * 남을 때만 알린다.
  *
  * 미리보기는 계산한 때의 초안으로 고른다 — 그사이 다른 미리보기 · 사람이 고른 사진이 저장되거나 글이 바뀌면(photoStateKey) 그
  * 미리보기로는 저장하지 않고 다시 맞추게 한다(작성자 · 브랜드 반복 상한이 달라진다). 서버도 쓰기 안에서 상한을 다시 본다.
@@ -119,12 +120,15 @@ export default function PhotoAutoFill({
       })
       const publicOk = publicPhotosAllowed(settings, brand.industry)
       const pub = await publicFor(autoArticles, found, publicOk)
+      // 장소 페이지를 읽은 장소 — 읽지 못한(일시 실패 · 읽기 상한) 장소의 자리는 관광공사 사진으로 먼저 채우지 않는다(다음에 눌러 그 페이지부터).
+      const pagesRead = new Set(pub.pages.map((p) => p.place))
       const pick = (tourCandidates: AutoCandidate[] = []) =>
         autoPickPhotos({
           articles: autoArticles,
           candidates: found.photos.map((p) => ({ src: p.src, alt: p.alt, pageUrl, ...(p.credit ? { credit: true } : {}) })),
           publicCandidates: pub.candidates,
           tourCandidates,
+          pagesRead,
           places: pub.places,
           others: otherPhotoUses(drafts, ids, groupOf),
           brandName: brand.brandName,
@@ -132,7 +136,7 @@ export default function PhotoAutoFill({
         })
       let result = pick()
       // 3단계 — 장소 페이지에 쓸 사진이 없던 장소 자리를 관광공사 사진으로.
-      const tourWanted = publicOk ? tourPlacesWanted(result) : []
+      const tourWanted = publicOk ? tourPlacesWanted(result, pagesRead) : []
       const tourNotes: string[] = []
       if (tourWanted.length) {
         if (await loadTourApiStatus()) {
@@ -143,7 +147,10 @@ export default function PhotoAutoFill({
           if (none.length) {
             tourNotes.push(`관광공사 자료에 공공누리 제1유형 사진이 없거나 장소를 찾지 못한 곳 ${none.length}곳(${none.slice(0, 6).join(' · ')}${none.length > 6 ? ' …' : ''}).`)
           }
-          if (tour.skipped) tourNotes.push(`관광공사 사진은 한 번에 장소 ${tour.results.length}곳까지 찾았어요 — 남은 ${tour.skipped}곳은 저장한 뒤 다시 눌러 주세요.`)
+          if (tour.skipped && tour.stopped) tourNotes.push(`남은 ${tour.skipped}곳은 관광공사 사진을 찾지 않았어요.`)
+          else if (tour.skipped) {
+            tourNotes.push(`관광공사 사진은 한 번에 새 장소 ${TOUR_PLACE_LIMIT}곳까지 찾아요 — 남은 ${tour.skipped}곳은 다시 누르면 이어서 찾아요(이미 찾은 장소는 다시 부르지 않아요).`)
+          }
         } else {
           tourNotes.push(`장소 페이지에 쓸 사진이 없는 장소 ${tourWanted.length}곳 — 이 PC에 관광공사 TourAPI 키가 있으면 관광공사 사진(공공누리 제1유형)으로 채울 수 있어요.`)
         }

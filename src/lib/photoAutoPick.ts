@@ -398,6 +398,8 @@ export interface AutoSlotRow {
   place?: string
   /** 자리 글자에 나온 장소 전부(slotPlaces 순서) — 앞 장소에 쓸 공공 사진이 없으면 다음 장소의 사진을 본다. */
   places?: string[]
+  /** used인데 상한에 걸린 것이 홈페이지 사진 짝뿐이다 — 자리의 장소에 장소 페이지 · 관광공사 사진이 없었다(관광공사 사진을 찾을 자리). */
+  homeOnly?: true
 }
 
 /** 이미 고른 사진 가운데 출처가 없는 공공 사진(photoCreditState missing)에 붙일 출처 — 같은 사진이 장소 페이지에 제1유형으로 있다. */
@@ -471,17 +473,25 @@ export function placesToRead(articles: readonly Pick<AutoArticle, 'markdown' | '
   return [...new Set([...first, ...rest])]
 }
 
+/** 자리의 장소 페이지를 모두 읽었나 — 아니면 3단계(관광공사 사진)로 채우지 않는다(읽지 못한 장소의 페이지 사진이 먼저다). */
+function placesRead(places: readonly string[], pagesRead: ReadonlySet<string>): boolean {
+  return places.every((p) => pagesRead.has(p))
+}
+
 /**
  * 장소 페이지(2단계)에 쓸 공공 사진이 없어 비어 있는 장소 자리의 장소들 — 관광공사 사진(3단계)을 찾을 장소. 자리마다 첫 장소를 모두
- * 앞에, 다음 장소들은 그 뒤에(화면이 장소 수 상한으로 자른다). 맞는 사진 없음 · 제1유형 아님 자리만 본다 — 장소 페이지 사진이 반복 상한에
- * 걸린 자리(used) · 글이 다 찬 자리(full)는 묻지 않는다.
+ * 앞에, 다음 장소들은 그 뒤에(화면이 장소 수 상한으로 자른다). 맞는 사진 없음 · 제1유형 아님 자리와, 홈페이지 사진 짝만 반복 상한에 걸린
+ * 자리(used · homeOnly)를 본다 — 장소 페이지 · 관광공사 사진이 반복 상한에 걸린 자리(used) · 글이 다 찬 자리(full)는 묻지 않는다.
+ * pagesRead는 장소 페이지를 읽은 장소(2단계가 본 장소) — 자리의 장소 가운데 하나라도 읽지 못했으면(일시 실패 · 읽기 상한) 그 자리는 묻지
+ * 않는다(autoPickPhotos ③도 채우지 않는다). 다음에 눌러 그 페이지를 읽은 뒤에 묻는다.
  */
-export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>): string[] {
+export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>, pagesRead: ReadonlySet<string>): string[] {
   const first: string[] = []
   const rest: string[] = []
   for (const a of result.articles) {
     for (const row of a.rows) {
-      if ((row.state !== 'nomatch' && row.state !== 'license') || !row.places) continue
+      const open = row.state === 'nomatch' || row.state === 'license' || (row.state === 'used' && row.homeOnly)
+      if (!open || !row.places?.length || !placesRead(row.places, pagesRead)) continue
       row.places.forEach((place, i) => (i === 0 ? first : rest).push(place))
     }
   }
@@ -502,8 +512,13 @@ export function autoPickPhotos(input: {
   candidates: readonly AutoCandidate[]
   /** 자사 사이트 장소 페이지의 공공 사진(origin 'public', 장소 · 유형 · 출처) — 제1유형이 아니거나 출처가 없으면 이유와 함께 뺀다. */
   publicCandidates?: readonly AutoCandidate[]
-  /** 관광공사 사진(3단계, origin 'public' · tour · 장소) — 장소 페이지 사진이 없던 장소에만(tourPlacesWanted). 국문 관광정보 사진이 앞. */
+  /**
+   * 관광공사 사진(3단계, origin 'public' · tour · 장소) — 장소 페이지 사진이 없던 장소에만(tourPlacesWanted). 국문 관광정보 사진이 앞.
+   * 사이트의 두 장소가 같은 관광공사 장소로 풀려 같은 사진이 두 장소에 오면 두 장소 모두에 둔다(반복 상한 · 한 글에 한 번은 그대로).
+   */
   tourCandidates?: readonly AutoCandidate[]
+  /** 장소 페이지를 읽은 장소(2단계가 본 장소) — 주면 ③(관광공사 사진)은 자리의 장소 페이지를 모두 읽은 자리만 채운다(tourPlacesWanted와 같다). */
+  pagesRead?: ReadonlySet<string>
   /** 장소 사전(자사 사이트 sitemap의 /places/{이름}/) — 자리 글자에서 장소를 찾는다. */
   places?: readonly string[]
   others?: readonly { src: string; group?: string }[]
@@ -553,20 +568,22 @@ export function autoPickPhotos(input: {
     publicByPlace.set(raw.place, list)
   }
 
-  // 관광공사 사진 — 장소별로, 받은 순서 그대로(국문 관광정보 사진이 앞). 이미 본 사진(홈페이지 · 장소 페이지)과 같으면 뺀다.
+  // 관광공사 사진 — 장소별로, 받은 순서 그대로(국문 관광정보 사진이 앞). 이미 본 사진(홈페이지 · 장소 페이지)이나 같은 장소에 이미 받은
+  // 사진과 같으면 뺀다. 다른 장소에 같은 사진이 와도(두 장소가 같은 관광공사 장소로 풀렸다) 빼지 않는다 — 뒤 장소의 자리가 비지 않게.
   const tourByPlace = new Map<string, AutoCandidate[]>()
-  let usableTour = 0
+  const tourSrcs = new Set<string>()
   for (const raw of input.tourCandidates ?? []) {
     const src = canonicalPhotoSrc(raw.src)
-    const reason = autoCandidateSkip({ ...raw, origin: 'public' }) ?? (src && (seen.has(src) || publicSeen.has(src)) ? 'duplicate' : null)
+    const samePlace = Boolean(raw.place && tourByPlace.get(raw.place)?.some((c) => c.src === src))
+    const reason = autoCandidateSkip({ ...raw, origin: 'public' }) ?? (src && (seen.has(src) || publicSeen.has(src) || samePlace) ? 'duplicate' : null)
     if (reason || !src || !raw.place) {
       skipped.push({ candidate: raw, reason: reason ?? 'bad-src' })
       continue
     }
-    publicSeen.add(src)
-    usableTour += 1
+    tourSrcs.add(src)
     tourByPlace.set(raw.place, [...(tourByPlace.get(raw.place) ?? []), { ...raw, src, alt: cleanPhotoAlt(raw.alt) }])
   }
+  const usableTour = tourSrcs.size
 
   const brandCount = new Map<string, number>()
   const groupUsed = new Map<string, Set<string>>()
@@ -659,9 +676,11 @@ export function autoPickPhotos(input: {
       }
     }
 
-    // ③ 관광공사 사진 — 아직 빈 자리를 앞에서부터, 자리의 장소(앞 장소부터) 사진 가운데 브랜드에서 가장 덜 쓴 첫 장.
+    // ③ 관광공사 사진 — 아직 빈 자리를 앞에서부터, 자리의 장소(앞 장소부터) 사진 가운데 브랜드에서 가장 덜 쓴 첫 장. 장소 페이지를 다
+    // 읽지 못한 자리는 건너뛴다(pagesRead).
+    const tourOk = (row: AutoSlotRow) => !input.pagesRead || placesRead(row.places ?? [], input.pagesRead)
     for (const row of rows) {
-      if (row.state !== 'nomatch' || !row.places || room === 0) continue
+      if (row.state !== 'nomatch' || !row.places || room === 0 || !tourOk(row)) continue
       for (const place of row.places) {
         const open = (tourByPlace.get(place) ?? []).filter((c) => !isBlocked(c.src))
         if (!open.length) continue
@@ -673,6 +692,7 @@ export function autoPickPhotos(input: {
     }
 
     // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소의 공공 사진이 모두 「제1유형 아님」으로 빠졌으면 license.
+    // 홈페이지 사진 짝만 상한에 걸리고 장소 사진이 없던 자리는 homeOnly — 관광공사 사진을 찾을 자리다(tourPlacesWanted).
     const licenseOnly = (place: string) => {
       const reasons = skippedByPlace.get(place) ?? []
       return reasons.length > 0 && !publicByPlace.get(place)?.length && !tourByPlace.get(place)?.length && reasons.every((r) => r === 'license')
@@ -680,8 +700,8 @@ export function autoPickPhotos(input: {
     for (const row of rows) {
       if (row.state !== 'nomatch') continue
       const best = pairs.filter((p) => p.row === row).sort(better)[0]
-      const publicPlace = row.places?.find((place) => publicByPlace.get(place)?.length || tourByPlace.get(place)?.length)
-      if (best) Object.assign(row, { state: room === 0 ? 'full' : 'used', candidate: best.candidate, score: best.score })
+      const publicPlace = row.places?.find((place) => publicByPlace.get(place)?.length || (tourOk(row) && tourByPlace.get(place)?.length))
+      if (best) Object.assign(row, { state: room === 0 ? 'full' : 'used', candidate: best.candidate, score: best.score, ...(room > 0 && !publicPlace ? { homeOnly: true } : {}) })
       else if (publicPlace)
         Object.assign(row, {
           state: room === 0 ? 'full' : 'used',
