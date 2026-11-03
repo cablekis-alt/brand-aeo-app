@@ -1757,6 +1757,45 @@ export async function saveDraftPhotosAuto(
   return total
 }
 
+let tourApiStatus: Promise<boolean> | null = null
+
+/**
+ * 이 PC에서 관광공사 사진(3단계, TourAPI)을 쓸 수 있는가 — /api/health의 tourApi(키가 있는지만). 웹(Vercel)에는 그 값이 없어 false.
+ * 화면이 열려 있는 동안 한 번 묻는다(실패하면 다음에 다시).
+ */
+export function loadTourApiStatus(): Promise<boolean> {
+  tourApiStatus ??= fetch('/api/health')
+    .then(async (res) => (res.ok ? ((await res.json()) as { tourApi?: unknown }) : {}))
+    .then((h) => h.tourApi === true)
+    .catch((e: unknown) => {
+      console.warn('[api] /api/health를 읽지 못해 관광공사 사진을 건너뜁니다', e)
+      tourApiStatus = null
+      return false
+    })
+  return tourApiStatus
+}
+
+/**
+ * 사이트 장소 하나의 관광공사 사진 후보(server/tourPhotos.ts) — 공공 사진 사용 확인이 있어야 한다. 서비스 오류(승인 없음 · 한도 등)는
+ * 결과의 note · error로 오고, 키가 없거나 요청이 틀리면 throw.
+ */
+export async function loadTourPhotos(tenantId: string, q: import('./tourPhotos').TourPhotoQuery): Promise<import('./tourPhotos').TourPhotoResult> {
+  const params = new URLSearchParams({ place: q.place })
+  for (const n of q.names ?? []) params.append('name', n)
+  if (q.address) params.set('address', q.address)
+  if (q.lat !== undefined && q.lng !== undefined) {
+    params.set('lat', String(q.lat))
+    params.set('lng', String(q.lng))
+  }
+  const res = await fetch(`/api/tourapi/photos/${encodeURIComponent(tenantId)}?${params.toString()}`)
+  const out: unknown = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const error = (out as { error?: unknown }).error
+    throw new Error(typeof error === 'string' && error ? error : `관광공사 사진을 찾지 못했어요 (HTTP ${res.status})`)
+  }
+  return out as import('./tourPhotos').TourPhotoResult
+}
+
 /** 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. null = 라우트 없는 환경(웹). */
 /**
  * 브랜드 페이지에서 팩트 그래프 후보를 뽑는다. 저장하지 않는다 — 사람이 골라 넣는다.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { loadPublishSettings, saveDraftPhoto, savePhotoRights, type PhotoPlace, type StoredDraft, type TenantSummary } from '../lib/api'
+import { loadPublishSettings, loadTourApiStatus, saveDraftPhoto, savePhotoRights, type PhotoPlace, type StoredDraft, type TenantSummary } from '../lib/api'
 import {
   canonicalPhotoSrc,
   isPhotoMedical,
@@ -22,11 +22,14 @@ import {
   loadPlaceDirectory,
   loadPublicPhotos,
   loadSitePhotos,
+  loadTourPhotosFor,
   photoPageOf,
   publicCandidatesOf,
   siteRootOf,
+  tourCandidatesOf,
   type SitePhotoResult,
 } from '../lib/sitePhotos'
+import { isTourSourcePage, TOUR_SOURCES, type TourSource } from '../lib/tourPhotos'
 import PhotoAutoFill from './PhotoAutoFill'
 
 /**
@@ -43,6 +46,9 @@ import PhotoAutoFill from './PhotoAutoFill'
  * 받은 뒤 사진 자리에 나온 장소의 공공누리 제1유형 사진을 고를 수 있다(출처와 함께 저장하고, 내보낼 때 사진 아래에 출처 줄이 붙는다).
  * 공공 사진 호스트의 사진을 출처 없이 고른 옛 기록은 「출처 없음」으로 알리고 내보내지 않는다 — 「출처 붙이기」로 장소 페이지에서 같은
  * 사진의 제1유형 표시를 찾으면 출처를 붙인다. 지우지는 않는다.
+ *
+ * 관광공사 사진 — 이 PC에 TourAPI 키가 있으면(/api/health tourApi) 사진 자리에 나온 장소의 한국관광공사 공공누리 제1유형 사진(국문
+ * 관광정보 · 관광사진 정보)도 불러와 같은 방법으로 고른다(공공 사진 사용 확인 뒤, 출처와 함께).
  */
 
 /** 고를 수 있는 사진 하나 — 홈페이지 사진 또는 공공 사진(pub: 출처 · 이용 허락, place: 장소). */
@@ -52,6 +58,8 @@ interface PhotoOption {
   pageUrl: string
   where?: string
   pub?: PublicPhotoFields
+  /** 관광공사 사진이면 그 서비스. */
+  tour?: TourSource
 }
 
 /** 사진 자리 바로 아랫줄의 설명(`*설명*`) — 장소를 찾을 때 쓴다. */
@@ -101,6 +109,10 @@ export default function SitePhotoPanel({
   const [agreePublic, setAgreePublic] = useState(false)
   const [publicFound, setPublicFound] = useState<{ options: PhotoOption[]; other: number; places: string[] } | null>(null)
   const [publicLoading, setPublicLoading] = useState(false)
+  /** 이 PC에서 관광공사 사진(TourAPI)을 쓸 수 있는가 — null은 아직 모름. */
+  const [tourOn, setTourOn] = useState<boolean | null>(null)
+  const [tourFound, setTourFound] = useState<{ options: PhotoOption[]; places: string[]; notes: string[] } | null>(null)
+  const [tourLoading, setTourLoading] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -147,9 +159,21 @@ export default function SitePhotoPanel({
     }
   }, [siteRoot, wantPlaces])
 
+  const publicOk = publicPhotosAllowed(settings, brand.industry)
+  const wantTour = publicOk && (places?.length ?? 0) > 0 && slots.length > 0
+  useEffect(() => {
+    if (!wantTour) return
+    let alive = true
+    void loadTourApiStatus().then((on) => {
+      if (alive) setTourOn(on)
+    })
+    return () => {
+      alive = false
+    }
+  }, [wantTour])
+
   if (!hasPhotoWork) return null
 
-  const publicOk = publicPhotosAllowed(settings, brand.industry)
   const noCredit = (stored.photos ?? []).filter((p) => photoCreditState(p) === 'missing')
   const showPublic = allowed && ((places?.length ?? 0) > 0 || noCredit.length > 0)
   // 홈페이지 사진 가운데 출처 표시가 필요한 사진(공공누리 표시 · 공공 사진 호스트)은 여기서 고르지 않는다 — 공공 사진으로 출처와 함께.
@@ -158,7 +182,10 @@ export default function SitePhotoPanel({
     .filter((p) => !p.credit && !needsPhotoCredit(p.src, brand.ownedDomains))
     .map((p) => ({ src: p.src, alt: p.alt, pageUrl: found!.pageUrl, ...(p.where ? { where: p.where } : {}) }))
   const creditSkipped = (found?.photos.length ?? 0) - siteOptions.length
-  const options: PhotoOption[] = [...siteOptions, ...(publicOk ? (publicFound?.options ?? []) : []).filter((o) => !siteOptions.some((x) => x.src === o.src))]
+  const options: PhotoOption[] = [...siteOptions]
+  for (const o of publicOk ? [...(publicFound?.options ?? []), ...(tourFound?.options ?? [])] : []) {
+    if (!options.some((x) => x.src === o.src)) options.push(o)
+  }
   const pickAt = (slot: PhotoSlot) => match.applied.find((a) => a.slot.line === slot.line)?.pick
   const slotId = (slot: PhotoSlot) => `${slot.key}|${slot.nth}|${slot.heading}`
   const openFor = (id: string | null) => {
@@ -194,15 +221,18 @@ export default function SitePhotoPanel({
     }
   }
 
+  /** 이 글의 사진 자리(장면 · 설명 줄 · 소제목)에 나온 장소. */
+  const slotPlaceNames = (dir: readonly string[]) => [
+    ...new Set(slots.flatMap((slot) => [slot.key, captionAt(md, slot), slot.heading].flatMap((t) => (t ? (findPlace(t, dir) ?? []) : [])))),
+  ]
+
   /** 이 글의 사진 자리(장면 · 설명 줄 · 소제목)에 나온 장소의 공공 사진 — 제1유형 · 출처가 있는 사진만 고를 수 있다. */
   const loadPublic = async () => {
     if (!siteRoot || !places?.length) return
     setPublicLoading(true)
     setError(null)
     try {
-      const names = [
-        ...new Set(slots.flatMap((slot) => [slot.key, captionAt(md, slot), slot.heading].flatMap((t) => (t ? (findPlace(t, places) ?? []) : [])))),
-      ]
+      const names = slotPlaceNames(places)
       const load = await loadPublicPhotos(await loadPlaceDirectory(siteRoot), names)
       const all = publicCandidatesOf(load.pages)
       const usable = all.flatMap((c): PhotoOption[] => {
@@ -215,6 +245,31 @@ export default function SitePhotoPanel({
       setError(`공공 사진을 읽지 못했어요 — ${e instanceof Error ? e.message : String(e)}`)
     } finally {
       setPublicLoading(false)
+    }
+  }
+
+  /**
+   * 이 글의 사진 자리에 나온 장소의 관광공사 사진(TourAPI) — 장소 페이지의 다른 이름 · 주소 · 좌표로 찾는다(장소 페이지는 화면 캐시).
+   * 서버가 공공누리 제1유형 · 출처가 맞는 사진만 돌려준다.
+   */
+  const loadTour = async () => {
+    if (!siteRoot || !places?.length) return
+    setTourLoading(true)
+    setError(null)
+    try {
+      const names = slotPlaceNames(places)
+      const pages = names.length ? (await loadPublicPhotos(await loadPlaceDirectory(siteRoot), names)).pages : []
+      const tour = names.length ? await loadTourPhotosFor(tenantId, names, pages) : { results: [], notes: [], skipped: 0 }
+      const usable = tourCandidatesOf(tour.results).flatMap((c): PhotoOption[] => {
+        const pub = publicCandidateFields(c)
+        return pub ? [{ src: c.src, alt: c.alt, pageUrl: c.pageUrl, ...(c.place ? { where: c.place } : {}), pub, ...(c.tour ? { tour: c.tour } : {}) }] : []
+      })
+      const none = tour.results.filter((r) => !r.photos.length && r.note && !r.error).map((r) => r.note!)
+      setTourFound({ options: usable, places: names, notes: [...tour.notes, ...none] })
+    } catch (e) {
+      setError(`관광공사 사진을 불러오지 못했어요 — ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setTourLoading(false)
     }
   }
 
@@ -365,8 +420,8 @@ export default function SitePhotoPanel({
           {showPublic && !publicOk && (
             <div className="fact-sheet">
               <p className="hint" style={{ margin: 0 }}>
-                공공 사진 — 자사 사이트 장소 페이지의 공공누리 제1유형 사진(예: 한국관광공사)을 출처와 함께 쓸 수 있어요. 브랜드마다 한 번
-                확인해 주세요.
+                공공 사진 — 자사 사이트 장소 페이지의 공공누리 제1유형 사진(예: 한국관광공사)과, 이 PC에 키가 있으면 한국관광공사 TourAPI(국문
+                관광정보 · 관광사진 정보 「포토코리아」)의 공공누리 제1유형 사진을 출처와 함께 쓸 수 있어요. 브랜드마다 한 번 확인해 주세요.
               </p>
               <label>
                 <input type="checkbox" checked={agreePublic} onChange={(e) => setAgreePublic(e.target.checked)} /> 공공 사진 사용 확인 — 공공누리
@@ -392,6 +447,19 @@ export default function SitePhotoPanel({
                   {publicFound.places.length === 0
                     ? '이 글의 사진 자리에 사이트의 장소 이름이 나오지 않아요.'
                     : `${publicFound.places.join(' · ')} — 공공 사진 ${publicFound.options.length}장${publicFound.other ? ` (제1유형이 아니거나 출처가 없어 뺀 사진 ${publicFound.other}장)` : ''}`}
+                </span>
+              )}
+              {tourOn && (
+                <button type="button" className="ghost" disabled={tourLoading || off} onClick={() => void loadTour()}>
+                  {tourLoading ? '관광공사 사진 찾는 중…' : tourFound ? '관광공사 사진 다시 불러오기' : '관광공사 사진 불러오기'}
+                </button>
+              )}
+              {tourOn && tourFound && (
+                <span className="doc-meta">
+                  {tourFound.places.length === 0
+                    ? '이 글의 사진 자리에 사이트의 장소 이름이 나오지 않아요.'
+                    : `관광공사 사진(공공누리 제1유형) ${tourFound.options.length}장`}
+                  {tourFound.notes.length > 0 && ` — ${tourFound.notes.join(' ')}`}
                 </span>
               )}
             </div>
@@ -428,7 +496,9 @@ export default function SitePhotoPanel({
                 <img src={picked.src} alt={picked.alt || slot.alt} referrerPolicy="no-referrer" loading="lazy" />
                 <span>
                   {picked.auto && <span className="status-pill st-info no-glyph">자동</span>}
-                  {photoCreditState(picked) === 'public' && <span className="status-pill st-info no-glyph">공공 사진</span>}
+                  {photoCreditState(picked) === 'public' && (
+                    <span className="status-pill st-info no-glyph">{isTourSourcePage(picked.pageUrl) ? '관광공사 사진' : '공공 사진'}</span>
+                  )}
                   {photoCreditState(picked) === 'missing' && <span className="status-pill st-warn">출처 없음</span>}
                   {picked.auto && (isPeopleScene(slot.key) || photoCreditState(picked) === 'public') && (
                     <span className="status-pill st-warn">확인 필요</span>
@@ -489,7 +559,12 @@ export default function SitePhotoPanel({
                         <input type="radio" name={`photo-${stored.actionId}-${slot.line}`} checked={choice === p.src} onChange={() => setChoice(p.src)} />
                         <img src={p.src} alt="" referrerPolicy="no-referrer" loading="lazy" />
                         <span>
-                          {p.pub && <span className="status-pill st-info no-glyph">공공 사진</span>} {p.alt || <span className="muted">설명 없음</span>}
+                          {p.pub && (
+                            <span className="status-pill st-info no-glyph" title={p.tour ? TOUR_SOURCES[p.tour].name : undefined}>
+                              {p.tour ? '관광공사 사진' : '공공 사진'}
+                            </span>
+                          )}{' '}
+                          {p.alt || <span className="muted">설명 없음</span>}
                         </span>
                         {p.where && <span className="doc-meta">{p.where}</span>}
                         {p.pub && (

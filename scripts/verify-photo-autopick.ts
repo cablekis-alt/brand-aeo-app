@@ -1,5 +1,5 @@
 /**
- * 사진 자리 자동 채우기(src/lib/photoAutoPick.ts — 1단계 홈페이지 사진, 2단계 공공 사진과 출처 줄)의 규칙을 확인한다. 가짜 원고 · 가짜 주소만 쓰고 서버 · AI는 부르지 않는다.
+ * 사진 자리 자동 채우기(src/lib/photoAutoPick.ts — 1단계 홈페이지 사진, 2단계 공공 사진과 출처 줄, 3단계 관광공사 사진)의 규칙을 확인한다. 가짜 원고 · 가짜 주소만 쓰고 서버 · AI는 부르지 않는다.
  *
  * 왜:
  * - 틀린 사진은 빈자리보다 나쁘다 — 문턱에 못 미치면 비워야 하고, 화면 자리 · 사람 사진 · 일러스트 · 출처 표시가 필요한 공공 사진은
@@ -460,6 +460,107 @@ ok('© 표시 · 다른 라이선스만 있는 자사 사진은 출처 표시 �
 const suggestedLegacy: PhotoPick = { ...legacy, slot: '가상섬 바닷가 풍경', same: 1 }
 const statsSuggested = photoSlotStats([{ markdown: mdArt, picks: [suggestedLegacy] }])
 ok('제안 자리(suggested)의 출처 없는 공공 사진도 noCredit에 센다', matchPhotos(mdArt, [suggestedLegacy]).suggested.length === 1 && statsSuggested.noCredit === 1 && statsSuggested.filled === 0)
+
+// 12) 3단계 — 관광공사 사진(TourAPI 공공누리 제1유형). 장소 페이지에 쓸 사진이 없던 장소 자리만, 장소 페이지 사진 다음에.
+const { tourPlacesWanted } = await import('../src/lib/photoAutoPick')
+const { extractPlaceInfo, tourCandidatesOf, tourQueryOf } = await import('../src/lib/sitePhotos')
+const { isTourSourcePage, TOUR_SOURCES } = await import('../src/lib/tourPhotos')
+const tourPlaces = ['가상근대박물관', '가상섬', '가상해양공원']
+const tourCand = (name: string, place: string, source: 'kor' | 'gallery', over: Partial<AutoCandidate> = {}): AutoCandidate => ({
+  src: `https://tong.visitkorea.or.kr/cms2/website/00/${name}.jpg`, alt: place === '가상해양공원' ? '가상해양테마공원' : place, pageUrl: TOUR_SOURCES[source].page,
+  origin: 'public', place, license: 'kogl-1', licenseType: 1, creditText: source === 'gallery' ? '한국관광공사 가상촬영' : '한국관광공사', tour: source, ...over,
+})
+const mdTour = [
+  '## 1. 박물관', '', '![가상근대박물관 외관](#image-slot)', '',
+  '## 2. 섬', '', '![가상섬 바닷가](#image-slot)', '*가상섬 앞바다*', '',
+  '## 3. 공원', '', '![가상해양공원 전시 함정](#image-slot)', '',
+  '## 4. 화면', '', '![가상해양공원 웹사이트 화면](#image-slot)',
+]
+const stage2 = autoPickPhotos({ articles: [article('t', mdTour)], candidates: [], publicCandidates: [pub1, island3], places: tourPlaces })
+ok(
+  '관광공사 사진을 찾을 장소 — 장소 페이지 사진이 없던(제1유형 아님 · 사진 없음) 장소 자리만, 화면 자리는 빼고',
+  JSON.stringify(tourPlacesWanted(stage2)) === JSON.stringify(['가상섬', '가상해양공원']) && stage2.articles[0]!.rows[0]!.pick?.src === pub1.src,
+)
+const korIsland1 = tourCand('k-island1', '가상섬', 'kor')
+const korIsland2 = tourCand('k-island2', '가상섬', 'kor')
+const galIsland = tourCand('g-island1', '가상섬', 'gallery', { alt: '가상섬' })
+const galPark1 = tourCand('g-park1', '가상해양공원', 'gallery')
+const galPark2 = tourCand('g-park2', '가상해양공원', 'gallery')
+const tourPeople = tourCand('g-people', '가상해양공원', 'gallery', { alt: '가상해양테마공원 관광객' })
+const tourDup = { ...tourCand('dup', '가상섬', 'kor'), src: pub1.src }
+const tourAll = [korIsland1, korIsland2, galIsland, galPark1, galPark2, tourPeople, tourDup]
+const rTour = autoPickPhotos({ articles: [article('t', mdTour)], candidates: [], publicCandidates: [pub1, island3], tourCandidates: tourAll, places: tourPlaces })
+const tTour = rTour.articles[0]!.rows
+ok('장소 페이지 사진이 있는 장소는 그대로 장소 페이지 사진(관광공사 사진보다 먼저)', tTour[0]!.pick?.src === pub1.src && !tTour[0]!.candidate?.tour)
+ok(
+  '제1유형이 아니던 장소 자리는 관광공사 사진 — 국문 관광정보 사진이 먼저, 출처 · 이용 허락 · 찾은 페이지(데이터 페이지)와 함께',
+  tTour[1]!.state === 'filled' && tTour[1]!.pick?.src === korIsland1.src && tTour[1]!.candidate?.tour === 'kor' && tTour[1]!.pick?.credit === '한국관광공사' &&
+    tTour[1]!.pick?.license === 'kogl-1' && tTour[1]!.pick?.creditUrl === KOGL1 && tTour[1]!.pick?.pageUrl === TOUR_SOURCES.kor.page && isTourSourcePage(tTour[1]!.pick?.pageUrl),
+)
+ok(
+  '사진이 없던 장소 자리는 관광사진(촬영자 출처) · 늘 「확인 필요」',
+  tTour[2]!.state === 'filled' && tTour[2]!.pick?.src === galPark1.src && tTour[2]!.pick?.credit === '한국관광공사 가상촬영' && tTour[1]!.review === true && tTour[2]!.review === true,
+)
+ok('화면 자리는 관광공사 사진도 넣지 않는다', tTour[3]!.state === 'screen' && !tTour[3]!.pick)
+ok(
+  '관광공사 사진 수 · 사람 낱말 · 이미 본 사진은 뺀 이유와 함께',
+  rTour.usableTour === 5 && rTour.skipped.some((x) => x.candidate.src === tourPeople.src && x.reason === 'people') && rTour.skipped.some((x) => x.candidate === tourDup && x.reason === 'duplicate'),
+)
+ok('같은 입력이면 같은 결과(관광공사 사진 포함)', JSON.stringify(autoPickPhotos({ articles: [article('t', mdTour)], candidates: [], publicCandidates: [pub1, island3], tourCandidates: tourAll, places: tourPlaces })) === JSON.stringify(rTour))
+const islandOnly = ['## 1. 섬', '', '![가상섬 바닷가](#image-slot)']
+const rSpread = autoPickPhotos({
+  articles: [article('s1', islandOnly, { group: 'A' }), article('s2', islandOnly, { group: 'B' }), article('s3', islandOnly, { group: 'C' }), article('s4', islandOnly, { group: 'D' })],
+  candidates: [],
+  tourCandidates: [korIsland1, korIsland2, galIsland],
+  places: tourPlaces,
+})
+ok(
+  '같은 장소의 여러 자리에는 다른 사진부터(브랜드에서 덜 쓴 사진, 같으면 국문 관광정보 먼저)',
+  JSON.stringify(rSpread.articles.map((a) => a.picks[0]?.src)) === JSON.stringify([korIsland1.src, korIsland2.src, galIsland.src, korIsland1.src]),
+)
+const rCap = autoPickPhotos({ articles: [article('c1', islandOnly)], candidates: [], tourCandidates: [korIsland1], places: tourPlaces, others: [{ src: korIsland1.src }, { src: korIsland1.src }, { src: korIsland1.src }] })
+ok('브랜드 반복 상한(3회)도 관광공사 사진에 그대로 — 다 쓰면 used', rCap.articles[0]!.rows[0]!.state === 'used' && !rCap.articles[0]!.picks.length)
+const rLicense = autoPickPhotos({ articles: [article('l', mdTour)], candidates: [], publicCandidates: [pub1, island3], tourCandidates: [], places: tourPlaces })
+ok('관광공사 사진이 없으면 그대로 「제1유형 아님」 · 「맞는 사진 없음」', rLicense.articles[0]!.rows[1]!.state === 'license' && rLicense.articles[0]!.rows[2]!.state === 'nomatch')
+const tourPick: PhotoPick = {
+  slot: '가상해양공원 전시 함정', nth: 1, same: 1, heading: '공원', src: galPark1.src, alt: '가상해양테마공원', pageUrl: TOUR_SOURCES.gallery.page,
+  confirmedAt: '2026-11-03T00:00:00.000Z', auto: true, origin: 'public', license: 'kogl-1', credit: '한국관광공사 가상촬영', creditUrl: KOGL1,
+}
+const mdTourArt = article('t', mdTour).markdown
+const tourOut = withPhotos(mdTourArt, [tourPick]).markdown.split('\n')
+ok(
+  '내보내기 — 관광공사 사진 아래 출처 줄(촬영자 · 공공누리 제1유형 링크)',
+  tourOut[tourOut.indexOf(`![가상해양테마공원](${galPark1.src})`) + 1] === `*사진: 한국관광공사 가상촬영, [공공누리 제1유형](${KOGL1})*`,
+)
+const tourStats = photoSlotStats([{ markdown: mdTourArt, picks: [tourPick] }])
+ok('작성자 줄 셈 — 관광공사 사진도 공공 사진 채움', tourStats.filled === 1 && tourStats.public === 1 && tourStats.noCredit === 0)
+ok('관광공사 사진도 출처가 없으면 내보내지 않는다(공공 사진 호스트)', withPhotos(mdTourArt, [{ ...tourPick, origin: undefined, license: undefined, credit: undefined, creditUrl: undefined }]).markdown === mdTourArt)
+const tourResult = {
+  place: '가상해양공원', city: '가상', resolved: { contentId: '9100', title: '가상해양테마공원', addr: '전북특별자치도 가상시 내항길 2' }, rejectedType: 0, rejectedGallery: 0,
+  photos: [{ src: galPark1.src, title: '가상해양테마공원', place: '가상해양공원', source: 'gallery' as const, license: 'kogl-1' as const, licenseType: 1 as const, creditText: '한국관광공사 가상촬영', creditUrl: KOGL1, sourcePageUrl: TOUR_SOURCES.gallery.page, photographer: '한국관광공사 가상촬영', contentId: '1' }],
+}
+ok(
+  '관광공사 사진 → 자동 채우기 후보(공공 사진 · 사이트 장소 이름 · 데이터 페이지)',
+  JSON.stringify(tourCandidatesOf([tourResult])) ===
+    JSON.stringify([{ src: galPark1.src, alt: '가상해양테마공원', pageUrl: TOUR_SOURCES.gallery.page, origin: 'public', place: '가상해양공원', license: 'kogl-1', licenseType: 1, creditText: '한국관광공사 가상촬영', tour: 'gallery' }]),
+)
+const parkPage = [
+  ld({ '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebPage', name: '가상해양공원 이용시간' },
+    { '@type': ['Park', 'TouristAttraction'], name: '가상해양공원', alternateName: '가상해양테마공원',
+      address: { '@type': 'PostalAddress', addressRegion: '전북특별자치도', streetAddress: '가상 내항길 2 가상해양테마공원' },
+      geo: { '@type': 'GeoCoordinates', latitude: 35.98, longitude: 126.71 } },
+  ] }),
+].join('')
+const parkInfo = extractPlaceInfo(parkPage, '가상해양공원')
+ok('장소 페이지의 다른 이름 · 주소 · 좌표를 읽는다', JSON.stringify(parkInfo) === JSON.stringify({ names: ['가상해양테마공원'], address: '가상 내항길 2 가상해양테마공원', lat: 35.98, lng: 126.71 }))
+ok('장소 정보가 없는 페이지는 null', extractPlaceInfo(ld({ '@type': 'WebPage', name: '가상' }), '가상섬') === null)
+ok(
+  '관광공사 사진 묻기 — 읽은 장소 페이지가 있으면 그 단서를, 없으면 이름만',
+  JSON.stringify(tourQueryOf('가상해양공원', [{ place: '가상해양공원', pageUrl: 'https://site.example/places/가상해양공원/', photos: [], info: parkInfo }])) ===
+    JSON.stringify({ place: '가상해양공원', names: ['가상해양테마공원'], address: '가상 내항길 2 가상해양테마공원', lat: 35.98, lng: 126.71 }) &&
+    JSON.stringify(tourQueryOf('가상섬', [])) === JSON.stringify({ place: '가상섬' }),
+)
 
 let failed = 0
 for (const [label, pass] of checks) {
