@@ -105,6 +105,21 @@ const statuses = (t: TenantConfig, runtime: TenantConfig[]) => planCohortTargets
   ok('이름 없는 줄 unnamed', plan.entries[0].status === 'unnamed' && !plan.entries[0].takesSlot && plan.targets.length === 1)
 }
 
+// 9) 고객 엔진이 바뀐 뒤 — 같은 코호트의 옛 경쟁사 초안(경쟁사로만 잼)은 고객과 같은 엔진으로 잰다. 고객 브랜드 · 다른 지역 브랜드는 자기 엔진.
+{
+  const t = customer(six.slice(0, 3), { engines: ['openai', 'gemini', 'perplexity'] })
+  const [a, b] = planCohortTargets(t, [t]).entries.map((e) => e.draftId!)
+  const stale = { ...other(a, '가상 하나', '펜션', '가상시'), engines: ['openai', 'perplexity'] } as TenantConfig
+  const owner = { ...other(b, '가상 둘', '펜션', '가상시'), cohortOnly: false, engines: ['gemini'] } as TenantConfig
+  const far = { ...other('far', '가상 셋', '펜션', '먼 곳', ['far.example']), engines: ['perplexity'] } as TenantConfig
+  const tt = { ...t, competitors: [...t.competitors.slice(0, 2), { name: '가상 셋', aliases: ['가상 셋'], domains: ['far.example'] }] }
+  const targets = planCohortTargets(tt, [tt, stale, owner, far]).targets
+  const engines = (id: string) => targets.find((x) => x.tenantId === id)?.engines.join()
+  ok('같은 코호트 옛 경쟁사 초안은 고객 엔진(openai · gemini · perplexity)으로', engines(a) === 'openai,gemini,perplexity')
+  ok('고객 브랜드는 자기 엔진 그대로', engines(b) === 'gemini')
+  ok('다른 지역 브랜드는 자기 엔진 그대로', engines('far') === 'perplexity')
+}
+
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)

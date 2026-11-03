@@ -6,8 +6,13 @@
  * 깨진 파일을 빈 목록으로 읽고 덮어쓰면 그 글의 기록이 어느 글의 것인지 잃는다. 올린 기록에 싣는 질문 스냅샷이 원장 검사(checkTopic)를
  * 통과하지 못하면 「올렸어요」가 400으로 막힌다.
  *
+ * 작성자 배정(server/probePlanStore.ts)도 함께 본다 — 배정 파일이 있으면 새로 만들기 · 되살리기와 브리프 · 초안 라우트가 부르는 검사
+ * (checkProbeAction)가 배정표 글만 허용하고, 운영 기간에는 배정 글끼리 질문이 겹쳐도 받고 상한이 배정 글 수까지 늘어난다. 파일이 없거나
+ * 운영 기간이 지나면 지금과 같아야 한다.
+ *
  *   npx tsx scripts/verify-extra-articles-store.ts
  */
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -18,6 +23,7 @@ process.env.APP_DATA_DIR = root;
 const { createExtraArticle, patchExtraArticle, readExtraArticles } = await import('../server/extraArticles');
 const { addPublishedPost } = await import('../server/publishedPosts');
 const { readActionStates } = await import('../server/actionStates');
+const { checkProbeAction, checkProbeTopic, readProbePlan } = await import('../server/probePlanStore');
 const { EXTRA_LIMITS, NAME_AND_ANGLE_LIMIT, extraTopicSnapshot, topicArticleId } = await import('../src/lib/extraArticles');
 
 const checks: [string, boolean][] = [];
@@ -206,6 +212,161 @@ try {
     topic: extraTopicSnapshot(revivedDef),
   });
   ok('되살린 글(다른 판)의 스냅샷도 통과', otherBank.post.topic?.bankVersion === 'v4');
+
+  // 11) 작성자 배정(probe-plan.json, probe-plan/2) — 새로 만들기 · 되살리기는 배정표 글만, 이름 · 빼기는 그대로. 운영 기간에는 배정 글끼리
+  // 질문이 겹쳐도 받고 살아 있는 글 상한이 배정 글 수까지 늘어난다. 파일이 없으면 지금과 같다(1~10이 그 경우).
+  const TP = 'fake-writer';
+  const planPath = (t: string) => path.join(root, 'data', t, 'probe-plan.json');
+  const extrasText = (t: string) => readFile(path.join(root, 'data', t, 'extra-articles.json'), 'utf-8');
+  const PT: Record<string, string> = {
+    'p-001': '가상시 숙소 주차 어디가 편해?',
+    'p-002': '가상시 숙소 주차비 따로 내?',
+    'p-003': '가상시 기념일 숙소 추천해줘',
+    'p-004': '가상시 독채 숙소 특징이 어때?',
+    'p-005': '가상시 숙소 주차 편한 곳 알려줘',
+    'p-006': '가상시 바다 전망 숙소 추천해줘',
+    'p-008': '가상시 숙소 체크인 시간 보통 어때?',
+  };
+  const W1 = { key: 'w1', name: '가상 작성자 하나' };
+  const W2 = { key: 'w2', name: '가상 작성자 둘' };
+  const planArt = (ids: string[], name: string, angle: string, writer: { key: string; name: string }, blog = '') => {
+    const sorted = [...ids].sort();
+    return { id: topicArticleId(sorted), name, angle, writer, blog, questionIds: sorted, questionTexts: sorted.map((id) => PT[id] ?? `가상 질문 ${id}`) };
+  };
+  // P1 · P2는 p-001을 함께 맡는다 — 한 질문을 여러 글이 맡는 배정이다.
+  const P1 = planArt(['p-001', 'p-002'], '가상 숙소 주차 안내', '차로 오는 가족 여행', W1, 'https://w1.example.com');
+  const P2 = planArt(['p-001', 'p-003'], '가상 기념일 숙소 주차', '둘이 떠나는 기념일', W2);
+  const P3 = planArt(['p-002', 'p-004'], '가상 독채 숙소 주차비', '혼자 쉬다 오는 주말', W2);
+  const fakePlan = (tenantId: string, activeUntil: string, articles: unknown[] = [P1, P2, P3]) => ({
+    format: 'probe-plan/2',
+    tenantId,
+    bankVersion: 'v9',
+    activeUntil,
+    source: { writers: 'docs/writers.json', seed: 1 },
+    articles,
+  });
+  const writePlan = async (t: string, body: unknown) => {
+    await mkdir(path.join(root, 'data', t), { recursive: true });
+    await writeFile(planPath(t), typeof body === 'string' ? body : JSON.stringify(body, null, 2), 'utf-8');
+  };
+  const planInput = (a: ReturnType<typeof planArt>, extra: Record<string, unknown> = {}) =>
+    input(a.questionIds, a.questionTexts, { bankVersion: 'v9', name: a.name, angle: a.angle, ...extra });
+  const probeInput = (ids: string[], extra: Record<string, unknown> = {}) => input(ids, ids.map((id) => PT[id]), { bankVersion: 'v9', name: '가상 주제', ...extra });
+  const statusAndMessage = (p: Promise<unknown>) =>
+    p.then(
+      () => 'ok',
+      (err: Error & { status?: number }) => `${err.status} ${err.message}`,
+    );
+
+  // 배정 파일이 생기기 전에 만든 글 — 배정 밖 질문 글 두 편(하나는 뺀다). 둘 다 지금처럼 만들어진다.
+  const beforePlan = await createExtraArticle(TP, probeInput(['p-005'], { name: '가상 주차 이야기' }));
+  ok('배정 파일이 없으면 배정 밖 질문 글도 만든다(지금과 같다)', beforePlan.article.id === 'topic:p-005');
+  await createExtraArticle(TP, probeInput(['p-008'], { name: '가상 체크인 안내' }));
+  await patchExtraArticle(TP, { id: 'topic:p-008', removed: true });
+  const noPlan = await readProbePlan(TP);
+  ok('배정 파일이 없으면 plan null · 깨지지 않음', noPlan.plan === null && !noPlan.corrupt);
+  ok('배정 파일이 없으면 브리프 · 초안 검사도 허용', (await checkProbeAction(TP, 'topic:p-005', undefined)) === null && (await checkProbeAction(TP, 'topic:p-005', 'v1')) === null);
+
+  await writePlan(TP, fakePlan(TP, '2099-12-31'));
+  const withPlan = await readProbePlan(TP);
+  ok('배정 파일을 읽는다', withPlan.plan?.bankVersion === 'v9' && !withPlan.corrupt && withPlan.plan.articles.length === 3);
+
+  const assigned = await createExtraArticle(TP, planInput(P1));
+  ok('배정 글은 만든다 · 각도도 저장', assigned.article.id === P1.id && !assigned.revived && assigned.article.angle === P1.angle);
+  const sharing = await createExtraArticle(TP, planInput(P2));
+  ok('운영 기간에는 다른 배정 글과 같은 질문을 맡은 배정 글도 만든다(겹침 허용)', sharing.article.id === P2.id && sharing.articles.filter((a) => !a.removedAt).length === 3);
+  const before11 = await extrasText(TP);
+  const outside = await statusAndMessage(createExtraArticle(TP, probeInput(['p-006'])));
+  ok('배정 밖 질문 글은 400 · 이유', outside.startsWith('400') && outside.includes('배정표 글만'));
+  ok('배정 글과 다르게 묶은 글(배정 질문 + 배정 밖 질문)도 400', (await fails(createExtraArticle(TP, probeInput(['p-003', 'p-006'])))) === 400);
+  ok('배정 글과 질문이 겹치는 배정 밖 글도 400(겹침 허용이 배정 밖 글을 열지 않음)', (await fails(createExtraArticle(TP, probeInput(['p-001'])))) === 400);
+  const mismatch = await statusAndMessage(createExtraArticle(TP, planInput(P3, { bankVersion: 'v8' })));
+  ok('같은 id라도 판이 다르면 400 · 판 안내', mismatch.startsWith('400') && mismatch.includes('v8') && mismatch.includes('v9'));
+  ok('거절은 파일을 바꾸지 않는다', (await extrasText(TP)) === before11);
+
+  const removedOutside = await patchExtraArticle(TP, { id: 'topic:p-005', removed: true });
+  ok('배정 밖 글도 목록에서 빼기는 된다', Boolean(removedOutside.article.removedAt));
+  const renamedOutside = await patchExtraArticle(TP, { id: 'topic:p-005', name: '가상 주차 이야기 2' });
+  ok('배정 밖 글도 이름 고치기는 된다', renamedOutside.article.name === '가상 주차 이야기 2');
+  const beforeRevive = await extrasText(TP);
+  ok('배정 밖 글 되살리기(PATCH removed:false)는 400', (await fails(patchExtraArticle(TP, { id: 'topic:p-005', removed: false }))) === 400);
+  ok('배정 밖 글을 같은 질문으로 다시 만들어 되살리기도 400', (await fails(createExtraArticle(TP, probeInput(['p-008'])))) === 400);
+  ok('되살리기 거절도 파일을 바꾸지 않는다', (await extrasText(TP)) === beforeRevive);
+  await patchExtraArticle(TP, { id: P1.id, removed: true });
+  const p1Back = await createExtraArticle(TP, planInput(P1));
+  ok('뺀 배정 글은 다시 만들기로 되살린다(겹침 허용)', p1Back.revived && p1Back.article.id === P1.id);
+  await patchExtraArticle(TP, { id: P2.id, removed: true });
+  const p2Back = await patchExtraArticle(TP, { id: P2.id, removed: false });
+  ok('뺀 배정 글은 PATCH removed:false로도 되살린다(겹침 허용)', p2Back.revived && !p2Back.article.removedAt);
+
+  // 상한 — 운영 기간에는 살아 있는 글 상한이 max(10, 배정 글 수). 배정 밖 글도 살아 있으면 센다.
+  const TC = 'fake-writer-cap';
+  const capArticles = Array.from({ length: 12 }, (_, i) => planArt([`c-${String(i).padStart(3, '0')}`], `가상 상한 글 ${i}`, `가상 각도 ${i}`, W1));
+  await createExtraArticle(TC, input(['z-001'], ['가상 배정 밖 질문'], { name: '가상 배정 전 글', bankVersion: 'v9' }));
+  await writePlan(TC, fakePlan(TC, '2099-12-31', capArticles));
+  for (const a of capArticles.slice(0, 11)) await createExtraArticle(TC, planInput(a));
+  const capAlive = (await readExtraArticles(TC)).articles.filter((a) => !a.removedAt).length;
+  ok('상한 — 배정 글 12편이면 살아 있는 글 12편까지 만든다(10편을 넘어)', capAlive === 12);
+  const capOver = await statusAndMessage(createExtraArticle(TC, planInput(capArticles[11])));
+  ok('상한 — 배정 밖 글 1편 + 배정 글 11편이면 12번째 배정 글은 409 · 「12편까지」', capOver.startsWith('409') && capOver.includes('12편까지'));
+  await patchExtraArticle(TC, { id: capArticles[0].id, removed: true });
+  ok('상한 — 하나 빼면 남은 배정 글을 만든다', (await createExtraArticle(TC, planInput(capArticles[11]))).article.id === capArticles[11].id);
+  ok('상한 — 다시 12편이면 뺀 배정 글 되살리기도 409', (await fails(patchExtraArticle(TC, { id: capArticles[0].id, removed: false }))) === 409);
+
+  // 깨진 배정 파일 — 읽기는 corrupt, 배정 글이라도 만들지 않는다(fail closed). topic:이 아닌 항목은 이 규칙 밖.
+  const TB = 'fake-writer-broken';
+  await writePlan(TB, '{ 깨진');
+  const TW = 'fake-writer-wrong-tenant';
+  await writePlan(TW, fakePlan('fake-other', '2099-12-31'));
+  const TI = 'fake-writer-invalid';
+  await writePlan(TI, { ...fakePlan(TI, '2099-12-31'), bankVersion: '' });
+  const TO = 'fake-writer-old-format';
+  await writePlan(TO, { format: 'probe-plan/1', tenantId: TO, bankVersion: 'v9', activeUntil: '2099-12-31', rounds: [], questions: {} });
+  const planErrors: unknown[] = [];
+  console.error = (...args: unknown[]) => planErrors.push(args);
+  const brokenPlan = await readProbePlan(TB);
+  const brokenCreate = await statusAndMessage(createExtraArticle(TB, planInput(P1)));
+  const wrongTenant = await readProbePlan(TW);
+  const invalidPlan = await readProbePlan(TI);
+  const oldPlan = await readProbePlan(TO);
+  const oldCreate = await fails(createExtraArticle(TO, planInput(P1)));
+  const brokenBrief = await checkProbeAction(TB, P1.id, 'v9');
+  const brokenListing = await checkProbeAction(TB, 'listing:tistory.com', undefined);
+  console.error = origError;
+  ok('깨진 배정 파일은 알리고 plan null · corrupt', brokenPlan.plan === null && brokenPlan.corrupt && planErrors.length >= 1);
+  ok('깨진 배정 파일이면 배정 글도 400 · 이유', brokenCreate.startsWith('400') && brokenCreate.includes('probe-plan.json'));
+  ok('깨진 배정 파일이면 추가 글 파일을 만들지 않는다', !existsSync(path.join(root, 'data', TB, 'extra-articles.json')));
+  ok('다른 브랜드의 배정 파일은 corrupt', wrongTenant.plan === null && wrongTenant.corrupt);
+  ok('검사를 통과하지 못한 배정 파일은 corrupt', invalidPlan.plan === null && invalidPlan.corrupt);
+  ok('실증 때의 배정 파일(probe-plan/1)은 corrupt · 글 만들기 400', oldPlan.plan === null && oldPlan.corrupt && oldCreate === 400);
+  ok('깨진 배정 파일이면 브리프 · 초안도 거절', brokenBrief !== null && brokenBrief.includes('probe-plan.json'));
+  ok('깨진 배정 파일이어도 topic:이 아닌 항목은 허용', brokenListing === null);
+
+  // 운영 기간 — activeUntil(KST) 그날까지 잠그고 다음 날부터 허용한다. 기간이 지나면 상한 · 겹침도 지금 규칙(10편 · 409)이다.
+  const TE = 'fake-writer-ended';
+  await writePlan(TE, fakePlan(TE, '2020-01-01'));
+  const ended = await createExtraArticle(TE, probeInput(['p-006'], { name: '가상 바다 전망' }));
+  ok('운영 기간이 지나면 배정 밖 글도 만든다', ended.article.id === 'topic:p-006');
+  await createExtraArticle(TE, planInput(P1));
+  ok('운영 기간이 지나면 같은 질문을 맡은 글은 409(지금 규칙)', (await fails(createExtraArticle(TE, planInput(P2)))) === 409);
+  const lastDay = Date.parse('2099-12-31T23:59:00+09:00');
+  const nextDay = Date.parse('2100-01-01T00:01:00+09:00');
+  ok('마지막 날(KST 23:59)까지는 막는다', (await checkProbeTopic(TP, 'topic:p-006', 'v9', lastDay)) !== null);
+  ok('다음 날(KST 00:01)부터는 허용', (await checkProbeTopic(TP, 'topic:p-006', 'v9', nextDay)) === null);
+
+  // 브리프 · 초안 라우트가 부르는 검사(checkProbeAction) — 요청의 판이 없으면 배정 판으로 본다.
+  ok('브리프 · 초안: 배정 글 · 판 없음 → 배정 판으로 보고 허용', (await checkProbeAction(TP, P1.id, undefined)) === null);
+  ok('브리프 · 초안: 배정 글 · 빈 판 · 글자가 아닌 판 → 배정 판으로 허용', (await checkProbeAction(TP, P1.id, '  ')) === null && (await checkProbeAction(TP, P1.id, 9)) === null);
+  ok('브리프 · 초안: 배정 글 · 같은 판 → 허용', (await checkProbeAction(TP, P2.id, 'v9')) === null && (await checkProbeAction(TP, P2.id, ' v9 ')) === null);
+  const briefOther = await checkProbeAction(TP, 'topic:p-005', undefined);
+  ok('브리프 · 초안: 배정 밖 글(질문 은행 입구) → 거절', briefOther !== null && briefOther.includes('배정표 글만'));
+  const briefBank = await checkProbeAction(TP, P1.id, 'v8');
+  ok('브리프 · 초안: 배정 글이라도 다른 판 → 거절', briefBank !== null && briefBank.includes('v8'));
+  ok(
+    '브리프 · 초안: 본 글 · 등재형은 규칙 밖',
+    (await checkProbeAction(TP, 'content:category-agnostic', 'v8')) === null && (await checkProbeAction(TP, 'listing:tistory.com', undefined)) === null,
+  );
+  ok('브리프 · 초안: 운영 기간이 지나면 허용', (await checkProbeAction(TE, 'topic:p-004', 'v1')) === null);
 } finally {
   await rm(root, { recursive: true, force: true });
 }

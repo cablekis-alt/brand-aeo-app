@@ -5,11 +5,13 @@ import express from 'express';
 import { connect as netConnect } from 'node:net';
 import { packagedDataMode } from './appPaths.js';
 import { seedFirstRunIfEmpty } from './seedFirstRun.js';
+import { runBrandUnify } from './brandUnify.js';
 import { collectPage } from './aeo/collectPage.js';
 import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDomain, inferBrandFromName, inferCompetitors, inferMarketScope } from './brandInference.js';
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
 import { readPublishSettings, updatePublishSettings } from './publishSettingsStore.js';
 import { createExtraArticle, ExtraArticlesError, patchExtraArticle, readExtraArticles } from './extraArticles.js';
+import { checkProbeAction, readProbePlan } from './probePlanStore.js';
 import { normalizePublishSettings } from '../src/lib/publishSettings.js';
 import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
@@ -67,7 +69,6 @@ import { readLocalMeasures } from './localMeasureLog.js';
 import {
   MeasureCancelledError,
   beginMeasureRun,
-  clearMeasureFailures,
   endMeasureRun,
   listActiveMeasures,
   listMeasureFailures,
@@ -75,8 +76,7 @@ import {
   measureInFlight,
   requestCancelActiveMeasures,
 } from './measureTracker.js';
-import { readOverlay } from './tenantOverlay.js';
-import { addRemovedTenant, describeTenantDelete, dropRemovedTenant, readRemovedTenants, restoreRemovedTenant, TenantRestoreError } from './tenantRemovedStore.js';
+import { deleteTenantOnThisPc, describeTenantDelete, readRemovedTenants, restoreRemovedTenant, TenantRestoreError } from './tenantRemovedStore.js';
 import { runWeeklyPipeline } from './pipeline.js';
 import { getCitationBreakdown, getCitationSourceAnalysis, getEeatAnalysis, getRankingView } from './queries.js';
 import { startScheduler } from './scheduler.js';
@@ -95,7 +95,6 @@ import {
 import { FileResultStore } from './store.js';
 import {
   blobStoreEnabled,
-  deleteTenantLocally,
   isBakedTenant,
   loadRuntimeTenants,
   normalizeTenantDraft,
@@ -219,7 +218,7 @@ app.post('/api/tenants/:tenantId/restore', async (req, res) => {
   }
 });
 
-// 브랜드 삭제 — 오버레이·대기열에서 빼고, 로컬/패키징이면 툼스톤 + 남은 코호트 순위 재계산(deleteTenantLocally).
+// 브랜드 삭제 — 오버레이·대기열에서 빼고, 로컬/패키징이면 되살리기 백업 + 툼스톤 + 남은 코호트 순위 재계산(deleteTenantOnThisPc).
 // 배포(Vercel)의 베이크된 브랜드는 GitHub Actions(delete-tenant.ts)로 커밋 데이터까지 지운다.
 app.delete('/api/tenants', async (req, res) => {
   const tenantId = typeof req.query.tenantId === 'string' ? req.query.tenantId.trim() : '';
@@ -232,44 +231,27 @@ app.delete('/api/tenants', async (req, res) => {
     res.status(409).json({ error: '측정이 진행 중이에요. 끝난 뒤에 빼 주세요.', busy: true });
     return;
   }
-  // 되살리기용 — 지우기 **전에** 설정(오버레이)과 지우기 직전 모습을 이 PC에 남긴다(tenantRemovedStore.ts). 남기지 못하면
-  // 지우지 않는다(지운 뒤에 남기다 실패하면 경쟁사 · 엔진 설정을 되돌릴 길이 없다). 배포(Vercel)는 남기지 않는다.
-  let before: Awaited<ReturnType<typeof findTenant>>;
-  try {
-    before = process.env.VERCEL ? undefined : await findTenant(tenantId);
-    if (before) {
-      const overlayEntry = (await readOverlay()).find((t) => t.tenantId === tenantId) ?? null;
-      await addRemovedTenant({
-        tenantId,
-        brandName: before.brandName,
-        industry: before.industry,
-        region: before.region,
-        removedAt: new Date().toISOString(),
-        overlay: overlayEntry,
-        snapshot: before,
-      });
+  if (!process.env.VERCEL) {
+    // 로컬/패키징(Electron) — 되살리기 백업을 남긴 뒤 툼스톤으로 즉시 삭제(GitHub Actions 불필요, tenantRemovedStore.ts
+    // deleteTenantOnThisPc). v0.4.49 시작 때 한 번 하는 군산각 전국형 지우기(brandUnify.ts)도 같은 함수를 쓴다.
+    try {
+      const { removedFromOverlay } = await deleteTenantOnThisPc(tenantId, store);
+      res.json({ ok: true, tenantId, removedFromOverlay, stillBaked: false, dispatched: false, locallyDeleted: true });
+    } catch (err) {
+      res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
     }
-  } catch (err) {
-    res.status(500).json({ error: `되살릴 수 있게 설정을 남기지 못해 지우지 않았습니다: ${err instanceof Error ? err.message : String(err)}` });
     return;
   }
+  // 배포(Vercel) — 되살리기 백업은 남기지 않는다.
   try {
     const { removed } = await removeOverlayTenant(tenantId);
     await removeMeasureRequest(tenantId);
     const baked = await isBakedTenant(tenantId);
     let dispatched = false;
     let htmlUrl: string | undefined;
-    let locallyDeleted = false;
-    if (!process.env.VERCEL) {
-      // 로컬/패키징(Electron) — 베이크 여부와 관계없이 툼스톤으로 즉시 삭제(GitHub Actions 불필요).
-      // 앱에서 등록한 브랜드도 측정 데이터가 남으므로 툼스톤이 없으면 코호트 순위에 계속 낀다.
-      await deleteTenantLocally(tenantId, store);
-      locallyDeleted = true;
-      // 지운 브랜드의 「최근 실패」 줄은 다시 잴 길이 없어 남겨 두면 늘 보인다.
-      clearMeasureFailures(tenantId);
-    } else if (baked && canTriggerRemoteMeasure()) {
+    if (baked && canTriggerRemoteMeasure()) {
       try {
-        // 배포(Vercel) — 커밋 데이터까지 지우려면 GitHub Actions. 큐에 누적하고 큐 모드로 트리거.
+        // 커밋 데이터까지 지우려면 GitHub Actions. 큐에 누적하고 큐 모드로 트리거.
         await addDeleteRequest(tenantId);
         ({ htmlUrl } = await triggerGithubDelete(DELETE_QUEUE_SENTINEL));
         dispatched = true;
@@ -277,15 +259,8 @@ app.delete('/api/tenants', async (req, res) => {
         dispatched = false;
       }
     }
-    const stillBaked = baked && !locallyDeleted;
-    res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked, dispatched, htmlUrl, locallyDeleted });
+    res.json({ ok: true, tenantId, removedFromOverlay: removed, stillBaked: baked, dispatched, htmlUrl, locallyDeleted: false });
   } catch (err) {
-    // 지우기가 중간에 멈췄다 — 브랜드가 아직 목록에 있으면 남긴 백업을 거둔다(설정이 이미 빠졌으면 되살리기용으로 둔다).
-    if (before) {
-      await findTenant(tenantId)
-        .then((still) => (still ? dropRemovedTenant(tenantId) : undefined))
-        .catch((dropErr: unknown) => console.error(`[tenants] 멈춘 삭제의 백업을 거두지 못했습니다 ${tenantId}:`, dropErr));
-    }
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
@@ -671,6 +646,12 @@ app.post('/api/content-brief/:tenantId', async (req, res) => {
   }
   const force = req.query.force === '1';
   try {
+    // 작성자 배정 기간에는 배정표 글만 — 질문 은행 입구(actionFromQuestions)와 직접 요청까지 닫는다(server/probePlanStore.ts).
+    const refused = await checkProbeAction(tenant.tenantId, actionId, b.bankVersion);
+    if (refused) {
+      res.status(400).json({ error: refused });
+      return;
+    }
     if (!force) {
       const existing = (await readBriefs(tenant.tenantId))[actionId];
       if (existing) {
@@ -1003,6 +984,12 @@ app.post('/api/content-draft/:tenantId', async (req, res) => {
   const actionId = typeof b.actionId === 'string' ? b.actionId : '';
   if (!actionId) {
     res.status(400).json({ error: 'actionId가 필요합니다.' });
+    return;
+  }
+  // 작성자 배정 기간에는 배정표 글만 — 브리프가 이미 있어도 초안은 만들지 않는다(server/probePlanStore.ts).
+  const refused = await checkProbeAction(tenant.tenantId, actionId, b.bankVersion);
+  if (refused) {
+    res.status(400).json({ error: refused });
     return;
   }
   // 초안은 브리프에서 한 걸음이다 — 브리프 없이 만들면 구조도 사실 목록도 없는 맨글이 된다.
@@ -1344,6 +1331,21 @@ app.patch('/api/extra-articles/:tenantId', async (req, res) => {
     res.json(await patchExtraArticle(tenant.tenantId, req.body ?? {}));
   } catch (err) {
     sendExtraArticlesError(res, err);
+  }
+});
+
+// 작성자 배정 — data/<tenant>/probe-plan.json을 읽기만 한다(server/probePlanStore.ts · src/lib/probePlan.ts). 데스크톱·로컬 전용이다
+// (Vercel 함수는 12/12 — 웹은 404를 「배정 없음」으로 읽는다). 파일이 없으면 plan null, 깨졌으면 corrupt(글 만들기는 서버가 막는다).
+app.get('/api/probe-plan/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await readProbePlan(tenant.tenantId));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -2031,6 +2033,9 @@ async function startListening(): Promise<void> {
       process.exit(1);
     }
     seedFirstRunIfEmpty(); // 패키징 첫 실행 시 커밋 데이터를 userData로 시드(그 외엔 no-op)
+    // v0.4.49 브랜드 통일 — 한 번만 하는 PC별 파일 정리 · 군산각 전국형(gunsan-national) 지우기와 점검(userData/unify-check.json).
+    // 시드 뒤에 둬야 빈 PC의 첫 실행 시드를 막지 않는다.
+    runBrandUnify(store).catch((err: unknown) => console.warn('[unify] 브랜드 통일 점검에 실패했습니다', err));
     console.log(`[server] listening on ${HOSTS[0]} :${port}`);
     startScheduler(store);
     for (const host of HOSTS.slice(1)) {

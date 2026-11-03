@@ -1,21 +1,24 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import WeekPicker from '../components/WeekPicker'
 import { useTenant } from '../context/useTenant'
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
   generateContentBrief,
   generateContentDraft,
   loadChannelAdaptations,
   loadContentBriefs,
   loadContentDrafts,
+  loadFactGraph,
   loadPublishSettings,
   PHOTO_RIGHTS_EVENT,
   type ActionStatus,
   type ChannelAdaptation,
   type ChannelAdaptationMap,
+  type FactNode,
   type PhotoRightsChange,
   type StoredBrief,
   type StoredDraft,
+  type TenantSummary,
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
 import ExtraArticleForm from '../components/ExtraArticleForm'
@@ -23,15 +26,40 @@ import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
+import { bulkRunsAfter, passForTenant, type BulkKind, type BulkRuns } from '../lib/bulkRun'
 import { briefInputOf, draftRequestOf, effectiveDraft } from '../lib/draftGaps'
-import { isExtraArticleId } from '../lib/extraArticles'
+import { aliveExtraArticles, isExtraArticleId, questionTextKey, type ExtraArticle } from '../lib/extraArticles'
 import { draftTitle } from '../lib/markdownFile'
-import { channelNameOf, extraStandingOf, isIdleAction, isOpenAction, probeQuestionList, type GapAction } from '../lib/gapActions'
+import {
+  channelNameOf,
+  extraFormSlot,
+  extraStandingOf,
+  extraTakenFromMain,
+  isIdleAction,
+  isOpenAction,
+  probeQuestionList,
+  probeSectionHint,
+  probeTakenNote,
+  type GapAction,
+} from '../lib/gapActions'
+import { useMeasureStatus } from '../lib/measureStatus'
+import {
+  extraArticleCap,
+  planWriters,
+  topicGuard,
+  writerArticle,
+  writerChip,
+  type WriterPlan,
+  type WriterPlanArticle,
+} from '../lib/probePlan'
+import { todayKst } from '../lib/publishedUrl'
 import { buildPublishPlan, recordInputOf, type PublishArticle } from '../lib/publishPlan'
 import { VERDICT_WORD } from '../lib/questionWinLoss'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
+import { useProbePlan } from '../lib/useProbePlan'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { citedPostIdsInWeek, weekFileTimingOf } from '../lib/publishTracking'
+import { canSaveToFolder, saveWriterBundle, writerBundle } from '../lib/writerBundle'
 
 /** 집행 원장을 읽고 고치는 손잡이(useGapActionPlan의 posts). */
 type PlanPosts = ReturnType<typeof useGapActionPlan>['posts']
@@ -203,6 +231,9 @@ function BriefPanel({
 /** 한 편에 걸리는 대략의 시간(분) — 브리프(있으면 생략) + 초안, 각각 사실 대조 포함. 화면 안내용 어림이다. */
 const MINUTES_PER_DRAFT = 1.5
 
+/** 작성자 실행이 만든 글의 카드를 기다리는 시간 — 추가 글 목록을 받고 항목을 다시 계산하는 데는 보통 1초도 안 걸린다. */
+const CARD_WAIT_MS = 15_000
+
 /**
  * 쓸 글의 초안을 한 번에 만든다 — 브리프가 없으면 브리프부터.
  *
@@ -214,6 +245,10 @@ const MINUTES_PER_DRAFT = 1.5
  * 알 수 없다. 한 편 끝날 때마다 저장되므로 도중에 화면을 떠나도 그때까지 만든 것은 남는다.
  *
  * 실패는 삼키지 않는다 — 몇 편이 왜 실패했는지 끝에 그대로 보여 준다.
+ *
+ * 작성자 단추(onlyIds — WriterRuns)는 같은 흐름을 그 작성자의 배정 글만 돈다: 먼저 없는 배정 글을 만들고(prepare), 그 카드가
+ * 나타나기를 기다린 뒤 브리프(없으면) → 초안(없으면). 한 작성자 몫을 빠짐없이 넘기려고 첫 실패에서 멈추고, 다시 누르면 남은 것부터
+ * 이어서 한다.
  */
 function BulkDrafts({
   tenantId,
@@ -223,6 +258,13 @@ function BulkDrafts({
   mainId,
   onBrief,
   onDraft,
+  onlyIds,
+  label = '',
+  blocked = null,
+  prepare,
+  briefWarning,
+  locked = false,
+  onBusyChange,
 }: {
   tenantId: string
   actions: GapAction[]
@@ -232,14 +274,128 @@ function BulkDrafts({
   mainId: string | undefined
   onBrief: (s: StoredBrief) => void
   onDraft: (s: StoredDraft) => void
+  /** 작성자 한 명의 배정 글 — 이 글들만 이 순서로 돌고 첫 실패에서 멈춘다. 없으면 쓸 글 전부(지금과 같다). */
+  onlyIds?: readonly string[]
+  /** onlyIds일 때 단추 글자. */
+  label?: string
+  /** onlyIds일 때 누를 수 없는 이유 — 단추를 끄고 옆에 보인다. */
+  blocked?: string | null
+  /** onlyIds일 때 브리프 · 초안 전에 할 일(없는 배정 글 만들기). 실패하면 이유 — 거기서 멈춘다. */
+  prepare?: (progress: (text: string) => void) => Promise<string | null>
+  /** 새 브리프를 받은 뒤 확인할 것(모델 출력) — 경고만 하고 멈추지 않는다. */
+  briefWarning?: (a: GapAction, s: StoredBrief) => string | null
+  /** 다른 일괄 실행이 도는 중 — 단추를 끈다. */
+  locked?: boolean
+  /** 돌기 시작 · 끝 — 화면이 다른 일괄 실행과 카드 단추를 잠근다. */
+  onBusyChange?: (busy: boolean) => void
 }) {
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState('')
   const [result, setResult] = useState<string | null>(null)
+  const [warnings, setWarnings] = useState<string[]>([])
+  // 작성자 실행은 글을 만든 뒤의 카드 · 브리프 · 초안을 읽어야 한다 — 누른 때의 값이 아니라 마지막으로 그린 값.
+  const latest = useRef({ actions, briefs, drafts })
+  useEffect(() => {
+    latest.current = { actions, briefs, drafts }
+  })
   const todo = actions.filter((a) => !drafts[a.id])
-  if (todo.length === 0 && !result) return null
+  if (!onlyIds && todo.length === 0 && !result) return null
+
+  /** 만든 글의 카드가 그려지기를 기다린다(추가 글 목록 → 항목 계산). 제때 안 나타나면 null. */
+  const cardsOf = async (ids: readonly string[]): Promise<GapAction[] | null> => {
+    for (let waited = 0; waited <= CARD_WAIT_MS; waited += 100) {
+      const found = ids.map((id) => latest.current.actions.find((a) => a.id === id))
+      if (found.every((a): a is GapAction => a !== undefined)) return found
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    return null
+  }
+
+  const runOnly = async (ids: readonly string[]) => {
+    setBusy(true)
+    onBusyChange?.(true)
+    setResult(null)
+    setWarnings([])
+    const warned: string[] = []
+    let ok = 0
+    let total = 0
+    let failure: string | null
+    try {
+      failure = prepare ? await prepare(setProgress) : null
+      const cards = failure ? null : await cardsOf(ids)
+      if (!failure && !cards) failure = '만든 글의 카드가 나타나지 않았어요. 화면을 다시 연 뒤 다시 눌러 주세요.'
+      if (cards) {
+        const { briefs: known, drafts: made } = latest.current
+        const mainDraft = mainId ? made[mainId] : undefined
+        const list = cards.filter((a) => !made[a.id])
+        total = list.length
+        for (const [i, a] of list.entries()) {
+          const name = a.extra?.name ?? a.title
+          try {
+            if (!known[a.id]) {
+              setProgress(`${i + 1}/${list.length} · ${name} · 브리프`)
+              const s = await generateContentBrief(tenantId, briefInputOf(a, mainDraft))
+              onBrief(s)
+              const w = briefWarning?.(a, s)
+              if (w) warned.push(w)
+            }
+            setProgress(`${i + 1}/${list.length} · ${name} · 초안`)
+            onDraft(await generateContentDraft(tenantId, draftRequestOf(a)))
+            ok += 1
+          } catch (e) {
+            failure = `${name} — ${e instanceof Error ? e.message : String(e)}`
+            break
+          }
+        }
+      }
+    } catch (e) {
+      failure = e instanceof Error ? e.message : String(e)
+    } finally {
+      setProgress('')
+      setBusy(false)
+      onBusyChange?.(false)
+    }
+    setWarnings(warned)
+    setResult(
+      failure
+        ? `${ok > 0 ? `초안 ${ok}편을 만들고 ` : ''}멈췄어요 — ${failure}\n다시 누르면 남은 것부터 이어서 합니다.`
+        : total === 0
+          ? '이 작성자의 글은 모두 초안까지 있어요.'
+          : `초안 ${ok}편을 만들었습니다.`,
+    )
+  }
+
+  if (onlyIds) {
+    return (
+      <div className="brief-bar" style={{ marginBottom: 10 }}>
+        <button
+          type="button"
+          onClick={() => void runOnly(onlyIds)}
+          disabled={busy || locked || Boolean(blocked)}
+          title="없는 배정 글을 만들고, 글마다 브리프(없으면)와 초안을 차례로 만듭니다 — 한 편에 판정 2~4회"
+        >
+          {busy ? `만드는 중… ${progress}` : label}
+        </button>
+        {!busy && blocked && <span className="hint warn">{blocked}</span>}
+        {!busy && !blocked && locked && <span className="doc-meta">다른 일괄 실행이 끝난 뒤에 누를 수 있어요.</span>}
+        {busy && <span className="doc-meta">한 편씩 저장되므로 화면을 떠나도 끝난 글은 남습니다.</span>}
+        {result && (
+          <span className={result.includes('멈췄어요') ? 'error' : 'doc-meta'} style={{ whiteSpace: 'pre-line' }}>
+            {result}
+          </span>
+        )}
+        {warnings.length > 0 && (
+          <span className="hint warn" style={{ whiteSpace: 'pre-line' }}>
+            {warnings.join('\n')}
+          </span>
+        )}
+      </div>
+    )
+  }
+
   const run = async () => {
     setBusy(true)
+    onBusyChange?.(true)
     setResult(null)
     const failed: string[] = []
     let ok = 0
@@ -259,6 +415,7 @@ function BulkDrafts({
     }
     setProgress('')
     setBusy(false)
+    onBusyChange?.(false)
     setResult(failed.length === 0 ? `초안 ${ok}편을 만들었습니다.` : `${ok}편 성공 · ${failed.length}편 실패\n${failed.join('\n')}`)
   }
   return (
@@ -267,7 +424,7 @@ function BulkDrafts({
         <button
           type="button"
           onClick={() => void run()}
-          disabled={busy}
+          disabled={busy || locked}
           title="쓸 글마다 브리프(없으면)와 초안을 차례로 만듭니다 — 한 편에 판정 2~4회"
         >
           {busy
@@ -281,6 +438,193 @@ function BulkDrafts({
           {result}
         </span>
       )}
+    </div>
+  )
+}
+
+/**
+ * 작성자 단추 — 작성자 배정(src/lib/probePlan.ts)의 한 작성자 글(10편)을 단추 하나로 만들고 브리프 · 초안까지 차례로 만든다. 글은 운영자
+ * PC 한 곳에서 모두 만들고 작성자는 받은 초안을 자기 블로그에 올린다. 사람이 질문을 고르다 배정과 다르게 묶는 일을 없앤다.
+ *
+ * 누르기 전에 확인한다 — 보는 주의 질문 은행 판이 배정 판인가(다른 판이면 같은 id가 다른 질문이다), 살아 있는 추가 글 + 만들 글이 상한
+ * (extraArticleCap — 운영 기간에는 배정 글 수까지) 안인가, 측정 중이 아닌가(판정 엔진을 함께 쓴다), 다른 일괄 실행이 돌고 있지 않은가
+ * (브리프 · 초안 파일 쓰기에 줄이 없다). 이미 살아 있는 글은 건너뛰고, 뺀 글은 서버가 되살린다. 배정 글의 각도는 추가 글의 「다룰
+ * 각도」로 들어가 브리프 각도가 된다.
+ *
+ * 초안이 있으면 그 작성자 몫을 한 폴더로 받는 단추도 둔다(src/lib/writerBundle.ts — 글마다 홈페이지용 .html과 사진 파일).
+ */
+function WriterRuns({
+  tenantId,
+  brand,
+  writerPlan,
+  writerKey,
+  weekBank,
+  extrasList,
+  extrasBlocked,
+  create,
+  actions,
+  briefs,
+  drafts,
+  mainId,
+  onBrief,
+  onDraft,
+  locked,
+  onBusyChange,
+}: {
+  tenantId: string
+  /** 묶음의 .html이 쓰는 브랜드(글 끝 · JSON-LD · 사진의 업종 확인). */
+  brand: TenantSummary
+  /** 운영 기간 안의 배정. */
+  writerPlan: WriterPlan
+  /** 작성자 거르기 — 고르면 그 작성자 단추만 보인다. */
+  writerKey: string | null
+  /** 보는 주를 잰 질문 은행 판(모르면 null). */
+  weekBank: string | null
+  /** 추가 글 정의 전부(뺀 글 포함). */
+  extrasList: ExtraArticle[]
+  /** 추가 글 목록을 읽지 못했거나 깨졌다 — 누를 수 없는 이유. */
+  extrasBlocked: string | null
+  /** 추가 글 만들기(useGapActionPlan extras.create) — 성공하면 null, 실패하면 이유. */
+  create: (input: { name: string; angle: string; questionIds: string[]; questionTexts: string[] }) => Promise<string | null>
+  /** 이번 주 항목 전부 — 만든 글의 카드를 여기서 찾는다. */
+  actions: GapAction[]
+  briefs: Record<string, StoredBrief>
+  drafts: Record<string, StoredDraft>
+  mainId: string | undefined
+  onBrief: (s: StoredBrief) => void
+  onDraft: (s: StoredDraft) => void
+  /** 다른 일괄 실행이 도는 중. */
+  locked: boolean
+  onBusyChange: (busy: boolean) => void
+}) {
+  const status = useMeasureStatus()
+  const measuringRun = status.runs?.current[0] ?? null
+  const measuring = measuringRun !== null || status.active.length > 0
+  const measuringName = measuringRun?.brandName ?? status.active[0]?.brandName ?? ''
+  const alive = new Set(aliveExtraArticles(extrasList).map((a) => a.id))
+  const today = todayKst()
+  const cap = extraArticleCap(writerPlan, today)
+  const writers = planWriters(writerPlan).filter((w) => !writerKey || w.key === writerKey)
+  // 묶음 받기 — 한 번에 한 작성자. 결과 · 실패는 그 작성자 줄에 보인다.
+  const [bundleBusy, setBundleBusy] = useState<string | null>(null)
+  const [bundleNote, setBundleNote] = useState<{ key: string; text: string; error: boolean } | null>(null)
+
+  /** 그 작성자의 초안을 한 폴더로 — 글 카드 「홈페이지용 .html」과 같은 사실 · 발행 설정으로 만든다. 폴더 고르기를 닫으면 아무 말도 하지 않는다. */
+  const saveBundle = async (key: string) => {
+    setBundleBusy(key)
+    setBundleNote(null)
+    try {
+      const [facts, settings] = await Promise.all([
+        loadFactGraph(tenantId)
+          .then((fg) => fg?.factGraph ?? [])
+          .catch((e: unknown) => {
+            console.error('[WriterRuns] 브랜드 사실을 읽지 못해 Organization 없이 만듭니다', e)
+            return [] as FactNode[]
+          }),
+        loadPublishSettings(tenantId),
+      ])
+      const bundle = writerBundle({ plan: writerPlan, writerKey: key, drafts, brand, facts, settings, today })
+      const saved = await saveWriterBundle(tenantId, bundle)
+      if (!saved) return
+      const parts = [`「${saved.where}」에 글 ${bundle.articles}편${bundle.photos > 0 ? ` · 사진 ${bundle.photos}장` : ''}을 저장했어요.`]
+      if (bundle.missing.length > 0) parts.push(`초안이 없는 ${bundle.missing.length}편은 뺐어요(${bundle.missing.join(' · ')}).`)
+      if (bundle.withGaps > 0) parts.push(`빈칸이 남은 글 ${bundle.withGaps}편 — 빈칸 줄은 빠졌어요.`)
+      setBundleNote({ key, text: parts.join(' '), error: false })
+    } catch (e) {
+      setBundleNote({ key, text: `묶음을 다 저장하지 못했어요 — ${e instanceof Error ? e.message : String(e)}`, error: true })
+    } finally {
+      setBundleBusy(null)
+    }
+  }
+
+  /** 브리프의 답할 질문 앞부분에 배정 문장이 모두 있는지 — 모델 출력이라 다르면 알리기만 한다. */
+  const briefWarning = (a: GapAction, s: StoredBrief): string | null => {
+    const planned = writerArticle(writerPlan, a.id)
+    if (!planned) return null
+    const head = new Set(s.brief.questionsToAnswer.slice(0, planned.questionTexts.length).map(questionTextKey))
+    if (planned.questionTexts.every((t) => head.has(questionTextKey(t)))) return null
+    return `「${planned.name}」 브리프의 답할 질문 앞부분이 배정 문장과 달라요 — 모델이 쓴 것이라 브리프를 열어 확인해 주세요.`
+  }
+
+  /** 없는 배정 글만 차례로 만든다 — 살아 있는 글은 건너뛰고, 뺀 글은 서버가 되살린다(초안 · 기록이 이어진다). 각도도 함께 보낸다. */
+  const prepareOf = (mine: WriterPlanArticle[]) => async (progress: (text: string) => void): Promise<string | null> => {
+    for (const [i, a] of mine.entries()) {
+      if (alive.has(a.id)) continue
+      progress(`${i + 1}/${mine.length} · ${a.name} · 글 만들기`)
+      const error = await create({ name: a.name, angle: a.angle, questionIds: [...a.questionIds], questionTexts: [...a.questionTexts] })
+      if (error) return `「${a.name}」 글을 만들지 못했어요 — ${error}`
+    }
+    return null
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: 6 }}>
+      <p className="hint" style={{ margin: 0 }}>
+        작성자마다 단추 하나로 그 작성자의 배정 글을 만들고 브리프 · 초안까지 차례로 만듭니다. 첫 실패에서 멈추고, 다시 누르면 남은 것부터
+        이어서 합니다. 도는 동안에는 글 카드의 단추와 「글 더 만들기」를 잠급니다. 운영 기간(~{writerPlan.activeUntil})에는 추가 글을{' '}
+        {cap}편까지 둘 수 있어요(지금 {alive.size}편).
+      </p>
+      {writers.map((w) => {
+        const mine = writerPlan.articles.filter((a) => a.writer.key === w.key)
+        const ids = mine.map((a) => a.id)
+        const missing = mine.filter((a) => !alive.has(a.id)).length
+        const drafted = ids.filter((id) => drafts[id]).length
+        const reason =
+          extrasBlocked ??
+          topicGuard(writerPlan, false, weekBank, ids[0], today) ??
+          (alive.size + missing > cap
+            ? `추가 글은 ${cap}편까지예요 — 지금 ${alive.size}편에 ${missing}편을 더하면 넘습니다. 다 쓴 추가 글을 목록에서 뺀 뒤 눌러 주세요.`
+            : null) ??
+          (measuring ? `측정이 끝난 뒤에 눌러 주세요${measuringName ? `(지금 ${measuringName} 측정 중)` : ''}.` : null)
+        return (
+          <div key={w.key} style={{ display: 'grid', gap: 2 }}>
+            <p className="doc-meta" style={{ margin: 0 }}>
+              <b>
+                {w.key} · {w.name}
+              </b>
+              {w.blog && ` · ${w.blog}`} · 만든 글 {ids.length - missing}/{ids.length} · 초안 {drafted}/{ids.length}
+            </p>
+            <BulkDrafts
+              tenantId={tenantId}
+              actions={actions}
+              briefs={briefs}
+              drafts={drafts}
+              mainId={mainId}
+              onBrief={onBrief}
+              onDraft={onDraft}
+              onlyIds={ids}
+              label={`${w.name} — ${ids.length}편 만들기 · 브리프 · 초안`}
+              blocked={reason}
+              prepare={prepareOf(mine)}
+              briefWarning={briefWarning}
+              locked={locked}
+              onBusyChange={onBusyChange}
+            />
+            {drafted > 0 && (
+              <div className="brief-bar" style={{ marginBottom: 10 }}>
+                <button
+                  type="button"
+                  className="ghost"
+                  disabled={bundleBusy !== null}
+                  onClick={() => void saveBundle(w.key)}
+                  title={
+                    canSaveToFolder()
+                      ? '고른 폴더 안에 이 작성자 묶음 폴더를 만들어 글마다 홈페이지용 .html과 사진 파일을 저장합니다(파일 앞 번호는 배정표 번호).'
+                      : '글마다 홈페이지용 .html과 사진 파일을 내려받습니다(파일 이름 앞에 묶음 이름).'
+                  }
+                >
+                  {bundleBusy === w.key ? '묶음 저장 중…' : `초안 ${drafted}편 묶음 받기`}
+                </button>
+                {bundleNote?.key === w.key && (
+                  <span className={bundleNote.error ? 'error' : 'doc-meta'} role={bundleNote.error ? 'alert' : undefined}>
+                    {bundleNote.text}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -327,8 +671,14 @@ function ActionCard({
   mainDraft,
   takenByExtras = 0,
   onRemoveExtra,
+  writerLabel = null,
+  locked = false,
 }: {
   action: GapAction
+  /** 작성자 배정 기간의 배정 글 표시 — 「작성자 이름 · 블로그」. */
+  writerLabel?: string | null
+  /** 작성자 배정 기간의 일괄 실행 중 — 카드 전체를 잠근다(브리프 · 초안 파일 쓰기에 줄이 없어 같은 파일을 함께 쓰지 않게). */
+  locked?: boolean
   /** 「① 글 확인」의 글이면 그 확인 상태 — 카드 머리에 같은 표시를 단다. */
   article?: PublishArticle
   /** 본 글의 저장된 초안 — 추가 글의 브리프가 그 제목 · 소제목과 겹치지 않게 한다(briefInputOf). */
@@ -406,12 +756,13 @@ function ActionCard({
   // 「① 글 확인」의 글이면 머리에 글 제목을 크게, 답하는 질문 묶음은 그 아래 작게.
   const articleTitle = article?.draft ? draftTitle(effectiveDraft(article.draft)) : null
   return (
-    <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`}>
+    <article className={`gap-card${focused ? ' is-focused' : ''}`} id={`action-${action.id}`} inert={locked || undefined}>
       <div className="gap-card-head">
         <span className="gap-name">{articleTitle ?? action.title}</span>
         <span className={`status-pill ${action.satisfied ? 'st-good' : `no-glyph ${KIND_CLASS[action.kind]}`}`}>
           {action.satisfied ? '충족' : action.badge}
         </span>
+        {writerLabel && <span className="status-pill st-info">{writerLabel}</span>}
         {article && <span className={`status-pill ${articleStateOf(article).tone}`}>{articleStateOf(article).label}</span>}
         <span className="gap-rate">
           {standing === 'unknown' ? (
@@ -669,6 +1020,24 @@ export default function GapActions() {
   const [help, setHelp] = useState(false)
   const { plan, weeks, weekOf, setWeekOf, loading, neverMeasured, canSaveStatus, setStatus, saveError, canRecordPosts, posts, extras } =
     useGapActionPlan(tenant?.tenantId ?? '')
+  // 작성자 배정 — 운영 기간 안이면 작성자 단추 · 작성자 거르기가 생기고 「글 더 만들기」가 배정표 글만 고른다. 파일이 없으면 지금과 같다.
+  const probe = useProbePlan(tenant?.tenantId ?? '')
+  const activePlan = probe.active
+  // 작성자 거르기 — 브랜드마다 따로 둔다(브랜드를 바꿔도 이 화면은 그대로다). 배정에 없는 작성자면 전체로 본다.
+  const [writerPick, setWriterPick] = useState<{ tenantId: string; key: string } | null>(null)
+  const pickedKey = writerPick && writerPick.tenantId === tenant?.tenantId ? writerPick.key : ''
+  const writerKey = activePlan && pickedKey && activePlan.articles.some((a) => a.writer.key === pickedKey) ? pickedKey : null
+  // 도는 일괄 실행 — 작성자 배정 기간에는 도는 동안 카드와 「글 더 만들기」를 잠근다(브리프 · 초안 파일 쓰기에 줄이 없다). 브랜드마다
+  // 따로 센다 — 브랜드를 바꿔도 이 화면은 그대로라, 앞 브랜드에서 누른 실행이 끝날 때까지 지금 브랜드를 잠그면 안 된다(src/lib/bulkRun.ts).
+  const [bulkRuns, setBulkRuns] = useState<BulkRuns>({})
+  const bulkRunning = bulkRuns[tenant?.tenantId ?? ''] ?? null
+  const pageLocked = activePlan !== null && bulkRunning !== null
+  const bulkBusy = (tenantId: string, kind: BulkKind) => (busy: boolean) => setBulkRuns((r) => bulkRunsAfter(r, tenantId, kind, busy))
+  // 지금 보는 브랜드 — 앞 브랜드의 작성자 실행이 넘기는 브리프 · 초안을 버리는 데 쓴다(useGapActionPlan의 currentTenant와 같다).
+  const currentTenant = useRef(tenant?.tenantId ?? '')
+  useEffect(() => {
+    currentTenant.current = tenant?.tenantId ?? ''
+  }, [tenant?.tenantId])
   // 그 주 회차를 합친 올린 글 칸 — 마지막 저장 측정에는 없고 같은 주 다른 회차에서만 인용된 글을 주소 알약이 밝힌다(성과 표와 같은 칸).
   const postsRevision = useMemo(() => posts.list.map((p) => `${p.id}|${p.publishedOn ?? ''}|${p.removedAt ?? ''}`).join(','), [posts.list])
   const weekHistory = usePublishedHistory(canRecordPosts ? (tenant?.tenantId ?? '') : '', 12, postsRevision)
@@ -763,6 +1132,8 @@ export default function GapActions() {
     }
   }, [tenant?.tenantId])
   const onDraft = (s: StoredDraft) => setDrafts((m) => ({ ...(m ?? {}), [s.actionId]: s }))
+  // 작성자 단추 — 운영 기간 안이고 추가 글 · 브리프 · 초안을 쓸 수 있는 환경(데스크톱)일 때만.
+  const showWriters = activePlan !== null && extras.available && briefs !== null && drafts !== null
 
   const open = plan.actions.filter(isOpenAction)
   // 「쓸 글」과 「올릴 곳」은 같은 질문을 다르게 자른 것이지 서로 다른 일이 아니다(실측: 콘텐츠형 6 + 등재형 9가
@@ -790,19 +1161,51 @@ export default function GapActions() {
   const mainId = mainArticle?.action.id ?? plan.actions.find((a) => a.kind === 'content' && !isExtraArticleId(a.id))?.id
   const mainDraft = mainId ? drafts?.[mainId] : undefined
   const extraActions = plan.actions.filter((a) => a.extra)
-  // 추가 글이 본 글에서 가져간 이번 주 밀린 질문(추가 글의 reach 합 — 글끼리 질문이 겹치지 않는다). 본 글이 비지 않게 하나도 빼지
-  // 않은 주(본 글에 추가 글의 질문이 그대로 있다)에는 0이다.
+  // 추가 글이 본 글에서 가져간 이번 주 밀린 질문(실증 제외) — 질문 id로 한 번씩 센다. 운영 기간에는 배정 글끼리 질문이 겹쳐 글마다
+  // reach를 더하면 부푼다. 본 글이 비지 않게 하나도 빼지 않은 주(본 글에 추가 글의 질문이 그대로 있다)에는 0이다.
   const mainQuestionIds = new Set(mainArticle?.action.questionIds ?? [])
   const mainKeptAll = extraActions.some((a) => a.questionIds.some((id) => mainQuestionIds.has(id)))
-  // 실증 질문은 본 글에서 가져간 질문이 아니다 — 추가 글의 reach에서 그 글이 맡은 밀린 실증을 뺀다.
-  const lostProbeIds = new Set(plan.probes.filter((p) => p.verdict === 'loss').map((p) => p.questionId))
-  const takenByExtras = mainKeptAll
-    ? 0
-    : extraActions.reduce((sum, a) => sum + a.reach - a.questionIds.filter((id) => lostProbeIds.has(id)).length, 0)
+  const takenByExtras = mainKeptAll ? 0 : extraTakenFromMain(extraActions)
   // 실증 칸 목록 — 맡은 추가 글로 처치(맡은 글 있음) · 대조(없음)를 밝힌다. 추가 글이 맡았는데 이번 주 응답이 없는 실증도 싣는다.
   const probeList = probeQuestionList(plan.probes, extraActions)
+  const extraDefs = new Map(extras.list.map((d) => [d.id, d]))
+  /** 이 추가 글의 배정 — 글 id는 만든 판의 질문 id라 배정 판으로 만든 글만 배정 글로 본다. 운영 기간이 아니면 null. */
+  const writerArticleOf = (id: string) =>
+    activePlan && extraDefs.get(id)?.bankVersion === activePlan.bankVersion ? writerArticle(activePlan, id) : null
+  /** 추가 글 카드 머리의 작성자 표시 — 「작성자 이름 · 블로그」. 배정 글이 아니면 null. */
+  const writerLabelOf = (a: GapAction) => (a.extra && writerArticleOf(a.id) ? writerChip(activePlan, a.id) : null)
+  // 작성자 거르기 — 고른 작성자의 배정 글만 카드 · 올리기 목록에 남긴다. 고르지 않으면 지금과 같다.
+  const shownByWriter = (id: string) => !writerKey || writerArticleOf(id)?.writer.key === writerKey
+  const shownCards = writerKey ? articleCards.filter((x) => shownByWriter(x.action.id)) : articleCards
+  const shownPlan = writerKey
+    ? {
+        ...publishPlan,
+        articles: publishPlan.articles.filter((x) => shownByWriter(x.action.id)),
+        rows: publishPlan.rows.filter((r) => shownByWriter(r.article.action.id)),
+      }
+    : publishPlan
+  // 「글 더 만들기」 자리 — 작성자를 골라 본 글 카드가 걸러져도 글 카드 뒤에 남긴다(그 작성자의 배정표 글만 보인다).
+  const formSlot = extraFormSlot({
+    hasMain: mainArticle !== undefined,
+    mainShown: mainArticle !== undefined && shownCards.includes(mainArticle),
+    probes: plan.probes.length,
+  })
+  const extraForm = (main: GapAction | null) => (
+    <ExtraArticleForm
+      main={main}
+      probes={plan.probes}
+      extraActions={extraActions}
+      bankVersion={extras.bankVersion}
+      corrupt={extras.corrupt}
+      loadError={extras.error}
+      onCreate={extras.create}
+      probePlan={activePlan}
+      writerKey={writerKey}
+      locked={pageLocked}
+    />
+  )
   const articleCount = articleCards.filter((x) => x.action.kind === 'content').length
-  const confirmedCount = publishPlan.articles.filter((x) => x.confirmed).length
+  const confirmedCount = shownPlan.articles.filter((x) => x.confirmed).length
   const showArticle = (id: string) => {
     document.getElementById(`action-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   }
@@ -882,6 +1285,20 @@ export default function GapActions() {
 
       <div className="filters">
         <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
+        {activePlan && (
+          // 작성자 거르기 — 작성자 단추 · 글 카드 · 올리기 목록 · 「글 더 만들기」의 배정표 글을 그 작성자 것만 남긴다.
+          <label className="field">
+            <span>작성자</span>
+            <select value={writerKey ?? ''} onChange={(e) => setWriterPick({ tenantId: tenant.tenantId, key: e.target.value })}>
+              <option value="">전체</option>
+              {planWriters(activePlan).map((w) => (
+                <option key={w.key} value={w.key}>
+                  {w.key} · {w.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       {saveError && (
@@ -904,6 +1321,20 @@ export default function GapActions() {
             ? `읽지 못했어요(${extras.error}).`
             : '저장된 목록이 깨져 읽지 못했어요. 목록을 덮어쓰지 않으려고 새 추가 글도 만들지 않습니다.'}{' '}
           이미 만든 추가 글이 보이지 않고, 그 글이 맡던 질문은 본 글에 들어가 있어요.
+        </p>
+      )}
+      {/* 작성자 배정을 읽지 못했다 — 서버는 그래도 배정 글 만들기를 막는다(fail closed). 파일이 없으면 아무것도 띄우지 않는다. */}
+      {(probe.corrupt || probe.error) && (
+        <p className="error" role="alert">
+          작성자 배정:{' '}
+          {probe.corrupt
+            ? '배정 파일(probe-plan.json)이 깨져 있어 추가 글 · 브리프 · 초안을 만들지 않아요. 관리자에게 확인을 요청해 주세요.'
+            : `읽지 못했어요(${probe.error}). 글 만들기가 막힐 수 있어요.`}
+        </p>
+      )}
+      {pageLocked && (
+        <p className="hint warn" role="status">
+          일괄 실행 중 — 끝날 때까지 글 카드와 「글 더 만들기」를 잠갔어요(브리프 · 초안을 같은 파일에 함께 쓰지 않게).
         </p>
       )}
 
@@ -929,6 +1360,41 @@ export default function GapActions() {
             : '이 주차에 분석 데이터가 없습니다. '}
           <Link to="/measure-tenant">브랜드·경쟁사 측정</Link>에서 측정하면 항목이 채워집니다.
         </p>
+      )}
+
+      {showWriters && activePlan && briefs !== null && drafts !== null && !loading && (
+        // 작성자 단추 — 작성자마다 배정 글을 만들고 브리프 · 초안까지. 이번 주 밀린 질문이 없어도 배정 글은 만든다.
+        <section>
+          <h3 className="step-head">
+            작성자 배정 <span className="muted">— 작성자 {planWriters(activePlan).length}명 · 글 {activePlan.articles.length}편 · {activePlan.bankVersion} 판</span>
+          </h3>
+          <WriterRuns
+            key={tenant.tenantId}
+            tenantId={tenant.tenantId}
+            brand={tenant}
+            writerPlan={activePlan}
+            writerKey={writerKey}
+            weekBank={extras.bankVersion}
+            extrasList={extras.list}
+            extrasBlocked={
+              extras.error
+                ? `추가 글 목록을 읽지 못해 누를 수 없어요(${extras.error}).`
+                : extras.corrupt
+                  ? '저장된 추가 글 목록이 깨져 있어 새 글을 만들 수 없어요.'
+                  : null
+            }
+            create={extras.create}
+            actions={plan.actions}
+            briefs={briefs}
+            drafts={drafts}
+            mainId={mainId}
+            // 브랜드를 바꾼 뒤에도 앞 브랜드의 실행이 돈다 — 그 브리프 · 초안은 지금 브랜드의 목록에 넣지 않는다.
+            onBrief={(s) => passForTenant(currentTenant.current, tenant.tenantId, s, onBrief)}
+            onDraft={(s) => passForTenant(currentTenant.current, tenant.tenantId, s, onDraft)}
+            locked={bulkRunning !== null}
+            onBusyChange={bulkBusy(tenant.tenantId, 'writer')}
+          />
+        </section>
       )}
 
       {ready && (
@@ -989,7 +1455,7 @@ export default function GapActions() {
                     <>
                       {' '}
                       <span className="muted">
-                        {publishPlan.articles.length}편 중 {confirmedCount}편 확인됨
+                        {shownPlan.articles.length}편 중 {confirmedCount}편 확인됨
                       </span>
                     </>
                   )}
@@ -1001,7 +1467,7 @@ export default function GapActions() {
                 </p>
                 {manyArticles && (
                   <ul className="article-check-list" aria-label="글별 확인 상태">
-                    {articleCards.map((x) => {
+                    {shownCards.map((x) => {
                       const state = articleStateOf(x)
                       return (
                         <li key={x.action.id}>
@@ -1023,20 +1489,27 @@ export default function GapActions() {
                 {manyArticles && briefs !== null && drafts !== null && (
                   <BulkDrafts
                     tenantId={tenant.tenantId}
-                    actions={articleCards.map((x) => x.action)}
+                    actions={shownCards.map((x) => x.action)}
                     briefs={briefs}
                     drafts={drafts}
                     mainId={mainId}
                     onBrief={onBrief}
                     onDraft={onDraft}
+                    locked={bulkRunning === 'writer'}
+                    onBusyChange={bulkBusy(tenant.tenantId, 'all')}
                   />
                 )}
+                {writerKey && shownCards.length === 0 && (
+                  <p className="muted">이 작성자의 글이 아직 없어요 — 위 작성자 단추로 만드세요.</p>
+                )}
                 <div className="gap-grid">
-                  {articleCards.map((x) => (
+                  {shownCards.map((x) => (
                     <Fragment key={x.action.id}>
                       <ActionCard
                         action={x.action}
                         article={x}
+                        writerLabel={writerLabelOf(x.action)}
+                        locked={pageLocked}
                         focused={focusId === x.action.id}
                         canSaveStatus={canSaveStatus}
                         onStatus={setStatus}
@@ -1053,19 +1526,11 @@ export default function GapActions() {
                         onRemoveExtra={x.action.extra && extras.available ? () => extras.update({ id: x.action.id, removed: true }) : undefined}
                       />
                       {/* 「글 더 만들기」는 본 글 카드 바로 아래. 이 환경에 기능이 없으면(웹) 칸째 숨긴다 — 오류 문구도 띄우지 않는다. */}
-                      {x === mainArticle && extras.available && (
-                        <ExtraArticleForm
-                          main={x.action}
-                          probes={plan.probes}
-                          extraActions={extraActions}
-                          bankVersion={extras.bankVersion}
-                          corrupt={extras.corrupt}
-                          loadError={extras.error}
-                          onCreate={extras.create}
-                        />
-                      )}
+                      {x === mainArticle && formSlot === 'under-main' && extras.available && extraForm(x.action)}
                     </Fragment>
                   ))}
+                  {/* 작성자를 골라 본 글 카드가 걸러진 주 — 「글 더 만들기」를 글 카드 뒤에 둔다. */}
+                  {mainArticle && formSlot === 'after-cards' && extras.available && extraForm(mainArticle.action)}
                 </div>
               </section>
               )}
@@ -1086,7 +1551,7 @@ export default function GapActions() {
                 {drafts !== null ? (
                   <PublishList
                     tenantId={tenant.tenantId}
-                    plan={publishPlan}
+                    plan={shownPlan}
                     settings={publishSettings}
                     adaptations={adaptations}
                     onAdapted={onAdapted}
@@ -1182,15 +1647,14 @@ export default function GapActions() {
           )}
 
           {probeList.length > 0 && (
-            // 실증 질문 — 점수 · 본 글 · 채널의 질문에서 뺐다(lib/gapActions.ts). 처치로 쓸지는 「글 더 만들기」에서 고른다. 본 글이 없는
-            // 주에는 그 칸이 본 글 카드 아래에 없으니 여기 둔다(고를 실증이 있을 때만 — 응답 없는 실증은 이미 맡은 것뿐이다).
+            // 실증 질문 — 점수 · 본 글 · 채널의 질문에서 뺐다(lib/gapActions.ts). 처치로 쓸지는 「글 더 만들기」에서 고른다(작성자 배정
+            // 기간에는 고르지 않아 처치 · 대조를 말하지 않는다 — 실증이 남은 옛 판 주를 볼 때다). 본 글이 없는 주에는 그 칸이 본 글 카드
+            // 아래에 없으니 여기 둔다(고를 실증이 있을 때만 — 응답 없는 실증은 이미 맡은 것뿐이다).
             <section>
               <details className="gap-more">
                 <summary>실증 질문 {probeList.length}개 · 점수 제외 · 본 글에 넣지 않음</summary>
                 <p className="hint" style={{ marginTop: 0 }}>
-                  우리 글이 AI 답에 인용되는지 실험하려고 덧붙인 질문입니다. 언급률 · 추천 순위 · 비교 그룹에 들지 않고 본 글에도
-                  넣지 않습니다. 「글 더 만들기」에서 골라 추가 글이 맡으면 처치, 맡은 글이 없으면 대조입니다. 효과는 두 번 이상의 측정에서
-                  같은 방향일 때만 읽으세요.
+                  {probeSectionHint(activePlan?.activeUntil ?? null)}
                 </p>
                 <ul className="gap-worst">
                   {probeList.map((q) => (
@@ -1198,23 +1662,13 @@ export default function GapActions() {
                       <span className="gap-q">{q.text}</span>{' '}
                       <span className="muted">
                         · 이번 주 {q.verdict ? VERDICT_WORD[q.verdict] : '응답 없음(확인 불가)'}
-                        {q.takenBy ? ` · 「${q.takenBy}」 글이 맡음(처치)` : ' · 맡은 글 없음(대조)'}
+                        {probeTakenNote(q.takers, activePlan !== null)}
                       </span>
                     </li>
                   ))}
                 </ul>
               </details>
-              {!mainArticle && extras.available && plan.probes.length > 0 && (
-                <ExtraArticleForm
-                  main={null}
-                  probes={plan.probes}
-                  extraActions={extraActions}
-                  bankVersion={extras.bankVersion}
-                  corrupt={extras.corrupt}
-                  loadError={extras.error}
-                  onCreate={extras.create}
-                />
-              )}
+              {formSlot === 'probes' && extras.available && extraForm(null)}
             </section>
           )}
 
@@ -1228,7 +1682,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {satisfied.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} locked={pageLocked} />
                 ))}
               </div>
               </details>
@@ -1244,7 +1698,7 @@ export default function GapActions() {
               </p>
               <div className="gap-grid">
                 {skipped.map((a) => (
-                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} />
+                  <ActionCard key={a.id} action={a} focused={focusId === a.id} canSaveStatus={canSaveStatus} onStatus={setStatus} tenantId={tenant.tenantId} briefs={briefs} onBrief={onBrief} drafts={drafts} onDraft={onDraft} posts={cardPosts} weekOf={weekOf} coveredBy={null} locked={pageLocked} />
                 ))}
               </div>
             </section>

@@ -39,7 +39,8 @@ import { preserveUnrecordedWeekFile } from './preserveWeekFile.js';
 import { computeCohortRank, movingAverage4 } from './scoring.js';
 import type { QuestionBank, ResultStore, RunMeta } from './store.js';
 import { baseFingerprint, overrideApplies, readCompetitorOverride } from './tenantCompetitorsStore.js';
-import { loadRuntimeTenants, loadTenantWithoutCompetitorEdit } from './tenantRegistry.js';
+import { findBakedTenant, loadRuntimeTenants, loadTenantWithoutCompetitorEdit } from './tenantRegistry.js';
+import { bankQuestionsDiffer, hasBundledBanks, readBundledBank } from './bundledBanks.js';
 import type {
   CompetitorMentionDetail,
   FactClaimDetail,
@@ -121,8 +122,43 @@ async function regenerateOrigin(tenant: TenantConfig, store: ResultStore): Promi
   return { version: qb.regenerate.from, by: 'competitor-edit', base: qb.regenerate.base };
 }
 
+/**
+ * 설치본에 동봉한 질문지(bundledBanks.ts)를 쓰는 브랜드 — 여러 PC가 같은 판 이름으로 다른 질문을 재지 않게 한다.
+ *   - 이 PC에 그 판이 없으면 getQuestionBank가 동봉본을 가져온다(덮지 않는다).
+ *   - 이 PC에 그 판이 이미 있는데 동봉본과 질문(id · 문장)이 다르면 측정을 멈춘다 — 파일은 그대로 둔다(지난 기록이 그 질문으로 쟀다).
+ *   - 저장소 설정이 정한 판인데 이 PC에도 동봉본에도 없으면 AI로 새로 만들지 않고 멈춘다. 경쟁사 편집의 「모두 새로 쓰기」처럼
+ *     저장소 설정과 다른 판은 그대로 만든다.
+ * 동봉하지 않는 브랜드 · 웹(동봉 폴더 없음)은 아무것도 하지 않는다.
+ */
+async function assertBundledBank(tenant: TenantConfig, store: ResultStore): Promise<void> {
+  const { tenantId, questionBankVersion: version } = tenant;
+  const local = await store.getQuestionBank(tenantId, version);
+  const bundled = await readBundledBank(tenantId, version);
+  if (bundled) {
+    if (!local) {
+      throw new Error(`${tenantId} 질문 은행 ${version}이 이 PC에 있지만 읽지 못했습니다 — 동봉한 질문지로 덮지 않고 측정을 멈춥니다. 파일을 확인하세요.`);
+    }
+    const diff = bankQuestionsDiffer(local, bundled);
+    if (diff) {
+      throw new Error(
+        `${tenantId} 질문 은행 ${version}이 이 PC에 이미 있는데 설치본에 담긴 ${version}과 질문이 다릅니다(${diff}) — ` +
+          '이 PC의 파일을 덮지 않고 측정을 멈춥니다. 같은 판 이름으로 다른 질문을 재면 다른 PC와 비교할 수 없습니다. 운영자에게 알려 주세요.',
+      );
+    }
+    return;
+  }
+  if (local || !(await hasBundledBanks(tenantId))) return;
+  const repo = await findBakedTenant(tenantId);
+  if (repo?.questionBankVersion !== version) return;
+  throw new Error(
+    `${tenantId} 질문 은행 ${version}은 설치본에 담아 배포하는 질문지인데 이 PC에도 설치본에도 없습니다 — ` +
+      'AI로 새로 만들지 않고 측정을 멈춥니다. 앱을 최신 설치본으로 업데이트하세요.',
+  );
+}
+
 /** B1 — 질문 은행은 버전당 1회만 생성하고 이후 주차에는 재사용한다 (버전을 바꾸면 재생성). */
 export async function ensureQuestionBank(tenant: TenantConfig, store: ResultStore): Promise<QuestionSpec[]> {
+  await assertBundledBank(tenant, store);
   await assertDerivedBankInUse(tenant, store);
   // 코호트 공통 질문지를 쓰는 브랜드는 일반 질문을 코호트 은행에서 가져온다. 아래의 60% 하한
   // 보정(enforceAgnosticQuota)은 거치지 않는다 — 브랜드 전용 질문을 일반 질문으로 승격하면

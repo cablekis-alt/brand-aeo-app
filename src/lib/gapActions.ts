@@ -148,6 +148,11 @@ export interface GapAction {
      * 그 질문이 없어서. 찾지 못한 질문이 없으면 없다. 화면이 까닭을 근거 문장과 같게 말한다.
      */
     missingWhy?: 'bank-unknown' | 'bank-changed' | 'not-in-bank'
+    /**
+     * 찾은 질문 가운데 이번 주 밀린 질문 id(실증 제외) — 본 글에서 가져간 질문을 셀 때 쓴다(extraTakenFromMain). 운영 기간에는 배정 글끼리
+     * 질문이 겹쳐 글마다 reach를 더하면 같은 질문을 여러 번 센다.
+     */
+    lostIds: string[]
     /** 찾은 질문(questionIds) 가운데 이번 주 이긴 질문 수. */
     won: number
     /** 찾은 질문 가운데 이번 주 응답 줄이 없는 질문 수 — 확인 불가다(밀리지 않은 것으로 세지 않는다). */
@@ -819,6 +824,7 @@ function extraContentActions(
         how: found.how,
         missingTexts: found.missingTexts,
         ...(missingWhy ? { missingWhy } : {}),
+        lostIds: lost.filter((q) => !probeIds.has(q.id)).map((q) => q.id),
         won,
         noAnswer,
         ...(probes.length > 0 ? { probes } : {}),
@@ -1117,7 +1123,40 @@ export interface ProbeListItem {
   questionId: string
   text: string
   verdict: WinLossRow['verdict'] | null
+  /** 맡은 추가 글 가운데 처음 것의 이름. 없으면 null. */
   takenBy: string | null
+  /** 맡은 추가 글 이름 전부(추가 글 순서) — 운영 기간에는 배정 글 여러 편이 한 질문을 맡는다. 화면은 이것을 보인다. */
+  takers: string[]
+}
+
+/**
+ * 이번 주 질문 id마다 맡은 추가 글 이름(추가 글 순서, 같은 이름은 한 번). 지금까지는 글끼리 질문이 겹치지 않아 하나뿐이었지만, 운영
+ * 기간에는 배정 글끼리 질문이 겹친다(src/lib/probePlan.ts writerExtraRules) — 하나만 남기면 나머지 글이 목록에서 사라진다.
+ */
+export function extraTakers(extraActions: GapAction[]): Map<string, string[]> {
+  const takers = new Map<string, string[]>()
+  for (const a of extraActions) {
+    const name = a.extra?.name ?? a.title
+    for (const id of a.questionIds) {
+      const names = takers.get(id) ?? []
+      if (!names.includes(name)) names.push(name)
+      takers.set(id, names)
+    }
+  }
+  return takers
+}
+
+/** 「맡음」 표시의 글 이름 — 「A」, 여러 편이면 「A」 · 「B」. */
+export function takenByLabel(names: readonly string[]): string {
+  return names.map((n) => `「${n}」`).join(' · ')
+}
+
+/**
+ * 추가 글이 본 글에서 가져간 이번 주 밀린 질문 수 — 질문 id로 한 번씩 센다(extra.lostIds의 합집합). 글끼리 질문이 겹치지 않으면 글마다
+ * 「reach − 그 글이 맡은 밀린 실증」을 더한 것과 같다. 운영 기간에는 배정 글 여러 편이 한 질문을 맡아 글마다 더하면 부풀어 오른다.
+ */
+export function extraTakenFromMain(extraActions: GapAction[]): number {
+  return new Set(extraActions.flatMap((a) => a.extra?.lostIds ?? [])).size
 }
 
 /**
@@ -1126,18 +1165,47 @@ export interface ProbeListItem {
  * 고를 근거(판정)도 맡은 글도 없어 싣지 않는다.
  */
 export function probeQuestionList(probes: WinLossRow[], extraActions: GapAction[]): ProbeListItem[] {
-  const takenBy = new Map<string, string>()
-  for (const a of extraActions) for (const id of a.questionIds) takenBy.set(id, a.extra?.name ?? a.title)
-  const items: ProbeListItem[] = probes.map((p) => ({ questionId: p.questionId, text: p.text, verdict: p.verdict, takenBy: takenBy.get(p.questionId) ?? null }))
+  const takersById = extraTakers(extraActions)
+  const item = (questionId: string, text: string, verdict: WinLossRow['verdict'] | null): ProbeListItem => {
+    const takers = takersById.get(questionId) ?? []
+    return { questionId, text, verdict, takenBy: takers[0] ?? null, takers }
+  }
+  const items: ProbeListItem[] = probes.map((p) => item(p.questionId, p.text, p.verdict))
   const seen = new Set(items.map((p) => p.questionId))
   for (const a of extraActions) {
     for (const p of a.extra?.probes ?? []) {
       if (seen.has(p.questionId)) continue
       seen.add(p.questionId)
-      items.push({ questionId: p.questionId, text: p.text, verdict: null, takenBy: a.extra?.name ?? a.title })
+      items.push(item(p.questionId, p.text, null))
     }
   }
   return items
+}
+
+/**
+ * 실증 칸 한 줄의 맡은 글 표시. 작성자 배정 기간(writers)에는 실증이 끝나 처치 · 대조를 붙이지 않는다 — 그 기간에는 「글 더 만들기」에서
+ * 질문을 고를 수 없어(배정표 글만) 「맡은 글 없음(대조)」가 할 수 없는 일을 권하게 된다.
+ */
+export function probeTakenNote(takers: readonly string[], writers: boolean): string {
+  if (takers.length === 0) return writers ? '' : ' · 맡은 글 없음(대조)'
+  return ` · ${takenByLabel(takers)} 글이 맡음${writers ? '' : '(처치)'}`
+}
+
+/** 실증 칸 안내 — 작성자 배정 기간이면 그 마지막 날(activeUntil), 아니면 null. */
+export function probeSectionHint(activeUntil: string | null): string {
+  const head = '우리 글이 AI 답에 인용되는지 실험하려고 덧붙인 질문입니다. 언급률 · 추천 순위 · 비교 그룹에 들지 않고 본 글에도 넣지 않습니다.'
+  return activeUntil
+    ? `${head} 작성자 배정 기간(~${activeUntil})에는 이 질문을 골라 글을 만들지 않아요 — 글은 배정표 글만 만듭니다.`
+    : `${head} 「글 더 만들기」에서 골라 추가 글이 맡으면 처치, 맡은 글이 없으면 대조입니다. 효과는 두 번 이상의 측정에서 같은 방향일 때만 읽으세요.`
+}
+
+/**
+ * 콘텐츠 생성 화면이 「글 더 만들기」를 그릴 자리 — 본 글 카드 바로 아래(under-main). 작성자를 골라 본 글 카드가 걸러진 주에는 글 카드
+ * 뒤(after-cards) — 숨기면 그 작성자의 배정표 글을 한 편씩 만들 곳이 없다. 본 글이 없는 주에는 고를 실증이 있을 때만 실증 칸(probes).
+ */
+export function extraFormSlot(o: { hasMain: boolean; mainShown: boolean; probes: number }): 'under-main' | 'after-cards' | 'probes' | null {
+  if (o.hasMain) return o.mainShown ? 'under-main' : 'after-cards'
+  return o.probes > 0 ? 'probes' : null
 }
 
 /** 채널 이름 — 항목 제목에서 할 일(발행·등재…)을 뗀다. 「네이버 블로그 발행」 → 「네이버 블로그」. */

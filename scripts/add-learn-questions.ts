@@ -15,6 +15,8 @@
  *   npx tsx scripts/add-learn-questions.ts <tenantId> 6 "$env:APPDATA\brand-aeo-app"   # 데스크톱 데이터
  *
  * 판정 엔진 1회를 쓴다. 앱이 실행 중이면 데스크톱 대상 실행은 앱을 끄고 한다.
+ * 설치본에 담아 배포하는 판(src/data/question-banks — v0.4.49 브랜드 통일의 web4ai v6 · gunsan v7)에는
+ * 덧붙이지 않고 멈춘다(server/bundledBanks.ts bundledAppendBlocker). 같은 판은 모든 PC에서 같은 질문이어야 한다.
  */
 import 'dotenv/config'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -22,6 +24,7 @@ import path from 'node:path'
 import { buildStageTopUpPrompt, learnQuota } from '../src/prompts/b1-question-bank'
 import type { QuestionSpec } from '../src/prompts/types'
 import { getJudgeClient } from '../server/engines/index'
+import { bundledAppendBlocker } from '../server/bundledBanks'
 import { parseJsonLoose } from '../server/jsonParse'
 
 const args = process.argv.slice(2)
@@ -72,6 +75,12 @@ const brandNames = [
 
 const version = tenant.questionBankVersion
 const bankPath = path.join(dataRoot, tenantId, 'question-bank', `${version}.json`)
+// 설치본에 담아 배포하는 판(server/bundledBanks.ts)에는 덧붙이지 않는다 — 같은 판이 PC마다 다른 질문이 되어 측정이 멈춘다.
+const appendBlocked = await bundledAppendBlocker(tenantId, version)
+if (appendBlocked) {
+  console.error(appendBlocked)
+  process.exit(1)
+}
 if (!existsSync(bankPath)) {
   console.error(`질문 은행이 없습니다: ${bankPath}`)
   process.exit(1)

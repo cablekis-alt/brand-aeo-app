@@ -1,6 +1,7 @@
 import { access, mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
+import { readBundledBank } from './bundledBanks.js';
 import { isExcluded, readCohortExclusions, type CohortExclusion } from './cohortExclusionStore.js';
 import { readDeletedTenants } from './tenantTombstone.js';
 import { writeJsonAtomic as writeJsonAtomicWithRetry } from './tenantWriteQueue.js';
@@ -182,12 +183,37 @@ async function readJsonArray<T>(filePath: string): Promise<T[]> {
 export class FileResultStore implements ResultStore {
   async getQuestionBank(tenantId: string, version: string): Promise<QuestionBank | null> {
     const filePath = path.join(DATA_DIR, tenantId, 'question-bank', `${version}.json`);
+    let raw: string;
     try {
-      const raw = await readFile(filePath, 'utf-8');
+      raw = await readFile(filePath, 'utf-8');
+    } catch (err) {
+      // 이 PC에 없는 판이면 설치본에 동봉한 질문지를 가져온다(bundledBanks.ts) — 측정 · 질문 화면 · 스크립트가 모두 여기를 지난다.
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return this.copyBundledBank(tenantId, version);
+      return null;
+    }
+    try {
       return JSON.parse(raw) as QuestionBank;
     } catch {
       return null;
     }
+  }
+
+  /**
+   * 동봉한 그 판 질문지를 이 PC로 가져온다 — 없으면 null. 덮어쓰지 않는다(createQuestionBank). 같은 순간 다른 요청이 먼저 가져왔으면
+   * 그 파일을 읽는다.
+   */
+  private async copyBundledBank(tenantId: string, version: string): Promise<QuestionBank | null> {
+    const bundled = await readBundledBank(tenantId, version);
+    if (!bundled) return null;
+    try {
+      await this.createQuestionBank(tenantId, bundled);
+    } catch (err) {
+      const raw = await readFile(path.join(DATA_DIR, tenantId, 'question-bank', `${version}.json`), 'utf-8').catch(() => null);
+      if (raw === null) throw err;
+      return JSON.parse(raw) as QuestionBank;
+    }
+    console.log(`[B1] ${tenantId} 질문 은행 ${version} — 설치본에 동봉한 질문지를 가져왔습니다(문항 ${bundled.questions.length}개).`);
+    return bundled;
   }
 
   async saveQuestionBank(tenantId: string, bank: QuestionBank): Promise<void> {
