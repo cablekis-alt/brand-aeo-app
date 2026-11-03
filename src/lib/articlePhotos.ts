@@ -24,9 +24,17 @@ export interface PhotoPick {
   alt: string
   /** 사진을 찾은 페이지. */
   pageUrl: string
-  /** 사람이 이 사진을 이 자리에 넣기로 확인한 때(서버 시각). 없으면 넣지 않는다. */
+  /** 사람이 이 사진을 이 자리에 넣기로 확인한 때(서버 시각). 없으면 넣지 않는다. 자동 채우기는 운영자가 미리보기를 보고 저장한 때. */
   confirmedAt: string
+  /**
+   * 자동 채우기(src/lib/photoAutoPick.ts)가 고른 사진. 사람이 고르거나 바꾸면 이 표시가 없는 사진이 되고, 자동 채우기는 사진이 있는
+   * 자리를 덮지 않는다. 없으면 사람이 고른 사진(옛 기록 포함).
+   */
+  auto?: true
 }
+
+/** 사진 자리 하나의 열쇠 — 장면 글자 · 몇 번째 · 소제목. */
+export type PhotoPlace = Pick<PhotoPick, 'slot' | 'nth' | 'heading'>
 
 /** 글에 실제로 들어간 사진 — .html의 JSON-LD image · og:image, 「사진 N장 받기」가 쓴다. */
 export interface AppliedPhoto {

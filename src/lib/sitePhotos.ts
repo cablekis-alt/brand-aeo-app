@@ -25,6 +25,11 @@ export interface SitePhoto {
   source: 'jsonld' | 'og' | 'img'
   /** 구조화 데이터에서 그 사진을 가진 곳의 이름(예: 「A동」). */
   where?: string
+  /**
+   * 페이지가 출처 표시가 필요한 사진으로 표시했다 — 공공누리 표시(<img data-kogl>)나 구조화 데이터 ImageObject의 license · creditText.
+   * 자동 채우기(src/lib/photoAutoPick.ts)는 출처 줄이 생기기 전까지 이 사진을 넣지 않는다.
+   */
+  credit?: true
 }
 
 export interface SitePhotoResult {
@@ -102,10 +107,19 @@ function imageUrls(value: unknown): string[] {
   return []
 }
 
-/** 구조화 데이터의 업체 사진(주소 · 가진 곳 이름)과 로고 주소. */
-function jsonLdImages(doc: Document): { images: { url: string; where?: string }[]; logos: string[] } {
+/** 출처 표시가 필요한 ImageObject(license · creditText · copyrightNotice · acquireLicensePage가 있다)의 주소들. */
+function creditImageUrls(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap(creditImageUrls)
+  if (!value || typeof value !== 'object') return []
+  const v = value as JsonLdNode
+  return ['license', 'creditText', 'copyrightNotice', 'acquireLicensePage'].some((k) => v[k]) ? imageUrls(v) : []
+}
+
+/** 구조화 데이터의 업체 사진(주소 · 가진 곳 이름), 로고 주소, 출처 표시가 필요한 사진 주소. */
+function jsonLdImages(doc: Document): { images: { url: string; where?: string }[]; logos: string[]; credits: string[] } {
   const images: { url: string; where?: string }[] = []
   const logos: string[] = []
+  const credits: string[] = []
   const walk = (value: unknown, depth: number) => {
     if (depth > 12 || !value || typeof value !== 'object') return
     if (Array.isArray(value)) {
@@ -114,6 +128,7 @@ function jsonLdImages(doc: Document): { images: { url: string; where?: string }[
     }
     const node = value as JsonLdNode
     logos.push(...imageUrls(node.logo))
+    credits.push(...(typesOf(node).includes('ImageObject') ? creditImageUrls(node) : []), ...creditImageUrls(node.image), ...creditImageUrls(node.photo))
     if (typesOf(node).some((t) => BUSINESS_TYPE.test(t))) {
       const where = typeof node.name === 'string' ? node.name.trim().slice(0, 40) : undefined
       for (const url of [...imageUrls(node.image), ...imageUrls(node.photo)]) images.push({ url, ...(where ? { where } : {}) })
@@ -133,7 +148,7 @@ function jsonLdImages(doc: Document): { images: { url: string; where?: string }[
       console.warn('[sitePhotos] 구조화 데이터를 읽지 못해 건너뜁니다', err)
     }
   }
-  return { images, logos }
+  return { images, logos, credits }
 }
 
 /**
@@ -231,8 +246,11 @@ export function extractSitePhotos(html: string, pageUrl: string): Omit<SitePhoto
   const baseHref = doc.querySelector('base[href]')?.getAttribute('href')
   const base = (baseHref && absolute(baseHref, pageUrl)) || pageUrl
   const altOf = altChooser(doc, base)
-  const { images, logos } = jsonLdImages(doc)
+  const { images, logos, credits } = jsonLdImages(doc)
   const logoKeys = new Set(logos.map((l) => photoKey(l, base)).filter((k): k is string => Boolean(k)))
+  const creditKeys = new Set(
+    [...credits, ...[...doc.querySelectorAll('img[data-kogl]')].flatMap(imgSources)].map((u) => photoKey(u, base)).filter((k): k is string => Boolean(k)),
+  )
   const meta = (prop: string) => doc.querySelector(`meta[property="${prop}"], meta[name="${prop}"]`)?.getAttribute('content')?.trim() ?? ''
 
   type Found = { raw: string; alt: string; source: SitePhoto['source']; where?: string }
@@ -252,7 +270,13 @@ export function extractSitePhotos(html: string, pageUrl: string): Omit<SitePhoto
         if (abs.startsWith('http:')) skippedHttp += 1
         continue
       }
-      photos.push({ src, alt: altOf(key) || f.alt, source: f.source, ...(f.where ? { where: f.where } : {}) })
+      photos.push({
+        src,
+        alt: altOf(key) || f.alt,
+        source: f.source,
+        ...(f.where ? { where: f.where } : {}),
+        ...(creditKeys.has(key) ? { credit: true as const } : {}),
+      })
     }
   }
   collect(images.map((im) => ({ raw: im.url, alt: '', source: 'jsonld' as const, ...(im.where ? { where: im.where } : {}) })))
