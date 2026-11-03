@@ -394,6 +394,73 @@ ok('블로그 채널 줄에도 같은 출처 줄', viaSource.applied.length === 
 const statsPub = photoSlotStats([{ markdown: mdArt, picks: [pubPick(), { ...legacy }, { ...human, slot: '가상스테이 독채 앞의 아담한 정원 풍경', heading: '정원', src: C.garden.src }] }])
 ok('작성자 줄 셈 — 공공 사진은 채움에 세고, 출처 없는 공공 사진은 따로(채움 아님)', statsPub.slots === 4 && statsPub.filled === 2 && statsPub.public === 1 && statsPub.noCredit === 1 && statsPub.empty === 2)
 
+// 7) 장소 맞춤 — 같은 길이면 뒤에 나온 이름(꾸밈말보다 머리 명사), 띄어 쓴 한 글자를 이어 붙이지 않기, 「○○공원」의 줄인 이름, 다음 장소로 넘어가기
+ok(
+  '같은 길이의 장소가 둘이면 뒤에 나온 이름 — 「푸르던 … 대장도」는 대장도, 「산마루 … 오성산」은 오성산',
+  findPlace('푸르던 바다가 내려다보이는 대장도 전망', ['푸르던', '대장도']) === '대장도' && findPlace('산마루에 걸친 노을과 오성산', ['산마루', '오성산']) === '오성산',
+)
+ok('띄어 쓴 한 글자 낱말을 이어 붙여 장소로 맞추지 않는다 — 「이 성당」은 「이성당」이 아니다', findPlace('오래된 이 성당 앞 골목', ['이성당']) === null && findPlace('이성당 빵 진열대', ['이성당']) === '이성당')
+ok(
+  '「○○공원」은 네 글자 이상인 「○○」로도 맞춘다 — 은파호수 → 은파호수공원(어린이공원은 「어린이」로 맞추지 않는다)',
+  findPlace('은파호수 둘레 산책로의 아침 풍경', ['은파호수공원', '은파호수공원 물빛다리', '호텔 은파 팰리스']) === '은파호수공원' && findPlace('어린이 놀이터', ['어린이공원']) === null,
+)
+const placeCand = (name: string, placeName: string, type: number) =>
+  pubCand(name, { place: placeName, alt: placeName, pageUrl: `https://site.example/places/${placeName}/`, ...(type === 1 ? {} : { license: null, licenseType: type }) })
+const mdFall = ['## 1. 섬', '', '![대장도 앞 푸르던 바다](#image-slot)']
+const fallPlaces = ['푸르던', '대장도']
+const rf = autoPickPhotos({ articles: [article('f', mdFall)], candidates: [], publicCandidates: [placeCand('pr1', '푸르던', 3), placeCand('dj1', '대장도', 1)], places: fallPlaces })
+ok(
+  '자리의 첫 장소에 쓸 사진이 없으면 다음 장소의 사진 — 「…푸르던 바다」 자리에 대장도 제1유형 사진',
+  rf.articles[0]!.rows[0]!.state === 'filled' && rf.articles[0]!.rows[0]!.pick?.src === placeCand('dj1', '대장도', 1).src && rf.articles[0]!.rows[0]!.place === '대장도',
+)
+ok('읽을 장소에 자리의 다음 장소도(첫 장소들 뒤에)', JSON.stringify(placesToRead([article('f', mdFall)], fallPlaces)) === JSON.stringify(['푸르던', '대장도']))
+ok('공공 사진은 장소 이름으로만 맞추므로 늘 「확인 필요」', rf.articles[0]!.rows[0]!.review === true && prow[0]!.review === true)
+
+// 8) 공공 사진의 사람 검사는 장소 이름에 걸리지 않는다 — 「새만금어린이랜드」 · 「먹방이와 친구들」
+ok(
+  '장소 이름의 「어린이」 · 「친구」는 사람 사진이 아니다(장소 페이지 주소로도 장소를 안다)',
+  autoCandidateSkip(placeCand('kid', '가상어린이랜드', 1)) === null &&
+    autoCandidateSkip({ ...placeCand('friends', '먹방이와 친구들', 1), place: undefined, pageUrl: 'https://site.example/places/%EB%A8%B9%EB%B0%A9%EC%9D%B4%EC%99%80-%EC%B9%9C%EA%B5%AC%EB%93%A4/' }) === null &&
+    autoCandidateSkip(placeCand('kid2', '가상어린이랜드', 1)) === null &&
+    autoCandidateSkip({ ...placeCand('kid3', '가상어린이랜드', 1), alt: '가상어린이랜드에서 노는 아이' }) === 'people',
+)
+const mdKid = ['## 1. 놀이', '', '![가상어린이랜드 입구](#image-slot)', '', '## 2. 박물관', '', '![가상근대박물관 외관](#image-slot)']
+const rk = autoPickPhotos({ articles: [article('k', mdKid)], candidates: [], publicCandidates: [placeCand('kid', '가상어린이랜드', 1), pubCand('nocredit', { creditText: '' })], places: ['가상어린이랜드', '가상근대박물관'] })
+ok('장소 이름에 사람 낱말이 있어도 제1유형 사진으로 채운다', rk.articles[0]!.rows[0]!.state === 'filled')
+ok('장소 사진이 출처가 없어 빠졌으면 「제1유형 아님」(license)으로 적지 않는다', rk.articles[0]!.rows[1]!.state === 'nomatch')
+
+// 9) 자사 사이트가 공공 사진 호스트(visitkorea.or.kr · go.kr)인 브랜드 — 자기 홈페이지 사진은 출처 없이 쓴다
+const OWN = ['own.visitkorea.or.kr']
+const ownSrc = 'https://own.visitkorea.or.kr/img/hall.jpg'
+ok(
+  '자사 사이트 주소의 사진은 공공 사진 호스트여도 출처 표시가 필요한 사진이 아니다(다른 하위 도메인은 그대로)',
+  !needsPhotoCredit(ownSrc, OWN) && needsPhotoCredit(ownSrc) && needsPhotoCredit('https://tong.visitkorea.or.kr/cms/a.jpg', OWN) && !needsPhotoCredit('https://cdn.own.visitkorea.or.kr/a.jpg', ['https://own.visitkorea.or.kr/']),
+)
+ok('자동 채우기도 자사 사이트 사진은 쓴다', autoCandidateSkip({ src: ownSrc, alt: '전시관 로비', pageUrl: 'https://own.visitkorea.or.kr/' }, OWN) === null && autoCandidateSkip({ src: ownSrc, alt: '전시관 로비', pageUrl: PAGE }) === 'credit')
+const ownPick: PhotoPick = { ...legacy, src: ownSrc, origin: 'site' }
+ok('서버가 자사 사이트 사진으로 확인한 사진(origin site)은 출처 없이 내보낸다', photoCreditState(ownPick) === 'site' && exportPhotoPicks(siteOnly, '숙박', [ownPick]).length === 1)
+
+// 10) 출처 표시 사진 판정 — 공공누리 유형이 있는 ImageObject만(© 표시 · 다른 라이선스만 있는 자사 사진은 고를 수 있다)
+const own2 = extractSitePhotos(
+  ld({
+    '@type': 'LodgingBusiness',
+    name: '가상스테이',
+    image: [
+      { '@type': 'ImageObject', contentUrl: 'https://stay.example/img/garden.jpg', copyrightNotice: '© 가상스테이' },
+      { '@type': 'ImageObject', contentUrl: 'https://stay.example/img/cc.jpg', license: 'https://creativecommons.org/licenses/by/4.0/', creditText: '가상스테이' },
+      { '@type': 'ImageObject', contentUrl: 'https://stay.example/img/kogl.jpg', acquireLicensePage: 'https://www.kogl.or.kr/info/licenseType1.do' },
+    ],
+  }),
+  PAGE,
+)
+const own2By = (n: string) => own2.photos.find((p) => p.src.endsWith(`/${n}.jpg`))
+ok('© 표시 · 다른 라이선스만 있는 자사 사진은 출처 표시 사진이 아니다(공공누리 유형이 있으면 그대로)', own2By('garden')?.credit === undefined && own2By('cc')?.credit === undefined && own2By('kogl')?.credit === true)
+
+// 11) 제안 자리로 밀린 출처 없는 공공 사진도 작성자 줄의 「출처 없음」에 센다
+const suggestedLegacy: PhotoPick = { ...legacy, slot: '가상섬 바닷가 풍경', same: 1 }
+const statsSuggested = photoSlotStats([{ markdown: mdArt, picks: [suggestedLegacy] }])
+ok('제안 자리(suggested)의 출처 없는 공공 사진도 noCredit에 센다', matchPhotos(mdArt, [suggestedLegacy]).suggested.length === 1 && statsSuggested.noCredit === 1 && statsSuggested.filled === 0)
+
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)

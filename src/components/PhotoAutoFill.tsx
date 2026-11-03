@@ -117,6 +117,7 @@ export default function PhotoAutoFill({
         places: pub.places,
         others: otherPhotoUses(drafts, ids, groupOf),
         brandName: brand.brandName,
+        ownedDomains: brand.ownedDomains,
       })
       const placeRows = result.articles.flatMap((a) => a.rows).filter((r) => r.place && r.state !== 'filled').length
       const publicNote =
@@ -132,7 +133,8 @@ export default function PhotoAutoFill({
 
   /**
    * 공공 사진 후보 — 사이트의 장소 사전(sitemap)을 읽고, 공공 사진 사용 확인이 있으면 빈 자리에 나온 장소와 출처 없는 공공 사진의 단서
-   * (사진 설명 · 홈페이지에서 그 사진에 붙은 설명)에 나온 장소의 페이지만 읽는다. 사전을 읽지 못해도 홈페이지 사진 맞추기는 그대로 한다.
+   * (사진 설명 · 홈페이지에서 그 사진에 붙은 설명)에 나온 장소의 페이지만 읽는다. 사전을 읽지 못해도 홈페이지 사진 맞추기는 그대로 한다 —
+   * 그때 알림은 공공 사진 사용 확인이 있을 때만 띄운다(공공 사진을 쓰지 않는 브랜드에 경고를 띄우지 않게).
    */
   const publicFor = async (
     list: readonly AutoArticle[],
@@ -145,7 +147,11 @@ export default function PhotoAutoFill({
     try {
       places = (await loadPlaceDirectory(root)).map((e) => e.name)
     } catch (e) {
-      return { candidates: [], places: [], off: !allowed, note: `장소 목록(sitemap.xml)을 읽지 못해 공공 사진은 건너뛰었어요 — ${e instanceof Error ? e.message : String(e)}` }
+      if (!allowed) {
+        console.warn('[PhotoAutoFill] 장소 목록(sitemap.xml)을 읽지 못했습니다(공공 사진 사용 확인 전이라 알리지 않음)', e)
+        return { candidates: [], places: [], off: true, note: null }
+      }
+      return { candidates: [], places: [], off: false, note: `장소 목록(sitemap.xml)을 읽지 못해 공공 사진은 건너뛰었어요 — ${e instanceof Error ? e.message : String(e)}` }
     }
     if (!places.length || !allowed) return { candidates: [], places, off: !allowed, note: null }
     const siteAlt = new Map(site.photos.map((p) => [p.src, p.alt]))
@@ -259,7 +265,7 @@ export default function PhotoAutoFill({
           )}
           <p className="hint" style={{ margin: 0 }}>
             틀린 사진보다 빈자리가 낫다는 기준으로, 설명이 충분히 맞는 사진만 고릅니다. 공공 사진은 자리 글자에 나온 장소의 사진이라 장면까지
-            맞는지는 보지 않아요 — 썸네일을 확인해 주세요. 공공 사진은 내보낼 때 사진 아래에 출처(공공누리 제1유형 링크)가 붙습니다. 사람이
+            맞는지 · 사람이 찍혔는지는 보지 않아요 — 늘 「확인 필요」이니 썸네일을 확인해 주세요. 공공 사진은 내보낼 때 사진 아래에 출처(공공누리 제1유형 링크)가 붙습니다. 사람이
             나오는 장면 자리는 「확인 필요」 — 저장한 뒤 글의 「홈페이지 사진」 칸에서 바꾸거나 빼 주세요. 사람이 고르거나 뺀 자리는 덮지 않습니다.
           </p>
           {shown.length > 0 && (

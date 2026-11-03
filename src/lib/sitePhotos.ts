@@ -5,6 +5,7 @@ import {
   cleanPhotoCredit,
   exportPhotoPicks,
   koglTypeOf,
+  PHOTO_LICENSES,
   withPhotos,
   type AppliedPhoto,
   type PhotoLicense,
@@ -13,7 +14,8 @@ import {
 import { publishMarkdownOf } from './draftGaps'
 import { downloadBlob, safeFileName } from './markdownFile'
 import { fetchPage } from './aeo/fetchPage'
-import { findPlace, publicCandidateFields, type AutoCandidate } from './photoAutoPick'
+import { findPlace, placeNameOfPath, publicCandidateFields, type AutoCandidate } from './photoAutoPick'
+import { todayKst } from './publishedUrl'
 import { brandSiteUrl } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
 
@@ -37,7 +39,8 @@ export interface SitePhoto {
   /** 구조화 데이터에서 그 사진을 가진 곳의 이름(예: 「A동」). */
   where?: string
   /**
-   * 페이지가 출처 표시가 필요한 사진으로 표시했다 — 공공누리 표시(<img data-kogl>)나 구조화 데이터 ImageObject의 license · creditText.
+   * 페이지가 출처 표시가 필요한 사진으로 표시했다 — 공공누리 표시(<img data-kogl>)나 구조화 데이터 ImageObject의 공공누리 유형(license ·
+   * acquireLicensePage).
    * 자동 채우기(src/lib/photoAutoPick.ts)는 이 사진을 홈페이지 사진으로 넣지 않는다 — 장소 페이지의 공공 사진(extractPublicPhotos)으로만
    * 출처와 함께 넣는다.
    */
@@ -119,12 +122,15 @@ function imageUrls(value: unknown): string[] {
   return []
 }
 
-/** 출처 표시가 필요한 ImageObject(license · creditText · copyrightNotice · acquireLicensePage가 있다)의 주소들. */
+/**
+ * 출처 표시가 필요한 공공 사진 ImageObject(license나 acquireLicensePage가 공공누리 유형 주소)의 주소들. © 표시(copyrightNotice) ·
+ * creditText · 다른 라이선스만 단 사진은 자사 사진의 이미지 라이선스 메타데이터일 수 있어 보지 않는다(홈페이지 사진으로 고를 수 있다).
+ */
 function creditImageUrls(value: unknown): string[] {
   if (Array.isArray(value)) return value.flatMap(creditImageUrls)
   if (!value || typeof value !== 'object') return []
   const v = value as JsonLdNode
-  return ['license', 'creditText', 'copyrightNotice', 'acquireLicensePage'].some((k) => v[k]) ? imageUrls(v) : []
+  return koglTypeOf(v.license) !== null || koglTypeOf(v.acquireLicensePage) !== null ? imageUrls(v) : []
 }
 
 /** 구조화 데이터의 업체 사진(주소 · 가진 곳 이름), 로고 주소, 출처 표시가 필요한 사진 주소. */
@@ -392,9 +398,12 @@ export function extractPublicPhotos(html: string, pageUrl: string): PublicPhoto[
     const src = abs ? canonicalPhotoSrc(abs) : null
     if (!key || !src || seen.has(key)) continue
     seen.add(key)
+    // license가 있으면 그것으로 읽는다 — 공공누리 주소가 아니면(다른 라이선스 · 「공공누리 제3유형」 같은 글자) acquireLicensePage가
+    // 제1유형이어도 유형을 모르는 사진이다. license가 없을 때만 acquireLicensePage로 읽는다. 둘 다 있는데 어긋나도 모른다.
+    const hasLicense = typeof node.license === 'string' ? node.license.trim() !== '' : Boolean(node.license)
     const byLicense = koglTypeOf(node.license)
     const byPage = koglTypeOf(node.acquireLicensePage)
-    const licenseType = byLicense !== null && byPage !== null && byLicense !== byPage ? null : (byLicense ?? byPage)
+    const licenseType = hasLicense ? (byPage !== null && byPage !== byLicense ? null : byLicense) : byPage
     const mark = marks.get(key)
     const markAgrees = !mark || (mark.size === 1 && mark.has(String(licenseType)))
     const creator = node.creator && typeof node.creator === 'object' && !Array.isArray(node.creator) ? (node.creator as JsonLdNode).name : undefined
@@ -441,15 +450,7 @@ export function placeDirectoryOf(sitemapXml: string, siteRoot: string): PlaceEnt
     } catch {
       continue
     }
-    const seg = url.origin === origin ? /^\/places\/([^/]+)\/?$/.exec(url.pathname)?.[1] : undefined
-    if (!seg) continue
-    let name: string
-    try {
-      name = decodeURIComponent(seg)
-    } catch {
-      continue
-    }
-    name = name.replace(/-/g, ' ').replace(/\s+/g, ' ').trim()
+    const name = url.origin === origin ? placeNameOfPath(url.pathname) : null
     if (!name || names.has(name)) continue
     names.add(name)
     out.push({ name, url: url.href })
@@ -469,7 +470,7 @@ export function loadPlaceDirectory(siteRoot: string): Promise<PlaceEntry[]> {
   }
   const hit = directoryCache.get(origin)
   if (hit) return hit
-  const task = fetchPage(`${origin}/sitemap.xml`).then((page) => {
+  const task = fetchPage(`${origin}/sitemap.xml`, { probes: false }).then((page) => {
     if (page.fetchError) throw new Error(page.fetchError)
     if (page.status >= 400) return []
     return placeDirectoryOf(page.html, origin)
@@ -495,7 +496,7 @@ const publicPageCache = new Map<string, Promise<PublicPhotoPage>>()
 function loadPublicPage(entry: PlaceEntry): Promise<PublicPhotoPage> {
   const hit = publicPageCache.get(entry.url)
   if (hit) return hit
-  const task = fetchPage(entry.url).then((page) => {
+  const task = fetchPage(entry.url, { probes: false }).then((page) => {
     if (page.fetchError) throw new Error(page.fetchError)
     if (page.status >= 400) throw new Error(`페이지를 읽지 못했어요 (HTTP ${page.status})`)
     const pageUrl = page.finalUrl || entry.url
@@ -595,7 +596,7 @@ const cache = new Map<string, Promise<SitePhotoResult>>()
 export function loadSitePhotos(pageUrl: string, fresh = false): Promise<SitePhotoResult> {
   const hit = cache.get(pageUrl)
   if (hit && !fresh) return hit
-  const task = fetchPage(pageUrl).then((page) => {
+  const task = fetchPage(pageUrl, { probes: false }).then((page) => {
     if (page.fetchError) throw new Error(page.fetchError)
     if (page.status >= 400) throw new Error(`페이지를 읽지 못했어요 (HTTP ${page.status})`)
     return { pageUrl: page.finalUrl || pageUrl, ...extractSitePhotos(page.html, page.finalUrl || pageUrl) }
@@ -636,10 +637,61 @@ export function photoFileName(k: number, photo: Pick<AppliedPhoto, 'heading' | '
   return `사진${k}-${safeFileName(photo.heading || photo.slotAlt)}.${PHOTO_EXT[type] ?? 'jpg'}`
 }
 
-/** 고른 사진을 한 장씩 내려받는다(저장 창이 장마다 뜰 수 있다 — 글 하나에 3장까지). 하나라도 실패하면 throw. */
+/** 글 하나의 「사진 N장 받기」에 함께 받는 공공 사진 출처 파일 이름. */
+export const ARTICLE_CREDITS_FILE = '사진 출처.txt'
+
+/** 출처 파일의 한 줄 — 글 번호(작성자 묶음만) · 저장한 사진 파일 이름 · 그 사진. 출처가 없는 사진(홈페이지 사진)은 건너뛴다. */
+export interface PhotoCreditRow {
+  article?: string
+  name: string
+  photo: AppliedPhoto
+}
+
+/**
+ * 공공 사진 출처 파일 내용 — 공공 사진마다 한 줄(탭으로 나눔): (글 번호 ·) 사진 파일 이름 · 출처 · 유형 · 원 주소 · 받은 날. 블로그 편집기에
+ * 사진 파일을 직접 올리면 .html · 붙여 넣은 글의 사진 설명(출처 줄)이 따라가지 않을 수 있어, 사진마다 출처를 적도록 함께 둔다. 메모장에서
+ * 열리게 줄 끝은 CRLF. 글 번호 칸은 글 번호가 있는 줄이 있을 때만(작성자 묶음 src/lib/writerBundle.ts).
+ */
+export function photoCreditsTable(rows: readonly PhotoCreditRow[], today: string): string {
+  const credited = rows.filter((r) => r.photo.credit)
+  const withArticle = credited.some((r) => r.article !== undefined)
+  const cells = (article: string, rest: string[]) => (withArticle ? [article, ...rest] : rest).join('\t')
+  const first = credited[0]?.photo.credit
+  const lines = [
+    '사진 출처 — 아래 사진은 공공누리 제1유형 공공 사진입니다. 블로그에 올릴 때 사진 바로 아래에 출처와 이용 허락 링크를 적어 주세요.',
+    ...(first ? [`예: 사진: ${first.credit}, ${PHOTO_LICENSES[first.license].name} (${first.creditUrl})`] : []),
+    '「제공」 · 「협찬」 · 「공식」처럼 공공기관과 특별한 관계로 보이는 말은 쓰지 않습니다. 사진 속 인물의 초상권은 이 이용 허락에 들어 있지 않습니다.',
+    '',
+    cells('글 번호', ['사진 파일 이름', '출처', '유형', '원 주소', '받은 날']),
+    ...credited.map(({ article, name, photo }) => {
+      const c = photo.credit!
+      return cells(article ?? '', [name, c.credit, `${PHOTO_LICENSES[c.license].name} (${c.creditUrl})`, photo.src, today])
+    }),
+  ]
+  return `${lines.join('\r\n')}\r\n`
+}
+
+/**
+ * 고른 사진을 한 장씩 내려받는다(저장 창이 장마다 뜰 수 있다 — 글 하나에 3장까지). 공공 사진이 있으면 「사진 출처.txt」도 받는다 —
+ * 붙여 넣은 글에서 바깥 사진(<figure>)이 버려지면 사진 설명의 출처 줄도 함께 사라져, 받은 파일을 직접 올리는 작성자가 출처를 적을 수
+ * 있게. 하나라도 실패하면 throw — 그때까지 받은 공공 사진이 있으면 출처 파일은 받아 둔다.
+ */
 export async function downloadArticlePhotos(tenantId: string, stored: StoredDraft, photos: AppliedPhoto[]): Promise<void> {
-  for (const [i, p] of photos.entries()) {
-    const blob = await fetchDraftPhotoFile(tenantId, { actionId: stored.actionId, generatedAt: stored.generatedAt, place: p.place })
-    downloadBlob(photoFileName(i + 1, p, blob.type), blob)
+  const rows: PhotoCreditRow[] = []
+  const saveCredits = () => {
+    if (!rows.some((r) => r.photo.credit)) return
+    downloadBlob(ARTICLE_CREDITS_FILE, new Blob([photoCreditsTable(rows, todayKst())], { type: 'text/plain;charset=utf-8' }))
   }
+  try {
+    for (const [i, p] of photos.entries()) {
+      const blob = await fetchDraftPhotoFile(tenantId, { actionId: stored.actionId, generatedAt: stored.generatedAt, place: p.place })
+      const name = photoFileName(i + 1, p, blob.type)
+      downloadBlob(name, blob)
+      rows.push({ name, photo: p })
+    }
+  } catch (err) {
+    saveCredits()
+    throw err
+  }
+  saveCredits()
 }

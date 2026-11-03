@@ -845,7 +845,8 @@ app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
 // 사이트가 단 사진 설명에 브랜드 사실에 없는 숫자가 있으면 설명을 비운다 — 내보낼 때 사실 확인을 거친 사진 자리 글자를 쓴다.
 // 빼기는 그 자리를 「사람이 뺀 자리」로 적어 자동 채우기가 다시 채우지 않게 하고, 넣기는 그 기록을 지운다.
 // 공공 사진(origin public — 자사 사이트 장소 페이지의 공공누리 제1유형 사진)은 공공 사진 사용 확인(photoRights.publicAt)이 없으면 409,
-// 유형 · 출처 · 이용 허락 주소가 맞지 않으면 400(publicPhotoFields). 공공 사진 호스트의 사진을 출처 없이 고르면 400. op credit은 이미 고른
+// 유형 · 출처 · 이용 허락 주소가 맞지 않으면 400(publicPhotoFields). 공공 사진 호스트의 사진을 출처 없이 고르면 400(브랜드 자사 사이트
+// 주소의 사진은 홈페이지 사진 — origin site로 저장). op credit은 이미 고른
 // 출처 없는 공공 사진에 출처를 붙인다(「출처 붙이기」 — 자리 · 주소가 같은 사진만, 확인 시각 · 자동 표시는 그대로).
 app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
@@ -867,6 +868,10 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   };
   const samePlace = samePhotoPlace;
   const guard = createFactGuard(tenant.factGraph ?? [], [], 'drop');
+  // 자사 사이트가 공공 사진 호스트(korean.visitkorea.or.kr · tour.jb.go.kr)인 브랜드의 자기 홈페이지 사진 — 출처 없이 고르고, 서버가
+  // 확인했다는 표시(origin site)를 달아 저장한다(photoCreditState가 「출처 없음」으로 보지 않게). 화면이 보낸 origin site는 믿지 않는다.
+  const owned = tenant.ownedDomains ?? [];
+  const ownSite = (src: string): { origin?: 'site' } => (needsPhotoCredit(src) && !needsPhotoCredit(src, owned) ? { origin: 'site' } : {});
   // 고른 사진 하나 — 자리 · https 사진 주소 · 페이지 주소가 맞지 않으면 null. 설명은 사실 가드를 거친다(걸리면 '' — siteAlt로 알린다).
   const pickOf = (v: unknown) => {
     const raw = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
@@ -978,12 +983,14 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
             res.status(409).json({ error: PUBLIC_NEEDED });
             return;
           }
-          const candidate = p ? { src: p.src, alt: p.siteAlt, ...(pub ? { origin: 'public' as const, license: pub.license, creditText: pub.credit } : {}) } : null;
-          if (!p || typeof p.pub === 'string' || !candidate || autoCandidateSkip(candidate)) {
+          const candidate = p
+            ? { src: p.src, alt: p.siteAlt, pageUrl: p.pageUrl, ...(pub ? { origin: 'public' as const, license: pub.license, creditText: pub.credit } : {}) }
+            : null;
+          if (!p || typeof p.pub === 'string' || !candidate || autoCandidateSkip(candidate, owned)) {
             rejected += 1;
             continue;
           }
-          clean.push({ ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...(pub ?? {}) });
+          clean.push({ ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...(pub ?? ownSite(p.src)) });
         }
         const credits: PhotoCreditPatch[] = [];
         for (const raw of creditList) {
@@ -1019,12 +1026,12 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       res.status(409).json({ error: PUBLIC_NEEDED });
       return;
     }
-    if (!pub && needsPhotoCredit(src)) {
+    if (!pub && needsPhotoCredit(src, owned)) {
       res.status(400).json({ error: '출처 표시가 필요한 공공 사진이에요 — 「공공 사진」에서 출처와 함께 골라 주세요.' });
       return;
     }
     const replaces = placeOf(b.replaces);
-    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(pub ?? {}) };
+    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(pub ?? ownSite(src)) };
     const stored = await savePhotoPicks(
       tenant.tenantId,
       actionId,
@@ -1964,7 +1971,7 @@ app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {
   res.json(await getRankingView(source, tenant, req.params.weekOf));
 });
 
-// 사이트 종합 진단 — 단일 URL의 공개 HTML을 수집한다 (SSRF 가드, 정적 수집).
+// 사이트 종합 진단 — 단일 URL의 공개 HTML을 수집한다 (SSRF 가드, 정적 수집). probes=0이면 robots · sitemap · llms 조사를 건너뛴다(사진 후보 · 장소 페이지).
 app.get('/api/fetch', async (req, res) => {
   const target = typeof req.query.url === 'string' ? req.query.url : '';
   if (!target) {
@@ -1972,7 +1979,7 @@ app.get('/api/fetch', async (req, res) => {
     return;
   }
   res.set('Cache-Control', 'no-store');
-  res.json(await collectPage(target));
+  res.json(await collectPage(target, { probes: req.query.probes !== '0' }));
 });
 
 // 브랜드 추가 — Gemini 추론. ?kind=brand(업종·지역·주소) | competitors(경쟁사).

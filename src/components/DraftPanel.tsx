@@ -22,7 +22,7 @@ import { publishArticleOf } from '../lib/publishArticle'
 import EvidencePanel from './EvidencePanel'
 import SitePhotoPanel from './SitePhotoPanel'
 import { matchPhotos, normSlotAlt } from '../lib/articlePhotos'
-import { articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
+import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
 import FactApprovalSheet from './FactApprovalSheet'
 import { mergeApproved, needsFromBrief, reconcileHits, unansweredNeeds, type SheetHit } from '../lib/factApproval'
 import { useTenant } from '../context/useTenant'
@@ -611,7 +611,11 @@ export default function DraftPanel({
                   type="button"
                   className="ghost"
                   disabled={photoBusy}
-                  title="고른 홈페이지 사진 파일 — 블로그에 붙여 넣은 글에서 사진이 안 보이면 이 파일을 그 자리에 올리세요(파일 이름에 소제목)."
+                  title={`고른 사진 파일 — 블로그에 붙여 넣은 글에서 사진이 안 보이면 이 파일을 그 자리에 올리세요(파일 이름에 소제목).${
+                    photoFiles.some((p) => p.credit)
+                      ? ` 공공 사진이 있어 「${ARTICLE_CREDITS_FILE}」도 함께 받아요 — 공공 사진 파일을 직접 올리면 사진 바로 아래에 그 파일의 출처(공공누리 제1유형 링크)를 적어 주세요.`
+                      : ''
+                  }`}
                   onClick={() => {
                     setPhotoBusy(true)
                     setError(null)

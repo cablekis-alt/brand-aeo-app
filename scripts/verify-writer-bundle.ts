@@ -12,6 +12,7 @@ import type { StoredDraft, TenantSummary } from '../src/lib/api'
 import type { PhotoPick } from '../src/lib/articlePhotos'
 import { buildPublishHtml } from '../src/lib/htmlFile'
 import type { WriterPlan, WriterPlanArticle } from '../src/lib/probePlan'
+import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos } from '../src/lib/sitePhotos'
 import { bundlePhotoName, canSaveToFolder, PHOTO_CREDITS_FILE, photoCreditsText, saveWriterBundle, writerBundle } from '../src/lib/writerBundle'
 
 const checks: [string, boolean][] = []
@@ -257,6 +258,81 @@ async function main(): Promise<void> {
     '출처 파일에 저장한 사진 파일 이름과 출처가 적힌다',
     Boolean(savedCredits?.includes(['03', '03-사진1-무엇부터-보나요.jpg', '가상관광공사'].join('\t'))) && pubWritten.get(`${pb.folder}/${PHOTO_CREDITS_FILE}`)?.type === 'text/plain;charset=utf-8',
   )
+
+  // 5) 사진을 받다 멈춰도 — 이미 저장한 공공 사진 옆에 「00-사진 출처.txt」가 남아야 한다(01 글의 공공 사진은 받았고 03 글의 사진에서 502)
+  const failDrafts: Record<string, StoredDraft> = { ...drafts, [a1.id]: { ...drafts[a1.id]!, photos: [publicPhoto] }, [a4.id]: { ...drafts[a4.id]!, photos: [photo()] } }
+  const fb = writerBundle({ ...pubInput, drafts: failDrafts })
+  const okFetch = g.fetch
+  let photoCalls = 0
+  g.fetch = async (url: string) => {
+    photoCalls += 1
+    if (photoCalls === 2) return new Response(JSON.stringify({ error: '사진 주소가 답하지 않아요' }), { status: 502, headers: { 'Content-Type': 'application/json' } })
+    return (okFetch as (u: string) => Promise<Response>)(url)
+  }
+  const midWritten: Written = new Map()
+  g.window = { showDirectoryPicker: async () => fakeFolder('바탕 화면', midWritten, []) }
+  let midError = ''
+  try {
+    await saveWriterBundle('vstay', fb)
+  } catch (err) {
+    midError = err instanceof Error ? err.message : String(err)
+  }
+  const midCredits = await midWritten.get(`${fb.folder}/${PHOTO_CREDITS_FILE}`)?.blob?.text()
+  ok(
+    '폴더 저장 — 사진을 받다 멈춰도 저장한 공공 사진의 출처 파일이 남는다(원래 오류는 그대로)',
+    midError === '사진 주소가 답하지 않아요' && midWritten.has(`${fb.folder}/01-사진1-무엇부터-보나요.jpg`) && Boolean(midCredits?.includes(['01', '01-사진1-무엇부터-보나요.jpg', '가상관광공사'].join('\t'))),
+  )
+  photoCalls = 0
+  const midDownloads: string[] = []
+  g.window = { setTimeout: () => 0 }
+  g.document = {
+    createElement: () => ({ href: '', download: '', click() { midDownloads.push(this.download) }, remove() {} }),
+    body: { appendChild: () => undefined },
+  }
+  let midDownError = ''
+  try {
+    await saveWriterBundle('vstay', fb)
+  } catch (err) {
+    midDownError = err instanceof Error ? err.message : String(err)
+  }
+  ok(
+    '내려받기 — 사진을 받다 멈춰도 받은 공공 사진의 출처 파일을 내려받는다',
+    midDownError === '사진 주소가 답하지 않아요' && midDownloads.includes(`${fb.folder}-01-사진1-무엇부터-보나요.jpg`) && midDownloads.includes(`${fb.folder}-${PHOTO_CREDITS_FILE}`),
+  )
+  g.fetch = okFetch
+
+  // 6) 글 카드 · 올리기 목록의 「사진 N장 받기」(글 하나) — 공공 사진이 있으면 출처 파일도 함께
+  const singleDownloads: { name: string; blob: Blob }[] = []
+  let lastBlob: Blob | null = null
+  urlApi.createObjectURL = (blob: Blob) => {
+    lastBlob = blob
+    return 'blob:fake'
+  }
+  g.document = {
+    createElement: () => ({
+      href: '',
+      download: '',
+      click() {
+        if (lastBlob) singleDownloads.push({ name: this.download, blob: lastBlob })
+      },
+      remove() {},
+    }),
+    body: { appendChild: () => undefined },
+  }
+  const pubDraft = failDrafts[a1.id]!
+  const singleFiles = articlePhotoFiles(pubDraft, { settings: publicRights, industry: brand.industry })
+  await downloadArticlePhotos('vstay', pubDraft, singleFiles)
+  const singleCredit = singleDownloads.find((d) => d.name === ARTICLE_CREDITS_FILE)
+  const singleText = (await singleCredit?.blob.text()) ?? ''
+  ok(
+    '글 하나 사진 받기 — 공공 사진이 있으면 「사진 출처.txt」(사진 파일 이름 · 출처 · 유형 · 원 주소)',
+    singleDownloads.some((d) => d.name === '사진1-무엇부터-보나요.jpg') &&
+      singleText.includes(['사진1-무엇부터-보나요.jpg', '가상관광공사', `공공누리 제1유형 (${KOGL1})`, TOUR].join('\t')) &&
+      singleText.endsWith('\r\n'),
+  )
+  singleDownloads.length = 0
+  await downloadArticlePhotos('vstay', drafts[a1.id]!, articlePhotoFiles(drafts[a1.id]!, { settings: rights, industry: brand.industry }))
+  ok('글 하나 사진 받기 — 홈페이지 사진뿐이면 출처 파일은 없다', singleDownloads.length === 1 && !singleDownloads.some((d) => d.name === ARTICLE_CREDITS_FILE))
 
   let failed = 0
   for (const [label, pass] of checks) {

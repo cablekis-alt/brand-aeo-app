@@ -33,7 +33,9 @@ export interface PhotoPick {
   auto?: true
   /**
    * 사진이 어디서 왔나 — 'public'은 출처 표시가 필요한 공공 사진(자사 사이트 장소 페이지의 공공누리 제1유형 사진). 없으면 홈페이지
-   * 사진(옛 기록 포함). 공공 사진은 license · credit · creditUrl이 모두 있어야 넣는다(publicPhotoProblem).
+   * 사진(옛 기록 포함). 공공 사진은 license · credit · creditUrl이 모두 있어야 넣는다(publicPhotoProblem). 'site'는 공공 사진 호스트의
+   * 주소지만 브랜드 자사 사이트(ownedDomains)의 사진이라고 서버가 고를 때 확인한 홈페이지 사진(자사 사이트가 visitkorea.or.kr · go.kr인
+   * 브랜드) — 화면이 보낸 'site'는 믿지 않고 서버만 단다.
    */
   origin?: PhotoOrigin
   /** 공공 사진의 이용 허락 — 공공누리 제1유형만 받는다(PHOTO_LICENSES). */
@@ -104,23 +106,42 @@ export function publicPhotoFields(raw: { origin?: unknown; license?: unknown; cr
 /** 출처 표시가 필요한 공공 사진의 호스트(공공누리 · 한국관광공사 · 정부 기관). */
 const CREDIT_HOSTS = ['visitkorea.or.kr', 'knto.or.kr', 'kogl.or.kr', 'go.kr']
 
-/** 출처 표시가 필요한 공공 사진의 주소인가(호스트로만 본다). */
-export function needsPhotoCredit(src: string): boolean {
-  let host: string
+function hostOf(src: string): string | null {
   try {
-    host = new URL(src).hostname.toLowerCase()
+    return new URL(src).hostname.toLowerCase()
   } catch {
-    return false
+    return null
   }
+}
+
+/** 브랜드 자사 사이트(ownedDomains — 「site.example」 · 「https://site.example/」 모양)의 사진 주소인가 — 그 호스트이거나 그 하위 도메인. */
+export function isOwnedPhotoHost(src: string, ownedDomains: readonly string[] | undefined): boolean {
+  const host = hostOf(src)
+  if (!host) return false
+  return (ownedDomains ?? []).some((raw) => {
+    const d = raw.trim().toLowerCase().replace(/^https?:\/\//, '').split(/[/?#:]/)[0]!.replace(/^www\./, '').replace(/\.$/, '')
+    return Boolean(d) && (host === d || host.endsWith(`.${d}`))
+  })
+}
+
+/**
+ * 출처 표시가 필요한 공공 사진의 주소인가 — 호스트로 본다. 브랜드 자사 사이트(ownedDomains)의 사진이면 아니다: 자사 사이트가
+ * 공공 사진 호스트(korean.visitkorea.or.kr · tour.jb.go.kr)인 브랜드는 자기 홈페이지 사진을 홈페이지 사진으로 쓴다.
+ */
+export function needsPhotoCredit(src: string, ownedDomains?: readonly string[]): boolean {
+  const host = hostOf(src)
+  if (!host || isOwnedPhotoHost(src, ownedDomains)) return false
   return CREDIT_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))
 }
 
 /**
  * 고른 사진의 출처 상태 — site 홈페이지 사진 · public 출처가 맞는 공공 사진 · missing 출처 표시가 필요한데 없거나 틀림(공공 사진
- * 호스트의 사진을 출처 없이 골랐다). missing은 내보내지 않는다 — 지우지는 않고 「출처 없음」으로 알린다.
+ * 호스트의 사진을 출처 없이 골랐다). missing은 내보내지 않는다 — 지우지는 않고 「출처 없음」으로 알린다. origin 'site'는 서버가 자사
+ * 사이트 사진으로 확인한 사진이다.
  */
 export function photoCreditState(p: Pick<PhotoPick, 'src' | 'origin' | 'license' | 'credit' | 'creditUrl'>): 'site' | 'public' | 'missing' {
   if (p.origin === 'public') return typeof publicPhotoFields(p) === 'object' ? 'public' : 'missing'
+  if (p.origin === 'site') return 'site'
   return needsPhotoCredit(p.src) ? 'missing' : 'site'
 }
 

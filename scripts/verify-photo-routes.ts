@@ -40,7 +40,7 @@ writeFileSync(
   path.join(dir, 'tenants.overlay.json'),
   JSON.stringify([
     {
-      tenantId: TENANT, brandName: '가상 여행', aliases: ['가상 여행'], ownedDomains: ['site.example'], industry: '관광안내', region: '가상시',
+      tenantId: TENANT, brandName: '가상 여행', aliases: ['가상 여행'], ownedDomains: ['site.example', 'own.visitkorea.or.kr'], industry: '관광안내', region: '가상시',
       engines: ['gemini'], questionBankSize: 4, questionBankVersion: 'v1', repeatsPerQuestion: 1, factGraph: [], competitors: [],
     },
   ]),
@@ -64,6 +64,7 @@ writeFileSync(
       ],
     },
     'content:b': { actionId: 'content:b', generatedAt: AT, draft: { format: 'article', title: '가상 글 둘', sections: [], gapCount: 0, usedFacts: [] } },
+    'content:c': { actionId: 'content:c', generatedAt: AT, draft: { format: 'article', title: '가상 글 셋', sections: [], gapCount: 0, usedFacts: [] } },
   }),
 )
 writeFileSync(path.join(tenantDir, 'publish-settings.json'), JSON.stringify({ photoRights: { confirmedAt: AT } }))
@@ -135,6 +136,12 @@ try {
   ok('이용 허락 주소가 유형과 다르면 400', (await photos(pickBody(newPublic({ creditUrl: 'https://www.kogl.or.kr/info/licenseType3.do' })))).status === 400)
   const bare = await photos(pickBody(sitePick('가상섬 바닷가', '섬', 'https://tong.visitkorea.or.kr/cms/bare_image2_1.jpg')))
   ok('공공 사진 호스트의 사진을 출처 없이 고르면 400', bare.status === 400 && String(bare.body.error).includes('출처'))
+  const OWN_SRC = 'https://own.visitkorea.or.kr/img/hall_1.jpg'
+  const own = await photos(pickBody(sitePick('가상 전시관 로비', '전시관', OWN_SRC, { alt: '전시관 로비', pageUrl: 'https://own.visitkorea.or.kr/' }), 'content:c'))
+  const ownSaved = stored()['content:c']?.photos?.find((p) => p.src === OWN_SRC)
+  ok('자사 사이트(공공 사진 호스트의 하위 도메인)의 사진은 출처 없이 고르고 홈페이지 사진(origin site)으로 저장한다', own.status === 200 && ownSaved?.origin === 'site')
+  const ownAuto = await photos({ op: 'auto', articles: [{ actionId: 'content:c', generatedAt: AT, picks: [{ ...sitePick('가상 전시관 입구', '입구', 'https://own.visitkorea.or.kr/img/gate_1.jpg', { alt: '전시관 입구', pageUrl: 'https://own.visitkorea.or.kr/' }), auto: true }] }] })
+  ok('자동 채우기도 자사 사이트 사진은 받는다', ownAuto.status === 200 && ownAuto.body.saved === 1 && stored()['content:c']?.photos?.some((p) => String(p.src).includes('gate_1') && p.origin === 'site') === true)
   const good = await photos(pickBody(newPublic()))
   const saved = stored()['content:b']?.photos?.[0]
   ok(

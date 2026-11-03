@@ -124,8 +124,14 @@ export default function SitePhotoPanel({
   }, [tenantId, brand])
 
   const siteRoot = settings === undefined ? null : siteRootOf(photoPageOf(brand, settings))
+  const rights = settings?.photoRights
+  const allowed = Boolean(rights) && (!medical || Boolean(rights?.medical))
+  const hasPhotoWork = slots.length > 0 || (stored.photos ?? []).length > 0
+  // 장소 사전(sitemap.xml)은 사진 사용 확인(의료 업종은 의료광고 확인까지)이 있고 사진 자리나 고른 사진이 있을 때만 받는다 — 사진을 쓰지
+  // 않는 브랜드의 카드를 펼칠 때마다 고객 사이트에 요청하지 않게.
+  const wantPlaces = Boolean(siteRoot) && allowed && hasPhotoWork
   useEffect(() => {
-    if (!siteRoot) return
+    if (!siteRoot || !wantPlaces) return
     let alive = true
     loadPlaceDirectory(siteRoot).then(
       (dir) => {
@@ -139,18 +145,17 @@ export default function SitePhotoPanel({
     return () => {
       alive = false
     }
-  }, [siteRoot])
+  }, [siteRoot, wantPlaces])
 
-  if (!slots.length && !(stored.photos ?? []).length) return null
+  if (!hasPhotoWork) return null
 
-  const rights = settings?.photoRights
-  const allowed = Boolean(rights) && (!medical || Boolean(rights?.medical))
   const publicOk = publicPhotosAllowed(settings, brand.industry)
   const noCredit = (stored.photos ?? []).filter((p) => photoCreditState(p) === 'missing')
   const showPublic = allowed && ((places?.length ?? 0) > 0 || noCredit.length > 0)
   // 홈페이지 사진 가운데 출처 표시가 필요한 사진(공공누리 표시 · 공공 사진 호스트)은 여기서 고르지 않는다 — 공공 사진으로 출처와 함께.
+  // 자사 사이트 주소의 사진은 공공 사진 호스트여도 홈페이지 사진이다(자사 사이트가 visitkorea.or.kr · go.kr인 브랜드).
   const siteOptions: PhotoOption[] = (found?.photos ?? [])
-    .filter((p) => !p.credit && !needsPhotoCredit(p.src))
+    .filter((p) => !p.credit && !needsPhotoCredit(p.src, brand.ownedDomains))
     .map((p) => ({ src: p.src, alt: p.alt, pageUrl: found!.pageUrl, ...(p.where ? { where: p.where } : {}) }))
   const creditSkipped = (found?.photos.length ?? 0) - siteOptions.length
   const options: PhotoOption[] = [...siteOptions, ...(publicOk ? (publicFound?.options ?? []) : []).filter((o) => !siteOptions.some((x) => x.src === o.src))]
@@ -425,7 +430,9 @@ export default function SitePhotoPanel({
                   {picked.auto && <span className="status-pill st-info no-glyph">자동</span>}
                   {photoCreditState(picked) === 'public' && <span className="status-pill st-info no-glyph">공공 사진</span>}
                   {photoCreditState(picked) === 'missing' && <span className="status-pill st-warn">출처 없음</span>}
-                  {picked.auto && isPeopleScene(slot.key) && <span className="status-pill st-warn">확인 필요</span>}
+                  {picked.auto && (isPeopleScene(slot.key) || photoCreditState(picked) === 'public') && (
+                    <span className="status-pill st-warn">확인 필요</span>
+                  )}
                   {(picked.auto || photoCreditState(picked) !== 'site') && ' '}
                   {picked.alt || <span className="muted">(설명은 사진 자리 글자로)</span>}
                   {photoCreditState(picked) === 'public' && picked.license && (
@@ -516,18 +523,36 @@ export default function SitePhotoPanel({
         )
       })}
 
-      {match.suggested.map(({ pick, slot }) => (
-        <p key={`s-${pick.slot}-${pick.nth}-${pick.heading}`} className="hint warn">
-          「{pick.heading}」의 사진 자리({pick.slot})를 찾지 못했어요 — 「{slot.heading || slot.alt}」의 「{slot.alt}」 자리로 옮길까요?{' '}
-          <button type="button" className="link-btn" disabled={off} onClick={() => void putPhoto(slot, pick.src, pick.alt, pick.pageUrl, pick, pubOf(pick))}>
-            이 자리로 옮기기
-          </button>{' '}
-          ·{' '}
-          <button type="button" className="link-btn" disabled={off} onClick={() => void remove(pick)}>
-            빼기
-          </button>
-        </p>
-      ))}
+      {match.suggested.map(({ pick, slot }) => {
+        // 출처 없는 공공 사진은 그대로 옮길 수 없다(서버가 거절한다) — 출처를 먼저 붙이면 출처와 함께 옮긴다.
+        const missing = photoCreditState(pick) === 'missing'
+        return (
+          <p key={`s-${pick.slot}-${pick.nth}-${pick.heading}`} className="hint warn">
+            「{pick.heading}」의 사진 자리({pick.slot})를 찾지 못했어요 — 「{slot.heading || slot.alt}」의 「{slot.alt}」 자리로 옮길까요?{' '}
+            {missing ? (
+              <>
+                <span className="status-pill st-warn">출처 없음</span> 출처 표시가 필요한 공공 사진인데 출처가 없어, 출처를 붙인 뒤에 옮길 수
+                있어요.{' '}
+                {publicOk ? (
+                  <button type="button" className="link-btn" disabled={off} onClick={() => void attachCredit(pick)}>
+                    출처 붙이기
+                  </button>
+                ) : (
+                  '공공 사진 사용 확인 뒤 「출처 붙이기」를 할 수 있어요.'
+                )}
+              </>
+            ) : (
+              <button type="button" className="link-btn" disabled={off} onClick={() => void putPhoto(slot, pick.src, pick.alt, pick.pageUrl, pick, pubOf(pick))}>
+                이 자리로 옮기기
+              </button>
+            )}{' '}
+            ·{' '}
+            <button type="button" className="link-btn" disabled={off} onClick={() => void remove(pick)}>
+              빼기
+            </button>
+          </p>
+        )
+      })}
       {match.unmatched.map((pick) => (
         <p key={`u-${pick.slot}-${pick.nth}-${pick.heading}`} className="hint warn">
           「{pick.slot}」 자리를 찾지 못해 넣지 않는 사진이 있어요(글을 고치며 자리가 바뀌었어요).{' '}

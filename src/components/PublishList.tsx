@@ -10,7 +10,7 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
 import { useTenant } from '../context/useTenant'
 import { channelStyleOf, sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
-import { articlePhotoFiles, downloadArticlePhotos, uniquePhotoFiles } from '../lib/sitePhotos'
+import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos, uniquePhotoFiles } from '../lib/sitePhotos'
 import type { AppliedPhoto } from '../lib/articlePhotos'
 
 /**
@@ -329,7 +329,9 @@ export default function PublishList({
                       type="button"
                       className="ghost"
                       disabled={photoBusy !== null}
-                      title={photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}
+                      title={`${photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}${
+                        photos.some((p) => p.credit) ? ` · 공공 사진 출처는 「${ARTICLE_CREDITS_FILE}」로 함께 받아요` : ''
+                      }`}
                       onClick={() => {
                         const draft = row.article.draft
                         if (!draft) return
@@ -364,8 +366,10 @@ export default function PublishList({
               )}
               {!row.locked && (!row.done || recopied.has(row.key)) && photos.length > 0 && (
                 <p className="publish-row-note">
-                  홈페이지 사진 {photos.length}장을 넣었어요 — 붙여 넣은 글에서 사진이 안 보이면 「사진 {photos.length}장 받기」로 받은 파일을 그
+                  사진 {photos.length}장을 넣었어요 — 붙여 넣은 글에서 사진이 안 보이면 「사진 {photos.length}장 받기」로 받은 파일을 그
                   자리에 올리세요({photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}).
+                  {photos.some((p) => p.credit) &&
+                    ` 공공 사진 ${photos.filter((p) => p.credit).length}장은 출처 표시가 이용 조건이에요 — 사진 파일을 직접 올렸다면 함께 받은 「${ARTICLE_CREDITS_FILE}」대로 사진 바로 아래에 출처(공공누리 제1유형 링크)를 적어 주세요.`}
                 </p>
               )}
               {stale && (

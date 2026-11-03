@@ -248,6 +248,23 @@ ok('제3유형은 유형만 적고 쓰지 않는다', pp('a2')?.licenseType === 
 ok('<img data-kogl> 표시가 구조화 데이터와 어긋나면 쓰지 않는다', pp('a3')?.licenseType === 1 && pp('a3')?.license === null)
 ok('license와 acquireLicensePage의 유형이 다르면 유형 모름', pp('a4')?.licenseType === null && pp('a4')?.license === null)
 ok('출처 글자가 없으면 빈 출처(자동 채우기가 credit으로 뺀다)', pp('a5')?.creditText === '' && pp('a5')?.license === 'kogl-1')
+const oddLicense = extractPublicPhotos(
+  ld({
+    '@type': 'TouristAttraction',
+    name: '가상섬',
+    image: [
+      imageObject('https://tong.visitkorea.or.kr/cms/b1.jpg', 1, { license: 'https://creativecommons.org/licenses/by-nc/4.0/' }),
+      imageObject('https://tong.visitkorea.or.kr/cms/b2.jpg', 1, { license: '공공누리 제3유형' }),
+      imageObject('https://tong.visitkorea.or.kr/cms/b3.jpg', null, { acquireLicensePage: K(1) }),
+    ],
+  }),
+  'https://site.example/places/가상섬/',
+)
+const op = (n: string) => oddLicense.find((p) => p.src.endsWith(`/${n}.jpg`))
+ok(
+  'license가 공공누리 주소가 아니면(다른 라이선스 · 글자) acquireLicensePage가 제1유형이어도 유형 모름 — license가 없을 때만 acquireLicensePage로',
+  op('b1')?.licenseType === null && op('b1')?.license === null && op('b2')?.licenseType === null && op('b2')?.license === null && op('b3')?.licenseType === 1 && op('b3')?.license === 'kogl-1',
+)
 const cands = publicCandidatesOf([{ place: '가상섬', pageUrl: 'https://site.example/places/가상섬/', photos: pubPhotos }])
 ok('공공 사진 후보 — 장소 · 유형 · 출처를 달고 페이지 순서 그대로', cands.length === 5 && cands.every((c) => c.origin === 'public' && c.place === '가상섬') && cands[0]!.src.endsWith('/a1.jpg'))
 ok('홈페이지 사진 추출(extractSitePhotos)은 관광지 노드의 사진을 여전히 업체 사진으로 보지 않는다', extractSitePhotos(placePage, 'https://site.example/places/가상섬/').photos.every((p) => p.source !== 'jsonld'))

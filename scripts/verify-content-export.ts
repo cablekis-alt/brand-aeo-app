@@ -121,6 +121,23 @@ const twice = buildPublishHtml({ stored: { ...articleDraft, photos: [photo(), ph
 ok('같은 사진을 두 자리에 쓰면 JSON-LD image는 한 번', (twice.match(/garden%201%28%EB%B0%A4%29\.jpg/g) ?? []).length === 4 && twice.includes('"image": [\n    "https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg"\n  ]'))
 ok('사이트 설명이 비면 사진 자리 글자를 대체 텍스트로', publishArticleOf({ ...articleDraft, photos: [photo({ alt: '' })] }, { brand, settings: rights }).includes('![가상스테이 정원](https://vtravel.example/img/'))
 ok('사진 사용 확인이 없으면 고른 사진도 넣지 않는다', publishArticleOf(withPhoto, { brand }) === publishArticleOf(articleDraft, { brand }) && !buildPublishHtml({ stored: withPhoto, brand, facts: [] }).includes('og:image'))
+// 공공 사진(출처 표시가 필요한 사진)은 링크 미리보기 대표 사진(og:image)으로 쓰지 않는다 — 미리보기에는 출처 줄이 따라가지 않는다.
+const KOGL1 = 'https://www.kogl.or.kr/info/licenseType1.do'
+const publicRights = { photoRights: { ...rights.photoRights, publicAt: '2026-11-03T00:00:00.000Z' } }
+const publicPhoto = photo({
+  slot: '가상 골목 풍경', heading: '지역은 어떻게 고르나요?', src: 'https://tong.example.or.kr/cms/alley_image2_1.jpg', alt: '가상 골목',
+  pageUrl: 'https://vtravel.example/places/가상골목/', origin: 'public', license: 'kogl-1', credit: '가상관광공사', creditUrl: KOGL1,
+})
+const firstPublic = buildPublishHtml({ stored: { ...articleDraft, photos: [publicPhoto, photo()] }, brand, facts: [], settings: publicRights })
+ok(
+  '첫 사진이 공공 사진이면 og:image는 홈페이지 사진(본문 · JSON-LD에는 공공 사진도 출처와 함께)',
+  firstPublic.includes('<meta property="og:image" content="https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg">') &&
+    firstPublic.includes('<meta property="og:image:alt" content="밤에 창 너머로 본 정원 나무와 석등">') &&
+    !/og:image"[^>]*tong\.example/.test(firstPublic) &&
+    firstPublic.includes('"contentUrl": "https://tong.example.or.kr/cms/alley_image2_1.jpg"'),
+)
+const onlyPublic = buildPublishHtml({ stored: { ...articleDraft, photos: [publicPhoto] }, brand, facts: [], settings: publicRights })
+ok('공공 사진뿐이면 og:image · og:image:alt를 쓰지 않는다', !onlyPublic.includes('og:image') && onlyPublic.includes('tong.example.or.kr/cms/alley_image2_1.jpg'))
 ok('의료 업종은 의료광고 확인까지 있어야 넣는다', !publishArticleOf(withPhoto, { brand: { ...brand, industry: '피부과' }, settings: rights }).includes('img/garden') && publishArticleOf(withPhoto, { brand: { ...brand, industry: '피부과' }, settings: { photoRights: { ...rights.photoRights, medical: true as const } } }).includes('img/garden'))
 
 // 4) 인용 — 빈 `>` 줄은 문단 나눔

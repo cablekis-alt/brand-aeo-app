@@ -201,7 +201,11 @@ async function fetchWithProtocolFallback(target: string): Promise<FetchResult> {
   }
 }
 
-export async function collectPage(target: string): Promise<FetchPayload> {
+/**
+ * 페이지 하나를 정적으로 수집한다. probes가 false면 robots.txt · sitemap.xml · llms.txt를 조사하지 않는다(그 칸은 비어 있다) — 사진
+ * 후보 · 장소 페이지처럼 본문만 쓰는 수집이 페이지마다 sitemap을 다시 받지 않게(/api/fetch?probes=0).
+ */
+export async function collectPage(target: string, options: { probes?: boolean } = {}): Promise<FetchPayload> {
   try {
     const page = await fetchWithProtocolFallback(target);
     const html = page.body;
@@ -213,11 +217,11 @@ export async function collectPage(target: string): Promise<FetchPayload> {
         : null;
 
     const origin = originOf(finalUrl || target);
-    const [robots, sitemap, llms] = await Promise.all([
-      probe(origin, '/robots.txt'),
-      probe(origin, '/sitemap.xml'),
-      probe(origin, '/llms.txt'),
-    ]);
+    const skipped = { status: 0, body: '', found: false };
+    const [robots, sitemap, llms] =
+      options.probes === false
+        ? [skipped, skipped, skipped]
+        : await Promise.all([probe(origin, '/robots.txt'), probe(origin, '/sitemap.xml'), probe(origin, '/llms.txt')]);
     return {
       requestedUrl: target,
       finalUrl,
