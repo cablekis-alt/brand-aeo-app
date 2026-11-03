@@ -632,7 +632,13 @@ function WriterRuns({
                 {w.key} · {w.name}
               </b>
               {w.blog && ` · ${w.blog}`} · 만든 글 {ids.length - missing}/{ids.length} · 초안 {drafted}/{ids.length}
-              {photosOn && photos && photos.slots > 0 && ` · 사진 자리 ${photos.slots} · 채움 ${photos.filled} · 자동 ${photos.auto} · 빈자리 ${photos.empty}`}
+              {photosOn &&
+                photos &&
+                photos.slots > 0 &&
+                ` · 사진 자리 ${photos.slots} · 채움 ${photos.filled}${photos.public ? `(공공 사진 ${photos.public})` : ""} · 자동 ${photos.auto} · 빈자리 ${photos.empty}`}
+              {photosOn && photos && photos.noCredit > 0 && (
+                <span className="hint warn"> · 출처 없는 공공 사진 {photos.noCredit}장(내보내지 않음 — 글의 「홈페이지 사진」 칸에서 「출처 붙이기」)</span>
+              )}
             </p>
             <BulkDrafts
               tenantId={tenantId}
