@@ -59,6 +59,7 @@ import {
   cleanPhotoAlt,
   exportPhotoPicks,
   isPhotoMedical,
+  MAX_REMOVED_SRCS,
   needsPhotoCredit,
   normSlotAlt,
   PHOTO_LIMITS,
@@ -71,6 +72,7 @@ import {
 } from '../src/lib/articlePhotos.js';
 import { AUTO_PICK_RULES, autoCandidateSkip, placeKey } from '../src/lib/photoAutoPick.js';
 import { findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
+import { describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
@@ -196,6 +198,8 @@ app.get('/api/health', (_req, res) => {
     collectEngines: globalCollectEngines(),
     // 관광공사 사진(3단계)을 쓸 수 있는가 — 이 PC에 TourAPI 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 건너뛴다.
     tourApi: tourApiConfigured(),
+    // 사진 장면(비전 모델)을 읽을 수 있는가 — 이 PC에 Claude 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 장면 없이 고른다.
+    photoScenes: photoScenesConfigured(),
   });
 });
 
@@ -919,13 +923,19 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         res.status(400).json({ error: '뺄 사진 자리(place)가 필요합니다.' });
         return;
       }
+      // 뺀 사진 주소도 적는다 — 「사람이 뺀 자리도 다시 채우기」가 그 사진을 다시 고르지 않게(앞서 뺀 사진에 더해, 오래된 것부터 버린다).
       res.json(
         await savePhotoPicks(
           tenant.tenantId,
           actionId,
           generatedAt,
           (cur) => cur.filter((p) => !samePlace(p, place)),
-          (cleared) => [...cleared.filter((c) => !samePlace(c, place)), place],
+          (cleared, before) => {
+            const prev = cleared.find((c) => samePlace(c, place))?.removed ?? [];
+            const gone = before.filter((p) => samePlace(p, place)).map((p) => p.src);
+            const removed = [...new Set([...prev.filter((s) => !gone.includes(s)), ...gone])].slice(-MAX_REMOVED_SRCS);
+            return [...cleared.filter((c) => !samePlace(c, place)), { ...place, ...(removed.length ? { removed } : {}) }];
+          },
         ),
       );
       return;
@@ -1022,7 +1032,10 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         if (clean.length || credits.length) entries.push({ actionId: id, generatedAt: at, picks: clean, ...(credits.length ? { credits } : {}) });
       }
       // 같은 작성자의 글 사이에 같은 사진 한 번 — 화면의 미리보기가 오래됐어도 쓰기 안에서 다시 본다(작성자 배정 기간에만).
-      const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat, await writerGroupOf(tenant.tenantId));
+      // refillCleared(「사람이 뺀 자리도 다시 채우기」)면 사람이 뺀 자리에도 넣되, 그 자리에서 뺀 사진은 넣지 않는다.
+      const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat, await writerGroupOf(tenant.tenantId), {
+        refillCleared: b.refillCleared === true,
+      });
       res.json({ ...saved, skipped: saved.skipped + rejected });
       return;
     }
@@ -1116,6 +1129,36 @@ app.get('/api/tourapi/photos/:tenantId', async (req, res) => {
     const message = scrubTourKey(err instanceof Error ? err.message : String(err));
     console.warn(`[tourapi] ${tenant.tenantId} 「${place}」 관광공사 사진을 찾지 못했습니다: ${message}`);
     res.status(502).json({ error: `관광공사 사진을 찾지 못했어요 — ${message.slice(0, 160)}` });
+  }
+});
+
+// 사진 장면(server/photoScenes.ts) — 자동 채우기 후보 사진의 장면 설명. 읽어 둔 장면은 그대로 주고(디스크 캐시, 모델이 바뀌기 전까지),
+// 아직 없는 사진은 비전 모델(기본 Claude Sonnet 5.5)로 limit장까지(한 번에 SCENE_MAX_NEW장) 읽는다 — limit 0은 읽어 둔 것만. 남은 사진은
+// pending · missing으로 알려 화면이 이어서 묻는다. 키가 없으면 읽어 둔 장면만 주고 알림(available false) — 화면은 장면 없이 지금처럼 고른다.
+// 키 값 · 키가 든 주소는 어디에도 싣지 않는다. Express 전용(Vercel 함수 12/12 — 웹은 /api/health에 photoScenes가 없어 묻지 않는다).
+app.post('/api/photo-scenes', async (req, res) => {
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const list = Array.isArray(b.srcs) ? b.srcs : null;
+  if (!list || !list.length || list.length > SCENE_MAX_SRCS || list.some((s) => typeof s !== 'string')) {
+    res.status(400).json({ error: `srcs(사진 주소 1~${SCENE_MAX_SRCS}개)가 필요합니다.` });
+    return;
+  }
+  const srcs = list.map((s) => canonicalPhotoSrc(s as string));
+  if (srcs.some((s) => !s)) {
+    res.status(400).json({ error: 'https 사진 주소만 받습니다.' });
+    return;
+  }
+  const limit = b.limit === undefined ? SCENE_MAX_NEW : typeof b.limit === 'number' && Number.isInteger(b.limit) && b.limit >= 0 ? Math.min(b.limit, SCENE_MAX_NEW) : -1;
+  if (limit < 0) {
+    res.status(400).json({ error: `limit(0~${SCENE_MAX_NEW})이 맞지 않습니다.` });
+    return;
+  }
+  try {
+    res.json(await describePhotoScenes([...new Set(srcs as string[])], { limit }));
+  } catch (err) {
+    const message = scrubSceneKey(err instanceof Error ? err.message : String(err));
+    console.warn(`[photo-scenes] 사진 장면을 읽지 못했습니다: ${message}`);
+    res.status(500).json({ error: `사진 장면을 읽지 못했어요 — ${message.slice(0, 160)}` });
   }
 });
 
