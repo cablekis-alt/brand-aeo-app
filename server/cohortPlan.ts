@@ -177,7 +177,11 @@ export function planCohortTargets(tenant: TenantConfig, runtime: TenantConfig[])
       };
       if (existing.region !== tenant.region) entry.otherRegion = true;
     }
-    targets.push(existing ? { ...existing, autoCohort: false } : draft);
+    // 같은 코호트의 경쟁사로만 재는 브랜드는 고객과 같은 엔진으로 잰다 — 초안은 만들 때 고객 엔진을 한 번 복사할 뿐이라(cohortOnlyDraft),
+    // 고객 엔진이 바뀐 뒤에는 코호트 안에서 엔진 묶음이 갈려 다른 엔진으로 잰 카드끼리 순위를 매긴다. 고객 브랜드 · 다른 지역 브랜드는
+    // 자기 설정 그대로.
+    const aligned = existing?.cohortOnly && sameCohort(existing) ? { engines: [...tenant.engines] } : {};
+    targets.push(existing ? { ...existing, autoCohort: false, ...aligned } : draft);
   });
   return { cap: MAX_AUTO_COHORT, entries, targets };
 }

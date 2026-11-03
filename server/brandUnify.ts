@@ -33,8 +33,10 @@ import { sharesSite } from '../src/lib/brandVariant.js';
  * 3. 한 번만 하는 군산각 전국형 지우기 — id가 정확히 gunsan-national인 브랜드가 목록에 있으면 화면의 「빼기」와 같은 함수로 지운다
  *    (tenantRemovedStore.ts deleteTenantOnThisPc — 되살리기 백업 · 오버레이 · 측정 대기열 · 툼스톤 · 코호트 순위 · 최근 실패). 측정 기록
  *    (data/gunsan-national/)은 남아 「되살리기」로 돌아온다. 표식(userData/remove-gunsan-national-0.4.49.json)이 있으면 다시 하지 않는다
- *    — 그 뒤 되살리거나 새로 만든 것은 사람이 한 것이다. 없는 PC도 없음을 표식에 남긴다. 측정 중이면 미룬다. 다른 id의 군산각
- *    전국형은 지우지 않고 점검이 같은 홈페이지로 알린다.
+ *    — 그 뒤 되살리거나 새로 만든 것은 사람이 한 것이다. 없는 PC도 없음을 표식에 남긴다. 측정 중이면 미룬다. 그 id가 군산각 전국형이
+ *    아니면(이름 · 홈페이지가 다르거나 경쟁사로만 잼 — nationalCollision) 지우지 않고 알린다. 지우다 멈추면(오버레이에서 뺀 뒤 쓰기
+ *    실패 · 종료) 다음 시작이 진행 기록(NATIONAL_REMOVAL_PENDING_FILE)으로 알아보고 남은 단계를 마저 한다. 다른 id의 군산각 전국형은
+ *    지우지 않고 점검이 같은 홈페이지로 알린다.
  * 패키징(설치본)에서만 한다 — dev 체크아웃의 data/는 개발자 것이고, 웹은 이 서버를 쓰지 않는다.
  */
 export const UNIFY_VERSION = '0.4.49';
@@ -48,6 +50,13 @@ export const UNIFY_CHECK_FILE = 'unify-check.json';
 export const NATIONAL_REMOVED_TENANT = 'gunsan-national';
 /** 그 지우기를 했다는 표식 — 있으면 다시 하지 않는다(되살린 뒤에도). */
 export const NATIONAL_REMOVAL_MARKER_FILE = `remove-${NATIONAL_REMOVED_TENANT}-${UNIFY_VERSION}.json`;
+/**
+ * 그 지우기를 시작했다는 진행 기록 — 지우기 전에 남긴다. 오버레이에서 빼는 순간 브랜드가 목록에서 사라지므로(저장소 설정에 없다),
+ * 그 뒤에 멈추면 다음 시작은 목록만 보고는 「없었다」와 가리지 못한다. 표식이 생기면 표식이 이긴다.
+ */
+export const NATIONAL_REMOVAL_PENDING_FILE = `remove-${NATIONAL_REMOVED_TENANT}-${UNIFY_VERSION}.pending.json`;
+/** 군산각 전국형과 같은 업체인지 견주는 구운 브랜드 — 같은 이름 · 같은 홈페이지의 고객 브랜드여야 지운다. */
+const NATIONAL_SAME_BRAND = 'gunsan';
 /** 정리에서 옮기는 파일 — 저장소 설정의 엔진 · 시장 범위를 PC마다 덮는다. */
 const MOVED_FILES = ['engines.json', 'market-scope.json'] as const;
 /** 점검에서 있는지만 보는 PC별 파일 — 저장소 설정을 이기거나(사실 · 브랜드 페이지 · 경쟁사) 더한다(자사 주소). */
@@ -114,6 +123,25 @@ export function idCollision(entry: Pick<TenantConfig, 'brandName' | 'cohortOnly'
   const reasons: string[] = [];
   if (Boolean(entry.cohortOnly) !== Boolean(baked.cohortOnly)) reasons.push(entry.cohortOnly ? '경쟁사로만 재는 브랜드' : '고객 브랜드');
   if (entry.brandName.trim() !== baked.brandName.trim()) reasons.push(`이름 「${entry.brandName}」`);
+  return reasons.length > 0 ? reasons.join(' · ') : null;
+}
+
+/**
+ * 이 PC의 gunsan-national이 군산각 전국형이 아닌가 — 구운 군산각(gunsan)과 이름이 다르거나, 경쟁사로만 재거나, 홈페이지가 겹치지
+ * 않는다. id는 홈페이지 첫 마디에 범위 꼬리를 붙여 만들어(cohortPlan.ts slugFromDomain · brandVariant.ts variantTenantId) gunsan.go.kr
+ * (군산시 문화관광)의 「하나 더 등록」도 gunsan-national이 된다. 다른 업체면 사람이 읽을 까닭, 군산각 전국형이면 null.
+ */
+export function nationalCollision(
+  entry: Pick<TenantConfig, 'brandName' | 'cohortOnly' | 'ownedDomains'>,
+  regional: Pick<TenantConfig, 'brandName' | 'cohortOnly' | 'ownedDomains'> | undefined,
+): string | null {
+  if (!regional) return `저장소 설정에 ${NATIONAL_SAME_BRAND}가 없어 같은 업체인지 알 수 없음`;
+  const reasons: string[] = [];
+  const named = idCollision(entry, regional);
+  if (named) reasons.push(named);
+  if (!sharesSite({ ownedDomains: entry.ownedDomains ?? [] }, { ownedDomains: regional.ownedDomains ?? [] })) {
+    reasons.push(`홈페이지 「${(entry.ownedDomains ?? []).join(', ') || '없음'}」`);
+  }
   return reasons.length > 0 ? reasons.join(' · ') : null;
 }
 
@@ -199,11 +227,18 @@ export interface NationalRemoval {
   version: string;
   tenantId: string;
   at: string;
-  /** deleted — 화면의 「빼기」와 같이 지웠다. absent — 이 PC 목록에 없어 아무것도 하지 않았다. */
-  action: 'deleted' | 'absent';
+  /**
+   * deleted — 화면의 「빼기」와 같이 지웠다. absent — 이 PC 목록에 없어 아무것도 하지 않았다. skipped-collision — 그 id가 군산각
+   * 전국형이 아닌 다른 업체라 지우지 않았다(nationalCollision).
+   */
+  action: 'deleted' | 'absent' | 'skipped-collision';
   /** absent일 때 — 이미 지운 브랜드(툼스톤)였는가. */
   hidden?: boolean;
-  /** deleted일 때 — 지운 브랜드의 모습과 지우기 결과. */
+  /** deleted일 때 — 지난 시작에 멈춘 지우기를 이번에 마저 했다. */
+  resumed?: boolean;
+  /** skipped-collision일 때 — 다른 업체로 본 까닭. */
+  reason?: string;
+  /** deleted · skipped-collision일 때 — 그 브랜드의 모습(deleted면 지우기 결과도). */
   brandName?: string;
   industry?: string;
   region?: string;
@@ -212,9 +247,22 @@ export interface NationalRemoval {
   ranksUpdated?: number;
 }
 
+/** 군산각 전국형 지우기의 진행 기록(userData/remove-gunsan-national-0.4.49.pending.json) — 지우기 전 브랜드의 모습. */
+interface NationalRemovalPending {
+  version: string;
+  startedAt: string;
+  brandName: string;
+  industry: string;
+  region: string;
+  /** 그때 오버레이에 항목이 있었는가 — 마저 할 때 「오버레이에서 뺐다」를 바르게 적는다. */
+  inOverlay: boolean;
+}
+
 /**
  * 한 번만 하는 군산각 전국형 지우기. 이미 했으면 그때의 표식을 돌려준다. 측정 중이면 표식 없이 미룬다(deferred — 화면의 「빼기」도
- * 측정 중에는 지우지 않는다). 지우다 멈추면 표식 없이 던진다 — 다음 시작 때 아직 목록에 있으면 다시 지운다.
+ * 측정 중에는 지우지 않는다). 그 id가 다른 업체면 지우지 않고 skipped-collision을 남긴다. 지우기 전에 진행 기록을 남기고, 지우다
+ * 멈추면 표식 없이 던진다 — 다음 시작은 아직 목록에 있으면 다시 지우고, 오버레이에서 빠져 목록에 없으면 같은 함수로 남은 단계
+ * (측정 대기열 · 툼스톤 · 코호트 순위 · 최근 실패 — 이미 한 것은 그대로 둔다)를 마저 한다. 되살리기 백업은 첫 시도의 것을 둔다.
  */
 export async function removeNationalOnce(store: ResultStore, now: Date = new Date()): Promise<{ ran: boolean; removal: NationalRemoval | null; deferred?: string }> {
   const markerFile = stateFilePath(NATIONAL_REMOVAL_MARKER_FILE);
@@ -223,13 +271,38 @@ export async function removeNationalOnce(store: ResultStore, now: Date = new Dat
     return { ran: false, removal: null, deferred: `측정이 진행 중이라 ${NATIONAL_REMOVED_TENANT}를 지우지 않았습니다 — 다음 시작 때 다시 합니다.` };
   }
   const base = { version: UNIFY_VERSION, tenantId: NATIONAL_REMOVED_TENANT, at: now.toISOString() };
+  const pendingFile = stateFilePath(NATIONAL_REMOVAL_PENDING_FILE);
+  const pending = (await exists(pendingFile)) ? (JSON.parse(await readFile(pendingFile, 'utf-8')) as NationalRemovalPending) : null;
   const tenant = (await loadRuntimeTenants()).find((t) => t.tenantId === NATIONAL_REMOVED_TENANT);
   let removal: NationalRemoval;
-  if (!tenant) {
-    removal = { ...base, action: 'absent', hidden: (await readDeletedTenants()).includes(NATIONAL_REMOVED_TENANT) };
-  } else {
+  if (tenant) {
+    const shape = { brandName: tenant.brandName, industry: tenant.industry, region: tenant.region };
+    const collision = nationalCollision(tenant, await findBakedTenant(NATIONAL_SAME_BRAND));
+    if (collision) {
+      removal = { ...base, action: 'skipped-collision', reason: collision, ...shape };
+    } else {
+      if (!pending) {
+        const inOverlay = (await readOverlay()).some((t) => t.tenantId === NATIONAL_REMOVED_TENANT);
+        await writeJsonAtomic(pendingFile, { version: UNIFY_VERSION, startedAt: now.toISOString(), ...shape, inOverlay } satisfies NationalRemovalPending);
+      }
+      const { removedFromOverlay, ranksUpdated } = await deleteTenantOnThisPc(NATIONAL_REMOVED_TENANT, store);
+      removal = { ...base, action: 'deleted', ...shape, removedFromOverlay, ranksUpdated, ...(pending ? { resumed: true } : {}) };
+    }
+  } else if (pending) {
+    // 지난 시작에 오버레이에서 뺀 뒤 멈췄다 — 브랜드가 목록에 없어도 같은 함수로 남은 단계를 마저 한다.
     const { removedFromOverlay, ranksUpdated } = await deleteTenantOnThisPc(NATIONAL_REMOVED_TENANT, store);
-    removal = { ...base, action: 'deleted', brandName: tenant.brandName, industry: tenant.industry, region: tenant.region, removedFromOverlay, ranksUpdated };
+    removal = {
+      ...base,
+      action: 'deleted',
+      resumed: true,
+      brandName: pending.brandName,
+      industry: pending.industry,
+      region: pending.region,
+      removedFromOverlay: removedFromOverlay || pending.inOverlay,
+      ranksUpdated,
+    };
+  } else {
+    removal = { ...base, action: 'absent', hidden: (await readDeletedTenants()).includes(NATIONAL_REMOVED_TENANT) };
   }
   await writeJsonAtomic(markerFile, removal);
   return { ran: true, removal };
@@ -247,7 +320,7 @@ export interface UnifyIssue {
     | 'cleanup-failed'
     /** 측정 중이라 군산각 전국형 지우기를 다음 시작으로 미뤘다. */
     | 'national-deferred'
-    /** 군산각 전국형을 지우다 멈췄다 — 다음 시작 때 다시. */
+    /** 군산각 전국형을 지우다 멈췄다 — 다음 시작 때 다시 지우거나 남은 단계를 마저 한다. */
     | 'national-delete-failed';
   tenantId: string;
   message: string;
@@ -283,7 +356,10 @@ export interface UnifyCheck {
   sameSite: { tenantId: string; brandName: string; industry: string; region: string; marketScope: string; cohortOnly: boolean; hidden: boolean; sharesWith: string[] }[];
   /** 두 브랜드가 쓰는 코호트 공통 질문지 — 이 PC 것과 동봉 기준본. 동봉 기준본이 없는 실행(dev)이면 비교하지 않는다. */
   cohortBanks: { key: string; version: string; state: 'same' | 'differs' | 'missing' | 'unreadable' | 'not-compared'; detail?: string }[];
-  /** 군산각 전국형 한 번 지우기의 표식 — 지웠다(deleted) · 없었다(absent). 아직 못 했으면(미룸 · 멈춤) null이고 issues에 까닭. */
+  /**
+   * 군산각 전국형 한 번 지우기의 표식 — 지웠다(deleted) · 없었다(absent) · 다른 업체라 두었다(skipped-collision — 그 브랜드가 목록에
+   * 있는 동안 issues에 id-collision). 아직 못 했으면(미룸 · 멈춤) null이고 issues에 까닭.
+   */
   nationalRemoval: NationalRemoval | null;
 }
 
@@ -320,6 +396,16 @@ export async function checkBrandUnify(
   const issues: UnifyIssue[] = [];
   if (cleanupFailure) issues.push({ kind: 'cleanup-failed', tenantId: UNIFIED_TENANTS.join(','), message: cleanupFailure });
   if (national.problem) issues.push({ kind: national.problem.kind, tenantId: NATIONAL_REMOVED_TENANT, message: national.problem.message });
+  const otherNational = national.removal?.action === 'skipped-collision' ? runtime.find((t) => t.tenantId === NATIONAL_REMOVED_TENANT) : undefined;
+  if (otherNational) {
+    issues.push({
+      kind: 'id-collision',
+      tenantId: NATIONAL_REMOVED_TENANT,
+      message:
+        `이 PC의 ${NATIONAL_REMOVED_TENANT}는 군산각 전국형이 아닌 다른 업체(${national.removal?.reason} · ${otherNational.industry} · ${otherNational.region})라 ` +
+        '지우지 않았습니다 — 군산각 전국형을 다른 id로 등록했다면 운영자가 지우세요.',
+    });
+  }
   const tenants: Record<string, UnifyTenantReport> = {};
   const cohortBanks: UnifyCheck['cohortBanks'] = [];
   const unified = new Set<string>(UNIFIED_TENANTS);
@@ -438,15 +524,17 @@ async function runNationalRemoval(store: ResultStore): Promise<NationalRemovalOu
     if (deferred) return { removal: null, problem: { kind: 'national-deferred', message: deferred } };
     if (ran && removal?.action === 'deleted') {
       console.log(
-        `[unify] 군산각 전국형(${NATIONAL_REMOVED_TENANT})을 지움 — 화면의 「빼기」와 같음(툼스톤 · 되살리기 가능), ` +
+        `[unify] 군산각 전국형(${NATIONAL_REMOVED_TENANT})을 지움${removal.resumed ? '(지난 시작에 멈춘 지우기를 마저 함)' : ''} — 화면의 「빼기」와 같음(툼스톤 · 되살리기 가능), ` +
           `측정 기록은 data/${NATIONAL_REMOVED_TENANT}/에 남음 · 순위 다시 매긴 카드 ${removal.ranksUpdated ?? 0}장`,
       );
+    } else if (ran && removal?.action === 'skipped-collision') {
+      console.log(`[unify] 군산각 전국형(${NATIONAL_REMOVED_TENANT}) — 이 PC의 그 id는 다른 업체(${removal.reason})라 지우지 않음`);
     } else if (ran && removal) {
       console.log(`[unify] 군산각 전국형(${NATIONAL_REMOVED_TENANT}) — 이 PC 목록에 없음${removal.hidden ? '(이미 지운 브랜드)' : ''}, 지울 것 없음`);
     }
     return { removal };
   } catch (err) {
-    const message = `${NATIONAL_REMOVED_TENANT}를 지우지 못했습니다(${err instanceof Error ? err.message : String(err)}) — 다음 시작 때 다시 합니다.`;
+    const message = `${NATIONAL_REMOVED_TENANT}를 지우지 못했습니다(${err instanceof Error ? err.message : String(err)}) — 다음 시작 때 다시 지우거나 남은 단계를 마저 합니다.`;
     return { removal: null, problem: { kind: 'national-delete-failed', message } };
   }
 }

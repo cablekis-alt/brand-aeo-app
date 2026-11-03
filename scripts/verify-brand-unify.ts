@@ -21,6 +21,8 @@
  *               백업 · 대기열 · 최근 실패 · 순위 다시 매김). 측정 기록과 gunsan은 그대로. 되살린 뒤 다시 시작해도 다시 지우지 않는다.
  *   national-absent  gunsan-national이 없는 PC — 없음을 남기고 아무것도 하지 않는다(그 뒤 새로 만든 것도 지우지 않는다).
  *   national-busy    측정 중에 시작 — 지우지 않고 다음 시작으로 미룬다.
+ *   national-resume  오버레이에서 뺀 뒤 측정 대기열(-tombstone은 툼스톤) 쓰기가 실패한 PC — 다음 시작이 남은 단계를 마저 하고 deleted로 남긴다.
+ *   national-collision  이 PC의 gunsan-national이 다른 업체(이름 · 홈페이지가 다르거나 경쟁사로만 잼) — 지우지 않고 알린다.
  *   national-dev     dev · CI(APP_DATA_DIR 없음) — 지우지 않는다.
  *   vercel      웹 — 동봉 폴더가 없어 아무것도 하지 않는다. 정리 · 점검 · gunsan-national 지우기도 하지 않는다.
  *   real        이 운영 PC 데이터의 사본(있으면) — 시작 때 gunsan-national을 지우고(기록 · data/ 그대로, gunsan · web4ai 그대로),
@@ -561,6 +563,74 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
     return;
   }
 
+  if (scenario === 'national-resume' || scenario === 'national-resume-tombstone') {
+    const { readRemovedTenants } = await import('../server/tenantRemovedStore');
+    const { readDeletedTenants } = await import('../server/tenantTombstone');
+    const { readOverlay } = await import('../server/tenantOverlay');
+    const { readMeasureRequests } = await import('../server/measureRequests');
+    const { flushMeasureFailures } = await import('../server/measureTracker');
+    const nationalEntry = (await readOverlay()).find((t) => t.tenantId === NATIONAL);
+    // 첫 시작 — 오버레이에서 뺀 뒤의 쓰기가 실패한다(백신 · 색인기가 파일을 잡은 것처럼). 그 자리에 폴더를 두어 writeFile이 던지게 한다.
+    const blocked = path.join(root, scenario === 'national-resume' ? 'measure-requests.json' : 'tenants.deleted.json');
+    const blockedRaw = existsSync(blocked) ? readFileSync(blocked, 'utf8') : null;
+    rmSync(blocked, { force: true });
+    mkdirSync(blocked);
+    await unifyWithLogs();
+    const check1 = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
+    ok(
+      '첫 시작 — 오버레이에서 뺀 뒤 쓰기 실패: 표식 없이 national-delete-failed로 알림',
+      !existsSync(nationalMarker()) && !(await readOverlay()).some((t) => t.tenantId === NATIONAL) && check1.issues.some((i) => i.kind === 'national-delete-failed' && i.tenantId === NATIONAL),
+      JSON.stringify(check1.issues),
+    );
+    // 파일이 풀린 뒤 다음 시작 — 남은 단계(대기열 · 툼스톤 · 순위 · 최근 실패)를 마저 한다.
+    rmSync(blocked, { recursive: true, force: true });
+    if (blockedRaw !== null) writeFileSync(blocked, blockedRaw);
+    const logs = await unifyWithLogs();
+    await flushMeasureFailures();
+    const marker = readJson<NationalRemoval>(nationalMarker());
+    const check2 = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
+    ok('다음 시작 — 남은 단계를 마저 해 툼스톤을 닮 · 목록에 없음', (await readDeletedTenants()).includes(NATIONAL) && !(await tenantNow(NATIONAL)));
+    const queued = (await readMeasureRequests()).map((r) => r.tenant.tenantId).join();
+    ok('다음 시작 — 측정 대기열에서 gunsan-national만 빠짐', queued === 'gunsan', queued);
+    const failures = readJson<{ tenantId: string }[]>(path.join(root, 'measure-failures.json')).map((f) => f.tenantId).join();
+    ok('다음 시작 — 「최근 실패」에서 gunsan-national 줄만 빠짐', failures === 'gunsan', failures);
+    const comp = (await store.getScorecardHistory('comp-nat', 10))[0];
+    ok('다음 시작 — 같은 코호트 순위를 다시 매김(2/2 → 1/1)', comp?.cohortRank?.position === 1 && comp.cohortRank.totalTenants === 1, JSON.stringify(comp?.cohortRank));
+    ok(
+      '다음 시작 — 표식 deleted(마저 함) · 점검 알릴 것 없음 · 로그',
+      marker.action === 'deleted' && marker.resumed === true && marker.brandName === '군산각' && check2.issues.length === 0 && logs.some((l) => l.includes(NATIONAL) && l.includes('지움')),
+      JSON.stringify({ marker, issues: check2.issues, logs }),
+    );
+    const backup = (await readRemovedTenants()).find((r) => r.tenantId === NATIONAL);
+    ok('되살리기 백업 — 첫 시작에 남긴 오버레이 설정 그대로', JSON.stringify(backup?.overlay) === JSON.stringify(nationalEntry), JSON.stringify(backup));
+    return;
+  }
+
+  if (scenario.startsWith('national-collision')) {
+    const { readOverlay } = await import('../server/tenantOverlay');
+    const overlayBefore = readFileSync(path.join(root, 'tenants.overlay.json'), 'utf8');
+    const entry = (await readOverlay()).find((t) => t.tenantId === NATIONAL)!;
+    const logs = await unifyWithLogs();
+    const marker = readJson<NationalRemoval>(nationalMarker());
+    const check = readJson<UnifyCheck>(path.join(root, unify.UNIFY_CHECK_FILE));
+    ok(
+      `다른 업체의 gunsan-national(${entry.brandName} · ${entry.ownedDomains.join()}${entry.cohortOnly ? ' · 경쟁사로만' : ''}) — 지우지 않음(목록 · 오버레이 그대로 · 툼스톤 · 지운 브랜드 없음)`,
+      Boolean(await tenantNow(NATIONAL)) &&
+        !existsSync(path.join(root, 'tenants.deleted.json')) &&
+        !existsSync(path.join(root, 'tenants.removed.json')) &&
+        readFileSync(path.join(root, 'tenants.overlay.json'), 'utf8') === overlayBefore,
+    );
+    ok('표식 — skipped-collision과 까닭 · 그 브랜드 이름', marker.action === 'skipped-collision' && Boolean(marker.reason) && marker.brandName === entry.brandName, JSON.stringify(marker));
+    ok(
+      '점검 · 로그 — id-collision:gunsan-national로 알림 · 「지움」 없음',
+      check.issues.some((i) => i.kind === 'id-collision' && i.tenantId === NATIONAL) && logs.some((l) => l.includes(NATIONAL) && l.includes('다른 업체')) && !logs.some((l) => l.includes('지움')),
+      JSON.stringify({ issues: check.issues, logs }),
+    );
+    await unifyWithLogs();
+    ok('다음 시작 — 여전히 지우지 않음', Boolean(await tenantNow(NATIONAL)) && readJson<NationalRemoval>(nationalMarker()).action === 'skipped-collision');
+    return;
+  }
+
   if (scenario === 'national-dev') {
     await unify.runBrandUnify(store);
     ok(
@@ -580,7 +650,15 @@ async function runScenario(scenario: string, root: string, ok: (label: string, p
       '운영 PC 사본 — web4ai v6 · gunsan v7(저장소 설정) · gunsan-national은 이 PC 오버레이의 v3(저장소 설정에 없음)',
       t('web4ai')?.questionBankVersion === 'v6' && t('gunsan')?.questionBankVersion === 'v7' && t('gunsan-national')?.questionBankVersion === 'v3' && !(await findBakedTenant('gunsan-national')),
     );
-    ok('운영 PC 사본 — 판 v6(web4ai) · v7(gunsan)은 아직 이 PC에 없음', !existsSync(bankFile('web4ai', 'v6')) && !existsSync(bankFile('gunsan', 'v7')));
+    const { selectCohortTargets } = await import('../server/cohortPlan');
+    const gunsanNow = t('gunsan')!;
+    const peers = selectCohortTargets(gunsanNow, runtime);
+    ok(
+      '운영 PC 사본 — gunsan(openai · gemini · perplexity)과 함께 재는 경쟁사는 오버레이의 옛 초안(openai · perplexity)이어도 gunsan과 같은 엔진으로 잼',
+      gunsanNow.engines.join() === 'openai,gemini,perplexity' && peers.length > 0 && peers.every((p) => p.engines.join() === gunsanNow.engines.join()),
+      JSON.stringify(peers.map((p) => [p.tenantId, p.engines])),
+    );
+    ok('운영 PC 사본 — 판 v6(web4ai) · v7(gunsan)은 아직 이 PC에 없음',!existsSync(bankFile('web4ai', 'v6')) && !existsSync(bankFile('gunsan', 'v7')));
     const snap = (rel: string) => readFileSync(path.join(root, rel), 'utf8');
     const keep = ['data/web4ai/question-bank/v5.json', 'data/gunsan/question-bank/v6.json', 'data/gunsan-national/question-bank/v3.json', 'cohort-banks/펜션__전북_군산/c1.json', 'cohort-banks/관광정보서비스__전북_군산/c1.json', 'cohort-banks/관광안내__국내/c1.json'];
     const before = keep.map(snap);
@@ -859,6 +937,23 @@ async function parent(): Promise<void> {
       const root = path.join(tmp, 'national-absent');
       put(path.join(root, 'tenants.overlay.json'), [gunsanEntry]);
       runChild('national-absent', root, packaged(root));
+    }
+    for (const scenario of ['national-resume', 'national-resume-tombstone']) {
+      const root = path.join(tmp, scenario);
+      withNational(root, [gunsanEntry, nationalEntry, compNat]);
+      runChild(scenario, root, packaged(root));
+    }
+    // id-collision — 이 PC의 gunsan-national이 군산각 전국형이 아니다: gunsan.go.kr(군산시 문화관광 → id gunsan)의 「하나 더 등록」 ·
+    // 이름만 같고 홈페이지가 다른 브랜드 · 경쟁사로만 재는 브랜드.
+    const otherNational: Record<string, Record<string, unknown>> = {
+      'national-collision': { brandName: '군산시 문화관광', aliases: ['군산시 문화관광'], ownedDomains: ['gunsan.go.kr'] },
+      'national-collision-site': { ownedDomains: ['gunsan-national.example'] },
+      'national-collision-comp': { cohortOnly: true, competitors: [] },
+    };
+    for (const [scenario, extra] of Object.entries(otherNational)) {
+      const root = path.join(tmp, scenario);
+      put(path.join(root, 'tenants.overlay.json'), [gunsanEntry, { ...nationalEntry, ...extra }]);
+      runChild(scenario, root, packaged(root));
     }
     {
       const root = path.join(tmp, 'national-busy');
