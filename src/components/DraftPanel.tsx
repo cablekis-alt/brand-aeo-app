@@ -22,7 +22,7 @@ import { publishArticleOf } from '../lib/publishArticle'
 import EvidencePanel from './EvidencePanel'
 import SitePhotoPanel from './SitePhotoPanel'
 import { matchPhotos, normSlotAlt } from '../lib/articlePhotos'
-import { articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
+import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
 import FactApprovalSheet from './FactApprovalSheet'
 import { mergeApproved, needsFromBrief, reconcileHits, unansweredNeeds, type SheetHit } from '../lib/factApproval'
 import { useTenant } from '../context/useTenant'
@@ -99,6 +99,7 @@ export default function DraftPanel({
   weekOf,
   publishHint = '아래 올리기 목록에서 올리세요',
   titleInHeader = false,
+  photoContext,
 }: {
   tenantId: string
   action: GapAction
@@ -120,6 +121,8 @@ export default function DraftPanel({
   publishHint?: string
   /** 카드 머리가 이미 글 제목을 보인다(콘텐츠 생성 「① 글 확인」) — 접힌 요약에서 같은 제목을 또 쓰지 않는다. */
   titleInHeader?: boolean
+  /** 사진 자동 채우기의 반복 상한에 셀 브랜드 초안과 작성자(SitePhotoPanel photoContext). */
+  photoContext?: { drafts: Readonly<Record<string, StoredDraft>>; groupOf?: (actionId: string) => string | undefined }
 }) {
   // 발행용 .html의 JSON-LD(Organization)에 브랜드 이름·도메인을 넣기 위해. tenantId만으로는 이름을 모른다.
   const { tenant } = useTenant()
@@ -608,7 +611,11 @@ export default function DraftPanel({
                   type="button"
                   className="ghost"
                   disabled={photoBusy}
-                  title="고른 홈페이지 사진 파일 — 블로그에 붙여 넣은 글에서 사진이 안 보이면 이 파일을 그 자리에 올리세요(파일 이름에 소제목)."
+                  title={`고른 사진 파일 — 블로그에 붙여 넣은 글에서 사진이 안 보이면 이 파일을 그 자리에 올리세요(파일 이름에 소제목).${
+                    photoFiles.some((p) => p.credit)
+                      ? ` 공공 사진이 있어 「${ARTICLE_CREDITS_FILE}」도 함께 받아요 — 공공 사진 파일을 직접 올리면 사진 바로 아래에 그 파일의 출처(공공누리 제1유형 링크)를 적어 주세요.`
+                      : ''
+                  }`}
                   onClick={() => {
                     setPhotoBusy(true)
                     setError(null)
@@ -938,7 +945,15 @@ export default function DraftPanel({
       )}
       {/* 홈페이지 사진도 자사 글(content)의 발행본에만 들어간다. */}
       {opened && !editing && tenant && action.kind === 'content' && (
-        <SitePhotoPanel tenantId={tenantId} brand={tenant} stored={stored} disabled={busy} onStored={onStored} onSettings={setPubSettings} />
+        <SitePhotoPanel
+          tenantId={tenantId}
+          brand={tenant}
+          stored={stored}
+          disabled={busy}
+          onStored={onStored}
+          onSettings={setPubSettings}
+          photoContext={photoContext}
+        />
       )}
     </div>
   )

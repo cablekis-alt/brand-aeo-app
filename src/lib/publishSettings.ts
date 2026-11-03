@@ -30,10 +30,15 @@ export interface PublishSettings {
   updatedAt?: string
 }
 
-/** 홈페이지 사진 사용 확인. medical: 의료 업종에서 의료광고(환자 · 시술 전후 사진) 확인까지 받았다. */
+/**
+ * 홈페이지 사진 사용 확인. medical: 의료 업종에서 의료광고(환자 · 시술 전후 사진) 확인까지 받았다. publicAt: 공공 사진(자사 사이트의
+ * 공공누리 제1유형 사진) 사용 확인 — 출처 표시 의무 · 명예훼손 · CI/BI 금지 · 초상권은 라이선스 밖임을 확인한 때(서버 시각). 없으면 공공
+ * 사진을 고르지도, 자동으로 채우지도, 내보내지도 않는다(src/lib/articlePhotos.ts exportPhotoPicks).
+ */
 export interface PhotoRights {
   confirmedAt: string
   medical?: true
+  publicAt?: string
 }
 
 export const PUBLISH_LIMITS = { cta: 200, tags: 10, tag: 30, category: 30 } as const
@@ -92,7 +97,8 @@ function photoRightsOf(raw: unknown): PhotoRights | undefined {
   if (!raw || typeof raw !== 'object') return undefined
   const r = raw as Record<string, unknown>
   if (typeof r.confirmedAt !== 'string' || Number.isNaN(Date.parse(r.confirmedAt))) return undefined
-  return { confirmedAt: r.confirmedAt, ...(r.medical === true ? { medical: true as const } : {}) }
+  const publicAt = typeof r.publicAt === 'string' && !Number.isNaN(Date.parse(r.publicAt)) ? r.publicAt : undefined
+  return { confirmedAt: r.confirmedAt, ...(r.medical === true ? { medical: true as const } : {}), ...(publicAt ? { publicAt } : {}) }
 }
 
 /** 받은 값을 고른다. 빈 칸은 뺀다. 틀린 값은 이유를 담아 throw. */

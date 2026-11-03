@@ -190,8 +190,16 @@ export interface PublishHtmlInput {
 /** 완성된 HTML 문서. 본문은 <article>(발행본 — 글 끝 포함), <head>에 메타와 JSON-LD(Article + Organization). */
 export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtmlInput): string {
   const { markdown: md, photos } = publishArticleParts(stored, { brand, settings })
-  // 실제로 글에 들어간 홈페이지 사진만 — 같은 사진을 두 자리에 썼으면 한 번.
-  const images = [...new Set(photos.map((p) => p.src))]
+  // 실제로 글에 들어간 사진만 — 같은 사진을 두 자리에 썼으면 한 번. 공공 사진은 출처 · 이용 허락과 함께 ImageObject로(본문 figcaption의
+  // 출처 줄과 같은 내용), 홈페이지 사진은 지금처럼 주소 글자로.
+  const images = [...new Map(photos.map((p) => [p.src, p])).values()].map((p) =>
+    p.credit
+      ? { '@type': 'ImageObject', contentUrl: p.src, creditText: p.credit.credit, license: p.credit.creditUrl, acquireLicensePage: p.credit.creditUrl }
+      : p.src,
+  )
+  // 링크 미리보기 대표 사진(og:image)은 홈페이지 사진만 — 미리보기 카드에는 공공 사진의 출처 줄(figcaption · JSON-LD)이 따라가지 않는다.
+  // 홈페이지 사진이 없으면 og:image를 쓰지 않는다.
+  const ogPhoto = photos.find((p) => !p.credit)
   const keywords = settings?.tags?.join(', ')
   // 블로그 글 형식은 본문 첫 줄(# 제목)과 같은 제목 — 빈칸을 채우거나 본문을 고치면 {N}이 바뀐다. 옛 형식은 예전처럼 초안 제목.
   const title =
@@ -234,8 +242,8 @@ export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtml
     `<meta property="og:title" content="${escapeHtml(title)}">`,
     `<meta property="og:description" content="${escapeHtml(description)}">`,
     `<meta property="og:site_name" content="${escapeHtml(brand.brandName)}">`,
-    ...(photos[0]
-      ? [`<meta property="og:image" content="${escapeHtml(photos[0].src)}">`, `<meta property="og:image:alt" content="${escapeHtml(photos[0].alt)}">`]
+    ...(ogPhoto
+      ? [`<meta property="og:image" content="${escapeHtml(ogPhoto.src)}">`, `<meta property="og:image:alt" content="${escapeHtml(ogPhoto.alt)}">`]
       : []),
     `<meta property="article:published_time" content="${published}">`,
     '<script type="application/ld+json">',

@@ -11,7 +11,7 @@ import { inferAddressViaSearch, inferAliases, inferBrandFields, inferBrandFromDo
 import { normalizeTenantScope, writeTenantScope } from './tenantScopeStore.js';
 import { readPublishSettings, updatePublishSettings } from './publishSettingsStore.js';
 import { createExtraArticle, ExtraArticlesError, patchExtraArticle, readExtraArticles } from './extraArticles.js';
-import { checkProbeAction, readProbePlan } from './probePlanStore.js';
+import { checkProbeAction, readProbePlan, writerGroupOf } from './probePlanStore.js';
 import { normalizePublishSettings } from '../src/lib/publishSettings.js';
 import { MARKET_SCOPES, type MarketScope } from '../src/prompts/types.js';
 import { fetchAiReferrals } from './gaReferrals.js';
@@ -37,11 +37,38 @@ import {
 import { draftCompetitorRewrites } from './competitorRewrite.js';
 import { readCompetitorOverride } from './tenantCompetitorsStore.js';
 import { describeTenantConflict, promoteCompetitor, registerVariant } from './tenantPromote.js';
-import { DraftChangedError, generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills, savePhotoPicks } from './contentDraft.js';
+import {
+  DraftChangedError,
+  generateDraft,
+  readDrafts,
+  applyPhotoCredits,
+  saveAutoPhotoPicks,
+  saveEditedDraft,
+  saveEvidence,
+  saveGapFills,
+  savePhotoPicks,
+  samePhotoPlace,
+  type AutoPhotoEntry,
+  type PhotoCreditPatch,
+} from './contentDraft.js';
 import { createFactGuard } from './factGuard.js';
 import { fetchSitePhoto } from './sitePhoto.js';
 import { publicCollectorError } from './aeo/networkSafety.js';
-import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, normSlotAlt, PHOTO_LIMITS, photosAllowed, type PhotoPick } from '../src/lib/articlePhotos.js';
+import {
+  canonicalPhotoSrc,
+  cleanPhotoAlt,
+  exportPhotoPicks,
+  isPhotoMedical,
+  needsPhotoCredit,
+  normSlotAlt,
+  PHOTO_LIMITS,
+  photoCreditState,
+  photosAllowed,
+  publicPhotoFields,
+  type PhotoPick,
+  type PublicPhotoFields,
+} from '../src/lib/articlePhotos.js';
+import { AUTO_PICK_RULES, autoCandidateSkip } from '../src/lib/photoAutoPick.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
@@ -812,9 +839,15 @@ app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
   }
 });
 
-// 글 사진 자리에 고른 홈페이지 사진(src/lib/articlePhotos.ts) — op pick(넣기 · 옮기기) · remove(빼기). 판정 · 글쓰기 호출이 없고
-// 페이지 · 사진을 다시 받지 않는다. 사진 사용 확인(photo-rights)이 없으면 409, 화면이 본 초안이 그사이 다시 만들어졌으면 409.
+// 글 사진 자리에 고른 홈페이지 사진(src/lib/articlePhotos.ts) — op pick(넣기 · 옮기기) · remove(빼기) · auto(자동 채우기 저장 —
+// src/lib/photoAutoPick.ts가 고르고 운영자가 미리보기를 본 뒤 여러 글을 한 번에). 판정 · 글쓰기 호출이 없고 페이지 · 사진을 다시 받지
+// 않는다. 사진 사용 확인(photo-rights)이 없으면 409, 화면이 본 초안이 그사이 다시 만들어졌으면 409(auto는 그 글만 건너뛰고 알린다).
 // 사이트가 단 사진 설명에 브랜드 사실에 없는 숫자가 있으면 설명을 비운다 — 내보낼 때 사실 확인을 거친 사진 자리 글자를 쓴다.
+// 빼기는 그 자리를 「사람이 뺀 자리」로 적어 자동 채우기가 다시 채우지 않게 하고, 넣기는 그 기록을 지운다.
+// 공공 사진(origin public — 자사 사이트 장소 페이지의 공공누리 제1유형 사진)은 공공 사진 사용 확인(photoRights.publicAt)이 없으면 409,
+// 유형 · 출처 · 이용 허락 주소가 맞지 않으면 400(publicPhotoFields). 공공 사진 호스트의 사진을 출처 없이 고르면 400(브랜드 자사 사이트
+// 주소의 사진은 홈페이지 사진 — origin site로 저장). op credit은 이미 고른
+// 출처 없는 공공 사진에 출처를 붙인다(「출처 붙이기」 — 자리 · 주소가 같은 사진만, 확인 시각 · 자동 표시는 그대로).
 app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -824,7 +857,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   const b = (req.body ?? {}) as Record<string, unknown>;
   const actionId = typeof b.actionId === 'string' ? b.actionId : '';
   const generatedAt = typeof b.generatedAt === 'string' ? b.generatedAt : '';
-  const op = b.op === 'pick' || b.op === 'remove' ? b.op : null;
+  const op = b.op === 'pick' || b.op === 'remove' || b.op === 'auto' || b.op === 'credit' ? b.op : null;
   const text = (v: unknown, max: number) => (typeof v === 'string' ? normSlotAlt(v).slice(0, max) : '');
   const count = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 20 ? v : 0);
   // 사진 자리 하나 — 장면 글자 · 몇 번째 · 소제목. 빼기와 옮기기(replaces)가 이것으로 고른 사진을 찾는다.
@@ -833,10 +866,43 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     const place = { slot: text(r.slot, 300), nth: count(r.nth), heading: text(r.heading, 300) };
     return place.slot && place.nth ? place : null;
   };
-  const samePlace = (p: PhotoPick, place: { slot: string; nth: number; heading: string }) =>
-    p.slot === place.slot && p.nth === place.nth && p.heading === place.heading;
-  if (!actionId || !generatedAt || !op) {
-    res.status(400).json({ error: 'actionId · generatedAt · op(pick · remove)가 필요합니다.' });
+  const samePlace = samePhotoPlace;
+  const guard = createFactGuard(tenant.factGraph ?? [], [], 'drop');
+  // 자사 사이트가 공공 사진 호스트(korean.visitkorea.or.kr · tour.jb.go.kr)인 브랜드의 자기 홈페이지 사진 — 출처 없이 고르고, 서버가
+  // 확인했다는 표시(origin site)를 달아 저장한다(photoCreditState가 「출처 없음」으로 보지 않게). 화면이 보낸 origin site는 믿지 않는다.
+  const owned = tenant.ownedDomains ?? [];
+  const ownSite = (src: string): { origin?: 'site' } => (needsPhotoCredit(src) && !needsPhotoCredit(src, owned) ? { origin: 'site' } : {});
+  // 고른 사진 하나 — 자리 · https 사진 주소 · 페이지 주소가 맞지 않으면 null. 설명은 사실 가드를 거친다(걸리면 '' — siteAlt로 알린다).
+  const pickOf = (v: unknown) => {
+    const raw = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+    const place = placeOf(raw);
+    const same = count(raw.same);
+    const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
+    const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
+    if (!place || !same || same < place.nth || !src || !pageUrl) return null;
+    const siteAlt = cleanPhotoAlt(typeof raw.alt === 'string' ? raw.alt : '');
+    const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
+    return { place, same, src, pageUrl, siteAlt, alt, pub: publicOf(raw) };
+  };
+  // 공공 사진 표시 — 홈페이지 사진이면 null, 맞지 않으면 이유(글자). 출처 글자도 사실 가드를 거친다(브랜드 사실에 없는 숫자).
+  function publicOf(raw: Record<string, unknown>): PublicPhotoFields | string | null {
+    const f = publicPhotoFields(raw);
+    if (f && typeof f === 'object' && !guard.guardSentence(f.credit)) return '공공 사진의 출처 글자를 쓸 수 없어요.';
+    return f;
+  }
+  // 출처 붙이기 하나 — 자리 · 사진 주소 · 공공 사진 표시 · 찾은 페이지. 맞지 않으면 이유(글자).
+  const creditOf = (v: unknown): PhotoCreditPatch | string => {
+    const raw = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+    const place = placeOf(raw.place);
+    const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
+    const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
+    const pub = publicOf(raw);
+    if (!place || !src || !pageUrl) return '출처를 붙일 사진 자리(place) · 사진 주소(src) · 찾은 페이지(pageUrl)가 필요합니다.';
+    if (!pub || typeof pub === 'string') return pub ?? '공공 사진 표시(origin public)가 필요합니다.';
+    return { place, src, fields: pub, pageUrl };
+  };
+  if (!op || (op !== 'auto' && (!actionId || !generatedAt))) {
+    res.status(400).json({ error: 'actionId · generatedAt · op(pick · remove · credit)가 필요합니다(op auto는 articles).' });
     return;
   }
   try {
@@ -846,7 +912,15 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         res.status(400).json({ error: '뺄 사진 자리(place)가 필요합니다.' });
         return;
       }
-      res.json(await savePhotoPicks(tenant.tenantId, actionId, generatedAt, (cur) => cur.filter((p) => !samePlace(p, place))));
+      res.json(
+        await savePhotoPicks(
+          tenant.tenantId,
+          actionId,
+          generatedAt,
+          (cur) => cur.filter((p) => !samePlace(p, place)),
+          (cleared) => [...cleared.filter((c) => !samePlace(c, place)), place],
+        ),
+      );
       return;
     }
     const settings = await readPublishSettings(tenant.tenantId);
@@ -858,27 +932,119 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       res.status(409).json({ error: '의료 업종은 의료광고 확인까지 받아야 사진을 쓸 수 있어요.' });
       return;
     }
-    const raw = (b.pick && typeof b.pick === 'object' ? b.pick : {}) as Record<string, unknown>;
-    const place = placeOf(raw);
-    const same = count(raw.same);
-    const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
-    const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
-    if (!place || !same || same < place.nth || !src || !pageUrl) {
+    const publicAt = settings.photoRights.publicAt;
+    const PUBLIC_NEEDED = '먼저 이 브랜드의 공공 사진(공공누리) 사용 확인을 해 주세요 — 글의 「홈페이지 사진」 칸에 있습니다.';
+    if (op === 'credit') {
+      const patch = creditOf(b);
+      if (typeof patch === 'string') {
+        res.status(400).json({ error: patch });
+        return;
+      }
+      if (!publicAt) {
+        res.status(409).json({ error: PUBLIC_NEEDED });
+        return;
+      }
+      res.json(
+        await savePhotoPicks(tenant.tenantId, actionId, generatedAt, (cur) => {
+          const fixed = applyPhotoCredits(cur, [patch]);
+          if (!fixed.credited) throw new RangeError('그 자리에 출처가 없는 그 공공 사진이 없어요 — 화면을 새로 고친 뒤 다시 해 주세요.');
+          return fixed.photos;
+        }),
+      );
+      return;
+    }
+    if (op === 'auto') {
+      // 자동 채우기 저장 — 한 번에 AUTO_ARTICLES편까지(화면이 나눠 보낸다 — JSON 본문 한도). 사진마다 넣기와 같은 검사를 하고, 자동
+      // 후보 검사(일러스트 · 사람 · 출처 표시가 필요한 공공 사진)를 서버에서도 다시 한다. 걸린 사진은 빼고 그 수를 알린다.
+      const AUTO_ARTICLES = 20;
+      const list = Array.isArray(b.articles) ? b.articles : null;
+      if (!list || !list.length || list.length > AUTO_ARTICLES) {
+        res.status(400).json({ error: `articles(글 1~${AUTO_ARTICLES}편)가 필요합니다.` });
+        return;
+      }
+      const now = new Date().toISOString();
+      const entries: AutoPhotoEntry[] = [];
+      let rejected = 0;
+      for (const item of list) {
+        const r = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>;
+        const id = typeof r.actionId === 'string' ? r.actionId : '';
+        const at = typeof r.generatedAt === 'string' ? r.generatedAt : '';
+        const picks = Array.isArray(r.picks) ? r.picks : [];
+        const creditList = Array.isArray(r.credits) ? r.credits : [];
+        if (!id || !at || (!picks.length && !creditList.length) || picks.length > PHOTO_LIMITS.picks || creditList.length > PHOTO_LIMITS.picks * 2) {
+          res.status(400).json({ error: `글마다 actionId · generatedAt과 사진 1~${PHOTO_LIMITS.picks}장(또는 붙일 출처)이 필요합니다.` });
+          return;
+        }
+        const clean: PhotoPick[] = [];
+        for (const raw of picks) {
+          const p = pickOf(raw);
+          const pub = p?.pub && typeof p.pub === 'object' ? p.pub : null;
+          if (pub && !publicAt) {
+            res.status(409).json({ error: PUBLIC_NEEDED });
+            return;
+          }
+          const candidate = p
+            ? { src: p.src, alt: p.siteAlt, pageUrl: p.pageUrl, ...(pub ? { origin: 'public' as const, license: pub.license, creditText: pub.credit } : {}) }
+            : null;
+          if (!p || typeof p.pub === 'string' || !candidate || autoCandidateSkip(candidate, owned)) {
+            rejected += 1;
+            continue;
+          }
+          clean.push({ ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...(pub ?? ownSite(p.src)) });
+        }
+        const credits: PhotoCreditPatch[] = [];
+        for (const raw of creditList) {
+          const patch = creditOf(raw);
+          if (typeof patch === 'string') {
+            rejected += 1;
+            continue;
+          }
+          if (!publicAt) {
+            res.status(409).json({ error: PUBLIC_NEEDED });
+            return;
+          }
+          credits.push(patch);
+        }
+        if (clean.length || credits.length) entries.push({ actionId: id, generatedAt: at, picks: clean, ...(credits.length ? { credits } : {}) });
+      }
+      // 같은 작성자의 글 사이에 같은 사진 한 번 — 화면의 미리보기가 오래됐어도 쓰기 안에서 다시 본다(작성자 배정 기간에만).
+      const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat, await writerGroupOf(tenant.tenantId));
+      res.json({ ...saved, skipped: saved.skipped + rejected });
+      return;
+    }
+    const p = pickOf(b.pick);
+    if (!p) {
       res.status(400).json({ error: '사진 자리(slot · nth · same · heading)와 https 사진 주소 · http(s) 페이지 주소가 필요합니다.' });
       return;
     }
-    const siteAlt = cleanPhotoAlt(typeof raw.alt === 'string' ? raw.alt : '');
-    const guard = createFactGuard(tenant.factGraph ?? [], [], 'drop');
-    const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
+    const { place, same, src, pageUrl, siteAlt, alt, pub } = p;
+    if (typeof pub === 'string') {
+      res.status(400).json({ error: pub });
+      return;
+    }
+    if (pub && !publicAt) {
+      res.status(409).json({ error: PUBLIC_NEEDED });
+      return;
+    }
+    if (!pub && needsPhotoCredit(src, owned)) {
+      res.status(400).json({ error: '출처 표시가 필요한 공공 사진이에요 — 「공공 사진」에서 출처와 함께 골라 주세요.' });
+      return;
+    }
     const replaces = placeOf(b.replaces);
-    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString() };
-    const stored = await savePhotoPicks(tenant.tenantId, actionId, generatedAt, (cur) => {
-      const rest = cur.filter((p) => !samePlace(p, place) && !(replaces && samePlace(p, replaces)));
-      if (rest.length >= PHOTO_LIMITS.picks) {
-        throw new RangeError(`사진은 글 하나에 ${PHOTO_LIMITS.picks}장까지예요 — 자리를 찾지 못한 사진을 먼저 빼 주세요.`);
-      }
-      return [...rest, pick];
-    });
+    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(pub ?? ownSite(src)) };
+    const stored = await savePhotoPicks(
+      tenant.tenantId,
+      actionId,
+      generatedAt,
+      (cur) => {
+        const rest = cur.filter((x) => !samePlace(x, place) && !(replaces && samePlace(x, replaces)));
+        if (rest.length >= PHOTO_LIMITS.picks) {
+          throw new RangeError(`사진은 글 하나에 ${PHOTO_LIMITS.picks}장까지예요 — 자리를 찾지 못한 사진을 먼저 빼 주세요.`);
+        }
+        return [...rest, pick];
+      },
+      (cleared) => cleared.filter((c) => !samePlace(c, place)),
+    );
     res.json(siteAlt && !alt ? { ...stored, photoNote: '사이트의 사진 설명에 브랜드 사실에 없는 숫자가 있어, 사진 자리 글자를 설명으로 씁니다.' } : stored);
   } catch (err) {
     const status = err instanceof DraftChangedError ? 409 : err instanceof RangeError ? 400 : 500;
@@ -915,8 +1081,19 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
     res.status(404).json({ error: '그 자리에 고른 사진이 없어요.' });
     return;
   }
-  if (!photosAllowed(await readPublishSettings(tenant.tenantId), tenant.industry)) {
+  const settings = await readPublishSettings(tenant.tenantId);
+  if (!photosAllowed(settings, tenant.industry)) {
     res.status(409).json({ error: '이 브랜드의 홈페이지 사진 사용 확인이 없어요.' });
+    return;
+  }
+  // 내보내기와 같은 기준(exportPhotoPicks) — 출처 없는 공공 사진 · 공공 사진 사용 확인 전의 공공 사진은 받지 않는다. 받은 파일은 바이트 그대로 보낸다.
+  if (!exportPhotoPicks(settings, tenant.industry, [pick]).length) {
+    res.status(409).json({
+      error:
+        photoCreditState(pick) === 'missing'
+          ? '출처가 없는 공공 사진이라 받지 않아요 — 글의 「홈페이지 사진」 칸에서 「출처 붙이기」를 하거나 사진을 바꿔 주세요.'
+          : '이 브랜드의 공공 사진(공공누리) 사용 확인이 없어요.',
+    });
     return;
   }
   try {
@@ -1268,21 +1445,46 @@ app.put('/api/tenants/:tenantId/publish-settings', async (req, res) => {
 });
 
 // 홈페이지 사진을 글에 써도 된다는 확인(브랜드별 한 번, src/lib/articlePhotos.ts) — 확인 시각은 서버가 찍는다. 의료 업종은
-// 의료광고(환자 · 시술 전후 사진) 확인(medical)까지 받아야 한다. Express 전용이다(Vercel 함수 12/12 — 웹은 사진을 고르지 않는다).
+// 의료광고(환자 · 시술 전후 사진) 확인(medical)까지 받아야 한다. public: true는 공공 사진(공공누리 제1유형) 사용 확인(publicAt)이고
+// 홈페이지 사진 확인이 먼저 있어야 한다(409). 홈페이지 사진을 다시 확인해도 공공 사진 확인은 남는다. Express 전용이다(Vercel 함수 12/12 —
+// 웹은 사진을 고르지 않는다).
 app.put('/api/tenants/:tenantId/photo-rights', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const medical = (req.body as { medical?: unknown } | undefined)?.medical === true;
+  const body = (req.body ?? {}) as { medical?: unknown; public?: unknown };
+  const now = new Date().toISOString();
+  if (body.public === true) {
+    try {
+      res.json(
+        await updatePublishSettings(tenant.tenantId, (cur) => {
+          if (!cur?.photoRights) throw new RangeError('먼저 이 브랜드의 홈페이지 사진 사용 확인을 해 주세요.');
+          return { ...cur, photoRights: { ...cur.photoRights, publicAt: now } };
+        }),
+      );
+    } catch (err) {
+      res.status(err instanceof RangeError ? 409 : 500).json({ error: err instanceof Error ? err.message : String(err) });
+    }
+    return;
+  }
+  const medical = body.medical === true;
   if (isPhotoMedical(tenant.industry) && !medical) {
     res.status(400).json({ error: '의료 업종은 환자 · 시술 전후 사진이 아닌지 확인(의료광고)까지 받아야 사진을 쓸 수 있어요.' });
     return;
   }
   try {
-    const confirmedAt = new Date().toISOString();
-    res.json(await updatePublishSettings(tenant.tenantId, (cur) => ({ ...cur, photoRights: { confirmedAt, ...(medical ? { medical: true as const } : {}) } })));
+    res.json(
+      await updatePublishSettings(tenant.tenantId, (cur) => ({
+        ...cur,
+        photoRights: {
+          confirmedAt: now,
+          ...(medical ? { medical: true as const } : {}),
+          ...(cur?.photoRights?.publicAt ? { publicAt: cur.photoRights.publicAt } : {}),
+        },
+      })),
+    );
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -1769,7 +1971,7 @@ app.get('/api/ranking/:tenantId/:weekOf', async (req, res) => {
   res.json(await getRankingView(source, tenant, req.params.weekOf));
 });
 
-// 사이트 종합 진단 — 단일 URL의 공개 HTML을 수집한다 (SSRF 가드, 정적 수집).
+// 사이트 종합 진단 — 단일 URL의 공개 HTML을 수집한다 (SSRF 가드, 정적 수집). probes=0이면 robots · sitemap · llms 조사를 건너뛴다(사진 후보 · 장소 페이지).
 app.get('/api/fetch', async (req, res) => {
   const target = typeof req.query.url === 'string' ? req.query.url : '';
   if (!target) {
@@ -1777,7 +1979,7 @@ app.get('/api/fetch', async (req, res) => {
     return;
   }
   res.set('Cache-Control', 'no-store');
-  res.json(await collectPage(target));
+  res.json(await collectPage(target, { probes: req.query.probes !== '0' }));
 });
 
 // 브랜드 추가 — Gemini 추론. ?kind=brand(업종·지역·주소) | competitors(경쟁사).

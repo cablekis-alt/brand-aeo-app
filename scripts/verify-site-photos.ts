@@ -5,6 +5,7 @@
  * - 사진은 사람이 고른 그 자리에만 들어가야 한다. 절이 빠지거나(빈칸 뺌) 사람이 고친 글에서 자리가 흔들리면, 엉뚱한 절에 넣지
  *   말고 다시 물어야 한다.
  * - 사진 주소의 공백 · 괄호 · 한글이 마크다운 이미지 문법을 깨면 사진 대신 글자가 나간다.
+ * - 공공 사진은 출처 · 공공누리 유형이 기계로 읽히는 사진만, 제1유형만 써야 한다 — 유형이 어긋나거나 모르면 쓰지 않는다.
  *
  *   npx tsx scripts/verify-site-photos.ts
  */
@@ -208,6 +209,83 @@ const sharedPlaceholder = extractSitePhotos(
   'https://s.example/',
 )
 ok('지연 로딩 사진이 같은 자리표시자를 써도 사진마다 붙은 이름 꼬리표는 거른다', sharedPlaceholder.photos.length === 4 && sharedPlaceholder.photos.every((p) => p.alt === ''))
+
+// 10) 공공 사진(장소 페이지의 공공누리 사진) — 출처 · 유형이 기계로 읽히는 ImageObject만, 제1유형만 'kogl-1'
+const { extractPublicPhotos, placeDirectoryOf, publicCandidatesOf, siteRootOf } = await import('../src/lib/sitePhotos')
+const K = (n: number) => `https://www.kogl.or.kr/info/licenseType${n}.do`
+const imageObject = (src: string, n: number | null, over: Record<string, unknown> = {}) => ({
+  '@type': 'ImageObject', contentUrl: src, creditText: '가상관광공사', copyrightNotice: '가상관광공사',
+  creator: { '@type': 'Organization', name: '가상관광공사' }, ...(n ? { license: K(n), acquireLicensePage: K(n) } : {}), ...over,
+})
+const placePage = [
+  ld({
+    '@context': 'https://schema.org',
+    '@graph': [
+      { '@type': 'WebPage', name: '가상섬 이용시간 · 요금', url: 'https://site.example/places/가상섬/' },
+      {
+        '@type': 'TouristAttraction',
+        name: '가상섬',
+        image: [
+          imageObject('https://tong.visitkorea.or.kr/cms/a1.jpg', 1),
+          imageObject('https://tong.visitkorea.or.kr/cms/a2.jpg', 3),
+          imageObject('https://tong.visitkorea.or.kr/cms/a3.jpg', 1),
+          imageObject('https://tong.visitkorea.or.kr/cms/a4.jpg', 1, { acquireLicensePage: K(3) }),
+          imageObject('https://tong.visitkorea.or.kr/cms/a5.jpg', 1, { creditText: '', copyrightNotice: '', creator: undefined }),
+          imageObject('http://tong.visitkorea.or.kr/cms/a6.jpg', 1),
+          'https://tong.visitkorea.or.kr/cms/plain.jpg',
+        ],
+      },
+    ],
+  }),
+  '<img src="https://tong.visitkorea.or.kr/cms/a1.jpg" alt="가상섬 사진 1" data-kogl="1">',
+  '<img src="https://tong.visitkorea.or.kr/cms/a3.jpg" alt="가상섬 사진 3" data-kogl="3">',
+].join('')
+const pubPhotos = extractPublicPhotos(placePage, 'https://site.example/places/%EA%B0%80%EC%83%81%EC%84%AC/')
+const pp = (n: string) => pubPhotos.find((p) => p.src.endsWith(`/${n}.jpg`))
+ok('license가 있는 ImageObject만 — 주소 글자 image · http 사진은 빼고', pubPhotos.length === 5 && !pp('plain') && !pubPhotos.some((p) => p.src.startsWith('http:')))
+ok('제1유형 · 출처 · 가진 장소 이름', pp('a1')?.license === 'kogl-1' && pp('a1')?.licenseType === 1 && pp('a1')?.creditText === '가상관광공사' && pp('a1')?.alt === '가상섬')
+ok('제3유형은 유형만 적고 쓰지 않는다', pp('a2')?.licenseType === 3 && pp('a2')?.license === null)
+ok('<img data-kogl> 표시가 구조화 데이터와 어긋나면 쓰지 않는다', pp('a3')?.licenseType === 1 && pp('a3')?.license === null)
+ok('license와 acquireLicensePage의 유형이 다르면 유형 모름', pp('a4')?.licenseType === null && pp('a4')?.license === null)
+ok('출처 글자가 없으면 빈 출처(자동 채우기가 credit으로 뺀다)', pp('a5')?.creditText === '' && pp('a5')?.license === 'kogl-1')
+const oddLicense = extractPublicPhotos(
+  ld({
+    '@type': 'TouristAttraction',
+    name: '가상섬',
+    image: [
+      imageObject('https://tong.visitkorea.or.kr/cms/b1.jpg', 1, { license: 'https://creativecommons.org/licenses/by-nc/4.0/' }),
+      imageObject('https://tong.visitkorea.or.kr/cms/b2.jpg', 1, { license: '공공누리 제3유형' }),
+      imageObject('https://tong.visitkorea.or.kr/cms/b3.jpg', null, { acquireLicensePage: K(1) }),
+    ],
+  }),
+  'https://site.example/places/가상섬/',
+)
+const op = (n: string) => oddLicense.find((p) => p.src.endsWith(`/${n}.jpg`))
+ok(
+  'license가 공공누리 주소가 아니면(다른 라이선스 · 글자) acquireLicensePage가 제1유형이어도 유형 모름 — license가 없을 때만 acquireLicensePage로',
+  op('b1')?.licenseType === null && op('b1')?.license === null && op('b2')?.licenseType === null && op('b2')?.license === null && op('b3')?.licenseType === 1 && op('b3')?.license === 'kogl-1',
+)
+const cands = publicCandidatesOf([{ place: '가상섬', pageUrl: 'https://site.example/places/가상섬/', photos: pubPhotos }])
+ok('공공 사진 후보 — 장소 · 유형 · 출처를 달고 페이지 순서 그대로', cands.length === 5 && cands.every((c) => c.origin === 'public' && c.place === '가상섬') && cands[0]!.src.endsWith('/a1.jpg'))
+ok('홈페이지 사진 추출(extractSitePhotos)은 관광지 노드의 사진을 여전히 업체 사진으로 보지 않는다', extractSitePhotos(placePage, 'https://site.example/places/가상섬/').photos.every((p) => p.source !== 'jsonld'))
+
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?><urlset>',
+  '<url><loc>https://site.example/places/%EA%B0%80%EC%83%81%EC%84%AC/</loc></url>',
+  '<url><loc>https://site.example/places/%EA%B0%80%EC%83%81-%EA%B7%BC%EB%8C%80-%EB%B0%95%EB%AC%BC%EA%B4%80/</loc></url>',
+  '<url><loc>https://site.example/en/places/%EA%B0%80%EC%83%81%EC%84%AC/</loc></url>',
+  '<url><loc>https://site.example/places/%EA%B0%80%EC%83%81%EC%84%AC/</loc></url>',
+  '<url><loc>https://other.example/places/%EB%8B%A4%EB%A5%B8%EA%B3%B3/</loc></url>',
+  '<url><loc>https://site.example/guides/abc/</loc></url>',
+  '<url><loc>https://site.example/places/a/b/</loc></url>',
+  '</urlset>',
+].join('\n')
+const dir = placeDirectoryOf(sitemap, 'https://site.example/')
+ok(
+  '장소 사전 — 같은 사이트의 /places/{이름}/만(다른 언어 · 다른 사이트 · 다른 경로 빼고), 하이픈은 띄어쓰기, 같은 이름은 한 번',
+  JSON.stringify(dir.map((e) => e.name)) === JSON.stringify(['가상섬', '가상 근대 박물관']),
+)
+ok('사이트 출처', siteRootOf('https://site.example/s/stay?x=1') === 'https://site.example/' && siteRootOf('site.example') === 'https://site.example/' && siteRootOf(undefined) === null)
 
 let failed = 0
 for (const [label, pass] of checks) {

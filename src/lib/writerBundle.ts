@@ -5,7 +5,7 @@ import { buildPublishHtml } from './htmlFile'
 import { countGapNotes, downloadBlob, safeFileName } from './markdownFile'
 import type { WriterPlan } from './probePlan'
 import type { PublishSettings } from './publishSettings'
-import { articlePhotoFiles, photoFileName } from './sitePhotos'
+import { articlePhotoFiles, photoCreditsTable, photoFileName } from './sitePhotos'
 
 /**
  * 작성자 묶음 — 작성자 한 명 몫의 초안(배정 글)을 한 폴더로 받는다(작성자 배정 운영, 2026-11-02).
@@ -17,14 +17,21 @@ import { articlePhotoFiles, photoFileName } from './sitePhotos'
  * 그 글에 들어간 홈페이지 사진 파일(articlePhotoFiles — 사진 사용 확인이 없으면 없다). 파일 이름 앞의 두 자리 번호는 배정표(scripts/
  * writer-plan.ts writerHandouts)의 번호 — 작성자 안의 배정 순서 — 라 작성자가 배정표와 맞춰 본다. 초안이 없는 글은 빼고 알린다.
  *
+ * 공공 사진(공공누리 제1유형)이 하나라도 있으면 「00-사진 출처.txt」를 함께 둔다 — 블로그 편집기에 사진 파일을 직접 올리면 .html의 사진
+ * 설명(출처 줄)이 따라가지 않을 수 있어, 작성자가 사진마다 출처를 적도록 글 번호 · 파일 이름 · 출처 · 유형 · 원 주소 · 받은 날을 적는다.
+ *
  * zip 라이브러리는 넣지 않는다 — 폴더를 고를 수 있는 곳(데스크톱 앱 · 크롬 계열)에서는 고른 폴더 안에 묶음 폴더를 만들어 쓰고, 그렇지 않으면
  * 파일마다 내려받는다(이름 앞에 묶음 이름을 붙여 한데 모인다).
  */
 
-/** html은 글자를 그대로, photo는 저장할 때 서버에서 받아 형식(확장자)을 정한다. */
+/** html은 글자를 그대로, photo는 저장할 때 서버에서 받아 형식(확장자)을 정한다. credits는 사진을 다 받은 뒤 그 파일 이름으로 쓴다. */
 export type WriterBundleFile =
   | { kind: 'html'; name: string; text: string }
   | { kind: 'photo'; prefix: string; k: number; photo: AppliedPhoto; actionId: string; generatedAt: string }
+  | { kind: 'credits'; name: string; photos: Extract<WriterBundleFile, { kind: 'photo' }>[]; today: string }
+
+/** 공공 사진 출처 파일 이름 — 묶음 맨 앞에 보이게 00. */
+export const PHOTO_CREDITS_FILE = '00-사진 출처.txt'
 
 export interface WriterBundle {
   /** 묶음 폴더 이름 — 「브랜드-w1-작성자-날짜」. */
@@ -82,7 +89,29 @@ export function writerBundle(input: WriterBundleInput): WriterBundle {
       files.push({ kind: 'photo', prefix, k: j + 1, photo, actionId: stored.actionId, generatedAt: stored.generatedAt })
     })
   })
+  const credited = files.filter((f): f is Extract<WriterBundleFile, { kind: 'photo' }> => f.kind === 'photo' && Boolean(f.photo.credit))
+  if (credited.length) files.push({ kind: 'credits', name: PHOTO_CREDITS_FILE, photos: credited, today: input.today })
   return { folder, files, articles, photos, missing, withGaps }
+}
+
+/** 받기 전에 확장자를 모를 때의 사진 형식 — 주소 끝으로 어림한다(받은 뒤에는 받은 이름을 쓴다). */
+function typeFromSrc(src: string): string {
+  const ext = /\.(jpe?g|png|gif|webp|avif)(?:$|[?#])/i.exec(src)?.[1]?.toLowerCase()
+  return ext === 'png' || ext === 'gif' || ext === 'webp' || ext === 'avif' ? `image/${ext}` : 'image/jpeg'
+}
+
+/**
+ * 「00-사진 출처.txt」 내용 — 공공 사진마다 한 줄(탭으로 나눔): 글 번호 · 사진 파일 이름 · 출처 · 유형 · 원 주소 · 받은 날. 메모장에서 열리게
+ * 줄 끝은 CRLF. nameOf는 저장한 사진 파일 이름(없으면 주소로 어림한 이름).
+ */
+export function photoCreditsText(
+  file: Extract<WriterBundleFile, { kind: 'credits' }>,
+  nameOf: (photo: Extract<WriterBundleFile, { kind: 'photo' }>) => string | undefined,
+): string {
+  return photoCreditsTable(
+    file.photos.map((p) => ({ article: p.prefix, name: nameOf(p) ?? bundlePhotoName(p, typeFromSrc(p.photo.src)), photo: p.photo })),
+    file.today,
+  )
 }
 
 /** 사진 파일 이름 — 글 번호 + 「사진1-소제목.jpg」(sitePhotos.ts photoFileName). 한 폴더에 여러 글의 사진이 섞이지 않게 번호를 붙인다. */
@@ -103,9 +132,17 @@ export function canSaveToFolder(): boolean {
   return directoryPicker() !== null
 }
 
-/** 파일 하나의 내용 — 사진은 서버에서 받는다(글 카드 「사진 N장 받기」와 같은 길). 실패하면 throw. */
-async function contentOf(tenantId: string, file: WriterBundleFile): Promise<{ name: string; blob: Blob }> {
+/**
+ * 파일 하나의 내용 — 사진은 서버에서 받는다(글 카드 「사진 N장 받기」와 같은 길, 받은 바이트 그대로). 출처 파일은 앞에서 저장한 사진
+ * 파일 이름(names)으로 쓴다. 실패하면 throw.
+ */
+async function contentOf(
+  tenantId: string,
+  file: WriterBundleFile,
+  names: ReadonlyMap<WriterBundleFile, string>,
+): Promise<{ name: string; blob: Blob }> {
   if (file.kind === 'html') return { name: file.name, blob: new Blob([file.text], { type: 'text/html;charset=utf-8' }) }
+  if (file.kind === 'credits') return { name: file.name, blob: new Blob([photoCreditsText(file, (p) => names.get(p))], { type: 'text/plain;charset=utf-8' }) }
   const blob = await fetchDraftPhotoFile(tenantId, { actionId: file.actionId, generatedAt: file.generatedAt, place: file.photo.place })
   return { name: bundlePhotoName(file, blob.type), blob }
 }
@@ -135,14 +172,35 @@ async function freshBundleFolder(parent: FileSystemDirectoryHandle, base: string
 /**
  * 묶음을 저장한다. 폴더를 고를 수 있으면 고른 폴더 안에 새 묶음 폴더를 만들고(같은 이름이 있으면 번호를 붙인다) 파일을 쓴다 —
  * 폴더 고르기를 닫으면 null. 고를 수 없으면 파일마다 내려받는다. 하나라도 실패하면 throw — 그때까지 쓴 파일은 남는다.
+ *
+ * 공공 사진 출처 파일(「00-사진 출처.txt」)은 사진을 받다 멈춰도 남아야 한다 — 출처 없이 공공 사진 파일만 남은 폴더가 작성자에게 가면
+ * 안 된다. 폴더에는 맨 먼저 주소로 어림한 이름으로 써 두고, 끝나면(멈춰도) 받은 사진 이름으로 다시 쓴다. 내려받기는 다시 쓸 수 없어 끝에
+ * 한 번 받는다 — 멈췄으면 그때까지 받은 공공 사진이 있을 때 받는다.
  */
 export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): Promise<{ saved: number; where: string } | null> {
   const picker = directoryPicker()
+  const names = new Map<WriterBundleFile, string>()
+  const credits = bundle.files.find((f) => f.kind === 'credits')
+  const rest = bundle.files.filter((f) => f !== credits)
   if (!picker) {
-    for (const file of bundle.files) {
-      const { name, blob } = await contentOf(tenantId, file)
+    let creditedSaved = false
+    const saveCredits = async () => {
+      if (!credits) return
+      const { name, blob } = await contentOf(tenantId, credits, names)
       downloadBlob(`${bundle.folder}-${name}`, blob)
     }
+    try {
+      for (const file of rest) {
+        const { name, blob } = await contentOf(tenantId, file, names)
+        names.set(file, `${bundle.folder}-${name}`)
+        downloadBlob(`${bundle.folder}-${name}`, blob)
+        if (file.kind === 'photo' && file.photo.credit) creditedSaved = true
+      }
+    } catch (err) {
+      if (creditedSaved) await saveCredits()
+      throw err
+    }
+    await saveCredits()
     return { saved: bundle.files.length, where: '내려받기 폴더' }
   }
   let parent: FileSystemDirectoryHandle
@@ -153,8 +211,8 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
     throw err
   }
   const dir = await freshBundleFolder(parent, bundle.folder)
-  for (const file of bundle.files) {
-    const { name, blob } = await contentOf(tenantId, file)
+  const write = async (file: WriterBundleFile) => {
+    const { name, blob } = await contentOf(tenantId, file, names)
     const writable = await (await dir.getFileHandle(name, { create: true })).createWritable()
     try {
       await writable.write(blob)
@@ -164,6 +222,16 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
       throw err
     }
     await writable.close()
+    names.set(file, name)
   }
+  if (credits) await write(credits)
+  try {
+    for (const file of rest) await write(file)
+  } catch (err) {
+    // 받은 사진 이름으로 출처 파일을 다시 쓴다 — 못 쓰면 처음에 쓴(주소로 어림한 이름) 출처 파일이 남는다. 원래 오류를 올린다.
+    if (credits) await write(credits).catch((e: unknown) => console.error('[writerBundle] 사진 출처 파일을 다시 쓰지 못했습니다', e))
+    throw err
+  }
+  if (credits) await write(credits)
   return { saved: bundle.files.length, where: `${parent.name}/${dir.name}` }
 }

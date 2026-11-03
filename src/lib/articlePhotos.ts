@@ -24,8 +24,132 @@ export interface PhotoPick {
   alt: string
   /** 사진을 찾은 페이지. */
   pageUrl: string
-  /** 사람이 이 사진을 이 자리에 넣기로 확인한 때(서버 시각). 없으면 넣지 않는다. */
+  /** 사람이 이 사진을 이 자리에 넣기로 확인한 때(서버 시각). 없으면 넣지 않는다. 자동 채우기는 운영자가 미리보기를 보고 저장한 때. */
   confirmedAt: string
+  /**
+   * 자동 채우기(src/lib/photoAutoPick.ts)가 고른 사진. 사람이 고르거나 바꾸면 이 표시가 없는 사진이 되고, 자동 채우기는 사진이 있는
+   * 자리를 덮지 않는다. 없으면 사람이 고른 사진(옛 기록 포함).
+   */
+  auto?: true
+  /**
+   * 사진이 어디서 왔나 — 'public'은 출처 표시가 필요한 공공 사진(자사 사이트 장소 페이지의 공공누리 제1유형 사진). 없으면 홈페이지
+   * 사진(옛 기록 포함). 공공 사진은 license · credit · creditUrl이 모두 있어야 넣는다(publicPhotoProblem). 'site'는 공공 사진 호스트의
+   * 주소지만 브랜드 자사 사이트(ownedDomains)의 사진이라고 서버가 고를 때 확인한 홈페이지 사진(자사 사이트가 visitkorea.or.kr · go.kr인
+   * 브랜드) — 화면이 보낸 'site'는 믿지 않고 서버만 단다.
+   */
+  origin?: PhotoOrigin
+  /** 공공 사진의 이용 허락 — 공공누리 제1유형만 받는다(PHOTO_LICENSES). */
+  license?: PhotoLicense
+  /** 공공 사진의 출처(저작권자) — 사이트 구조화 데이터의 creditText(예: 「한국관광공사」). */
+  credit?: string
+  /** 공공 사진의 이용 허락 페이지 — PHOTO_LICENSES[license].url과 같아야 한다. */
+  creditUrl?: string
+}
+
+/** 사진 자리 하나의 열쇠 — 장면 글자 · 몇 번째 · 소제목. */
+export type PhotoPlace = Pick<PhotoPick, 'slot' | 'nth' | 'heading'>
+
+export type PhotoOrigin = 'site' | 'public'
+
+/**
+ * 받는 공공 사진의 이용 허락 — 공공누리 제1유형(출처 표시 · 상업 이용 · 변경 가능)만. 제2유형(상업 이용 금지) · 제3유형(변경 금지) ·
+ * 제4유형과 유형을 모르는 사진은 넣지 않는다(2026-11-03 결정).
+ */
+export const PHOTO_LICENSES = {
+  'kogl-1': { name: '공공누리 제1유형', url: 'https://www.kogl.or.kr/info/licenseType1.do' },
+} as const
+export type PhotoLicense = keyof typeof PHOTO_LICENSES
+
+/** 공공 사진의 출처 · 이용 허락 — PhotoPick에 함께 저장한다. */
+export type PublicPhotoFields = Required<Pick<PhotoPick, 'origin' | 'license' | 'credit' | 'creditUrl'>>
+
+/** 출처에 쓰지 않는 말 — 공공누리는 공공기관이 후원하거나 특별한 관계인 것처럼 보이게 하는 표시를 금지한다. */
+const CREDIT_FORBIDDEN = /제공|협찬|후원|공식|인증|추천/
+const CREDIT_MAX = 60
+
+/** 공공누리 이용 허락 주소의 유형(1~4) — kogl.or.kr의 /info/licenseType{n}.do만 읽는다. 아니면 null(유형 모름). */
+export function koglTypeOf(raw: unknown): 1 | 2 | 3 | 4 | null {
+  if (typeof raw !== 'string') return null
+  let url: URL
+  try {
+    url = new URL(raw.trim())
+  } catch {
+    return null
+  }
+  const host = url.hostname.toLowerCase()
+  if ((url.protocol !== 'https:' && url.protocol !== 'http:') || (host !== 'kogl.or.kr' && host !== 'www.kogl.or.kr')) return null
+  const m = /^\/info\/licenseType([1-4])\.do$/i.exec(url.pathname)
+  return m ? (Number(m[1]) as 1 | 2 | 3 | 4) : null
+}
+
+/** 출처 글자 정리 — 사진 설명과 같은 정리(cleanPhotoAlt)에 60자. 출처에 쓰지 않는 말(제공 · 협찬 · 공식 …)이 있으면 ''. */
+export function cleanPhotoCredit(raw: unknown): string {
+  const s = cleanPhotoAlt(typeof raw === 'string' ? raw : '').replace(/[()*_`]/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!s || s.length > CREDIT_MAX || CREDIT_FORBIDDEN.test(s)) return ''
+  return s
+}
+
+/**
+ * 공공 사진 표시를 고른다 — origin 'public' · 허용한 유형 · 출처 글자 · 그 유형의 이용 허락 주소가 모두 맞으면 저장할 모양, 아니면
+ * 이유(글자). origin이 'public'이 아니면 null(홈페이지 사진). 서버(사진 PUT)와 화면이 같은 검사를 쓴다.
+ */
+export function publicPhotoFields(raw: { origin?: unknown; license?: unknown; credit?: unknown; creditUrl?: unknown }): PublicPhotoFields | string | null {
+  if (raw.origin !== 'public') return null
+  const license = typeof raw.license === 'string' && Object.hasOwn(PHOTO_LICENSES, raw.license) ? (raw.license as PhotoLicense) : null
+  if (!license) return '공공누리 제1유형 사진만 쓸 수 있어요.'
+  const credit = cleanPhotoCredit(raw.credit)
+  if (!credit) return '공공 사진의 출처(저작권자)가 없거나 쓸 수 없는 말이 들어 있어요.'
+  if (raw.creditUrl !== PHOTO_LICENSES[license].url) return '공공 사진의 이용 허락 주소가 유형과 맞지 않아요.'
+  return { origin: 'public', license, credit, creditUrl: PHOTO_LICENSES[license].url }
+}
+
+/** 출처 표시가 필요한 공공 사진의 호스트(공공누리 · 한국관광공사 · 정부 기관). */
+const CREDIT_HOSTS = ['visitkorea.or.kr', 'knto.or.kr', 'kogl.or.kr', 'go.kr']
+
+function hostOf(src: string): string | null {
+  try {
+    return new URL(src).hostname.toLowerCase()
+  } catch {
+    return null
+  }
+}
+
+/** 브랜드 자사 사이트(ownedDomains — 「site.example」 · 「https://site.example/」 모양)의 사진 주소인가 — 그 호스트이거나 그 하위 도메인. */
+export function isOwnedPhotoHost(src: string, ownedDomains: readonly string[] | undefined): boolean {
+  const host = hostOf(src)
+  if (!host) return false
+  return (ownedDomains ?? []).some((raw) => {
+    const d = raw.trim().toLowerCase().replace(/^https?:\/\//, '').split(/[/?#:]/)[0]!.replace(/^www\./, '').replace(/\.$/, '')
+    return Boolean(d) && (host === d || host.endsWith(`.${d}`))
+  })
+}
+
+/**
+ * 출처 표시가 필요한 공공 사진의 주소인가 — 호스트로 본다. 브랜드 자사 사이트(ownedDomains)의 사진이면 아니다: 자사 사이트가
+ * 공공 사진 호스트(korean.visitkorea.or.kr · tour.jb.go.kr)인 브랜드는 자기 홈페이지 사진을 홈페이지 사진으로 쓴다.
+ */
+export function needsPhotoCredit(src: string, ownedDomains?: readonly string[]): boolean {
+  const host = hostOf(src)
+  if (!host || isOwnedPhotoHost(src, ownedDomains)) return false
+  return CREDIT_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))
+}
+
+/**
+ * 고른 사진의 출처 상태 — site 홈페이지 사진 · public 출처가 맞는 공공 사진 · missing 출처 표시가 필요한데 없거나 틀림(공공 사진
+ * 호스트의 사진을 출처 없이 골랐다). missing은 내보내지 않는다 — 지우지는 않고 「출처 없음」으로 알린다. origin 'site'는 서버가 자사
+ * 사이트 사진으로 확인한 사진이다.
+ */
+export function photoCreditState(p: Pick<PhotoPick, 'src' | 'origin' | 'license' | 'credit' | 'creditUrl'>): 'site' | 'public' | 'missing' {
+  if (p.origin === 'public') return typeof publicPhotoFields(p) === 'object' ? 'public' : 'missing'
+  if (p.origin === 'site') return 'site'
+  return needsPhotoCredit(p.src) ? 'missing' : 'site'
+}
+
+/** 사진 바로 아래에 붙는 출처 — 「사진: 한국관광공사, [공공누리 제1유형](주소)」. 출처가 맞지 않으면 ''. */
+export function photoCreditLine(p: Pick<PhotoPick, 'origin' | 'license' | 'credit' | 'creditUrl'>): string {
+  const f = publicPhotoFields(p)
+  if (!f || typeof f === 'string') return ''
+  return `사진: ${f.credit}, [${PHOTO_LICENSES[f.license].name}](${f.creditUrl})`
 }
 
 /** 글에 실제로 들어간 사진 — .html의 JSON-LD image · og:image, 「사진 N장 받기」가 쓴다. */
@@ -37,6 +161,12 @@ export interface AppliedPhoto {
   slotAlt: string
   /** 고른 사진의 자리 열쇠 — 「사진 N장 받기」가 이것으로 그 사진 파일을 청한다. */
   place: Pick<PhotoPick, 'slot' | 'nth' | 'heading'>
+  /** 공공 사진의 출처 · 이용 허락 — .html의 JSON-LD ImageObject와 묶음의 「00-사진 출처.txt」가 쓴다. 홈페이지 사진이면 없다. */
+  credit?: PublicPhotoFields
+  /** 사진을 찾은 페이지(PhotoPick.pageUrl). */
+  pageUrl?: string
+  /** 사람이 넣기로 확인한(자동이면 저장한) 때. */
+  confirmedAt?: string
 }
 
 export const PHOTO_LIMITS = { picks: 3, alt: 160, src: 2048 } as const
@@ -232,19 +362,48 @@ function mapSlots(sourceCaptions: readonly string[], targets: readonly PhotoSlot
   return mapped.every(Boolean) && new Set(mapped).size === mapped.length ? (mapped as PhotoSlot[]) : null
 }
 
-/** 짝지은 자리 줄만 `![사진 설명](https 주소)`로 바꾼다. 넣은 사진이 없으면 원고를 그대로(바이트까지 같게) 돌려준다. */
+/**
+ * 짝지은 자리 줄만 `![사진 설명](https 주소)`로 바꾼다. 공공 사진은 바로 아랫줄 설명에 출처를 붙이고(`*설명 (사진: 한국관광공사,
+ * [공공누리 제1유형](주소))*`), 설명 줄이 없으면 출처 줄을 한 줄 끼운다 — 줄 번호가 밀리지 않게 뒤 자리부터 바꾼다. 출처가 맞지
+ * 않는 공공 사진(photoCreditState missing)은 넣지 않는다. 넣은 사진이 없으면 원고를 그대로(바이트까지 같게) 돌려준다.
+ */
 function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot: PhotoSlot }[]): { markdown: string; applied: AppliedPhoto[] } {
   if (!applied.length) return { markdown, applied: [] }
   const lines = markdown.split('\n')
+  const crlf = markdown.includes('\r\n')
   const out: AppliedPhoto[] = []
-  for (const { pick, slot } of [...applied].sort((a, b) => a.slot.line - b.slot.line)) {
+  for (const { pick, slot } of [...applied].sort((a, b) => b.slot.line - a.slot.line)) {
     const src = canonicalPhotoSrc(pick.src)
-    if (!src) continue
+    const state = photoCreditState(pick)
+    if (!src || state === 'missing') continue
     const alt = cleanPhotoAlt(pick.alt) || cleanPhotoAlt(slot.alt)
     const cr = lines[slot.line]!.endsWith('\r') ? '\r' : ''
     lines[slot.line] = `![${alt}](${src})${cr}`
-    out.push({ src, alt, heading: slot.heading, slotAlt: slot.alt, place: { slot: pick.slot, nth: pick.nth, heading: pick.heading } })
+    const credit = state === 'public' ? (publicPhotoFields(pick) as PublicPhotoFields) : undefined
+    if (credit) {
+      const line = photoCreditLine(credit)
+      const next = lines[slot.line + 1]
+      const caption = next === undefined ? null : /^(\s*)\*(?!\*)(.+?)\*(\s*)$/.exec(next.replace(/\r$/, ''))
+      if (caption && next !== undefined) lines[slot.line + 1] = `${caption[1]}*${caption[2]} (${line})*${caption[3]}${next.endsWith('\r') ? '\r' : ''}`
+      else if (cr || !crlf) lines.splice(slot.line + 1, 0, `*${line}*${cr}`)
+      else {
+        // CRLF 원고의 마지막 줄 — 사진 줄에 줄 끝을 달고 출처 줄이 마지막 줄이 된다.
+        lines[slot.line] = `${lines[slot.line]!}\r`
+        lines.splice(slot.line + 1, 0, `*${line}*`)
+      }
+    }
+    out.push({
+      src,
+      alt,
+      heading: slot.heading,
+      slotAlt: slot.alt,
+      place: { slot: pick.slot, nth: pick.nth, heading: pick.heading },
+      ...(credit ? { credit } : {}),
+      pageUrl: pick.pageUrl,
+      confirmedAt: pick.confirmedAt,
+    })
   }
+  out.reverse()
   return out.length ? { markdown: lines.join('\n'), applied: out } : { markdown, applied: [] }
 }
 
@@ -266,4 +425,29 @@ export function isPhotoMedical(industry: string | undefined): boolean {
 export function photosAllowed(settings: { photoRights?: { medical?: true } } | null | undefined, industry: string | undefined): boolean {
   const rights = settings?.photoRights
   return Boolean(rights) && (!isPhotoMedical(industry) || Boolean(rights?.medical))
+}
+
+/** 공공 사진(공공누리)을 써도 된다는 브랜드 확인이 있는가 — 홈페이지 사진 확인(photosAllowed) 위에 따로 받는다. */
+export function publicPhotosAllowed(
+  settings: { photoRights?: { medical?: true; publicAt?: string } } | null | undefined,
+  industry: string | undefined,
+): boolean {
+  return photosAllowed(settings, industry) && Boolean(settings?.photoRights?.publicAt)
+}
+
+/**
+ * 내보낼(복사 · .html · 사진 받기) 고른 사진 — 사진 사용 확인이 없으면(의료 업종은 의료광고 확인까지) 없다. 출처가 없거나 틀린 공공
+ * 사진(photoCreditState missing)과, 공공 사진 사용 확인(photoRights.publicAt) 전의 공공 사진은 뺀다. 서버의 사진 받기(photo-file)도 같은 기준.
+ */
+export function exportPhotoPicks(
+  settings: { photoRights?: { medical?: true; publicAt?: string } } | null | undefined,
+  industry: string | undefined,
+  picks: readonly PhotoPick[] | undefined,
+): PhotoPick[] {
+  if (!picks?.length || !photosAllowed(settings, industry)) return []
+  const publicOk = publicPhotosAllowed(settings, industry)
+  return picks.filter((p) => {
+    const state = photoCreditState(p)
+    return state === 'site' || (state === 'public' && publicOk)
+  })
 }

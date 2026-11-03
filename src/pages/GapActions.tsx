@@ -22,12 +22,13 @@ import {
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
 import ExtraArticleForm from '../components/ExtraArticleForm'
+import PhotoAutoFill from '../components/PhotoAutoFill'
 import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
 import type { PublishSettings } from '../lib/publishSettings'
 import { bulkRunsAfter, passForTenant, type BulkKind, type BulkRuns } from '../lib/bulkRun'
-import { briefInputOf, draftRequestOf, effectiveDraft } from '../lib/draftGaps'
+import { briefInputOf, draftRequestOf, effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
 import { aliveExtraArticles, isExtraArticleId, questionTextKey, type ExtraArticle } from '../lib/extraArticles'
 import { draftTitle } from '../lib/markdownFile'
 import {
@@ -43,6 +44,8 @@ import {
   type GapAction,
 } from '../lib/gapActions'
 import { useMeasureStatus } from '../lib/measureStatus'
+import { photosAllowed, photoSlotsOf } from '../lib/articlePhotos'
+import { photoSlotStats } from '../lib/photoAutoPick'
 import {
   extraArticleCap,
   planWriters,
@@ -452,7 +455,9 @@ function BulkDrafts({
  * (브리프 · 초안 파일 쓰기에 줄이 없다). 이미 살아 있는 글은 건너뛰고, 뺀 글은 서버가 되살린다. 배정 글의 각도는 추가 글의 「다룰
  * 각도」로 들어가 브리프 각도가 된다.
  *
- * 초안이 있으면 그 작성자 몫을 한 폴더로 받는 단추도 둔다(src/lib/writerBundle.ts — 글마다 홈페이지용 .html과 사진 파일).
+ * 초안이 있으면 그 작성자 몫을 한 폴더로 받는 단추도 둔다(src/lib/writerBundle.ts — 글마다 홈페이지용 .html과 사진 파일). 그 아래
+ * 「사진 자동 채우기」(PhotoAutoFill)는 작성자 글의 빈 사진 자리를 홈페이지 사진으로 채운다 — 브랜드 전부 단추도 맨 위에 둔다. 사진을
+ * 쓸 수 없는 브랜드(사진 사용 확인 전 · 의료 업종은 의료광고 확인 전)에는 사진 셈과 그 단추를 그리지 않는다(글의 「홈페이지 사진」 칸과 같은 기준).
  */
 function WriterRuns({
   tenantId,
@@ -471,6 +476,8 @@ function WriterRuns({
   onDraft,
   locked,
   onBusyChange,
+  onPhotosBusyChange,
+  photosOn,
 }: {
   tenantId: string
   /** 묶음의 .html이 쓰는 브랜드(글 끝 · JSON-LD · 사진의 업종 확인). */
@@ -497,6 +504,10 @@ function WriterRuns({
   /** 다른 일괄 실행이 도는 중. */
   locked: boolean
   onBusyChange: (busy: boolean) => void
+  /** 사진 자동 채우기 저장 시작 · 끝(BulkKind photos). */
+  onPhotosBusyChange: (busy: boolean) => void
+  /** 이 브랜드에 홈페이지 사진을 쓸 수 있다(photosAllowed) — 아니면 사진 셈 · 자동 채우기 단추를 그리지 않는다. */
+  photosOn: boolean
 }) {
   const status = useMeasureStatus()
   const measuringRun = status.runs?.current[0] ?? null
@@ -509,6 +520,31 @@ function WriterRuns({
   // 묶음 받기 — 한 번에 한 작성자. 결과 · 실패는 그 작성자 줄에 보인다.
   const [bundleBusy, setBundleBusy] = useState<string | null>(null)
   const [bundleNote, setBundleNote] = useState<{ key: string; text: string; error: boolean } | null>(null)
+  /** 사진 자동 채우기 — 글의 작성자(같은 작성자 글 사이에 같은 사진을 한 번만). */
+  const groupOf = (id: string) => writerArticle(writerPlan, id)?.writer.key
+  const photoArticle = (id: string) => {
+    const stored = drafts[id]
+    return stored ? [{ stored, title: draftTitle(effectiveDraft(stored)) }] : []
+  }
+  // 작성자 줄의 「사진 자리 n · 채움 m · 자동 k · 빈자리 j」 — 초안이 바뀔 때만 다시 센다(글마다 발행 원고를 만든다).
+  // 브랜드 전부 단추는 사진 자리가 하나라도 있을 때만(배정에 없는 자사 글 포함).
+  const { photoStats, brandPhotoSlots } = useMemo(() => {
+    const out = new Map<string, ReturnType<typeof photoSlotStats>>()
+    const statsOf = (ids: string[]) => photoSlotStats(ids.map((id) => ({ markdown: publishMarkdownOf(drafts[id]!), picks: drafts[id]!.photos })))
+    let slots = 0
+    for (const w of planWriters(writerPlan)) {
+      const stats = statsOf(writerPlan.articles.filter((a) => a.writer.key === w.key && drafts[a.id]).map((a) => a.id))
+      out.set(w.key, stats)
+      slots += stats.slots
+    }
+    slots += statsOf(actions.filter((a) => a.kind === 'content' && !writerArticle(writerPlan, a.id) && drafts[a.id]).map((a) => a.id)).slots
+    return { photoStats: out, brandPhotoSlots: slots }
+  }, [writerPlan, drafts, actions])
+  // 브랜드 전부 — 배정 순서의 작성자 글, 그다음 배정에 없는 자사 글(본 글 등).
+  const brandPhotoArticles = [
+    ...writerPlan.articles.flatMap((a) => photoArticle(a.id)),
+    ...actions.filter((a) => a.kind === 'content' && !writerArticle(writerPlan, a.id)).flatMap((a) => photoArticle(a.id)),
+  ]
 
   /** 그 작성자의 초안을 한 폴더로 — 글 카드 「홈페이지용 .html」과 같은 사실 · 발행 설정으로 만든다. 폴더 고르기를 닫으면 아무 말도 하지 않는다. */
   const saveBundle = async (key: string) => {
@@ -565,11 +601,25 @@ function WriterRuns({
         이어서 합니다. 도는 동안에는 글 카드의 단추와 「글 더 만들기」를 잠급니다. 운영 기간(~{writerPlan.activeUntil})에는 추가 글을{' '}
         {cap}편까지 둘 수 있어요(지금 {alive.size}편).
       </p>
+      {photosOn && brandPhotoArticles.length > 0 && brandPhotoSlots > 0 && (
+        <PhotoAutoFill
+          tenantId={tenantId}
+          brand={brand}
+          articles={brandPhotoArticles}
+          drafts={drafts}
+          groupOf={groupOf}
+          label={`사진 자동 채우기 — 브랜드 전부(글 ${brandPhotoArticles.length}편)`}
+          locked={locked}
+          onBusyChange={onPhotosBusyChange}
+          onStored={onDraft}
+        />
+      )}
       {writers.map((w) => {
         const mine = writerPlan.articles.filter((a) => a.writer.key === w.key)
         const ids = mine.map((a) => a.id)
         const missing = mine.filter((a) => !alive.has(a.id)).length
         const drafted = ids.filter((id) => drafts[id]).length
+        const photos = photoStats.get(w.key)
         const reason =
           extrasBlocked ??
           topicGuard(writerPlan, false, weekBank, ids[0], today) ??
@@ -582,6 +632,13 @@ function WriterRuns({
                 {w.key} · {w.name}
               </b>
               {w.blog && ` · ${w.blog}`} · 만든 글 {ids.length - missing}/{ids.length} · 초안 {drafted}/{ids.length}
+              {photosOn &&
+                photos &&
+                photos.slots > 0 &&
+                ` · 사진 자리 ${photos.slots} · 채움 ${photos.filled}${photos.public ? `(공공 사진 ${photos.public})` : ""} · 자동 ${photos.auto} · 빈자리 ${photos.empty}`}
+              {photosOn && photos && photos.noCredit > 0 && (
+                <span className="hint warn"> · 출처 없는 공공 사진 {photos.noCredit}장(내보내지 않음 — 글의 「홈페이지 사진」 칸에서 「출처 붙이기」)</span>
+              )}
             </p>
             <BulkDrafts
               tenantId={tenantId}
@@ -620,6 +677,19 @@ function WriterRuns({
                   </span>
                 )}
               </div>
+            )}
+            {photosOn && drafted > 0 && photos && photos.slots > 0 && (
+              <PhotoAutoFill
+                tenantId={tenantId}
+                brand={brand}
+                articles={mine.flatMap((a) => photoArticle(a.id))}
+                drafts={drafts}
+                groupOf={groupOf}
+                label={`${w.name} — 사진 자동 채우기`}
+                locked={locked}
+                onBusyChange={onPhotosBusyChange}
+                onStored={onDraft}
+              />
             )}
           </div>
         )
@@ -672,8 +742,11 @@ function ActionCard({
   onRemoveExtra,
   writerLabel = null,
   locked = false,
+  photoContext,
 }: {
   action: GapAction
+  /** 사진 자동 채우기의 반복 상한에 셀 브랜드 초안과 작성자(SitePhotoPanel photoContext). */
+  photoContext?: { drafts: Readonly<Record<string, StoredDraft>>; groupOf?: (actionId: string) => string | undefined }
   /** 작성자 배정 기간의 배정 글 표시 — 「작성자 이름 · 블로그」. */
   writerLabel?: string | null
   /** 작성자 배정 기간의 일괄 실행 중 — 카드 전체를 잠근다(브리프 · 초안 파일 쓰기에 줄이 없어 같은 파일을 함께 쓰지 않게). */
@@ -976,6 +1049,7 @@ function ActionCard({
           ensureBrief={async () => {
             onBrief(await generateContentBrief(tenantId, briefInputOf(action, mainDraft)))
           }}
+          photoContext={photoContext}
         />
       )}
       {extra && onRemoveExtra && (
@@ -1105,6 +1179,8 @@ export default function GapActions() {
     return () => window.removeEventListener(PHOTO_RIGHTS_EVENT, onRights)
   }, [tenant?.tenantId])
   const publishSettings = settingsState.key === tenant?.tenantId ? settingsState.value : null
+  // 홈페이지 사진을 쓸 수 있는 브랜드 — 아니면 일괄 사진 자동 채우기 · 작성자 줄 사진 셈을 그리지 않는다(글의 「홈페이지 사진」 칸과 같은 기준).
+  const photosOn = publishSettings !== null && photosAllowed(publishSettings, tenant?.industry)
   const onAdapted = (a: ChannelAdaptation) =>
     setAdaptState((st) => ({
       ...st,
@@ -1176,6 +1252,14 @@ export default function GapActions() {
   // 작성자 거르기 — 고른 작성자의 배정 글만 카드 · 올리기 목록에 남긴다. 고르지 않으면 지금과 같다.
   const shownByWriter = (id: string) => !writerKey || writerArticleOf(id)?.writer.key === writerKey
   const shownCards = writerKey ? articleCards.filter((x) => shownByWriter(x.action.id)) : articleCards
+  // 사진 자동 채우기 — 반복 상한은 브랜드의 초안 전부와 작성자로 센다. 배정이 없으면 작성자 상한 없이 글 · 브랜드 상한만.
+  const photoContext = drafts ? { drafts, groupOf: (id: string) => writerArticleOf(id)?.writer.key } : undefined
+  const photoCards = drafts
+    ? shownCards.flatMap((x) => {
+        const stored = x.action.kind === 'content' ? drafts[x.action.id] : undefined
+        return stored ? [{ stored, title: draftTitle(effectiveDraft(stored)) }] : []
+      })
+    : []
   const shownPlan = writerKey
     ? {
         ...publishPlan,
@@ -1392,6 +1476,8 @@ export default function GapActions() {
             onDraft={(s) => passForTenant(currentTenant.current, tenant.tenantId, s, onDraft)}
             locked={bulkRunning !== null}
             onBusyChange={bulkBusy(tenant.tenantId, 'writer')}
+            onPhotosBusyChange={bulkBusy(tenant.tenantId, 'photos')}
+            photosOn={photosOn}
           />
         </section>
       )}
@@ -1494,8 +1580,25 @@ export default function GapActions() {
                     mainId={mainId}
                     onBrief={onBrief}
                     onDraft={onDraft}
-                    locked={bulkRunning === 'writer'}
+                    locked={bulkRunning === 'writer' || bulkRunning === 'photos'}
                     onBusyChange={bulkBusy(tenant.tenantId, 'all')}
+                  />
+                )}
+                {/* 작성자 배정이 없는 브랜드의 사진 자동 채우기 — 배정이 있으면 위 작성자 칸에 있다. 한 편이면 글의 「홈페이지 사진」 칸에서. */}
+                {!activePlan &&
+                  photosOn &&
+                  photoCards.length > 1 &&
+                  drafts !== null &&
+                  photoCards.some(({ stored }) => photoSlotsOf(publishMarkdownOf(stored)).length > 0) && (
+                  <PhotoAutoFill
+                    tenantId={tenant.tenantId}
+                    brand={tenant}
+                    articles={photoCards}
+                    drafts={drafts}
+                    label={`사진 자동 채우기 — 글 ${photoCards.length}편`}
+                    locked={bulkRunning !== null}
+                    onBusyChange={bulkBusy(tenant.tenantId, 'photos')}
+                    onStored={(s) => passForTenant(currentTenant.current, tenant.tenantId, s, onDraft)}
                   />
                 )}
                 {writerKey && shownCards.length === 0 && (
@@ -1523,6 +1626,7 @@ export default function GapActions() {
                         mainDraft={mainDraft}
                         takenByExtras={x === mainArticle ? takenByExtras : 0}
                         onRemoveExtra={x.action.extra && extras.available ? () => extras.update({ id: x.action.id, removed: true }) : undefined}
+                        photoContext={photoContext}
                       />
                       {/* 「글 더 만들기」는 본 글 카드 바로 아래. 이 환경에 기능이 없으면(웹) 칸째 숨긴다 — 오류 문구도 띄우지 않는다. */}
                       {x === mainArticle && formSlot === 'under-main' && extras.available && extraForm(x.action)}

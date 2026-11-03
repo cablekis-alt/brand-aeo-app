@@ -1,8 +1,21 @@
 import { fetchDraftPhotoFile, type StoredDraft, type TenantSummary } from './api'
-import { canonicalPhotoSrc, cleanPhotoAlt, photosAllowed, withPhotos, type AppliedPhoto } from './articlePhotos'
+import {
+  canonicalPhotoSrc,
+  cleanPhotoAlt,
+  cleanPhotoCredit,
+  exportPhotoPicks,
+  koglTypeOf,
+  PHOTO_LICENSES,
+  withPhotos,
+  type AppliedPhoto,
+  type PhotoLicense,
+  type PublicPhotoFields,
+} from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
 import { downloadBlob, safeFileName } from './markdownFile'
 import { fetchPage } from './aeo/fetchPage'
+import { findPlace, placeNameOfPath, publicCandidateFields, type AutoCandidate } from './photoAutoPick'
+import { todayKst } from './publishedUrl'
 import { brandSiteUrl } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
 
@@ -25,6 +38,13 @@ export interface SitePhoto {
   source: 'jsonld' | 'og' | 'img'
   /** 구조화 데이터에서 그 사진을 가진 곳의 이름(예: 「A동」). */
   where?: string
+  /**
+   * 페이지가 출처 표시가 필요한 사진으로 표시했다 — 공공누리 표시(<img data-kogl>)나 구조화 데이터 ImageObject의 공공누리 유형(license ·
+   * acquireLicensePage).
+   * 자동 채우기(src/lib/photoAutoPick.ts)는 이 사진을 홈페이지 사진으로 넣지 않는다 — 장소 페이지의 공공 사진(extractPublicPhotos)으로만
+   * 출처와 함께 넣는다.
+   */
+  credit?: true
 }
 
 export interface SitePhotoResult {
@@ -102,10 +122,22 @@ function imageUrls(value: unknown): string[] {
   return []
 }
 
-/** 구조화 데이터의 업체 사진(주소 · 가진 곳 이름)과 로고 주소. */
-function jsonLdImages(doc: Document): { images: { url: string; where?: string }[]; logos: string[] } {
+/**
+ * 출처 표시가 필요한 공공 사진 ImageObject(license나 acquireLicensePage가 공공누리 유형 주소)의 주소들. © 표시(copyrightNotice) ·
+ * creditText · 다른 라이선스만 단 사진은 자사 사진의 이미지 라이선스 메타데이터일 수 있어 보지 않는다(홈페이지 사진으로 고를 수 있다).
+ */
+function creditImageUrls(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap(creditImageUrls)
+  if (!value || typeof value !== 'object') return []
+  const v = value as JsonLdNode
+  return koglTypeOf(v.license) !== null || koglTypeOf(v.acquireLicensePage) !== null ? imageUrls(v) : []
+}
+
+/** 구조화 데이터의 업체 사진(주소 · 가진 곳 이름), 로고 주소, 출처 표시가 필요한 사진 주소. */
+function jsonLdImages(doc: Document): { images: { url: string; where?: string }[]; logos: string[]; credits: string[] } {
   const images: { url: string; where?: string }[] = []
   const logos: string[] = []
+  const credits: string[] = []
   const walk = (value: unknown, depth: number) => {
     if (depth > 12 || !value || typeof value !== 'object') return
     if (Array.isArray(value)) {
@@ -114,6 +146,7 @@ function jsonLdImages(doc: Document): { images: { url: string; where?: string }[
     }
     const node = value as JsonLdNode
     logos.push(...imageUrls(node.logo))
+    credits.push(...(typesOf(node).includes('ImageObject') ? creditImageUrls(node) : []), ...creditImageUrls(node.image), ...creditImageUrls(node.photo))
     if (typesOf(node).some((t) => BUSINESS_TYPE.test(t))) {
       const where = typeof node.name === 'string' ? node.name.trim().slice(0, 40) : undefined
       for (const url of [...imageUrls(node.image), ...imageUrls(node.photo)]) images.push({ url, ...(where ? { where } : {}) })
@@ -133,7 +166,7 @@ function jsonLdImages(doc: Document): { images: { url: string; where?: string }[
       console.warn('[sitePhotos] 구조화 데이터를 읽지 못해 건너뜁니다', err)
     }
   }
-  return { images, logos }
+  return { images, logos, credits }
 }
 
 /**
@@ -231,8 +264,11 @@ export function extractSitePhotos(html: string, pageUrl: string): Omit<SitePhoto
   const baseHref = doc.querySelector('base[href]')?.getAttribute('href')
   const base = (baseHref && absolute(baseHref, pageUrl)) || pageUrl
   const altOf = altChooser(doc, base)
-  const { images, logos } = jsonLdImages(doc)
+  const { images, logos, credits } = jsonLdImages(doc)
   const logoKeys = new Set(logos.map((l) => photoKey(l, base)).filter((k): k is string => Boolean(k)))
+  const creditKeys = new Set(
+    [...credits, ...[...doc.querySelectorAll('img[data-kogl]')].flatMap(imgSources)].map((u) => photoKey(u, base)).filter((k): k is string => Boolean(k)),
+  )
   const meta = (prop: string) => doc.querySelector(`meta[property="${prop}"], meta[name="${prop}"]`)?.getAttribute('content')?.trim() ?? ''
 
   type Found = { raw: string; alt: string; source: SitePhoto['source']; where?: string }
@@ -252,7 +288,13 @@ export function extractSitePhotos(html: string, pageUrl: string): Omit<SitePhoto
         if (abs.startsWith('http:')) skippedHttp += 1
         continue
       }
-      photos.push({ src, alt: altOf(key) || f.alt, source: f.source, ...(f.where ? { where: f.where } : {}) })
+      photos.push({
+        src,
+        alt: altOf(key) || f.alt,
+        source: f.source,
+        ...(f.where ? { where: f.where } : {}),
+        ...(creditKeys.has(key) ? { credit: true as const } : {}),
+      })
     }
   }
   collect(images.map((im) => ({ raw: im.url, alt: '', source: 'jsonld' as const, ...(im.where ? { where: im.where } : {}) })))
@@ -279,12 +321,282 @@ export function extractSitePhotos(html: string, pageUrl: string): Omit<SitePhoto
   return { photos, skippedHttp }
 }
 
+/**
+ * 공공 사진 — 자사 사이트 장소 페이지의 구조화 데이터가 출처 · 이용 허락과 함께 단 사진(ImageObject의 license · creditText).
+ * 군산각은 장소 페이지마다 한국관광공사 사진을 공공누리 유형과 함께 싣는다(https://gunsan.webforai.kr/places/고군산군도/). 홈페이지
+ * 사진(extractSitePhotos)과 따로 읽는다 — 관광지 노드를 업체 사진에서 일부러 빼는 이유(위 주석)가 그대로라서, 출처 · 유형이 기계로
+ * 읽히는 사진만 이 길로 받는다. 받는 유형은 공공누리 제1유형뿐이다(그 밖은 유형과 함께 돌려주고 자동 채우기가 뺀다).
+ */
+export interface PublicPhoto {
+  /** https 주소(canonicalPhotoSrc). */
+  src: string
+  /** 사진을 가진 장소 이름(구조화 데이터) — 없으면 <img> 설명에서 「사진 N」 꼬리표를 뗀 글자. */
+  alt: string
+  /** 공공누리 유형(1~4) — license(없으면 acquireLicensePage) 주소로 읽는다. 모르면 null. */
+  licenseType: 1 | 2 | 3 | 4 | null
+  /** 제1유형이고 페이지의 <img data-kogl> 표시와 어긋나지 않으면 'kogl-1', 아니면 null. */
+  license: PhotoLicense | null
+  /** 출처(creditText → copyrightNotice → creator.name, cleanPhotoCredit). 없으면 ''. */
+  creditText: string
+}
+
+/** 사진을 가진 곳으로 보지 않는 노드(페이지 · 목록 · 운영사 · 주소 등). */
+const NOT_PHOTO_OWNER = /^(ImageObject|WebPage|WebSite|BreadcrumbList|ListItem|Organization|Corporation|Person|PropertyValue|PostalAddress|GeoCoordinates|LocationFeatureSpecification|CreativeWork)$/
+/** 장소 페이지 사진의 「○○ 사진 3」 꼬리표 끝. */
+const PHOTO_NUMBER_TAG = /\s*(사진|이미지|photo|image)\s*\d*$/i
+
+/** 페이지 HTML에서 공공 사진을 고른다(화면 전용 — DOMParser). 출처 · 이용 허락 표시가 있는 ImageObject만, 같은 사진은 한 번. */
+export function extractPublicPhotos(html: string, pageUrl: string): PublicPhoto[] {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const baseHref = doc.querySelector('base[href]')?.getAttribute('href')
+  const base = (baseHref && absolute(baseHref, pageUrl)) || pageUrl
+  // <img data-kogl="N"> — 구조화 데이터의 유형과 어긋나면 유형을 모르는 사진으로 본다.
+  const marks = new Map<string, Set<string>>()
+  const imgAlt = new Map<string, string>()
+  for (const img of doc.querySelectorAll('img')) {
+    const mark = img.getAttribute('data-kogl')?.trim()
+    const alt = cleanPhotoAlt(img.getAttribute('alt') ?? '')
+    for (const raw of imgSources(img)) {
+      const key = photoKey(raw, base)
+      if (!key) continue
+      if (mark) marks.set(key, (marks.get(key) ?? new Set<string>()).add(mark))
+      if (alt && !imgAlt.has(key)) imgAlt.set(key, alt)
+    }
+  }
+  const found: { node: JsonLdNode; owner?: string }[] = []
+  const walk = (value: unknown, owner: string | undefined, depth: number) => {
+    if (depth > 12 || !value || typeof value !== 'object') return
+    if (Array.isArray(value)) {
+      for (const v of value) walk(v, owner, depth + 1)
+      return
+    }
+    const node = value as JsonLdNode
+    const types = typesOf(node)
+    if (types.includes('ImageObject') && ['license', 'creditText', 'copyrightNotice', 'acquireLicensePage'].some((k) => node[k])) found.push({ node, owner })
+    const named = typeof node.name === 'string' && node.name.trim() && types.length > 0 && !types.some((t) => NOT_PHOTO_OWNER.test(t))
+    const next = named ? (node.name as string).trim().slice(0, 40) : owner
+    for (const [key, v] of Object.entries(node)) {
+      if (key !== '@context') walk(v, next, depth + 1)
+    }
+  }
+  for (const script of doc.querySelectorAll('script[type]')) {
+    if (!/ld\+json/i.test(script.getAttribute('type') ?? '')) continue
+    const raw = script.textContent?.trim()
+    if (!raw) continue
+    try {
+      walk(JSON.parse(raw), undefined, 0)
+    } catch (err) {
+      console.warn('[sitePhotos] 구조화 데이터를 읽지 못해 공공 사진을 건너뜁니다', err)
+    }
+  }
+  const seen = new Set<string>()
+  const out: PublicPhoto[] = []
+  for (const { node, owner } of found) {
+    const url = imageUrls(node)[0]
+    const key = url ? photoKey(url, base) : null
+    const abs = url ? absolute(url, base) : null
+    const src = abs ? canonicalPhotoSrc(abs) : null
+    if (!key || !src || seen.has(key)) continue
+    seen.add(key)
+    // license가 있으면 그것으로 읽는다 — 공공누리 주소가 아니면(다른 라이선스 · 「공공누리 제3유형」 같은 글자) acquireLicensePage가
+    // 제1유형이어도 유형을 모르는 사진이다. license가 없을 때만 acquireLicensePage로 읽는다. 둘 다 있는데 어긋나도 모른다.
+    const hasLicense = typeof node.license === 'string' ? node.license.trim() !== '' : Boolean(node.license)
+    const byLicense = koglTypeOf(node.license)
+    const byPage = koglTypeOf(node.acquireLicensePage)
+    const licenseType = hasLicense ? (byPage !== null && byPage !== byLicense ? null : byLicense) : byPage
+    const mark = marks.get(key)
+    const markAgrees = !mark || (mark.size === 1 && mark.has(String(licenseType)))
+    const creator = node.creator && typeof node.creator === 'object' && !Array.isArray(node.creator) ? (node.creator as JsonLdNode).name : undefined
+    const creditText = cleanPhotoCredit(node.creditText) || cleanPhotoCredit(node.copyrightNotice) || cleanPhotoCredit(creator)
+    out.push({
+      src,
+      alt: cleanPhotoAlt(owner ?? '') || cleanPhotoAlt((imgAlt.get(key) ?? '').replace(PHOTO_NUMBER_TAG, '')),
+      licenseType,
+      license: licenseType === 1 && markAgrees ? 'kogl-1' : null,
+      creditText,
+    })
+  }
+  return out
+}
+
+/** 장소 사전의 한 곳 — 자사 사이트 sitemap의 /places/{이름}/ 페이지. */
+export interface PlaceEntry {
+  /** 주소의 이름(하이픈은 띄어쓰기로). */
+  name: string
+  url: string
+}
+
+/** 장소 사전의 최대 크기 — 군산각 381곳(2026-11-03). */
+const MAX_PLACES = 3000
+
+/**
+ * sitemap.xml에서 장소 사전을 만든다 — 사이트와 같은 출처의 /places/{이름}/ 주소만(다른 언어 경로 /en/places/… 는 뺀다). 같은 이름은 한 번.
+ * sitemap 색인(sitemapindex)은 읽지 않는다.
+ */
+export function placeDirectoryOf(sitemapXml: string, siteRoot: string): PlaceEntry[] {
+  let origin: string
+  try {
+    origin = new URL(siteRoot).origin
+  } catch {
+    return []
+  }
+  const out: PlaceEntry[] = []
+  const names = new Set<string>()
+  for (const m of sitemapXml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)) {
+    if (out.length >= MAX_PLACES) break
+    let url: URL
+    try {
+      url = new URL(m[1]!.replace(/&amp;/g, '&'))
+    } catch {
+      continue
+    }
+    const name = url.origin === origin ? placeNameOfPath(url.pathname) : null
+    if (!name || names.has(name)) continue
+    names.add(name)
+    out.push({ name, url: url.href })
+  }
+  return out
+}
+
+const directoryCache = new Map<string, Promise<PlaceEntry[]>>()
+
+/** 사이트의 장소 사전(sitemap.xml) — 사이트 출처마다 화면이 열려 있는 동안 한 번 받는다. sitemap이 없으면(404) 빈 사전. */
+export function loadPlaceDirectory(siteRoot: string): Promise<PlaceEntry[]> {
+  let origin: string
+  try {
+    origin = new URL(siteRoot).origin
+  } catch {
+    return Promise.resolve([])
+  }
+  const hit = directoryCache.get(origin)
+  if (hit) return hit
+  const task = fetchPage(`${origin}/sitemap.xml`, { probes: false }).then((page) => {
+    if (page.fetchError) throw new Error(page.fetchError)
+    if (page.status >= 400) return []
+    return placeDirectoryOf(page.html, origin)
+  })
+  directoryCache.set(origin, task)
+  task.catch(() => directoryCache.delete(origin))
+  return task
+}
+
+/** 한 번에 읽는 장소 페이지 수의 상한 — 군산각 글 80편의 장소 자리는 20곳 안팎이다(2026-11-03). */
+export const PUBLIC_PAGE_LIMIT = 30
+const PUBLIC_FETCH_CONCURRENCY = 3
+
+export interface PublicPhotoPage {
+  /** 장소 사전의 이름. */
+  place: string
+  pageUrl: string
+  photos: PublicPhoto[]
+}
+
+const publicPageCache = new Map<string, Promise<PublicPhotoPage>>()
+
+function loadPublicPage(entry: PlaceEntry): Promise<PublicPhotoPage> {
+  const hit = publicPageCache.get(entry.url)
+  if (hit) return hit
+  const task = fetchPage(entry.url, { probes: false }).then((page) => {
+    if (page.fetchError) throw new Error(page.fetchError)
+    if (page.status >= 400) throw new Error(`페이지를 읽지 못했어요 (HTTP ${page.status})`)
+    const pageUrl = page.finalUrl || entry.url
+    return { place: entry.name, pageUrl, photos: extractPublicPhotos(page.html, pageUrl) }
+  })
+  publicPageCache.set(entry.url, task)
+  task.catch(() => publicPageCache.delete(entry.url))
+  return task
+}
+
+export interface PublicPhotoLoad {
+  pages: PublicPhotoPage[]
+  /** 읽지 못한 장소와 이유. */
+  failed: { place: string; error: string }[]
+  /** 상한(PUBLIC_PAGE_LIMIT)에 걸려 읽지 않은 장소 수. */
+  capped: number
+}
+
+/** 이름이 사전에 있는 장소의 페이지를 읽어 공공 사진을 모은다 — 앞에서부터 PUBLIC_PAGE_LIMIT곳까지, 페이지마다 캐시. */
+export async function loadPublicPhotos(directory: readonly PlaceEntry[], names: readonly string[]): Promise<PublicPhotoLoad> {
+  const byName = new Map(directory.map((e) => [e.name, e]))
+  const wanted = [...new Set(names)].flatMap((n) => {
+    const e = byName.get(n)
+    return e ? [e] : []
+  })
+  const entries = wanted.slice(0, PUBLIC_PAGE_LIMIT)
+  const pages: (PublicPhotoPage | null)[] = new Array<PublicPhotoPage | null>(entries.length).fill(null)
+  const failed: PublicPhotoLoad['failed'] = []
+  let next = 0
+  const worker = async () => {
+    while (next < entries.length) {
+      const i = next
+      next += 1
+      const entry = entries[i]!
+      try {
+        pages[i] = await loadPublicPage(entry)
+      } catch (err) {
+        failed.push({ place: entry.name, error: err instanceof Error ? err.message : String(err) })
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(PUBLIC_FETCH_CONCURRENCY, entries.length) }, worker))
+  return { pages: pages.filter((p): p is PublicPhotoPage => p !== null), failed, capped: wanted.length - entries.length }
+}
+
+/** 장소 페이지의 공공 사진 → 자동 채우기 후보(origin 'public'). 페이지 순서 · 사진 순서 그대로. */
+export function publicCandidatesOf(pages: readonly PublicPhotoPage[]): AutoCandidate[] {
+  return pages.flatMap((page) =>
+    page.photos.map((p) => ({
+      src: p.src,
+      alt: p.alt || page.place,
+      pageUrl: page.pageUrl,
+      origin: 'public' as const,
+      place: page.place,
+      license: p.license,
+      licenseType: p.licenseType,
+      creditText: p.creditText,
+    })),
+  )
+}
+
+/** 사이트 출처 — 사진을 찾는 페이지(photoPageOf)의 루트. */
+export function siteRootOf(pageUrl: string | undefined): string | null {
+  if (!pageUrl) return null
+  try {
+    return `${new URL(/^https?:\/\//i.test(pageUrl) ? pageUrl : `https://${pageUrl}`).origin}/`
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 출처 없는 공공 사진에 붙일 출처를 찾는다(「출처 붙이기」) — 단서(사진 설명 · 홈페이지에서 그 사진에 붙은 설명, 예: 「대장도 사진 1」)에
+ * 나온 장소의 페이지를 읽어, 같은 사진이 공공누리 제1유형 · 출처와 함께 있으면 그 출처. 못 찾으면 null(사진은 내보내지 않는다).
+ */
+export async function findPublicCredit(
+  siteRoot: string,
+  src: string,
+  hints: readonly string[],
+): Promise<{ fields: PublicPhotoFields; pageUrl: string; place: string } | null> {
+  const want = canonicalPhotoSrc(src)
+  if (!want) return null
+  const directory = await loadPlaceDirectory(siteRoot)
+  const names = directory.map((e) => e.name)
+  const places = [...new Set(hints.flatMap((h) => findPlace(h, names) ?? []))]
+  if (!places.length) return null
+  const { pages } = await loadPublicPhotos(directory, places)
+  for (const c of publicCandidatesOf(pages)) {
+    const fields = c.src === want ? publicCandidateFields(c) : null
+    if (fields) return { fields, pageUrl: c.pageUrl, place: c.place ?? '' }
+  }
+  return null
+}
+
 /** 페이지를 받아 후보를 고른다. 같은 페이지는 화면이 열려 있는 동안 다시 받지 않는다(fresh면 다시 받는다). */
 const cache = new Map<string, Promise<SitePhotoResult>>()
 export function loadSitePhotos(pageUrl: string, fresh = false): Promise<SitePhotoResult> {
   const hit = cache.get(pageUrl)
   if (hit && !fresh) return hit
-  const task = fetchPage(pageUrl).then((page) => {
+  const task = fetchPage(pageUrl, { probes: false }).then((page) => {
     if (page.fetchError) throw new Error(page.fetchError)
     if (page.status >= 400) throw new Error(`페이지를 읽지 못했어요 (HTTP ${page.status})`)
     return { pageUrl: page.finalUrl || pageUrl, ...extractSitePhotos(page.html, page.finalUrl || pageUrl) }
@@ -302,8 +614,7 @@ export function articlePhotoFiles(
   stored: StoredDraft,
   ctx: { settings: PublishSettings | null | undefined; industry: string | undefined },
 ): AppliedPhoto[] {
-  if (!photosAllowed(ctx.settings, ctx.industry)) return []
-  return uniquePhotoFiles(withPhotos(publishMarkdownOf(stored), stored.photos).applied)
+  return uniquePhotoFiles(withPhotos(publishMarkdownOf(stored), exportPhotoPicks(ctx.settings, ctx.industry, stored.photos)).applied)
 }
 
 /** 글에 들어간 사진에서 받을 파일 — 같은 사진은 한 번(글 순서). 채널 줄은 다듬은 글에 들어간 사진으로 부른다(channelArticleParts). */
@@ -326,10 +637,61 @@ export function photoFileName(k: number, photo: Pick<AppliedPhoto, 'heading' | '
   return `사진${k}-${safeFileName(photo.heading || photo.slotAlt)}.${PHOTO_EXT[type] ?? 'jpg'}`
 }
 
-/** 고른 사진을 한 장씩 내려받는다(저장 창이 장마다 뜰 수 있다 — 글 하나에 3장까지). 하나라도 실패하면 throw. */
+/** 글 하나의 「사진 N장 받기」에 함께 받는 공공 사진 출처 파일 이름. */
+export const ARTICLE_CREDITS_FILE = '사진 출처.txt'
+
+/** 출처 파일의 한 줄 — 글 번호(작성자 묶음만) · 저장한 사진 파일 이름 · 그 사진. 출처가 없는 사진(홈페이지 사진)은 건너뛴다. */
+export interface PhotoCreditRow {
+  article?: string
+  name: string
+  photo: AppliedPhoto
+}
+
+/**
+ * 공공 사진 출처 파일 내용 — 공공 사진마다 한 줄(탭으로 나눔): (글 번호 ·) 사진 파일 이름 · 출처 · 유형 · 원 주소 · 받은 날. 블로그 편집기에
+ * 사진 파일을 직접 올리면 .html · 붙여 넣은 글의 사진 설명(출처 줄)이 따라가지 않을 수 있어, 사진마다 출처를 적도록 함께 둔다. 메모장에서
+ * 열리게 줄 끝은 CRLF. 글 번호 칸은 글 번호가 있는 줄이 있을 때만(작성자 묶음 src/lib/writerBundle.ts).
+ */
+export function photoCreditsTable(rows: readonly PhotoCreditRow[], today: string): string {
+  const credited = rows.filter((r) => r.photo.credit)
+  const withArticle = credited.some((r) => r.article !== undefined)
+  const cells = (article: string, rest: string[]) => (withArticle ? [article, ...rest] : rest).join('\t')
+  const first = credited[0]?.photo.credit
+  const lines = [
+    '사진 출처 — 아래 사진은 공공누리 제1유형 공공 사진입니다. 블로그에 올릴 때 사진 바로 아래에 출처와 이용 허락 링크를 적어 주세요.',
+    ...(first ? [`예: 사진: ${first.credit}, ${PHOTO_LICENSES[first.license].name} (${first.creditUrl})`] : []),
+    '「제공」 · 「협찬」 · 「공식」처럼 공공기관과 특별한 관계로 보이는 말은 쓰지 않습니다. 사진 속 인물의 초상권은 이 이용 허락에 들어 있지 않습니다.',
+    '',
+    cells('글 번호', ['사진 파일 이름', '출처', '유형', '원 주소', '받은 날']),
+    ...credited.map(({ article, name, photo }) => {
+      const c = photo.credit!
+      return cells(article ?? '', [name, c.credit, `${PHOTO_LICENSES[c.license].name} (${c.creditUrl})`, photo.src, today])
+    }),
+  ]
+  return `${lines.join('\r\n')}\r\n`
+}
+
+/**
+ * 고른 사진을 한 장씩 내려받는다(저장 창이 장마다 뜰 수 있다 — 글 하나에 3장까지). 공공 사진이 있으면 「사진 출처.txt」도 받는다 —
+ * 붙여 넣은 글에서 바깥 사진(<figure>)이 버려지면 사진 설명의 출처 줄도 함께 사라져, 받은 파일을 직접 올리는 작성자가 출처를 적을 수
+ * 있게. 하나라도 실패하면 throw — 그때까지 받은 공공 사진이 있으면 출처 파일은 받아 둔다.
+ */
 export async function downloadArticlePhotos(tenantId: string, stored: StoredDraft, photos: AppliedPhoto[]): Promise<void> {
-  for (const [i, p] of photos.entries()) {
-    const blob = await fetchDraftPhotoFile(tenantId, { actionId: stored.actionId, generatedAt: stored.generatedAt, place: p.place })
-    downloadBlob(photoFileName(i + 1, p, blob.type), blob)
+  const rows: PhotoCreditRow[] = []
+  const saveCredits = () => {
+    if (!rows.some((r) => r.photo.credit)) return
+    downloadBlob(ARTICLE_CREDITS_FILE, new Blob([photoCreditsTable(rows, todayKst())], { type: 'text/plain;charset=utf-8' }))
   }
+  try {
+    for (const [i, p] of photos.entries()) {
+      const blob = await fetchDraftPhotoFile(tenantId, { actionId: stored.actionId, generatedAt: stored.generatedAt, place: p.place })
+      const name = photoFileName(i + 1, p, blob.type)
+      downloadBlob(name, blob)
+      rows.push({ name, photo: p })
+    }
+  } catch (err) {
+    saveCredits()
+    throw err
+  }
+  saveCredits()
 }
