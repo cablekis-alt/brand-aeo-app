@@ -1,4 +1,4 @@
-import { fetchDraftPhotoFile, loadTourPhotos, type StoredDraft, type TenantSummary } from './api'
+import { fetchDraftPhotoFile, loadPhotoScenes, loadTourPhotos, type StoredDraft, type TenantSummary } from './api'
 import {
   canonicalPhotoSrc,
   cleanPhotoAlt,
@@ -15,6 +15,7 @@ import { publishMarkdownOf } from './draftGaps'
 import { downloadBlob, safeFileName } from './markdownFile'
 import { fetchPage } from './aeo/fetchPage'
 import { findPlace, placeKey, placeNameOfPath, publicCandidateFields, type AutoCandidate } from './photoAutoPick'
+import { scenesToRead, type PhotoScene, type SceneWant } from './photoScenes'
 import { TOUR_PLACE_LIMIT, type TourPhotoQuery, type TourPhotoResult } from './tourPhotos'
 import { todayKst } from './publishedUrl'
 import { brandSiteUrl } from './publishArticle'
@@ -704,8 +705,84 @@ export function tourCandidatesOf(results: readonly TourPhotoResult[]): AutoCandi
       licenseType: p.licenseType,
       creditText: p.creditText,
       tour: p.source,
+      ...(p.month ? { month: p.month } : {}),
     })),
   )
+}
+
+/** 한 번 누를 때 장소마다 새로 읽는 사진 장면 수의 상한(관광공사 사진은 촬영 연월이 고루 섞이게). */
+export const SCENE_PER_PLACE = 40
+/** 한 번 누를 때 새로 읽는 사진 장면 수의 상한 — 사진 한 장에 비전 모델 한 번. */
+export const SCENE_RUN_LIMIT = 150
+/** 한 번에 묻는 새 장면 수 — 화면이 진행(n/m)을 보인다. */
+const SCENE_CHUNK = 12
+/** 읽어 둔 장면만 물을 때 한 번에 묻는 주소 수(서버 SCENE_MAX_SRCS). */
+const SCENE_PEEK = 300
+
+export interface SceneLoad {
+  /** 이 PC에서 새로 읽을 수 있었나(키가 있는가). */
+  available: boolean
+  /** 이번에 비전 모델을 부른 횟수(비용). */
+  calls: number
+  /** 이번에 새로 읽은 장면 수. */
+  described: number
+  /** 이미 읽어 둔 장면을 받은 수. */
+  cached: number
+  /** 상한에 걸려 이번에 읽지 않고 남긴 사진 수. */
+  left: number
+  /** 읽지 못한 사진 수(받지 못함 · 형식 · 모양이 틀림). */
+  failed: number
+  notes: string[]
+}
+
+/**
+ * 자동 채우기가 견줄 사진(sceneWanted)의 장면을 scenes에 채운다 — 먼저 읽어 둔 장면을 받고(비용 없음), 없는 사진은 장소마다
+ * SCENE_PER_PLACE장 · 모두 SCENE_RUN_LIMIT장까지(scenesToRead — 관광공사 사진은 촬영 연월이 고루) SCENE_CHUNK장씩 새로 읽는다. 키가
+ * 없거나 키 · 한도 오류가 나면 멈추고 알린다(그때까지 받은 장면은 쓴다). onProgress(n, m)는 새로 읽기의 진행.
+ */
+export async function loadScenesFor(
+  wanted: readonly SceneWant[],
+  scenes: Map<string, PhotoScene>,
+  onProgress?: (done: number, total: number) => void,
+): Promise<SceneLoad> {
+  const out: SceneLoad = { available: true, calls: 0, described: 0, cached: 0, left: 0, failed: 0, notes: [] }
+  const note = (n: string) => {
+    if (!out.notes.includes(n)) out.notes.push(n)
+  }
+  const ask = [...new Set(wanted.map((w) => w.src).filter((src) => !scenes.has(src)))]
+  const missing = new Set<string>()
+  for (let i = 0; i < ask.length; i += SCENE_PEEK) {
+    const r = await loadPhotoScenes(ask.slice(i, i + SCENE_PEEK), 0)
+    for (const [src, scene] of Object.entries(r.scenes)) scenes.set(src, scene)
+    out.cached += Object.keys(r.scenes).length
+    for (const src of r.missing) if (!r.failed[src]) missing.add(src)
+    out.failed += Object.keys(r.failed).length
+    out.available &&= r.available
+    r.notes.forEach(note)
+  }
+  if (!out.available || !missing.size) return out
+  const plan = scenesToRead(wanted, missing, { perPlace: SCENE_PER_PLACE, total: SCENE_RUN_LIMIT })
+  out.left = plan.left
+  onProgress?.(0, plan.read.length)
+  let done = 0
+  for (let i = 0; i < plan.read.length; i += SCENE_CHUNK) {
+    const chunk = plan.read.slice(i, i + SCENE_CHUNK)
+    const r = await loadPhotoScenes(chunk, chunk.length)
+    for (const [src, scene] of Object.entries(r.scenes)) scenes.set(src, scene)
+    out.calls += r.calls
+    out.described += r.described
+    out.failed += Object.keys(r.failed).length
+    r.notes.forEach(note)
+    done += chunk.length
+    onProgress?.(Math.min(done, plan.read.length), plan.read.length)
+    // 키 · 한도 오류로 남긴 사진이 있으면 멈춘다 — 남은 묶음도 같은 이유로 못 읽는다.
+    if (r.pending > 0) {
+      out.left += plan.read.length - done + r.pending
+      break
+    }
+  }
+  if (plan.cappedPlaces.length) note(`장소마다 한 번에 ${SCENE_PER_PLACE}장까지 장면을 읽어요(${plan.cappedPlaces.join(' · ')}) — 다시 누르면 남은 사진을 이어서 읽어요.`)
+  return out
 }
 
 /** 사이트 출처 — 사진을 찾는 페이지(photoPageOf)의 루트. */

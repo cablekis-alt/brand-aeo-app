@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { loadPublishSettings, loadTourApiStatus, saveDraftPhoto, savePhotoRights, type PhotoPlace, type StoredDraft, type TenantSummary } from '../lib/api'
+import {
+  loadPhotoScenes,
+  loadPhotoScenesStatus,
+  loadPublishSettings,
+  loadTourApiStatus,
+  saveDraftPhoto,
+  savePhotoRights,
+  type PhotoPlace,
+  type StoredDraft,
+  type TenantSummary,
+} from '../lib/api'
 import {
   canonicalPhotoSrc,
   isPhotoMedical,
@@ -17,6 +27,7 @@ import {
 import { publishMarkdownOf } from '../lib/draftGaps'
 import type { PublishSettings } from '../lib/publishSettings'
 import { findPlace, isPeopleScene, publicCandidateFields } from '../lib/photoAutoPick'
+import { sceneMeta, type PhotoScene } from '../lib/photoScenes'
 import {
   findPublicCredit,
   loadPlaceDirectory,
@@ -49,6 +60,9 @@ import PhotoAutoFill from './PhotoAutoFill'
  *
  * 관광공사 사진 — 이 PC에 TourAPI 키가 있으면(/api/health tourApi) 사진 자리에 나온 장소의 한국관광공사 공공누리 제1유형 사진(국문
  * 관광정보 · 관광사진 정보)도 불러와 같은 방법으로 고른다(공공 사진 사용 확인 뒤, 출처와 함께).
+ *
+ * 사진 장면 — 이 PC에 Claude 키가 있으면(/api/health photoScenes) 고를 사진 아래에 읽어 둔 장면(자동 채우기가 읽은 것 — 여기서는 새로
+ * 읽지 않는다)을 함께 보인다.
  */
 
 /** 고를 수 있는 사진 하나 — 홈페이지 사진 또는 공공 사진(pub: 출처 · 이용 허락, place: 장소). */
@@ -113,6 +127,9 @@ export default function SitePhotoPanel({
   const [tourOn, setTourOn] = useState<boolean | null>(null)
   const [tourFound, setTourFound] = useState<{ options: PhotoOption[]; places: string[]; notes: string[] } | null>(null)
   const [tourLoading, setTourLoading] = useState(false)
+  /** 이 PC에서 사진 장면을 읽을 수 있는가 · 고를 사진의 읽어 둔 장면(사진 주소 → 장면). */
+  const [scenesOn, setScenesOn] = useState(false)
+  const [sceneOf, setSceneOf] = useState<Readonly<Record<string, PhotoScene>>>({})
 
   useEffect(() => {
     let alive = true
@@ -171,6 +188,33 @@ export default function SitePhotoPanel({
       alive = false
     }
   }, [wantTour])
+
+  // 고를 사진의 읽어 둔 장면 — 새로 읽지 않는다(비용 없음). 후보가 바뀔 때만 다시 묻는다.
+  useEffect(() => {
+    if (!allowed || !hasPhotoWork) return
+    let alive = true
+    void loadPhotoScenesStatus().then((on) => {
+      if (alive) setScenesOn(on)
+    })
+    return () => {
+      alive = false
+    }
+  }, [allowed, hasPhotoWork])
+  const optionKey = [...(found?.photos ?? []), ...(publicFound?.options ?? []), ...(tourFound?.options ?? [])].map((p) => p.src).join('\n')
+  useEffect(() => {
+    if (!scenesOn || !optionKey) return
+    let alive = true
+    const srcs = [...new Set(optionKey.split('\n'))]
+    const load = async () => {
+      const got: Record<string, PhotoScene> = {}
+      for (let i = 0; i < srcs.length; i += 300) Object.assign(got, (await loadPhotoScenes(srcs.slice(i, i + 300), 0)).scenes)
+      if (alive) setSceneOf(got)
+    }
+    load().catch((e: unknown) => console.warn('[SitePhotoPanel] 사진 장면을 읽지 못해 장면 없이 보입니다', e))
+    return () => {
+      alive = false
+    }
+  }, [scenesOn, optionKey])
 
   if (!hasPhotoWork) return null
 
@@ -567,6 +611,7 @@ export default function SitePhotoPanel({
                           {p.alt || <span className="muted">설명 없음</span>}
                         </span>
                         {p.where && <span className="doc-meta">{p.where}</span>}
+                        <SceneLine scene={sceneOf[canonicalPhotoSrc(p.src) ?? p.src]} />
                         {p.pub && (
                           <span className="doc-meta">
                             사진: {p.pub.credit}, {PHOTO_LICENSES[p.pub.license].name}
@@ -647,4 +692,13 @@ export default function SitePhotoPanel({
       )}
     </section>
   )
+}
+
+/** 고를 사진 아래의 장면 줄 — 읽어 둔 장면이 있을 때만. */
+function SceneLine({ scene }: { scene: PhotoScene | undefined }) {
+  return scene ? (
+    <span className="doc-meta">
+      장면: {scene.text} ({sceneMeta(scene)})
+    </span>
+  ) : null
 }
