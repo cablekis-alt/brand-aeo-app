@@ -190,8 +190,13 @@ export interface PublishHtmlInput {
 /** 완성된 HTML 문서. 본문은 <article>(발행본 — 글 끝 포함), <head>에 메타와 JSON-LD(Article + Organization). */
 export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtmlInput): string {
   const { markdown: md, photos } = publishArticleParts(stored, { brand, settings })
-  // 실제로 글에 들어간 홈페이지 사진만 — 같은 사진을 두 자리에 썼으면 한 번.
-  const images = [...new Set(photos.map((p) => p.src))]
+  // 실제로 글에 들어간 사진만 — 같은 사진을 두 자리에 썼으면 한 번. 공공 사진은 출처 · 이용 허락과 함께 ImageObject로(본문 figcaption의
+  // 출처 줄과 같은 내용), 홈페이지 사진은 지금처럼 주소 글자로.
+  const images = [...new Map(photos.map((p) => [p.src, p])).values()].map((p) =>
+    p.credit
+      ? { '@type': 'ImageObject', contentUrl: p.src, creditText: p.credit.credit, license: p.credit.creditUrl, acquireLicensePage: p.credit.creditUrl }
+      : p.src,
+  )
   const keywords = settings?.tags?.join(', ')
   // 블로그 글 형식은 본문 첫 줄(# 제목)과 같은 제목 — 빈칸을 채우거나 본문을 고치면 {N}이 바뀐다. 옛 형식은 예전처럼 초안 제목.
   const title =

@@ -3,7 +3,8 @@
  * 내려받기는 가짜 창(window · fetch · document)으로 흉내 낸다 — 디스크에는 아무것도 쓰지 않는다.
  *
  * 왜: 작성자는 받은 묶음만 보고 글을 올린다. 다른 작성자의 글이 섞이거나, 파일 번호가 배정표와 어긋나거나, 묶음의 .html이 글 카드의
- * 「홈페이지용 .html」과 다르거나(빈칸 줄 · 사진 · 글 끝), 사진이 어느 글 것인지 모르면 잘못 올린다.
+ * 「홈페이지용 .html」과 다르거나(빈칸 줄 · 사진 · 글 끝), 사진이 어느 글 것인지 모르면 잘못 올린다. 공공 사진(공공누리 제1유형)은 출처
+ * 표시가 이용 조건이라, .html의 사진 설명 · JSON-LD와 「00-사진 출처.txt」에 출처가 빠지면 안 되고, 출처 없는 공공 사진은 묶음에 넣지 않는다.
  *
  *   npx tsx scripts/verify-writer-bundle.ts
  */
@@ -11,7 +12,7 @@ import type { StoredDraft, TenantSummary } from '../src/lib/api'
 import type { PhotoPick } from '../src/lib/articlePhotos'
 import { buildPublishHtml } from '../src/lib/htmlFile'
 import type { WriterPlan, WriterPlanArticle } from '../src/lib/probePlan'
-import { bundlePhotoName, canSaveToFolder, saveWriterBundle, writerBundle } from '../src/lib/writerBundle'
+import { bundlePhotoName, canSaveToFolder, PHOTO_CREDITS_FILE, photoCreditsText, saveWriterBundle, writerBundle } from '../src/lib/writerBundle'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -91,9 +92,46 @@ ok('사진은 그 글 번호를 달고 하나', photos.length === 1 && b.photos 
 ok('사진 파일 이름은 글 번호 + 사진 번호 + 소제목 + 받은 형식의 확장자', photos[0] ? bundlePhotoName(photos[0], 'image/png') === '01-사진1-무엇부터-보나요.png' : false)
 ok('사진 사용 확인이 없으면 사진도 없다', writerBundle({ ...input, settings: null }).files.every((f) => f.kind === 'html'))
 ok('배정에 없는 작성자는 빈 묶음', writerBundle({ ...input, writerKey: 'w9' }).files.length === 0)
+ok('공공 사진이 없으면 출처 파일도 없다', !b.files.some((f) => f.kind === 'credits'))
+
+// 1-b) 공공 사진(공공누리 제1유형) — 출처 줄 · JSON-LD ImageObject · 「00-사진 출처.txt」, 출처 없는 공공 사진은 빼기
+const KOGL1 = 'https://www.kogl.or.kr/info/licenseType1.do'
+const TOUR = 'https://tong.example.or.kr/cms/a1_image2_1.jpg'
+const publicPhoto = photo({ src: TOUR, alt: '가상섬', pageUrl: 'https://vstay.example/places/가상섬/', origin: 'public', license: 'kogl-1', credit: '가상관광공사', creditUrl: KOGL1 })
+const publicRights = { photoRights: { confirmedAt: '2026-10-20T10:00:00.000Z', publicAt: '2026-11-03T01:00:00.000Z' } }
+const pubDrafts: Record<string, StoredDraft> = { ...drafts, [a4.id]: { ...drafts[a4.id]!, photos: [publicPhoto] } }
+const pubInput = { ...input, drafts: pubDrafts, settings: publicRights }
+const pb = writerBundle(pubInput)
+const creditsFile = pb.files.find((f): f is Extract<typeof f, { kind: 'credits' }> => f.kind === 'credits')
+const pubHtml = pb.files.find((f): f is Extract<typeof f, { kind: 'html' }> => f.kind === 'html' && f.name.startsWith('03-'))?.text ?? ''
+ok('공공 사진이 있으면 묶음 끝에 「00-사진 출처.txt」', creditsFile?.name === PHOTO_CREDITS_FILE && pb.files.at(-1) === creditsFile && creditsFile.photos.length === 1 && pb.photos === 2)
+ok(
+  '.html 사진 설명에 출처와 이용 허락 링크(「제공」 · 「협찬」 · 「공식」 없이)',
+  pubHtml.includes(`<figcaption>골목 입구 (사진: 가상관광공사, <a href="${KOGL1}" rel="noopener">공공누리 제1유형</a>)</figcaption>`) && !/제공|협찬|공식/.test(/<figcaption>[^<]*/.exec(pubHtml)?.[0] ?? ''),
+)
+const ldText = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(pubHtml)?.[1] ?? '{}'
+const ldImage = (JSON.parse(ldText.replace(/<\\\//g, '</')) as { image?: unknown[] }).image ?? []
+ok(
+  'JSON-LD image는 ImageObject(contentUrl · creditText · license · acquireLicensePage)',
+  JSON.stringify(ldImage) === JSON.stringify([{ '@type': 'ImageObject', contentUrl: TOUR, creditText: '가상관광공사', license: KOGL1, acquireLicensePage: KOGL1 }]),
+)
+ok('홈페이지 사진의 JSON-LD image는 지금처럼 주소 글자', htmls[0]!.text.includes('"image": [\n    "https://vstay.example/img/alley.jpg"\n  ]'))
+const creditText = creditsFile ? photoCreditsText(creditsFile, () => undefined) : ''
+const creditRow = creditText.split('\r\n').find((l) => l.startsWith('03\t')) ?? ''
+ok(
+  '출처 파일 — 글 번호 · 사진 파일 이름 · 출처 · 유형 · 원 주소 · 받은 날(탭, CRLF)',
+  creditRow === ['03', '03-사진1-무엇부터-보나요.jpg', '가상관광공사', `공공누리 제1유형 (${KOGL1})`, TOUR, '2026-11-02'].join('\t') && creditText.endsWith('\r\n') && creditText.includes('글 번호\t사진 파일 이름\t출처\t유형\t원 주소\t받은 날'),
+)
+ok('공공 사진 사용 확인(publicAt)이 없으면 공공 사진도 출처 파일도 없다', (() => {
+  const nb = writerBundle({ ...pubInput, settings: rights })
+  return nb.photos === 1 && !nb.files.some((f) => f.kind === 'credits') && !nb.files.some((f) => f.kind === 'html' && f.text.includes(TOUR))
+})())
+const noCreditDrafts: Record<string, StoredDraft> = { ...drafts, [a4.id]: { ...drafts[a4.id]!, photos: [photo({ src: 'https://tong.visitkorea.or.kr/cms/x_image2_1.jpg' })] } }
+const ncb = writerBundle({ ...input, drafts: noCreditDrafts, settings: publicRights })
+ok('출처 없는 공공 사진(공공 사진 호스트 · 출처 없음)은 .html · 사진 파일에 넣지 않는다', ncb.photos === 1 && !ncb.files.some((f) => f.kind === 'html' && f.text.includes('tong.visitkorea')) && !ncb.files.some((f) => f.kind === 'credits'))
 
 // 2) 저장 — 폴더 고르기(가짜 창)
-type Written = Map<string, { type: string; size: number }>
+type Written = Map<string, { type: string; size: number; blob?: Blob }>
 /** folders는 이번에 만든 폴더, existing은 처음부터 있던(또는 만든) 폴더, plainFiles는 고른 폴더에 있던 같은 이름의 파일. */
 function fakeFolder(name: string, written: Written, folders: string[], failOn?: string, existing = new Set<string>(), plainFiles = new Set<string>()) {
   return {
@@ -118,7 +156,7 @@ function fakeFolder(name: string, written: Written, folders: string[], failOn?: 
                   data = blob
                 },
                 async close() {
-                  if (data) written.set(`${child}/${file}`, { type: data.type, size: data.size })
+                  if (data) written.set(`${child}/${file}`, { type: data.type, size: data.size, blob: data })
                 },
                 async abort() {
                   written.set(`${child}/${file}#aborted`, { type: '', size: 0 })
@@ -205,6 +243,20 @@ async function main(): Promise<void> {
   ok('폴더 고르기가 없으면 내려받기로', !canSaveToFolder())
   const down = await saveWriterBundle('vstay', b)
   ok('파일마다 내려받고 이름 앞에 묶음 이름', down?.saved === 3 && downloads.length === 3 && downloads.every((n) => n.startsWith(`${b.folder}-`)) && downloads.includes(`${b.folder}-01-사진1-무엇부터-보나요.jpg`))
+
+  // 4) 공공 사진 묶음 저장 — 사진은 받은 바이트 그대로, 출처 파일은 저장한 사진 이름으로(맨 마지막)
+  const pubWritten: Written = new Map()
+  g.window = { showDirectoryPicker: async () => fakeFolder('바탕 화면', pubWritten, []) }
+  photoRequests.length = 0
+  const pubSaved = await saveWriterBundle('vstay', pb)
+  const savedCredits = await pubWritten.get(`${pb.folder}/${PHOTO_CREDITS_FILE}`)?.blob?.text()
+  const savedPhoto = pubWritten.get(`${pb.folder}/03-사진1-무엇부터-보나요.jpg`)
+  ok('공공 사진 묶음 — 사진 2장 · .html 2개 · 출처 파일 1개', pubSaved?.saved === 5 && pubWritten.size === 5 && photoRequests.length === 2)
+  ok('사진 파일은 서버가 보낸 바이트 그대로(다시 인코딩하지 않는다)', savedPhoto?.size === 3 && savedPhoto.type === 'image/jpeg')
+  ok(
+    '출처 파일에 저장한 사진 파일 이름과 출처가 적힌다',
+    Boolean(savedCredits?.includes(['03', '03-사진1-무엇부터-보나요.jpg', '가상관광공사'].join('\t'))) && pubWritten.get(`${pb.folder}/${PHOTO_CREDITS_FILE}`)?.type === 'text/plain;charset=utf-8',
+  )
 
   let failed = 0
   for (const [label, pass] of checks) {

@@ -949,12 +949,15 @@ export async function fetchDraftPhotoFile(
   return res.blob()
 }
 
-/** 이 브랜드의 홈페이지 사진을 글에 써도 된다는 확인(한 번) — 확인 시각은 서버가 찍는다. 의료 업종은 medical까지. */
-export async function savePhotoRights(tenantId: string, opts: { medical?: boolean } = {}): Promise<PublishSettings> {
+/**
+ * 이 브랜드의 홈페이지 사진을 글에 써도 된다는 확인(한 번) — 확인 시각은 서버가 찍는다. 의료 업종은 medical까지. public이면 공공 사진
+ * (공공누리 제1유형) 사용 확인(photoRights.publicAt) — 홈페이지 사진 확인이 먼저 있어야 한다.
+ */
+export async function savePhotoRights(tenantId: string, opts: { medical?: boolean; public?: boolean } = {}): Promise<PublishSettings> {
   const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}/photo-rights`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(opts.medical ? { medical: true } : {}),
+    body: JSON.stringify(opts.public ? { public: true } : opts.medical ? { medical: true } : {}),
   })
   const body = (await res.json().catch(() => ({}))) as PublishSettings & { error?: string }
   if (!res.ok) throw new Error(body.error || `사진 사용 확인 저장 실패 (HTTP ${res.status})`)
@@ -1672,15 +1675,20 @@ export type PhotoPlace = Pick<import('./articlePhotos').PhotoPick, 'slot' | 'nth
 /** 사진을 고를 때 보내는 값 — 확인 시각은 서버가 찍는다. */
 export type PhotoPickInput = Omit<import('./articlePhotos').PhotoPick, 'confirmedAt'>
 
+/** 출처 붙이기 — 이미 고른 출처 없는 공공 사진(자리 · 주소)에 붙일 공공 사진 표시와 그 사진을 찾은 장소 페이지. */
+export type PhotoCreditInput = { place: PhotoPlace; src: string; pageUrl: string } & import('./articlePhotos').PublicPhotoFields
+
 /**
- * 글 사진 자리에 고른 홈페이지 사진을 넣거나(pick — replaces가 있으면 그 자리에서 옮긴다) 뺀다(remove). 판정 호출 없음.
- * 화면이 본 초안(generatedAt)이 그사이 다시 만들어졌으면 서버가 409로 거절한다. photoNote는 사이트 설명을 쓰지 않은 이유.
+ * 글 사진 자리에 고른 홈페이지 사진을 넣거나(pick — replaces가 있으면 그 자리에서 옮긴다) 뺀다(remove). 출처 없는 공공 사진에 출처를
+ * 붙인다(credit). 판정 호출 없음. 화면이 본 초안(generatedAt)이 그사이 다시 만들어졌으면 서버가 409로 거절한다. photoNote는 사이트 설명을
+ * 쓰지 않은 이유.
  */
 export async function saveDraftPhoto(
   tenantId: string,
   body:
     | { actionId: string; generatedAt: string; op: 'pick'; pick: PhotoPickInput; replaces?: PhotoPlace }
-    | { actionId: string; generatedAt: string; op: 'remove'; place: PhotoPlace },
+    | { actionId: string; generatedAt: string; op: 'remove'; place: PhotoPlace }
+    | ({ actionId: string; generatedAt: string; op: 'credit' } & PhotoCreditInput),
 ): Promise<StoredDraft & { photoNote?: string }> {
   const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photos`, {
     method: 'PUT',
@@ -1697,6 +1705,8 @@ export interface AutoPhotoSaveResult {
   /** 사진을 하나라도 넣은 글(저장된 모양). */
   drafts: StoredDraft[]
   saved: number
+  /** 출처를 붙인 사진 수(이미 고른 출처 없는 공공 사진). */
+  credited: number
   /** 넣지 않은 사진 수 — 그사이 자리에 사진이 생겼거나, 글이 다 찼거나, 반복 상한 · 후보 검사에 걸렸다. */
   skipped: number
   /** 그사이 다시 만들어진 글 — 건너뛰었다. */
@@ -1715,10 +1725,15 @@ const AUTO_PHOTO_BATCH = 10
  */
 export async function saveDraftPhotosAuto(
   tenantId: string,
-  articles: readonly { actionId: string; generatedAt: string; picks: readonly import('./photoAutoPick').AutoPickInput[] }[],
+  articles: readonly {
+    actionId: string
+    generatedAt: string
+    picks: readonly import('./photoAutoPick').AutoPickInput[]
+    credits?: readonly PhotoCreditInput[]
+  }[],
 ): Promise<AutoPhotoSaveResult> {
-  const total: AutoPhotoSaveResult = { drafts: [], saved: 0, skipped: 0, changed: [], missing: [] }
-  const list = articles.filter((a) => a.picks.length > 0)
+  const total: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [] }
+  const list = articles.filter((a) => a.picks.length > 0 || (a.credits?.length ?? 0) > 0)
   for (let i = 0; i < list.length; i += AUTO_PHOTO_BATCH) {
     let res: Response
     try {
@@ -1734,6 +1749,7 @@ export async function saveDraftPhotosAuto(
     if (!res.ok) throw Object.assign(new Error(out.error || `사진 저장 실패 (HTTP ${res.status})`), { status: res.status, partial: total })
     total.drafts.push(...(out.drafts ?? []))
     total.saved += out.saved ?? 0
+    total.credited += out.credited ?? 0
     total.skipped += out.skipped ?? 0
     total.changed.push(...(out.changed ?? []))
     total.missing.push(...(out.missing ?? []))

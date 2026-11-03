@@ -1,17 +1,36 @@
 /**
- * 사진 자리 자동 채우기(1단계 — 홈페이지 사진). 글의 사진 자리 글자와 홈페이지 사진 후보(src/lib/sitePhotos.ts)의 설명을 낱말로 맞춰
- * 자리마다 사진을 한 장 고른다. AI를 부르지 않고, 같은 입력이면 늘 같은 결과다.
+ * 사진 자리 자동 채우기. 1단계 — 글의 사진 자리 글자와 홈페이지 사진 후보(src/lib/sitePhotos.ts)의 설명을 낱말로 맞춰 자리마다 사진을
+ * 한 장 고른다. 2단계 — 그래도 빈 자리는 자리 글자에 나온 장소 이름(자사 사이트 sitemap의 /places/{이름}/, 가장 긴 이름)으로 그 장소
+ * 페이지의 공공누리 제1유형 사진(공공 사진, 출처 줄과 함께 내보낸다)을 고른다. AI를 부르지 않고, 같은 입력이면 늘 같은 결과다.
  *
  * 틀린 사진은 빈자리보다 나쁘다 — 사람이 고른 사진 3장이 이미 장면과 어긋났다(2026-11-03 점검). 그래서 문턱(AUTO_PICK_RULES)에
  * 못 미치면 비워 두고, 다음은 아예 보지 않는다.
  * - 자리: 웹사이트 화면 자리(사진이 아니라 캡처가 맞다) · 이미 사진이 있는 자리 · 사람이 사진을 뺀 자리.
- * - 후보: 설명 없는 사진 · 일러스트 · 사람이 찍힌 사진(초상권) · 출처 표시가 필요한 공공 사진(2단계에서 출처 줄과 함께 다룬다).
+ * - 후보: 설명 없는 사진 · 일러스트 · 사람이 찍힌 사진(초상권) · 출처를 확인하지 못한 공공 사진 · 공공누리 제1유형이 아닌 공공 사진.
  * 사람이 나오는 장면 자리(가족 · 둘이 · 여행자 …)에는 풍경이 맞으면 넣되 「확인 필요」로 표시한다.
  *
  * 같은 사진은 한 글에 한 번, 한 작성자(group)의 글 사이에 한 번, 브랜드 전체에서 AUTO_PICK_RULES.brandRepeat번까지.
  * 서버(server/index.ts op auto)도 이 파일의 후보 검사를 다시 하므로 DOM을 쓰지 않는다.
  */
-import { canonicalPhotoSrc, cleanPhotoAlt, matchPhotos, normSlotAlt, PHOTO_LIMITS, photoSlotsOf, type PhotoPick, type PhotoPlace, type PhotoSlot } from './articlePhotos.js'
+import {
+  canonicalPhotoSrc,
+  cleanPhotoAlt,
+  matchPhotos,
+  needsPhotoCredit,
+  normSlotAlt,
+  PHOTO_LICENSES,
+  PHOTO_LIMITS,
+  photoCreditState,
+  photoSlotsOf,
+  publicPhotoFields,
+  type PhotoLicense,
+  type PhotoPick,
+  type PhotoPlace,
+  type PhotoSlot,
+  type PublicPhotoFields,
+} from './articlePhotos.js'
+
+export { needsPhotoCredit }
 
 export const AUTO_PICK_RULES = {
   /** 이 점수 이상이어야 넣는다. */
@@ -34,8 +53,6 @@ const PEOPLE_WORDS = '관람객|관광객|방문객|투숙객|숙박객|이용�
 const PEOPLE_PHOTO = new RegExp(`여성|남성|${CHILD}|어린이|아기|사람|인물|포즈|가족|커플|연인|부부|얼굴|모델(?!하우스|룸|명)|학생|친구|${PEOPLE_WORDS}`)
 /** 사람이 나오는 장면 자리 — 풍경 사진이 맞아도 장면과 어긋날 수 있어 「확인 필요」로 표시한다. */
 const PEOPLE_SCENE = new RegExp(`가족|둘이|두 사람|커플|연인|부부|친구|${CHILD}|어린이|사람|뒷모습|인물|혼자|여성|남성|${PEOPLE_WORDS}`)
-/** 출처 표시가 필요한 공공 사진의 호스트(공공누리 · 한국관광공사 · 정부 기관) — 출처 줄이 생기는 2단계 전에는 넣지 않는다. */
-const CREDIT_HOSTS = ['visitkorea.or.kr', 'knto.or.kr', 'kogl.or.kr', 'go.kr']
 
 /** 낱말 끝의 조사 — 긴 것부터 뗀다(떼고 두 글자 이상 남을 때만). */
 const JOSA = ['에서', '으로', '에게', '까지', '부터', '처럼', '이나', '와', '과', '은', '는', '이', '가', '을', '를', '의', '에', '로', '도', '만']
@@ -49,46 +66,80 @@ const STOP_WORDS = new Set([
   '작은', '넓은', '좋은', '높은', '깊은', '같은', '많은', '어떤', '이런', '그런', '모든', '여러', '한눈에',
 ])
 
-export type AutoCandidateSkip = 'bad-src' | 'no-alt' | 'illustration' | 'people' | 'credit' | 'duplicate'
+export type AutoCandidateSkip = 'bad-src' | 'no-alt' | 'illustration' | 'people' | 'credit' | 'license' | 'duplicate'
 
 export const AUTO_CANDIDATE_SKIP_TEXT: Record<AutoCandidateSkip, string> = {
   'bad-src': 'https 주소가 아님',
   'no-alt': '설명 없음',
   illustration: '일러스트',
   people: '사람이 찍힘',
-  credit: '출처 표시가 필요한 공공 사진(다음 단계)',
+  credit: '출처를 확인하지 못한 공공 사진',
+  license: '공공누리 제1유형이 아닌 공공 사진',
   duplicate: '같은 사진',
 }
 
-/** 자동 채우기 후보 — 홈페이지 사진 하나(src/lib/sitePhotos.ts SitePhoto + 찾은 페이지). */
+/** 자동 채우기 후보 — 홈페이지 사진 하나(src/lib/sitePhotos.ts SitePhoto + 찾은 페이지) 또는 공공 사진 하나(PublicPhoto). */
 export interface AutoCandidate {
   src: string
   alt: string
   pageUrl: string
   /** 페이지가 출처 표시가 필요한 사진으로 표시했다(공공누리 data-kogl · 구조화 데이터의 license · creditText). */
   credit?: boolean
+  /** 공공 사진(자사 사이트 장소 페이지의 공공누리 사진) — 장소 이름으로만 맞춘다(설명이 「○○ 사진 N」 꼬리표뿐이다). */
+  origin?: 'public'
+  /** 공공 사진의 장소(장소 사전의 이름). */
+  place?: string
+  /** 공공 사진의 이용 허락 — 제1유형이면 'kogl-1', 아니면(제2~4유형 · 모름) null. */
+  license?: PhotoLicense | null
+  /** 공공 사진의 공공누리 유형(1~4) — 모르면 null. 미리보기에 뺀 이유로 보인다. */
+  licenseType?: number | null
+  /** 공공 사진의 출처(구조화 데이터 creditText). */
+  creditText?: string
 }
 
-/** 출처 표시가 필요한 공공 사진의 주소인가(호스트로만 본다). */
-export function needsPhotoCredit(src: string): boolean {
-  let host: string
-  try {
-    host = new URL(src).hostname.toLowerCase()
-  } catch {
-    return false
-  }
-  return CREDIT_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))
+/** 공공 사진 후보의 저장 모양(출처 · 이용 허락) — 맞지 않으면 null. */
+export function publicCandidateFields(c: Pick<AutoCandidate, 'origin' | 'license' | 'creditText'>): PublicPhotoFields | null {
+  if (c.origin !== 'public' || !c.license) return null
+  const f = publicPhotoFields({ origin: 'public', license: c.license, credit: c.creditText, creditUrl: PHOTO_LICENSES[c.license].url })
+  return f && typeof f === 'object' ? f : null
 }
 
 /** 자동으로 넣지 않는 후보인가 — 이유, 아니면 null. 서버도 같은 검사를 한다. */
-export function autoCandidateSkip(c: Pick<AutoCandidate, 'src' | 'alt' | 'credit'>): AutoCandidateSkip | null {
+export function autoCandidateSkip(c: Pick<AutoCandidate, 'src' | 'alt' | 'credit' | 'origin' | 'license' | 'creditText'>): AutoCandidateSkip | null {
   if (!canonicalPhotoSrc(c.src)) return 'bad-src'
   const alt = cleanPhotoAlt(c.alt)
   if (!alt) return 'no-alt'
   if (/^일러스트/.test(alt)) return 'illustration'
   if (PEOPLE_PHOTO.test(alt)) return 'people'
+  if (c.origin === 'public') {
+    if (c.license !== 'kogl-1') return 'license'
+    return publicCandidateFields(c) ? null : 'credit'
+  }
   if (c.credit || needsPhotoCredit(c.src)) return 'credit'
   return null
+}
+
+/** 장소 이름 비교용 — 띄어쓰기 · 문장부호를 빼고 소문자로(「근대역사박물관」은 「군산 근대역사박물관」 안에 있다). */
+export function placeKey(s: string): string {
+  return normSlotAlt(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+}
+
+/** 장소 이름이 이보다 짧으면(띄어쓰기를 뺀 글자 수) 맞추지 않는다 — 「달」 · 「하늘」 · 「연도」 같은 이름이 아무 글에나 걸린다. */
+const MIN_PLACE_KEY = 3
+
+/** 글자에 나온 장소 — 장소 사전에서 글자 안에 든 가장 긴 이름(같은 길이면 글자에서 먼저 나온 것, 그다음 사전 순서). 없으면 null. */
+export function findPlace(text: string, places: readonly string[]): string | null {
+  const hay = placeKey(text)
+  if (!hay) return null
+  let best: { name: string; len: number; at: number } | null = null
+  for (const name of places) {
+    const key = placeKey(name)
+    if (key.length < MIN_PLACE_KEY) continue
+    const at = hay.indexOf(key)
+    if (at < 0) continue
+    if (!best || key.length > best.len || (key.length === best.len && at < best.at)) best = { name, len: key.length, at }
+  }
+  return best?.name ?? null
 }
 
 /** 웹사이트 화면 자리인가. */
@@ -201,9 +252,9 @@ export interface AutoArticle {
 /**
  * 자리 하나의 결과.
  * filled 넣음 · kept 이미 사진이 있음(제안 대기 포함) · cleared 사람이 뺀 자리 · screen 웹사이트 화면 자리 · nomatch 맞는 사진 없음 ·
- * used 맞는 사진이 반복 상한에 걸림 · full 글 하나에 사진 PHOTO_LIMITS.picks장이 다 참.
+ * used 맞는 사진이 반복 상한에 걸림 · full 글 하나에 사진 PHOTO_LIMITS.picks장이 다 참 · license 자리의 장소 사진이 공공누리 제1유형이 아님.
  */
-export type AutoSlotState = 'filled' | 'kept' | 'cleared' | 'screen' | 'nomatch' | 'used' | 'full'
+export type AutoSlotState = 'filled' | 'kept' | 'cleared' | 'screen' | 'nomatch' | 'used' | 'full' | 'license'
 
 export const AUTO_SLOT_STATE_TEXT: Record<AutoSlotState, string> = {
   filled: '채움',
@@ -213,6 +264,7 @@ export const AUTO_SLOT_STATE_TEXT: Record<AutoSlotState, string> = {
   nomatch: '맞는 사진 없음',
   used: '맞는 사진을 이미 다 씀',
   full: '사진 3장이 다 참',
+  license: '장소 사진이 공공누리 제1유형이 아님',
 }
 
 export interface AutoSlotRow {
@@ -226,6 +278,17 @@ export interface AutoSlotRow {
   score?: SlotScore
   /** 사람이 나오는 장면 자리에 넣었다 — 미리보기에 「확인 필요」. */
   review?: boolean
+  /** 자리 글자(장면 · 설명 줄)에 나온 장소(장소 사전의 가장 긴 이름) — 공공 사진은 이것으로만 맞춘다. */
+  place?: string
+}
+
+/** 이미 고른 사진 가운데 출처가 없는 공공 사진(photoCreditState missing)에 붙일 출처 — 같은 사진이 장소 페이지에 제1유형으로 있다. */
+export interface AutoCreditPatch {
+  place: PhotoPlace
+  src: string
+  fields: PublicPhotoFields
+  /** 그 사진을 찾은 장소 페이지. */
+  pageUrl: string
 }
 
 export interface AutoArticleResult {
@@ -233,14 +296,18 @@ export interface AutoArticleResult {
   generatedAt: string
   rows: AutoSlotRow[]
   picks: AutoPickInput[]
+  /** 이미 고른 사진에 붙일 출처(「출처 붙이기」를 자동 채우기 저장에 함께 보낸다). */
+  credits: AutoCreditPatch[]
 }
 
 export interface AutoPickResult {
   articles: AutoArticleResult[]
   /** 자동으로 쓰지 않는 후보와 그 이유. */
   skipped: { candidate: AutoCandidate; reason: AutoCandidateSkip }[]
-  /** 자동으로 쓸 수 있는 후보 수. */
+  /** 자동으로 쓸 수 있는 홈페이지 사진 수. */
   usable: number
+  /** 자동으로 쓸 수 있는 공공 사진 수(제1유형 · 출처 있음). */
+  usablePublic: number
 }
 
 /** 사진 자리 바로 아랫줄의 설명(`*설명*`) — 없으면 ''(articlePhotos.ts captionAfter와 같은 모양). */
@@ -254,13 +321,43 @@ function isCleared(slot: PhotoSlot, cleared: readonly PhotoPlace[] | undefined):
   return (cleared ?? []).some((c) => c.slot === slot.key && (c.heading === slot.heading || c.nth === slot.nth))
 }
 
+/** 자리의 장소 — 장면 글자에서 먼저 찾고, 없으면 바로 아랫줄 설명에서(소제목은 절 전체라 보지 않는다). */
+export function slotPlace(slot: { key: string; caption: string }, places: readonly string[]): string | null {
+  return findPlace(slot.key, places) ?? (slot.caption ? findPlace(slot.caption, places) : null)
+}
+
 /**
- * 글마다 빈 사진 자리에 홈페이지 사진을 고른다 — 글은 받은 순서(작성자 배정 순서)대로, 글 안에서는 점수가 높은 짝부터. 같은 점수면
- * 앞 자리, 브랜드에서 덜 쓴 사진, 주소 사전순. others는 이번에 돌지 않는 글의 고른 사진(브랜드 · 작성자 반복 상한에 센다).
+ * 공공 사진을 찾으러 읽을 장소 — 글들의 빈 사진 자리(화면 자리 · 사진이 있는 자리 · 사람이 뺀 자리 제외)에 나온 장소, 나온 순서대로
+ * 중복 없이. 장소 페이지는 이것만 읽는다(src/lib/sitePhotos.ts loadPublicPhotos).
+ */
+export function placesToRead(articles: readonly Pick<AutoArticle, 'markdown' | 'picks' | 'cleared'>[], places: readonly string[]): string[] {
+  const out: string[] = []
+  for (const a of articles) {
+    const lines = a.markdown.split('\n')
+    const match = matchPhotos(a.markdown, a.picks ?? [])
+    const occupied = new Set([...match.applied, ...match.suggested].map((m) => m.slot.line))
+    for (const slot of photoSlotsOf(a.markdown)) {
+      if (occupied.has(slot.line) || isCleared(slot, a.cleared) || isScreenSlot(slot.key)) continue
+      const place = slotPlace({ key: slot.key, caption: captionOf(lines, slot) }, places)
+      if (place && !out.includes(place)) out.push(place)
+    }
+  }
+  return out
+}
+
+/**
+ * 글마다 빈 사진 자리에 사진을 고른다 — 글은 받은 순서(작성자 배정 순서)대로. 글 안에서는 먼저 홈페이지 사진을 점수가 높은 짝부터(같은
+ * 점수면 앞 자리, 브랜드에서 덜 쓴 사진, 주소 사전순), 그래도 빈 자리는 자리 글자에 나온 장소의 공공 사진을(그 장소 페이지의 사진 순서,
+ * 앞 자리부터). others는 이번에 돌지 않는 글의 고른 사진(브랜드 · 작성자 반복 상한에 센다). 공공 사진도 같은 상한을 쓴다.
+ * 이미 고른 사진 가운데 출처가 없는 공공 사진은, 같은 사진이 공공 사진 후보(제1유형 · 출처 있음)에 있으면 credits로 출처를 붙인다.
  */
 export function autoPickPhotos(input: {
   articles: readonly AutoArticle[]
   candidates: readonly AutoCandidate[]
+  /** 자사 사이트 장소 페이지의 공공 사진(origin 'public', 장소 · 유형 · 출처) — 제1유형이 아니거나 출처가 없으면 이유와 함께 뺀다. */
+  publicCandidates?: readonly AutoCandidate[]
+  /** 장소 사전(자사 사이트 sitemap의 /places/{이름}/) — 자리 글자에서 장소를 찾는다. */
+  places?: readonly string[]
   others?: readonly { src: string; group?: string }[]
   /** 장면을 가르지 못하는 낱말을 뽑을 브랜드 이름(「스테이,머뭄」 — 브랜드 사진이면 모두 그 브랜드다). */
   brandName?: string
@@ -280,6 +377,30 @@ export function autoPickPhotos(input: {
     usable.push({ ...raw, src, alt: cleanPhotoAlt(raw.alt) })
   }
   usable.sort((a, b) => (a.src < b.src ? -1 : a.src > b.src ? 1 : 0))
+
+  // 공공 사진 — 장소별로, 페이지의 사진 순서 그대로(대표 사진이 앞이다). 출처 붙이기는 설명 검사와 무관하게 제1유형 · 출처만 본다.
+  const places = input.places ?? []
+  const publicByPlace = new Map<string, AutoCandidate[]>()
+  const rawPlaces = new Set<string>()
+  const creditBySrc = new Map<string, { fields: PublicPhotoFields; pageUrl: string }>()
+  const publicSeen = new Set<string>()
+  let usablePublic = 0
+  for (const raw of input.publicCandidates ?? []) {
+    const src = canonicalPhotoSrc(raw.src)
+    const fields = publicCandidateFields(raw)
+    if (src && fields && !creditBySrc.has(src)) creditBySrc.set(src, { fields, pageUrl: raw.pageUrl })
+    if (raw.place) rawPlaces.add(raw.place)
+    const reason = autoCandidateSkip({ ...raw, origin: 'public' }) ?? (src && (seen.has(src) || publicSeen.has(src)) ? 'duplicate' : null)
+    if (reason || !src || !raw.place) {
+      skipped.push({ candidate: raw, reason: reason ?? 'bad-src' })
+      continue
+    }
+    publicSeen.add(src)
+    usablePublic += 1
+    const list = publicByPlace.get(raw.place) ?? []
+    list.push({ ...raw, src, alt: cleanPhotoAlt(raw.alt) })
+    publicByPlace.set(raw.place, list)
+  }
 
   const brandCount = new Map<string, number>()
   const groupUsed = new Map<string, Set<string>>()
@@ -309,33 +430,16 @@ export function autoPickPhotos(input: {
           : isScreenSlot(slot.key)
             ? 'screen'
             : 'nomatch'
-      return { slot, caption, state }
+      const place = state === 'nomatch' && places.length ? slotPlace({ key: slot.key, caption }, places) : null
+      return { slot, caption, state, ...(place ? { place } : {}) }
     })
-    type Pair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore }
-    const pairs: Pair[] = []
-    for (const row of rows) {
-      if (row.state !== 'nomatch') continue
-      for (const candidate of usable) {
-        const score = scoreSlot({ key: row.slot.key, caption: row.caption, heading: row.slot.heading }, candidate.alt, stop)
-        if (score.pass) pairs.push({ row, candidate, score })
-      }
-    }
-    const blocked = (p: Pair) =>
-      inArticle.has(p.candidate.src) ||
-      (article.group !== undefined && Boolean(groupUsed.get(article.group)?.has(p.candidate.src))) ||
-      (brandCount.get(p.candidate.src) ?? 0) >= AUTO_PICK_RULES.brandRepeat
-    const better = (a: Pair, b: Pair) =>
-      b.score.score - a.score.score ||
-      a.row.slot.line - b.row.slot.line ||
-      (brandCount.get(a.candidate.src) ?? 0) - (brandCount.get(b.candidate.src) ?? 0) ||
-      (a.candidate.src < b.candidate.src ? -1 : a.candidate.src > b.candidate.src ? 1 : 0)
-
+    const isBlocked = (src: string) =>
+      inArticle.has(src) ||
+      (article.group !== undefined && Boolean(groupUsed.get(article.group)?.has(src))) ||
+      (brandCount.get(src) ?? 0) >= AUTO_PICK_RULES.brandRepeat
     const out: AutoPickInput[] = []
-    for (;;) {
-      const open = pairs.filter((p) => p.row.state === 'nomatch' && !blocked(p))
-      if (!open.length || room === 0) break
-      const best = open.sort(better)[0]!
-      const { row, candidate, score } = best
+    const fill = (row: AutoSlotRow, candidate: AutoCandidate, score: SlotScore) => {
+      const credit = candidate.origin === 'public' ? publicCandidateFields(candidate) : null
       const pick: AutoPickInput = {
         slot: row.slot.key,
         nth: row.slot.nth,
@@ -345,6 +449,7 @@ export function autoPickPhotos(input: {
         alt: candidate.alt,
         pageUrl: candidate.pageUrl,
         auto: true,
+        ...(credit ?? {}),
       }
       Object.assign(row, { state: 'filled', pick, candidate, score, ...(isPeopleScene(row.slot.key) ? { review: true } : {}) })
       out.push(pick)
@@ -352,15 +457,57 @@ export function autoPickPhotos(input: {
       countUse(candidate.src, article.group)
       room -= 1
     }
-    // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다.
+
+    // ① 홈페이지 사진 — 점수가 높은 짝부터.
+    type Pair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore }
+    const pairs: Pair[] = []
+    for (const row of rows) {
+      if (row.state !== 'nomatch') continue
+      for (const candidate of usable) {
+        const score = scoreSlot({ key: row.slot.key, caption: row.caption, heading: row.slot.heading }, candidate.alt, stop)
+        if (score.pass) pairs.push({ row, candidate, score })
+      }
+    }
+    const better = (a: Pair, b: Pair) =>
+      b.score.score - a.score.score ||
+      a.row.slot.line - b.row.slot.line ||
+      (brandCount.get(a.candidate.src) ?? 0) - (brandCount.get(b.candidate.src) ?? 0) ||
+      (a.candidate.src < b.candidate.src ? -1 : a.candidate.src > b.candidate.src ? 1 : 0)
+    for (;;) {
+      const open = pairs.filter((p) => p.row.state === 'nomatch' && !isBlocked(p.candidate.src))
+      if (!open.length || room === 0) break
+      const best = open.sort(better)[0]!
+      fill(best.row, best.candidate, best.score)
+    }
+
+    // ② 공공 사진 — 남은 자리를 앞에서부터, 자리의 장소 페이지 사진 가운데 아직 쓰지 않은 첫 장.
+    const placeScore = (place: string): SlotScore => ({ score: 0, words: [place], coverage: 1, pass: true })
+    for (const row of rows) {
+      if (row.state !== 'nomatch' || !row.place || room === 0) continue
+      const candidate = (publicByPlace.get(row.place) ?? []).find((c) => !isBlocked(c.src))
+      if (candidate) fill(row, candidate, placeScore(row.place))
+    }
+
+    // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소 사진이 모두 제1유형이 아니면 license.
     for (const row of rows) {
       if (row.state !== 'nomatch') continue
       const best = pairs.filter((p) => p.row === row).sort(better)[0]
+      const publicFirst = row.place ? publicByPlace.get(row.place)?.[0] : undefined
       if (best) Object.assign(row, { state: room === 0 ? 'full' : 'used', candidate: best.candidate, score: best.score })
+      else if (publicFirst && row.place) Object.assign(row, { state: room === 0 ? 'full' : 'used', candidate: publicFirst, score: placeScore(row.place) })
+      else if (row.place && rawPlaces.has(row.place)) row.state = 'license'
     }
-    return { actionId: article.actionId, generatedAt: article.generatedAt, rows, picks: out }
+
+    // 이미 고른 사진 가운데 출처 없는 공공 사진 — 같은 사진이 제1유형 · 출처와 함께 장소 페이지에 있으면 출처를 붙인다.
+    const credits: AutoCreditPatch[] = []
+    for (const p of picks) {
+      if (photoCreditState(p) !== 'missing') continue
+      const hit = creditBySrc.get(canonicalPhotoSrc(p.src) ?? p.src)
+      if (hit) credits.push({ place: { slot: p.slot, nth: p.nth, heading: p.heading }, src: p.src, fields: hit.fields, pageUrl: hit.pageUrl })
+    }
+    return { actionId: article.actionId, generatedAt: article.generatedAt, rows, picks: out, credits }
   })
-  return { articles, skipped, usable: usable.length }
+  return { articles, skipped, usable: usable.length, usablePublic }
 }
 
 /** 이번에 돌지 않는 글의 고른 사진 — 브랜드 · 작성자 반복 상한에 센다. */
@@ -395,26 +542,40 @@ export function photoStateKey(
     .sort()
     .map((id) => {
       const d = drafts[id]!
-      return JSON.stringify([id, d.generatedAt, d.editedAt ?? '', (d.photos ?? []).map((p) => `${place(p)}=${p.src}`), (d.photoCleared ?? []).map(place)])
+      return JSON.stringify([id, d.generatedAt, d.editedAt ?? '', (d.photos ?? []).map((p) => `${place(p)}=${p.src}${p.origin === 'public' ? '+public' : ''}`), (d.photoCleared ?? []).map(place)])
     })
     .join('\n')
 }
 
-/** 사진 자리 셈 — 작성자 줄의 「사진 자리 n · 채움 m · 자동 k · 빈자리 j」. 채움은 지금 글에 실제로 들어가는 사진이다. */
+/**
+ * 사진 자리 셈 — 작성자 줄의 「사진 자리 n · 채움 m(공공 p) · 자동 k · 출처 없음 c · 빈자리 j」. 채움은 지금 글에 실제로 들어가는 사진이다
+ * — 출처 없는 공공 사진(photoCreditState missing)은 내보내지 않으므로 채움에 세지 않고 noCredit으로 따로 센다.
+ */
 export function photoSlotStats(articles: readonly { markdown: string; picks?: readonly PhotoPick[] }[]): {
   slots: number
   filled: number
   auto: number
+  public: number
+  noCredit: number
   empty: number
 } {
   let slots = 0
   let filled = 0
   let auto = 0
+  let pub = 0
+  let noCredit = 0
   for (const a of articles) {
     slots += photoSlotsOf(a.markdown).length
-    const applied = matchPhotos(a.markdown, a.picks ?? []).applied
-    filled += applied.length
-    auto += applied.filter((x) => x.pick.auto).length
+    for (const { pick } of matchPhotos(a.markdown, a.picks ?? []).applied) {
+      const state = photoCreditState(pick)
+      if (state === 'missing') {
+        noCredit += 1
+        continue
+      }
+      filled += 1
+      if (pick.auto) auto += 1
+      if (state === 'public') pub += 1
+    }
   }
-  return { slots, filled, auto, empty: slots - filled }
+  return { slots, filled, auto, public: pub, noCredit, empty: slots - filled }
 }

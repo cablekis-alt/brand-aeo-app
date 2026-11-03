@@ -74,6 +74,28 @@ try {
   const { writerGroupOf } = await import('../server/probePlanStore')
   ok('배정 파일이 없으면 작성자 상한을 두지 않는다', (await writerGroupOf(TENANT))('a1') === undefined)
 
+  // 3-b) 출처 붙이기 — 출처 없는 공공 사진(공공 사진 호스트)에만, 자리 · 주소가 같을 때만. 확인 시각 · 자동 표시는 그대로, 사진 없이도 저장.
+  const T = 'https://tong.visitkorea.or.kr/cms/legacy.jpg'
+  const KOGL1 = 'https://www.kogl.or.kr/info/licenseType1.do'
+  const legacy = { ...pick(T), auto: undefined }
+  writeDrafts({ a1: draft('a1', [legacy as unknown as ReturnType<typeof pick>]), a2: draft('a2', [pick(P)]) })
+  const fields = { origin: 'public' as const, license: 'kogl-1' as const, credit: '가상관광공사', creditUrl: KOGL1 }
+  const place = { slot: legacy.slot, nth: 1, heading: legacy.heading }
+  const r5 = await saveAutoPhotoPicks(
+    TENANT,
+    [
+      { actionId: 'a1', generatedAt: AT, picks: [], credits: [{ place, src: T, fields, pageUrl: 'https://site.example/places/x/' }] },
+      { actionId: 'a2', generatedAt: AT, picks: [], credits: [{ place, src: P, fields, pageUrl: 'https://site.example/places/x/' }] },
+    ],
+    3,
+  )
+  const fixed = readMap().a1?.photos?.[0] as Record<string, unknown> | undefined
+  ok(
+    '출처 없는 공공 사진에 출처를 붙인다(확인 시각 · 찾은 페이지)',
+    r5.credited === 1 && r5.saved === 0 && fixed?.origin === 'public' && fixed.credit === '가상관광공사' && fixed.creditUrl === KOGL1 && fixed.confirmedAt === AT && fixed.pageUrl === 'https://site.example/places/x/',
+  )
+  ok('홈페이지 사진(출처가 필요 없는 사진)에는 붙이지 않는다', !(readMap().a2?.photos?.[0] as Record<string, unknown> | undefined)?.origin && r5.drafts.length === 1)
+
   // 4) 둘째 묶음에서 연결이 끊김 — 앞 묶음의 결과가 partial로 온다.
   const { saveDraftPhotosAuto } = await import('../src/lib/api')
   let calls = 0

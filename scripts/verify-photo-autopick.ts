@@ -1,5 +1,5 @@
 /**
- * 사진 자리 자동 채우기 1단계(src/lib/photoAutoPick.ts)의 규칙을 확인한다. 가짜 원고 · 가짜 주소만 쓰고 서버 · AI는 부르지 않는다.
+ * 사진 자리 자동 채우기(src/lib/photoAutoPick.ts — 1단계 홈페이지 사진, 2단계 공공 사진과 출처 줄)의 규칙을 확인한다. 가짜 원고 · 가짜 주소만 쓰고 서버 · AI는 부르지 않는다.
  *
  * 왜:
  * - 틀린 사진은 빈자리보다 나쁘다 — 문턱에 못 미치면 비워야 하고, 화면 자리 · 사람 사진 · 일러스트 · 출처 표시가 필요한 공공 사진은
@@ -7,6 +7,7 @@
  * - 사람이 고르거나 뺀 자리는 자동 채우기가 덮지 않아야 한다.
  * - 같은 사진이 한 글 · 한 작성자 안에서 되풀이되거나 브랜드 전체에서 상한을 넘지 않아야 한다.
  * - 같은 입력이면 같은 결과여야 한다(운영자가 본 미리보기와 다시 돌린 결과가 같게).
+ * - 공공 사진은 공공누리 제1유형 · 출처가 있을 때만, 내보낼 때 사진 바로 아래에 출처 줄이 붙어야 한다(출처 표시는 이용 조건이다).
  *
  *   npx tsx scripts/verify-photo-autopick.ts
  */
@@ -255,6 +256,143 @@ const byName = (n: string) => page.photos.find((p) => p.src.endsWith(`/${n}.jpg`
 ok('업체 사진은 출처 표시 없음', byName('own') !== undefined && !byName('own')!.credit)
 ok('ImageObject에 license · creditText가 있으면 출처 표시 사진', byName('licensed')?.credit === true)
 ok('<img data-kogl>은 출처 표시 사진', byName('marked')?.credit === true)
+
+// 6) 2단계 — 공공 사진(자사 사이트 장소 페이지의 공공누리 제1유형 사진)
+const {
+  cleanPhotoCredit,
+  exportPhotoPicks,
+  koglTypeOf,
+  PHOTO_LICENSES,
+  photoCreditLine,
+  photoCreditState,
+  publicPhotoFields,
+  withPhotosFromSource,
+} = await import('../src/lib/articlePhotos')
+const { findPlace, placesToRead, slotPlace } = await import('../src/lib/photoAutoPick')
+const KOGL1 = PHOTO_LICENSES['kogl-1'].url
+ok('공공누리 유형은 kogl.or.kr의 licenseType{n}.do로만 읽는다', [
+  koglTypeOf('https://www.kogl.or.kr/info/licenseType1.do') === 1,
+  koglTypeOf('http://kogl.or.kr/info/licenseType3.do?x=1') === 3,
+  koglTypeOf('https://www.kogl.or.kr/info/license.do') === null,
+  koglTypeOf('https://evil.example/info/licenseType1.do') === null,
+  koglTypeOf(undefined) === null,
+].every(Boolean))
+ok('출처 글자 — 「제공」 · 「협찬」 · 「공식」이 들어가면 쓰지 않는다', cleanPhotoCredit('한국관광공사') === '한국관광공사' && cleanPhotoCredit('한국관광공사 제공') === '' && cleanPhotoCredit('공식 사진') === '' && cleanPhotoCredit('') === '')
+ok('공공 사진 표시 — 제1유형 · 출처 · 그 유형의 이용 허락 주소가 모두 맞아야', [
+  typeof publicPhotoFields({ origin: 'public', license: 'kogl-1', credit: '가상기관', creditUrl: KOGL1 }) === 'object',
+  typeof publicPhotoFields({ origin: 'public', license: 'kogl-3', credit: '가상기관', creditUrl: KOGL1 }) === 'string',
+  typeof publicPhotoFields({ origin: 'public', license: 'kogl-1', credit: '', creditUrl: KOGL1 }) === 'string',
+  typeof publicPhotoFields({ origin: 'public', license: 'kogl-1', credit: '가상기관', creditUrl: 'https://www.kogl.or.kr/info/licenseType3.do' }) === 'string',
+  publicPhotoFields({ src: 'x' } as never) === null,
+].every(Boolean))
+
+const PLACE_PAGE = 'https://site.example/places/가상근대박물관/'
+const pubCand = (name: string, over: Partial<AutoCandidate> = {}): AutoCandidate => ({
+  src: `https://tong.visitkorea.or.kr/cms/${name}.jpg`, alt: '가상근대박물관', pageUrl: PLACE_PAGE, origin: 'public', place: '가상근대박물관',
+  license: 'kogl-1', licenseType: 1, creditText: '가상관광공사', ...over,
+})
+ok('공공 사진 후보 — 제1유형 · 출처가 있으면 쓴다(공공 사진 호스트여도)', autoCandidateSkip(pubCand('p1')) === null)
+ok('제3유형 · 유형 모름은 license, 출처 없음은 credit', autoCandidateSkip(pubCand('p3', { license: null, licenseType: 3 })) === 'license' && autoCandidateSkip(pubCand('p0', { creditText: '' })) === 'credit')
+ok('공공 사진도 사람 · 일러스트 설명이면 뺀다', autoCandidateSkip(pubCand('pp', { alt: '가상근대박물관 앞의 관람객' })) === 'people')
+
+const places = ['가상근대박물관', '근대박물관', '가상섬', '달', '하늘']
+ok('가장 긴 장소 이름 — 「군산 근대역사박물관」은 「근대역사박물관」', findPlace('가상시 가상근대박물관 건물 외관', places) === '가상근대박물관' && findPlace('군산 근대역사박물관 외관', ['근대역사박물관']) === '근대역사박물관')
+ok('띄어쓰기가 달라도 맞는다', findPlace('가상 근대 박물관 앞마당', places) === '가상근대박물관')
+ok('세 글자보다 짧은 장소 이름은 맞추지 않는다(달 · 하늘)', findPlace('하늘과 달이 보이는 바다', places) === null)
+ok('자리 장소는 장면 글자 먼저, 없으면 설명 줄', slotPlace({ key: '바다 풍경', caption: '가상섬 앞바다' }, places) === '가상섬' && slotPlace({ key: '가상근대박물관 외관', caption: '가상섬' }, places) === '가상근대박물관')
+
+const mdPub = [
+  '## 1. 박물관',
+  '',
+  '![가상시 가상근대박물관 건물 외관](#image-slot)',
+  '*입장 마감 전에 들르세요.*',
+  '',
+  '## 2. 화면',
+  '',
+  '![가상스테이 웹사이트의 가상근대박물관 안내 화면](#image-slot)',
+  '',
+  '## 3. 정원',
+  '',
+  '![가상스테이 독채 앞의 아담한 정원 풍경](#image-slot)',
+  '',
+  '## 4. 섬',
+  '',
+  '![가상섬 바닷가](#image-slot)',
+]
+const pub1 = pubCand('museum1')
+const pub2 = pubCand('museum2')
+const island3 = pubCand('island3', { place: '가상섬', alt: '가상섬', pageUrl: 'https://site.example/places/가상섬/', license: null, licenseType: 3 })
+ok('읽을 장소 — 빈 자리에 나온 장소만(화면 자리 빼고), 나온 순서', JSON.stringify(placesToRead([article('p', mdPub)], places)) === JSON.stringify(['가상근대박물관', '가상섬']))
+const rp = autoPickPhotos({ articles: [article('p', mdPub)], candidates: [C.garden], publicCandidates: [pub1, pub2, island3], places, brandName: '가상스테이' })
+const prow = rp.articles[0]!.rows
+ok('홈페이지 사진이 먼저 — 정원 자리는 홈페이지 사진', prow[2]!.state === 'filled' && prow[2]!.pick?.src === C.garden.src && !prow[2]!.pick?.origin)
+ok(
+  '장소가 나온 빈 자리에는 그 장소의 첫 공공 사진(출처 · 이용 허락 함께)',
+  prow[0]!.state === 'filled' && prow[0]!.place === '가상근대박물관' && prow[0]!.pick?.src === pub1.src &&
+    JSON.stringify([prow[0]!.pick?.origin, prow[0]!.pick?.license, prow[0]!.pick?.credit, prow[0]!.pick?.creditUrl]) === JSON.stringify(['public', 'kogl-1', '가상관광공사', KOGL1]),
+)
+ok('화면 자리는 장소가 나와도 비워 둔다', prow[1]!.state === 'screen' && !prow[1]!.pick)
+ok('장소 사진이 제1유형이 아니면 license로 비워 둔다', prow[3]!.state === 'license' && prow[3]!.place === '가상섬' && !prow[3]!.pick)
+ok('공공 사진 수 · 제1유형이 아닌 사진은 뺀 이유와 함께', rp.usablePublic === 2 && rp.skipped.some((x) => x.candidate.src === island3.src && x.reason === 'license'))
+const twoMuseum = ['## 1. 외관', '', '![가상근대박물관 외관](#image-slot)', '', '## 2. 입구', '', '![가상근대박물관 입구](#image-slot)', '', '## 3. 또', '', '![가상근대박물관 전시실](#image-slot)']
+const rp2 = autoPickPhotos({ articles: [article('m', twoMuseum)], candidates: [], publicCandidates: [pub1, pub2], places })
+ok('한 글 안에서 같은 공공 사진은 한 번 — 장소 사진이 다 떨어지면 used', JSON.stringify(rp2.articles[0]!.rows.map((r) => r.pick?.src ?? r.state)) === JSON.stringify([pub1.src, pub2.src, 'used']))
+const rp3 = autoPickPhotos({
+  articles: [article('w1', twoMuseum.slice(0, 3), { group: 'A' }), article('w2', twoMuseum.slice(0, 3), { group: 'A' }), article('w3', twoMuseum.slice(0, 3), { group: 'B' })],
+  candidates: [],
+  publicCandidates: [pub1, pub2],
+  places,
+})
+ok('같은 작성자의 글 사이에도 같은 공공 사진은 한 번', rp3.articles[0]!.picks[0]?.src === pub1.src && rp3.articles[1]!.picks[0]?.src === pub2.src && rp3.articles[2]!.picks[0]?.src === pub1.src)
+const rp4 = autoPickPhotos({ articles: [article('x', twoMuseum.slice(0, 3))], candidates: [], publicCandidates: [pub1], places, others: [{ src: pub1.src }, { src: pub1.src }, { src: pub1.src }] })
+ok('브랜드 반복 상한(3회)도 공공 사진에 그대로', rp4.articles[0]!.rows[0]!.state === 'used')
+ok('공공 사진 후보가 없으면(사용 확인 전) 장소만 보이고 비워 둔다', (() => {
+  const r = autoPickPhotos({ articles: [article('p', mdPub)], candidates: [], places })
+  return r.articles[0]!.rows[0]!.state === 'nomatch' && r.articles[0]!.rows[0]!.place === '가상근대박물관'
+})())
+ok('같은 입력이면 같은 결과(공공 사진 포함)', JSON.stringify(autoPickPhotos({ articles: [article('p', mdPub)], candidates: [C.garden], publicCandidates: [pub1, pub2, island3], places, brandName: '가상스테이' })) === JSON.stringify(rp))
+
+// 출처 없는 공공 사진 — 같은 사진이 장소 페이지에 제1유형으로 있으면 출처를 붙인다(자동 채우기 저장에 함께)
+const legacy: PhotoPick = { slot: '가상섬 바닷가', nth: 1, same: 1, heading: '섬', src: pub2.src, alt: '', pageUrl: 'https://site.example/', confirmedAt: '2026-10-21T00:00:00.000Z' }
+const legacyOther: PhotoPick = { ...legacy, slot: '가상근대박물관 외관', heading: '외관', src: 'https://tong.visitkorea.or.kr/cms/none.jpg' }
+ok('공공 사진 호스트의 사진을 출처 없이 고른 기록은 missing', photoCreditState(legacy) === 'missing' && photoCreditState({ ...legacy, src: C.garden.src }) === 'site')
+const rc = autoPickPhotos({ articles: [article('p', mdPub, { picks: [legacy, legacyOther] })], candidates: [], publicCandidates: [pub1, pub2], places })
+ok(
+  '출처를 찾은 사진만 출처 붙이기(못 찾은 사진은 그대로 — 지우지 않는다)',
+  rc.articles[0]!.credits.length === 1 && rc.articles[0]!.credits[0]!.src === pub2.src && rc.articles[0]!.credits[0]!.fields.credit === '가상관광공사' && rc.articles[0]!.credits[0]!.pageUrl === PLACE_PAGE,
+)
+
+// 내보내기 — 출처 줄, 설명 줄이 없으면 한 줄 끼우기, 출처 없는 사진 빼기, 공공 사진 사용 확인 전이면 빼기
+const pubPick = (over: Partial<PhotoPick> = {}): PhotoPick => ({
+  slot: '가상시 가상근대박물관 건물 외관', nth: 1, same: 1, heading: '박물관', src: pub1.src, alt: '가상근대박물관', pageUrl: PLACE_PAGE,
+  confirmedAt: '2026-11-03T00:00:00.000Z', auto: true, origin: 'public', license: 'kogl-1', credit: '가상관광공사', creditUrl: KOGL1, ...over,
+})
+const islandPick = pubPick({ slot: '가상섬 바닷가', heading: '섬', src: 'https://tour.example.or.kr/cms/island1.jpg', alt: '가상섬' })
+const mdArt = article('p', mdPub).markdown
+const outPub = withPhotos(mdArt, [pubPick(), islandPick])
+const outLines = outPub.markdown.split('\n')
+const creditLine = `사진: 가상관광공사, [공공누리 제1유형](${KOGL1})`
+ok('설명 줄 뒤에 출처를 붙인다', outLines.includes(`*입장 마감 전에 들르세요. (${creditLine})*`))
+ok('설명 줄이 없으면 출처 줄을 한 줄 끼운다', outLines[outLines.indexOf(`![가상섬](${islandPick.src})`) + 1] === `*${creditLine}*`)
+ok('줄을 끼워도 앞 자리 줄이 밀리지 않는다', outLines.indexOf(`![가상근대박물관](${pub1.src})`) === 4 && outPub.applied.length === 2 && outPub.applied.every((a) => a.credit?.license === 'kogl-1'))
+ok('출처 줄에 「제공」 · 「협찬」 · 「공식」이 없다', !/제공|협찬|공식/.test(photoCreditLine(pubPick())))
+ok('CRLF 원고에서도 줄 끝을 지킨다', (() => {
+  const crlf = withPhotos(mdArt.replace(/\n/g, '\r\n'), [pubPick(), islandPick]).markdown
+  return crlf.includes(`*입장 마감 전에 들르세요. (${creditLine})*\r\n`) && crlf.includes(`![가상섬](${islandPick.src})\r\n*${creditLine}*`) && !/[^\r]\n/.test(crlf)
+})())
+ok('출처가 틀린 공공 사진은 넣지 않는다(원고 그대로)', withPhotos(mdArt, [pubPick({ creditUrl: 'https://www.kogl.or.kr/info/licenseType3.do' })]).markdown === mdArt)
+ok('출처 없는 공공 사진(공공 사진 호스트)은 넣지 않는다', withPhotos(mdArt, [{ ...legacyOther, slot: '가상시 가상근대박물관 건물 외관', heading: '박물관' }]).markdown === mdArt)
+const siteOnly = { photoRights: { confirmedAt: '2026-10-20T00:00:00.000Z' } }
+const withPublic = { photoRights: { confirmedAt: '2026-10-20T00:00:00.000Z', publicAt: '2026-11-03T00:00:00.000Z' } }
+const sitePick = { ...human, src: C.garden.src }
+ok('공공 사진 사용 확인 전에는 공공 사진을 내보내지 않는다(홈페이지 사진은 그대로)', JSON.stringify(exportPhotoPicks(siteOnly, '숙박', [pubPick(), sitePick])) === JSON.stringify([sitePick]))
+ok('확인 뒤에는 공공 사진도 · 출처 없는 공공 사진은 여전히 뺀다', exportPhotoPicks(withPublic, '숙박', [pubPick(), sitePick, legacy]).length === 2 && exportPhotoPicks(null, '숙박', [sitePick]).length === 0)
+// 블로그 채널 줄(다듬은 글) — 원문에서 짝지은 자리에 같은 출처 줄
+const adapted = mdArt.replace('## 1. 박물관', '## 1. 가상근대박물관부터 보기')
+const viaSource = withPhotosFromSource(adapted, mdArt, [pubPick()])
+ok('블로그 채널 줄에도 같은 출처 줄', viaSource.applied.length === 1 && viaSource.markdown.includes(`*입장 마감 전에 들르세요. (${creditLine})*`))
+const statsPub = photoSlotStats([{ markdown: mdArt, picks: [pubPick(), { ...legacy }, { ...human, slot: '가상스테이 독채 앞의 아담한 정원 풍경', heading: '정원', src: C.garden.src }] }])
+ok('작성자 줄 셈 — 공공 사진은 채움에 세고, 출처 없는 공공 사진은 따로(채움 아님)', statsPub.slots === 4 && statsPub.filled === 2 && statsPub.public === 1 && statsPub.noCredit === 1 && statsPub.empty === 2)
 
 let failed = 0
 for (const [label, pass] of checks) {

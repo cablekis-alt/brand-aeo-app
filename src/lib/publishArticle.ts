@@ -1,6 +1,6 @@
 import type { StoredDraft, TenantSummary } from './api'
 import { renderEvidenceMarkdown } from './answerEvidence'
-import { photosAllowed, withPhotos, withPhotosFromSource, type AppliedPhoto } from './articlePhotos'
+import { exportPhotoPicks, withPhotos, withPhotosFromSource, type AppliedPhoto } from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
 import type { PublishSettings } from './publishSettings'
 
@@ -81,10 +81,9 @@ export function channelArticleParts(
   if (adapted.style !== 'blog') return { markdown: adapted.markdown, photos: [] }
   // 글 끝은 사진을 넣기 전 글로 센다(publishArticleParts와 같은 이유).
   const tail = articleTailMarkdown(adapted.markdown, ctx)
-  const { markdown: shown, applied } =
-    source && photosAllowed(ctx.settings, ctx.brand.industry)
-      ? withPhotosFromSource(adapted.markdown, source.markdown, source.picks)
-      : { markdown: adapted.markdown, applied: [] }
+  const { markdown: shown, applied } = source
+    ? withPhotosFromSource(adapted.markdown, source.markdown, exportPhotoPicks(ctx.settings, ctx.brand.industry, source.picks))
+    : { markdown: adapted.markdown, applied: [] }
   return { markdown: tail ? `${shown.trimEnd()}\n\n${tail}\n` : shown, photos: applied }
 }
 
@@ -98,8 +97,9 @@ export function publishArticleParts(stored: StoredDraft, ctx: ArticleContext): {
   const evidence = renderEvidenceMarkdown(stored.evidence)
   // 글 끝은 사진을 넣기 전 본문으로 센다 — 브랜드 사이트의 사진 주소가 「본문에 이미 공식 사이트 링크가 있다」로 잡히지 않게.
   const tail = articleTailMarkdown(`${body}\n${evidence}`, ctx)
-  // 사진 사용 확인(의료 업종은 의료광고 확인까지)이 없으면 고른 사진도 넣지 않는다 — 서버의 사진 받기와 같은 기준.
-  const { markdown: shown, applied } = photosAllowed(ctx.settings, ctx.brand.industry) ? withPhotos(body, stored.photos) : { markdown: body, applied: [] }
+  // 사진 사용 확인(의료 업종은 의료광고 확인까지)이 없으면 고른 사진도 넣지 않는다 — 서버의 사진 받기와 같은 기준. 출처 없는 공공 사진 ·
+  // 공공 사진 사용 확인 전의 공공 사진도 뺀다(exportPhotoPicks).
+  const { markdown: shown, applied } = withPhotos(body, exportPhotoPicks(ctx.settings, ctx.brand.industry, stored.photos))
   const extra = [evidence, tail].filter(Boolean)
   return { markdown: extra.length ? `${[shown.trimEnd(), ...extra].join('\n\n')}\n` : shown, photos: applied }
 }

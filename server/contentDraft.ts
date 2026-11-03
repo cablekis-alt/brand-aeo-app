@@ -1,5 +1,5 @@
 import type { AnswerEvidence } from '../src/lib/answerEvidence.js';
-import { PHOTO_LIMITS, type PhotoPick, type PhotoPlace } from '../src/lib/articlePhotos.js';
+import { PHOTO_LIMITS, photoCreditState, type PhotoPick, type PhotoPlace, type PublicPhotoFields } from '../src/lib/articlePhotos.js';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -555,17 +555,41 @@ export async function savePhotoPicks(
   });
 }
 
-/** 자동 채우기로 저장할 글 하나 — 화면이 본 초안(generatedAt)과 넣을 사진(서버가 검사한 것). */
+/** 이미 고른 사진에 붙일 출처 — 자리 · 사진 주소가 같은 사진이 출처 없는 공공 사진(photoCreditState missing)일 때만 붙인다. */
+export interface PhotoCreditPatch {
+  place: PhotoPlace;
+  src: string;
+  fields: PublicPhotoFields;
+  /** 그 사진을 찾은 장소 페이지 — 고른 사진의 pageUrl을 이것으로 바꾼다. */
+  pageUrl: string;
+}
+
+/** 출처 붙이기 — 고친 목록과 붙인 수. 같은 자리 · 같은 주소의 출처 없는 공공 사진에만(확인 시각 · 자동 표시는 그대로). */
+export function applyPhotoCredits(photos: readonly PhotoPick[], credits: readonly PhotoCreditPatch[]): { photos: PhotoPick[]; credited: number } {
+  let credited = 0;
+  const out = photos.map((p) => {
+    const patch = credits.find((c) => samePhotoPlace(c.place, p) && c.src === p.src);
+    if (!patch || photoCreditState(p) !== 'missing') return p;
+    credited += 1;
+    return { ...p, ...patch.fields, pageUrl: patch.pageUrl };
+  });
+  return { photos: out, credited };
+}
+
+/** 자동 채우기로 저장할 글 하나 — 화면이 본 초안(generatedAt)과 넣을 사진 · 붙일 출처(서버가 검사한 것). */
 export interface AutoPhotoEntry {
   actionId: string;
   generatedAt: string;
   picks: PhotoPick[];
+  credits?: PhotoCreditPatch[];
 }
 
 export interface AutoPhotoSaveResult {
   /** 사진을 하나라도 넣은 글(저장된 모양). */
   drafts: StoredDraft[];
   saved: number;
+  /** 출처를 붙인 사진 수(이미 고른 출처 없는 공공 사진). */
+  credited: number;
   /** 넣지 않은 사진 수 — 그사이 그 자리에 사진이 생겼거나 사람이 뺐거나, 글이 다 찼거나, 반복 상한에 걸렸다. */
   skipped: number;
   /** 그사이 다시 만들어진 글 — 건너뛰었다. */
@@ -589,7 +613,7 @@ export async function saveAutoPhotoPicks(
   groupOf: (actionId: string) => string | undefined = () => undefined,
 ): Promise<AutoPhotoSaveResult> {
   return updateDrafts(tenantId, (map) => {
-    const result: AutoPhotoSaveResult = { drafts: [], saved: 0, skipped: 0, changed: [], missing: [] };
+    const result: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [] };
     const brandCount = new Map<string, number>();
     const groupUsed = new Map<string, Set<string>>();
     const markGroup = (group: string | undefined, src: string) => {
@@ -612,7 +636,8 @@ export async function saveAutoPhotoPicks(
         result.changed.push(entry.actionId);
         continue;
       }
-      const photos = [...(current.photos ?? [])];
+      const fixed = applyPhotoCredits(current.photos ?? [], entry.credits ?? []);
+      const photos = fixed.photos;
       const cleared = current.photoCleared ?? [];
       const group = groupOf(entry.actionId);
       let added = 0;
@@ -632,11 +657,12 @@ export async function saveAutoPhotoPicks(
         markGroup(group, pick.src);
         added += 1;
       }
-      if (!added) continue;
+      if (!added && !fixed.credited) continue;
       const stored: StoredDraft = { ...current, photos };
       map[entry.actionId] = stored;
       result.drafts.push(stored);
       result.saved += added;
+      result.credited += fixed.credited;
     }
     return result;
   });
