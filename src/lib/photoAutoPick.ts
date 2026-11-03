@@ -380,26 +380,45 @@ export interface SceneFit {
   words: string[]
 }
 
-/** 자리 하나가 바라는 장면 — places는 자리에 나온 장소 이름(글자에서 걷어 낸다), stop은 브랜드 이름 낱말. */
-export function slotSceneWants(slot: { key: string; caption: string }, places: readonly string[] = [], stop: ReadonlySet<string> = new Set()): SceneWants {
-  const strip = (t: string) => places.reduce((s, p) => withoutPlaceName(s, p), normSlotAlt(t).toLowerCase())
-  const key = strip(slot.key)
-  const caption = strip(slot.caption)
-  const text = `${key} ${caption}`.replace(/\s+/g, ' ').trim()
+/** 글자가 바라는 장면 종류 — 장면 낱말이 없으면 undefined, 바깥과 실내가 함께 나오면 null(정하지 않는다). */
+function settingWants(text: string): SceneSetting[] | null | undefined {
   const outside = WANT_OUTSIDE.test(text)
   const inside = WANT_INSIDE.test(text)
-  let settings: SceneSetting[] | null = WANT_OUTSIDE_STRONG.test(text) || (outside && !inside)
+  let settings: SceneSetting[] | null | undefined = WANT_OUTSIDE_STRONG.test(text) || (outside && !inside)
     ? ['exterior', 'aerial']
     : inside && !outside
       ? ['interior', 'closeup']
       : WANT_CLOSE.test(text) && !outside
         ? ['closeup', 'interior']
-        : null
+        : outside && inside
+          ? null
+          : undefined
   if (settings && WANT_SIGN.test(text) && !settings.includes('closeup')) settings = [...settings, 'closeup']
+  return settings
+}
+
+/** 글자가 바라는 시간 — 시간 낱말이 없으면 undefined, 낮과 밤이 함께 나오면 null. */
+function timeWants(text: string): SceneTime[] | null | undefined {
   const night = WANT_NIGHT.test(text)
   const dusk = WANT_DUSK.test(text)
   const day = WANT_DAY.test(text)
-  const times: SceneTime[] | null = day && (night || dusk) ? null : night ? ['night', 'dusk'] : dusk ? ['dusk'] : day ? ['day', 'unknown'] : null
+  if (day && (night || dusk)) return null
+  return night ? ['night', 'dusk'] : dusk ? ['dusk'] : day ? ['day', 'unknown'] : undefined
+}
+
+/**
+ * 자리 하나가 바라는 장면 — places는 자리에 나온 장소 이름(글자에서 걷어 낸다), stop은 브랜드 이름 낱말. 종류 · 시간은 장면 글자가 정하고,
+ * 장면 글자에 그 낱말이 없을 때만 바로 아랫줄 설명이 정한다 — 설명 줄은 사진이 아니라 본문을 풀어 쓰기도 한다(2026-11-04 군산각 「낮 시간에
+ * 근대역사박물관 건물 앞을 둘이 걸어가는 장면」의 설명 「입장 마감이 있는 실내 명소는 …」 — 「실내」 때문에 실내 디오라마 사진이 들어갔다).
+ */
+export function slotSceneWants(slot: { key: string; caption: string }, places: readonly string[] = [], stop: ReadonlySet<string> = new Set()): SceneWants {
+  const strip = (t: string) => places.reduce((s, p) => withoutPlaceName(s, p), normSlotAlt(t).toLowerCase())
+  const key = strip(slot.key)
+  const caption = strip(slot.caption)
+  const fromKey = settingWants(key)
+  const settings = fromKey !== undefined ? fromKey : (settingWants(caption) ?? null)
+  const timeFromKey = timeWants(key)
+  const times = timeFromKey !== undefined ? timeFromKey : (timeWants(caption) ?? null)
   return { settings, times, people: isPeopleScene(slot.key), key: contentWords(key, stop), caption: contentWords(caption, stop) }
 }
 

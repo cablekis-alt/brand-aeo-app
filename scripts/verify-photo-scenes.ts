@@ -91,6 +91,12 @@ ok('해 질 무렵 풍경 자리는 바깥 · 해 질 무렵만', dusk.settings?
 ok('전시실 내부 자리는 실내', wantsOf('근대역사박물관 전시실 내부').settings?.[0] === 'interior')
 ok('장소 이름 속 「공원」은 바깥 낱말이 아니다(진포해양공원 전시관 내부 → 실내)', wantsOf('진포해양공원 전시관 내부 모습').settings?.[0] === 'interior')
 ok('낮 자리는 낮 · 시간 모름까지', JSON.stringify(wantsOf('낮 시간에 근대역사박물관 건물 앞을 둘이 걸어가는 장면').times) === JSON.stringify(['day', 'unknown']))
+const withCaption = wantsOf('낮 시간에 근대역사박물관 건물 앞을 둘이 걸어가는 장면', '입장 마감이 있는 실내 명소는 낮 일정의 앞쪽에 둡니다.')
+ok(
+  '장면 글자가 종류를 정하면 설명 줄의 「실내」는 보지 않는다(2026-11-04 실데이터 — 실내 디오라마가 들어간 자리)',
+  withCaption.settings?.[0] === 'exterior' && !withCaption.settings.includes('interior') && sceneFit(withCaption, { text: '실내 전시관에 재현된 목조 건물과 벤치, 입구로 걸어 나오는 두 사람', setting: 'interior', people: 'distant', time: 'unknown', tags: ['전시실', '목조건물'] }).miss === 'setting',
+)
+ok('장면 글자에 장면 낱말이 없으면 설명 줄이 정한다', wantsOf('근대역사박물관 이야기', '근대역사박물관 전시실 내부 모습').settings?.[0] === 'interior')
 ok('장면 낱말이 없는 자리는 종류 · 시간을 정하지 않는다', wantsOf('군산 여행 이야기').settings === null && wantsOf('군산 여행 이야기').times === null)
 
 const S = (over: Partial<PhotoScene>): PhotoScene => ({
