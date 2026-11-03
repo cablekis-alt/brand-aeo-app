@@ -1,5 +1,5 @@
 import type { AnswerEvidence } from '../src/lib/answerEvidence.js';
-import type { PhotoPick } from '../src/lib/articlePhotos.js';
+import { PHOTO_LIMITS, type PhotoPick, type PhotoPlace } from '../src/lib/articlePhotos.js';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -63,6 +63,11 @@ export interface StoredDraft {
    * 바뀌지 않게). 다시 만들기로 새 초안이 오면 버린다 — 사진 자리가 바뀐다.
    */
   photos?: PhotoPick[];
+  /**
+   * 사람이 사진을 뺀 자리 — 자동 채우기(src/lib/photoAutoPick.ts)가 다시 채우지 않는다. 그 자리에 사진을 고르면 지운다. 다시 만들기로
+   * 새 초안이 오면 고른 사진과 함께 버린다.
+   */
+  photoCleared?: PhotoPlace[];
 }
 
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(아직 확인 전). */
@@ -514,15 +519,24 @@ export async function saveGapFills(
 /** 화면이 본 초안이 그사이 다시 만들어졌다 — 그 초안의 사진 자리에 고른 사진을 저장하지 않는다(라우트가 409로 답한다). */
 export class DraftChangedError extends Error {}
 
+/** 사람이 뺀 자리 기록의 최대 수 — 글 하나의 사진 자리보다 넉넉하게. */
+const MAX_PHOTO_CLEARED = 40;
+
+export function samePhotoPlace(a: PhotoPlace, b: PhotoPlace): boolean {
+  return a.slot === b.slot && a.nth === b.nth && a.heading === b.heading;
+}
+
 /**
  * 고른 홈페이지 사진을 바꾼다 — update가 지금 목록을 받아 새 목록을 돌려준다. 판정 호출이 없다. 화면이 본 초안(generatedAt)과
  * 지금 초안이 다르면 DraftChangedError — 다시 만드는 1~2분 사이에 고른 사진이 새 초안에 엉뚱하게 붙지 않게.
+ * cleared가 있으면 사람이 뺀 자리 기록(photoCleared)도 같은 쓰기에서 바꾼다.
  */
 export async function savePhotoPicks(
   tenantId: string,
   actionId: string,
   generatedAt: string,
   update: (current: PhotoPick[]) => PhotoPick[],
+  cleared?: (current: PhotoPlace[]) => PhotoPlace[],
 ): Promise<StoredDraft> {
   return updateDrafts(tenantId, (map) => {
     const current = map[actionId];
@@ -531,8 +545,80 @@ export async function savePhotoPicks(
     const photos = update(current.photos ?? []);
     const stored: StoredDraft = { ...current, photos };
     if (!photos.length) delete stored.photos;
+    if (cleared) {
+      const places = cleared(current.photoCleared ?? []).slice(-MAX_PHOTO_CLEARED);
+      if (places.length) stored.photoCleared = places;
+      else delete stored.photoCleared;
+    }
     map[actionId] = stored;
     return stored;
+  });
+}
+
+/** 자동 채우기로 저장할 글 하나 — 화면이 본 초안(generatedAt)과 넣을 사진(서버가 검사한 것). */
+export interface AutoPhotoEntry {
+  actionId: string;
+  generatedAt: string;
+  picks: PhotoPick[];
+}
+
+export interface AutoPhotoSaveResult {
+  /** 사진을 하나라도 넣은 글(저장된 모양). */
+  drafts: StoredDraft[];
+  saved: number;
+  /** 넣지 않은 사진 수 — 그사이 그 자리에 사진이 생겼거나 사람이 뺐거나, 글이 다 찼거나, 반복 상한에 걸렸다. */
+  skipped: number;
+  /** 그사이 다시 만들어진 글 — 건너뛰었다. */
+  changed: string[];
+  /** 초안이 없어진 글 — 건너뛰었다. */
+  missing: string[];
+}
+
+/**
+ * 자동 채우기를 여러 글에 한 번에 저장한다 — drafts.json 쓰기 한 번(updateDrafts). 판정 호출이 없다. 글마다 화면이 본 초안과 지금
+ * 초안을 대조해 다르면 그 글만 건너뛴다(통째로 거절하지 않는다 — 작성자 일괄 실행이 그사이 한 편을 다시 만들 수 있다).
+ * 쓰기 안에서 다시 확인한다: 사진이 있는 자리 · 사람이 뺀 자리는 덮지 않고, 글 하나에 PHOTO_LIMITS.picks장, 같은 사진은 글 하나에
+ * 한 번, 브랜드 전체에서 brandRepeat번까지(사람이 고른 것 포함).
+ */
+export async function saveAutoPhotoPicks(tenantId: string, entries: AutoPhotoEntry[], brandRepeat: number): Promise<AutoPhotoSaveResult> {
+  return updateDrafts(tenantId, (map) => {
+    const result: AutoPhotoSaveResult = { drafts: [], saved: 0, skipped: 0, changed: [], missing: [] };
+    const brandCount = new Map<string, number>();
+    for (const d of Object.values(map)) for (const p of d.photos ?? []) brandCount.set(p.src, (brandCount.get(p.src) ?? 0) + 1);
+    for (const entry of entries) {
+      const current = map[entry.actionId];
+      if (!current) {
+        result.missing.push(entry.actionId);
+        continue;
+      }
+      if (current.generatedAt !== entry.generatedAt) {
+        result.changed.push(entry.actionId);
+        continue;
+      }
+      const photos = [...(current.photos ?? [])];
+      const cleared = current.photoCleared ?? [];
+      let added = 0;
+      for (const pick of entry.picks) {
+        const taken =
+          photos.some((p) => samePhotoPlace(p, pick) || p.src === pick.src) ||
+          cleared.some((c) => samePhotoPlace(c, pick)) ||
+          photos.length >= PHOTO_LIMITS.picks ||
+          (brandCount.get(pick.src) ?? 0) >= brandRepeat;
+        if (taken) {
+          result.skipped += 1;
+          continue;
+        }
+        photos.push(pick);
+        brandCount.set(pick.src, (brandCount.get(pick.src) ?? 0) + 1);
+        added += 1;
+      }
+      if (!added) continue;
+      const stored: StoredDraft = { ...current, photos };
+      map[entry.actionId] = stored;
+      result.drafts.push(stored);
+      result.saved += added;
+    }
+    return result;
   });
 }
 

@@ -37,11 +37,23 @@ import {
 import { draftCompetitorRewrites } from './competitorRewrite.js';
 import { readCompetitorOverride } from './tenantCompetitorsStore.js';
 import { describeTenantConflict, promoteCompetitor, registerVariant } from './tenantPromote.js';
-import { DraftChangedError, generateDraft, readDrafts, saveEditedDraft, saveEvidence, saveGapFills, savePhotoPicks } from './contentDraft.js';
+import {
+  DraftChangedError,
+  generateDraft,
+  readDrafts,
+  saveAutoPhotoPicks,
+  saveEditedDraft,
+  saveEvidence,
+  saveGapFills,
+  savePhotoPicks,
+  samePhotoPlace,
+  type AutoPhotoEntry,
+} from './contentDraft.js';
 import { createFactGuard } from './factGuard.js';
 import { fetchSitePhoto } from './sitePhoto.js';
 import { publicCollectorError } from './aeo/networkSafety.js';
 import { canonicalPhotoSrc, cleanPhotoAlt, isPhotoMedical, normSlotAlt, PHOTO_LIMITS, photosAllowed, type PhotoPick } from '../src/lib/articlePhotos.js';
+import { AUTO_PICK_RULES, autoCandidateSkip } from '../src/lib/photoAutoPick.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
@@ -812,9 +824,11 @@ app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
   }
 });
 
-// 글 사진 자리에 고른 홈페이지 사진(src/lib/articlePhotos.ts) — op pick(넣기 · 옮기기) · remove(빼기). 판정 · 글쓰기 호출이 없고
-// 페이지 · 사진을 다시 받지 않는다. 사진 사용 확인(photo-rights)이 없으면 409, 화면이 본 초안이 그사이 다시 만들어졌으면 409.
+// 글 사진 자리에 고른 홈페이지 사진(src/lib/articlePhotos.ts) — op pick(넣기 · 옮기기) · remove(빼기) · auto(자동 채우기 저장 —
+// src/lib/photoAutoPick.ts가 고르고 운영자가 미리보기를 본 뒤 여러 글을 한 번에). 판정 · 글쓰기 호출이 없고 페이지 · 사진을 다시 받지
+// 않는다. 사진 사용 확인(photo-rights)이 없으면 409, 화면이 본 초안이 그사이 다시 만들어졌으면 409(auto는 그 글만 건너뛰고 알린다).
 // 사이트가 단 사진 설명에 브랜드 사실에 없는 숫자가 있으면 설명을 비운다 — 내보낼 때 사실 확인을 거친 사진 자리 글자를 쓴다.
+// 빼기는 그 자리를 「사람이 뺀 자리」로 적어 자동 채우기가 다시 채우지 않게 하고, 넣기는 그 기록을 지운다.
 app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -824,7 +838,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   const b = (req.body ?? {}) as Record<string, unknown>;
   const actionId = typeof b.actionId === 'string' ? b.actionId : '';
   const generatedAt = typeof b.generatedAt === 'string' ? b.generatedAt : '';
-  const op = b.op === 'pick' || b.op === 'remove' ? b.op : null;
+  const op = b.op === 'pick' || b.op === 'remove' || b.op === 'auto' ? b.op : null;
   const text = (v: unknown, max: number) => (typeof v === 'string' ? normSlotAlt(v).slice(0, max) : '');
   const count = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 20 ? v : 0);
   // 사진 자리 하나 — 장면 글자 · 몇 번째 · 소제목. 빼기와 옮기기(replaces)가 이것으로 고른 사진을 찾는다.
@@ -833,10 +847,22 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     const place = { slot: text(r.slot, 300), nth: count(r.nth), heading: text(r.heading, 300) };
     return place.slot && place.nth ? place : null;
   };
-  const samePlace = (p: PhotoPick, place: { slot: string; nth: number; heading: string }) =>
-    p.slot === place.slot && p.nth === place.nth && p.heading === place.heading;
-  if (!actionId || !generatedAt || !op) {
-    res.status(400).json({ error: 'actionId · generatedAt · op(pick · remove)가 필요합니다.' });
+  const samePlace = samePhotoPlace;
+  const guard = createFactGuard(tenant.factGraph ?? [], [], 'drop');
+  // 고른 사진 하나 — 자리 · https 사진 주소 · 페이지 주소가 맞지 않으면 null. 설명은 사실 가드를 거친다(걸리면 '' — siteAlt로 알린다).
+  const pickOf = (v: unknown) => {
+    const raw = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+    const place = placeOf(raw);
+    const same = count(raw.same);
+    const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
+    const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
+    if (!place || !same || same < place.nth || !src || !pageUrl) return null;
+    const siteAlt = cleanPhotoAlt(typeof raw.alt === 'string' ? raw.alt : '');
+    const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
+    return { place, same, src, pageUrl, siteAlt, alt };
+  };
+  if (!op || (op !== 'auto' && (!actionId || !generatedAt))) {
+    res.status(400).json({ error: 'actionId · generatedAt · op(pick · remove)가 필요합니다(op auto는 articles).' });
     return;
   }
   try {
@@ -846,7 +872,15 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         res.status(400).json({ error: '뺄 사진 자리(place)가 필요합니다.' });
         return;
       }
-      res.json(await savePhotoPicks(tenant.tenantId, actionId, generatedAt, (cur) => cur.filter((p) => !samePlace(p, place))));
+      res.json(
+        await savePhotoPicks(
+          tenant.tenantId,
+          actionId,
+          generatedAt,
+          (cur) => cur.filter((p) => !samePlace(p, place)),
+          (cleared) => [...cleared.filter((c) => !samePlace(c, place)), place],
+        ),
+      );
       return;
     }
     const settings = await readPublishSettings(tenant.tenantId);
@@ -858,27 +892,63 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       res.status(409).json({ error: '의료 업종은 의료광고 확인까지 받아야 사진을 쓸 수 있어요.' });
       return;
     }
-    const raw = (b.pick && typeof b.pick === 'object' ? b.pick : {}) as Record<string, unknown>;
-    const place = placeOf(raw);
-    const same = count(raw.same);
-    const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
-    const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
-    if (!place || !same || same < place.nth || !src || !pageUrl) {
+    if (op === 'auto') {
+      // 자동 채우기 저장 — 한 번에 AUTO_ARTICLES편까지(화면이 나눠 보낸다 — JSON 본문 한도). 사진마다 넣기와 같은 검사를 하고, 자동
+      // 후보 검사(일러스트 · 사람 · 출처 표시가 필요한 공공 사진)를 서버에서도 다시 한다. 걸린 사진은 빼고 그 수를 알린다.
+      const AUTO_ARTICLES = 20;
+      const list = Array.isArray(b.articles) ? b.articles : null;
+      if (!list || !list.length || list.length > AUTO_ARTICLES) {
+        res.status(400).json({ error: `articles(글 1~${AUTO_ARTICLES}편)가 필요합니다.` });
+        return;
+      }
+      const now = new Date().toISOString();
+      const entries: AutoPhotoEntry[] = [];
+      let rejected = 0;
+      for (const item of list) {
+        const r = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>;
+        const id = typeof r.actionId === 'string' ? r.actionId : '';
+        const at = typeof r.generatedAt === 'string' ? r.generatedAt : '';
+        const picks = Array.isArray(r.picks) ? r.picks : [];
+        if (!id || !at || !picks.length || picks.length > PHOTO_LIMITS.picks) {
+          res.status(400).json({ error: `글마다 actionId · generatedAt과 사진 1~${PHOTO_LIMITS.picks}장이 필요합니다.` });
+          return;
+        }
+        const clean: PhotoPick[] = [];
+        for (const raw of picks) {
+          const p = pickOf(raw);
+          if (!p || autoCandidateSkip({ src: p.src, alt: p.siteAlt })) {
+            rejected += 1;
+            continue;
+          }
+          clean.push({ ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true });
+        }
+        if (clean.length) entries.push({ actionId: id, generatedAt: at, picks: clean });
+      }
+      const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat);
+      res.json({ ...saved, skipped: saved.skipped + rejected });
+      return;
+    }
+    const p = pickOf(b.pick);
+    if (!p) {
       res.status(400).json({ error: '사진 자리(slot · nth · same · heading)와 https 사진 주소 · http(s) 페이지 주소가 필요합니다.' });
       return;
     }
-    const siteAlt = cleanPhotoAlt(typeof raw.alt === 'string' ? raw.alt : '');
-    const guard = createFactGuard(tenant.factGraph ?? [], [], 'drop');
-    const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
+    const { place, same, src, pageUrl, siteAlt, alt } = p;
     const replaces = placeOf(b.replaces);
     const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString() };
-    const stored = await savePhotoPicks(tenant.tenantId, actionId, generatedAt, (cur) => {
-      const rest = cur.filter((p) => !samePlace(p, place) && !(replaces && samePlace(p, replaces)));
-      if (rest.length >= PHOTO_LIMITS.picks) {
-        throw new RangeError(`사진은 글 하나에 ${PHOTO_LIMITS.picks}장까지예요 — 자리를 찾지 못한 사진을 먼저 빼 주세요.`);
-      }
-      return [...rest, pick];
-    });
+    const stored = await savePhotoPicks(
+      tenant.tenantId,
+      actionId,
+      generatedAt,
+      (cur) => {
+        const rest = cur.filter((x) => !samePlace(x, place) && !(replaces && samePlace(x, replaces)));
+        if (rest.length >= PHOTO_LIMITS.picks) {
+          throw new RangeError(`사진은 글 하나에 ${PHOTO_LIMITS.picks}장까지예요 — 자리를 찾지 못한 사진을 먼저 빼 주세요.`);
+        }
+        return [...rest, pick];
+      },
+      (cleared) => cleared.filter((c) => !samePlace(c, place)),
+    );
     res.json(siteAlt && !alt ? { ...stored, photoNote: '사이트의 사진 설명에 브랜드 사실에 없는 숫자가 있어, 사진 자리 글자를 설명으로 씁니다.' } : stored);
   } catch (err) {
     const status = err instanceof DraftChangedError ? 409 : err instanceof RangeError ? 400 : 500;
