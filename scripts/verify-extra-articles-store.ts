@@ -7,7 +7,7 @@
  * 통과하지 못하면 「올렸어요」가 400으로 막힌다.
  *
  * 작성자 배정(server/probePlanStore.ts)도 함께 본다 — 배정 파일이 있으면 새로 만들기 · 되살리기와 브리프 · 초안 라우트가 부르는 검사
- * (checkProbeAction)가 배정표 글만 허용하고, 운영 기간에는 배정 글끼리 질문이 겹쳐도 받고 상한이 배정 글 수까지 늘어난다. 파일이 없거나
+ * (checkProbeAction)가 배정표 글만 허용하고, 운영 기간에는 배정 글끼리 질문이 겹쳐도 받고 상한이 배정 글 수 + 10으로 늘어난다. 파일이 없거나
  * 운영 기간이 지나면 지금과 같아야 한다.
  *
  *   npx tsx scripts/verify-extra-articles-store.ts
@@ -214,7 +214,7 @@ try {
   ok('되살린 글(다른 판)의 스냅샷도 통과', otherBank.post.topic?.bankVersion === 'v4');
 
   // 11) 작성자 배정(probe-plan.json, probe-plan/2) — 새로 만들기 · 되살리기는 배정표 글만, 이름 · 빼기는 그대로. 운영 기간에는 배정 글끼리
-  // 질문이 겹쳐도 받고 살아 있는 글 상한이 배정 글 수까지 늘어난다. 파일이 없으면 지금과 같다(1~10이 그 경우).
+  // 질문이 겹쳐도 받고 살아 있는 글 상한이 배정 글 수 + 10으로 늘어난다. 파일이 없으면 지금과 같다(1~10이 그 경우).
   const TP = 'fake-writer';
   const planPath = (t: string) => path.join(root, 'data', t, 'probe-plan.json');
   const extrasText = (t: string) => readFile(path.join(root, 'data', t, 'extra-articles.json'), 'utf-8');
@@ -299,19 +299,34 @@ try {
   const p2Back = await patchExtraArticle(TP, { id: P2.id, removed: false });
   ok('뺀 배정 글은 PATCH removed:false로도 되살린다(겹침 허용)', p2Back.revived && !p2Back.article.removedAt);
 
-  // 상한 — 운영 기간에는 살아 있는 글 상한이 max(10, 배정 글 수). 배정 밖 글도 살아 있으면 센다.
+  // 상한 — 운영 기간에는 살아 있는 글 상한이 배정 글 수 + 10(EXTRA_LIMITS.articles). 배정 밖 글도 살아 있으면 센다. 2026-11-03 사용자가
+  // 규칙을 바꿨다 — 전에는 max(10, 배정 글 수)라 배정 전에 만든 글 1편이 살아 있으면 배정 글 80편 중 80번째가 409였다.
   const TC = 'fake-writer-cap';
-  const capArticles = Array.from({ length: 12 }, (_, i) => planArt([`c-${String(i).padStart(3, '0')}`], `가상 상한 글 ${i}`, `가상 각도 ${i}`, W1));
+  const capArticles = Array.from({ length: 80 }, (_, i) => planArt([`c-${String(i).padStart(3, '0')}`], `가상 상한 글 ${i}`, `가상 각도 ${i}`, W1));
   await createExtraArticle(TC, input(['z-001'], ['가상 배정 밖 질문'], { name: '가상 배정 전 글', bankVersion: 'v9' }));
   await writePlan(TC, fakePlan(TC, '2099-12-31', capArticles));
-  for (const a of capArticles.slice(0, 11)) await createExtraArticle(TC, planInput(a));
+  for (const a of capArticles.slice(0, 79)) await createExtraArticle(TC, planInput(a));
+  const capLast = await statusAndMessage(createExtraArticle(TC, planInput(capArticles[79])));
+  ok('상한 — 배정 밖 글 1편 + 배정 글 79편이 살아 있어도 80번째 배정 글을 만든다', capLast === 'ok');
   const capAlive = (await readExtraArticles(TC)).articles.filter((a) => !a.removedAt).length;
-  ok('상한 — 배정 글 12편이면 살아 있는 글 12편까지 만든다(10편을 넘어)', capAlive === 12);
-  const capOver = await statusAndMessage(createExtraArticle(TC, planInput(capArticles[11])));
-  ok('상한 — 배정 밖 글 1편 + 배정 글 11편이면 12번째 배정 글은 409 · 「12편까지」', capOver.startsWith('409') && capOver.includes('12편까지'));
-  await patchExtraArticle(TC, { id: capArticles[0].id, removed: true });
-  ok('상한 — 하나 빼면 남은 배정 글을 만든다', (await createExtraArticle(TC, planInput(capArticles[11]))).article.id === capArticles[11].id);
-  ok('상한 — 다시 12편이면 뺀 배정 글 되살리기도 409', (await fails(patchExtraArticle(TC, { id: capArticles[0].id, removed: false }))) === 409);
+  ok('상한 — 살아 있는 글 81편(배정 밖 1 + 배정 80)', capAlive === 81);
+  const capOffPlan = await statusAndMessage(createExtraArticle(TC, input(['z-002'], ['가상 배정 밖 질문 둘'], { name: '가상 배정 밖 글', bankVersion: 'v9' })));
+  ok('상한 — 상한(90)이 남아도 배정 밖 글은 400 · 「배정표 글만」', capOffPlan.startsWith('400') && capOffPlan.includes('배정표 글만'));
+
+  // 상한에 닿으면 — 앞 배정 기간의 글 11편이 살아 있는 채로 새 배정 80편을 받으면 90편에서 막힌다.
+  const TF = 'fake-writer-full';
+  const oldPlanArticles = Array.from({ length: 11 }, (_, i) => planArt([`o-${String(i).padStart(3, '0')}`], `가상 앞선 글 ${i}`, `가상 각도 ${i}`, W2));
+  await writePlan(TF, fakePlan(TF, '2099-12-31', oldPlanArticles));
+  for (const a of oldPlanArticles) await createExtraArticle(TF, planInput(a));
+  const newPlanArticles = Array.from({ length: 80 }, (_, i) => planArt([`n-${String(i).padStart(3, '0')}`], `가상 새 글 ${i}`, `가상 각도 ${i}`, W1));
+  await writePlan(TF, fakePlan(TF, '2099-12-31', newPlanArticles));
+  for (const a of newPlanArticles.slice(0, 79)) await createExtraArticle(TF, planInput(a));
+  ok('상한 — 앞 배정 글 11편 + 새 배정 글 79편 = 90편까지 만든다', (await readExtraArticles(TF)).articles.filter((a) => !a.removedAt).length === 90);
+  const fullOver = await statusAndMessage(createExtraArticle(TF, planInput(newPlanArticles[79])));
+  ok('상한 — 91번째 배정 글은 409 · 「90편까지」', fullOver.startsWith('409') && fullOver.includes('90편까지'));
+  await patchExtraArticle(TF, { id: newPlanArticles[0].id, removed: true });
+  ok('상한 — 하나 빼면 남은 배정 글을 만든다', (await createExtraArticle(TF, planInput(newPlanArticles[79]))).article.id === newPlanArticles[79].id);
+  ok('상한 — 다시 90편이면 뺀 배정 글 되살리기도 409', (await fails(patchExtraArticle(TF, { id: newPlanArticles[0].id, removed: false }))) === 409);
 
   // 깨진 배정 파일 — 읽기는 corrupt, 배정 글이라도 만들지 않는다(fail closed). topic:이 아닌 항목은 이 규칙 밖.
   const TB = 'fake-writer-broken';

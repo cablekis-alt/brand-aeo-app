@@ -169,7 +169,7 @@ function overlapOf(article: Pick<ExtraArticle, 'id' | 'questionTexts'>, all: Ext
 }
 
 /**
- * 편수 · 겹침 규칙. 기본은 살아 있는 글 10편 · 한 질문은 한 글만. 작성자 배정 기간에는 서버가 상한을 배정 글 수까지 늘리고 겹침을
+ * 편수 · 겹침 규칙. 기본은 살아 있는 글 10편 · 한 질문은 한 글만. 작성자 배정 기간에는 서버가 상한을 배정 글 수 + 10으로 늘리고 겹침을
  * 허용한다(src/lib/probePlan.ts writerExtraRules — 배정 밖 글은 그쪽 topicGuard가 막는다).
  */
 export interface ExtraArticleRules {

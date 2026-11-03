@@ -49,6 +49,7 @@ import {
   topicGuard,
   writerArticle,
   writerChip,
+  writerRunCapReason,
   type WriterPlan,
   type WriterPlanArticle,
 } from '../lib/probePlan'
@@ -447,7 +448,7 @@ function BulkDrafts({
  * PC 한 곳에서 모두 만들고 작성자는 받은 초안을 자기 블로그에 올린다. 사람이 질문을 고르다 배정과 다르게 묶는 일을 없앤다.
  *
  * 누르기 전에 확인한다 — 보는 주의 질문 은행 판이 배정 판인가(다른 판이면 같은 id가 다른 질문이다), 살아 있는 추가 글 + 만들 글이 상한
- * (extraArticleCap — 운영 기간에는 배정 글 수까지) 안인가, 측정 중이 아닌가(판정 엔진을 함께 쓴다), 다른 일괄 실행이 돌고 있지 않은가
+ * (writerRunCapReason · extraArticleCap — 운영 기간에는 배정 글 수 + 10) 안인가, 측정 중이 아닌가(판정 엔진을 함께 쓴다), 다른 일괄 실행이 돌고 있지 않은가
  * (브리프 · 초안 파일 쓰기에 줄이 없다). 이미 살아 있는 글은 건너뛰고, 뺀 글은 서버가 되살린다. 배정 글의 각도는 추가 글의 「다룰
  * 각도」로 들어가 브리프 각도가 된다.
  *
@@ -572,9 +573,7 @@ function WriterRuns({
         const reason =
           extrasBlocked ??
           topicGuard(writerPlan, false, weekBank, ids[0], today) ??
-          (alive.size + missing > cap
-            ? `추가 글은 ${cap}편까지예요 — 지금 ${alive.size}편에 ${missing}편을 더하면 넘습니다. 다 쓴 추가 글을 목록에서 뺀 뒤 눌러 주세요.`
-            : null) ??
+          writerRunCapReason(writerPlan, alive, w.key, today) ??
           (measuring ? `측정이 끝난 뒤에 눌러 주세요${measuringName ? `(지금 ${measuringName} 측정 중)` : ''}.` : null)
         return (
           <div key={w.key} style={{ display: 'grid', gap: 2 }}>

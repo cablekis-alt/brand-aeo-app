@@ -34,6 +34,7 @@ import {
   writerArticle,
   writerChip,
   writerExtraRules,
+  writerRunCapReason,
   WRITER_PLAN_FORMAT,
   type WriterPlan,
 } from '../src/lib/probePlan';
@@ -142,12 +143,49 @@ const ids = plan?.articles.map((a) => a.id) ?? [];
 {
   const TODAY = '2026-11-10';
   ok('상한 — plan 없으면 10편(지금과 같다)', extraArticleCap(null, TODAY) === EXTRA_LIMITS.articles && EXTRA_LIMITS.articles === 10);
-  ok('상한 — 배정 글이 10편보다 적으면 10편', extraArticleCap(plan, TODAY) === 10);
-  const many = { ...plan, articles: Array.from({ length: 80 }, (_, i) => ({ ...plan.articles[0], id: `topic:x-${String(i).padStart(3, '0')}` })) } as WriterPlan;
-  ok('상한 — 배정 글 80편이면 80편', extraArticleCap(many, TODAY) === 80);
+  // 2026-11-03 사용자가 규칙을 바꿨다 — 운영 기간의 상한은 배정 글 수 + 10(EXTRA_LIMITS.articles). 전에는 max(10, 배정 글 수)라 배정 전에
+  // 만든 글 1편이 살아 있으면 배정 글 80편 중 79편만 만들 수 있었다.
+  ok('상한 — 배정 글 4편이면 4 + 10 = 14편', extraArticleCap(plan, TODAY) === 4 + EXTRA_LIMITS.articles);
+  const xId = (i: number) => `x-${String(i).padStart(3, '0')}`;
+  const many = {
+    ...plan,
+    articles: Array.from({ length: 80 }, (_, i) => ({
+      ...plan.articles[0],
+      id: topicArticleId([xId(i)]),
+      writer: { key: `w${Math.floor(i / 10) + 1}`, name: `가상 작성자 ${Math.floor(i / 10) + 1}` },
+      questionIds: [xId(i)],
+      questionTexts: [`가상 배정 질문 ${xId(i)}`],
+    })),
+  } as WriterPlan;
+  ok('상한 — 배정 글 80편이면 80 + 10 = 90편', extraArticleCap(many, TODAY) === 90);
   ok('상한 — 기간이 지나면 10편', extraArticleCap(many, '2027-04-01') === 10);
   ok('규칙 — plan 없음 · 깨짐 · 기간 뒤에는 undefined(기본 규칙)', writerExtraRules(null, false, TODAY) === undefined && writerExtraRules(null, true, TODAY) === undefined && writerExtraRules(many, true, TODAY) === undefined && writerExtraRules(many, false, '2027-04-01') === undefined);
-  ok('규칙 — 운영 기간이면 상한 = 배정 글 수 · 겹침 허용', JSON.stringify(writerExtraRules(many, false, TODAY)) === JSON.stringify({ cap: 80, sharedQuestions: true }));
+  ok('규칙 — 운영 기간이면 상한 = 배정 글 수 + 10 · 겹침 허용', JSON.stringify(writerExtraRules(many, false, TODAY)) === JSON.stringify({ cap: 90, sharedQuestions: true }));
+
+  // 배정 전에 만든 글 1편 + 배정 글 79편이 살아 있어도 80번째 배정 글을 만든다(저장소 검사 그대로).
+  const NOW0 = '2026-11-10T00:00:00.000Z';
+  const offPlan: ExtraArticle = { id: 'topic:z-001', name: '가상 배정 전 글', bankVersion: 'v9', questionIds: ['z-001'], questionTexts: ['가상 배정 밖 질문'], createdAt: NOW0, updatedAt: NOW0 };
+  const asExtra = (a: WriterPlan['articles'][number]): ExtraArticle => ({ id: a.id, name: a.name, angle: a.angle, bankVersion: 'v9', questionIds: a.questionIds, questionTexts: a.questionTexts, createdAt: NOW0, updatedAt: NOW0 });
+  const planInputOf = (a: WriterPlan['articles'][number]) => ({ id: a.id, name: a.name, angle: a.angle, bankVersion: 'v9', questionIds: a.questionIds, questionTexts: a.questionTexts });
+  const rules90 = writerExtraRules(many, false, TODAY);
+  const with79 = [offPlan, ...many.articles.slice(0, 79).map(asExtra)];
+  const eightieth = checkNewExtraArticle(planInputOf(many.articles[79]), with79, NOW0, rules90);
+  ok('상한 — 배정 밖 글 1편 + 배정 글 79편이 살아 있으면 80번째 배정 글도 만든다', eightieth.ok && eightieth.articles.length === 81, eightieth.ok ? undefined : eightieth.error);
+  const tenOff = Array.from({ length: 10 }, (_, i): ExtraArticle => ({ ...offPlan, id: `topic:z-${i}`, questionIds: [`z-${i}`], questionTexts: [`가상 배정 밖 질문 ${i}`] }));
+  const ninety = [...tenOff, ...many.articles.slice(0, 80).map(asExtra)];
+  const ninetyFirst = checkNewExtraArticle({ ...planInputOf(many.articles[0]), id: 'topic:x-999', questionIds: ['x-999'], questionTexts: ['가상 넘침 질문'] }, ninety, NOW0, rules90);
+  ok('상한 — 살아 있는 글 90편이면 91번째는 409 · 「90편까지」', !ninetyFirst.ok && ninetyFirst.status === 409 && ninetyFirst.error.includes('90편까지'));
+
+  // 작성자 단추의 편수 검사(writerRunCapReason) — 화면 문구와 같은 상한을 쓴다.
+  const aliveOf = (list: ExtraArticle[]) => new Set(list.map((a) => a.id));
+  const w8NineDone = aliveOf([offPlan, ...many.articles.slice(0, 79).map(asExtra)]);
+  ok('작성자 단추 — 배정 밖 1편 + 배정 79편이면 마지막 작성자 단추를 누를 수 있다', writerRunCapReason(many, w8NineDone, 'w8', TODAY) === null);
+  const w8None = aliveOf([offPlan, ...many.articles.slice(0, 70).map(asExtra)]);
+  ok('작성자 단추 — 배정 밖 1편 + 다른 작성자 70편이면 마지막 작성자 10편을 누를 수 있다', writerRunCapReason(many, w8None, 'w8', TODAY) === null);
+  const crowded = aliveOf([...tenOff, { ...offPlan, id: 'topic:z-extra', questionIds: ['z-extra'] }, ...many.articles.slice(0, 70).map(asExtra)]);
+  const crowdedReason = writerRunCapReason(many, crowded, 'w8', TODAY);
+  ok('작성자 단추 — 81편 + 10편이면 막고 「90편까지」 · 지금 편수 · 더할 편수를 알림', Boolean(crowdedReason?.includes('90편까지') && crowdedReason.includes('81편') && crowdedReason.includes('10편을 더하면')));
+  ok('작성자 단추 — 그 작성자 글이 모두 살아 있으면 더할 글이 없어 막지 않는다', writerRunCapReason(many, aliveOf(ninety), 'w1', TODAY) === null);
   ok('규칙 — 기본 규칙은 10편 · 겹침 409', DEFAULT_EXTRA_RULES.cap === 10 && !DEFAULT_EXTRA_RULES.sharedQuestions);
 
   // checkNewExtraArticle · checkExtraArticlePatch에 규칙을 넘기면 — 기본(rules 없음)은 지금과 같다.
