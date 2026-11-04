@@ -13,6 +13,10 @@
  *   파일이 달라져도 같은 화면으로 세야 한다.
  * - 앱이 끝난 뒤에 캡처 창이 새로 생기면 종료가 늦어지고 자사 사이트를 한 번 더 연다 — 주소를 확인하는 동안 끝나도 창을 만들지 않아야 한다.
  * - 첫 화면의 바깥 그림 · 공공누리 그림은 <html> · <body> 배경이나 웹 컴포넌트(shadow root) 안에 있어도 잡아야 한다.
+ * - 잘라 찍기(장소 안내 · 가이드)는 사각형에 걸친 그림만 본다 — 밖의 공공누리 사진 때문에 버리면 안 되고, 안에 걸치면 버려야 한다.
+ *   사각형이 화면보다 크거나 머리에 가리면 찍지 않아야 한다(잘린 그림 · 가린 그림이 글에 들어간다).
+ * - 장소 안내 변형(장소 이름)은 화면이 보낸 값이다 — 모양 · 사이트 장소 목록을 보지 않으면 아무 경로나 찍는다.
+ * - 설명 줄의 시각 · 요금이 찍은 글자에 없으면 「확인 필요」여야 한다(틀린 화면이 사실처럼 나간다).
  *
  *   npx tsx scripts/verify-screen-capture.ts
  */
@@ -100,11 +104,29 @@ interface InspectResult {
   frames: string[]
 }
 
+type Rect = { x: number; y: number; width: number; height: number }
+interface ClipState {
+  missing: string[]
+  rects: { x: number; y: number; w: number; h: number }[]
+  text: string
+  cover: number
+  docWidth: number
+  docHeight: number
+}
 interface CaptureModule {
   captureScreen: (url: string, options: Record<string, unknown>) => Promise<unknown>
   disposeCapture: () => void
-  pageInspect: (ownHost: string, mapSelector: string | null, mapHosts: string[]) => InspectResult
+  pageInspect: (ownHost: string, mapSelector: string | null, mapHosts: string[], region?: Rect | null) => InspectResult
+  pageClipState: (selectors: string[], optional: string[]) => ClipState
+  pageClipCovers: (selectors: string[], optional: string[], region: Rect) => string[]
+  clipPlan: (
+    rects: { x: number; y: number; w: number; h: number }[],
+    padding: number,
+    page: { docWidth: number; docHeight: number; viewWidth: number; viewHeight: number; scrollX: number; scrollY: number; cover: number },
+  ) => { rect: Rect | null; scrollY: number; problem: string | null }
+  requestBlockReason: (details: { url: string; method?: string; resourceType?: string }, ctx: Record<string, unknown>) => Promise<string | null>
   countClosedShadowRoots: (node: unknown) => number
+  closedShadowHosts: (node: unknown) => { backendNodeId: number; nodeName: string }[]
 }
 
 /**
@@ -178,7 +200,8 @@ try {
   ok('ownedDomains의 https:// · www. · 끝 / 를 걷고 찾는다', screenProfileFor(['https://www.gunsan.webforai.kr/']) === profile)
   ok('상위 도메인 · 다른 사이트 · 없음이면 프로필이 없다', screenProfileFor(['webforai.kr']) === null && screenProfileFor(['stay.example']) === null && screenProfileFor(undefined) === null)
   const allUrls = SCREEN_PROFILES.flatMap((p) => p.screens.flatMap((s) => s.variants.map((v) => screenUrl(p, v))))
-  ok('모든 변형 주소는 https · 프로필 호스트', allUrls.length === 11 && allUrls.every((u) => new URL(u).protocol === 'https:' && new URL(u).host === 'gunsan.webforai.kr'))
+  // 예전 기대값은 11(코스 5 + 지도 6)이었다 — 4단계에서 「아이와 함께」 가이드 변형 하나를 더했다. 장소 안내는 표에 변형이 없다(사이트 장소마다).
+  ok('모든 변형 주소는 https · 프로필 호스트', allUrls.length === 12 && allUrls.every((u) => new URL(u).protocol === 'https:' && new URL(u).host === 'gunsan.webforai.kr'))
   ok(
     '코스 변형은 /plan/ 미리 채우기 쿼리만(보내는 값 없음)',
     (course?.variants ?? []).every((v) => v.path.startsWith('/plan/')) &&
@@ -196,7 +219,67 @@ try {
   )
   const ids = SCREEN_PROFILES.flatMap((p) => p.screens.map((s) => `${p.host}/${s.id}:${new Set(s.variants.map((v) => v.id)).size === s.variants.length}`))
   ok('화면 · 변형 id는 프로필 안에서 겹치지 않는다', ids.every((x) => x.endsWith(':true')) && new Set(ids).size === ids.length)
-  ok('글에 넣는 종류는 코스만(지도는 미리보기만)', JSON.stringify(SCREEN_AUTO_SAVE_KINDS) === '["course"]' && screenSaveAllowed('course') && !screenSaveAllowed('map'))
+  // 예전 기대값은 ["course"]였다 — 4단계 과제대로 장소 안내 · 가이드(고객 사이트의 자사 글자 · 아이콘 · 일러스트만 잘라 찍은 화면)도 넣는다.
+  ok(
+    '글에 넣는 종류는 코스 · 장소 안내 · 가이드(지도는 미리보기만)',
+    JSON.stringify(SCREEN_AUTO_SAVE_KINDS) === '["course","place","guide"]' && screenSaveAllowed('course') && screenSaveAllowed('place') && screenSaveAllowed('guide') && !screenSaveAllowed('map'),
+  )
+  // ── 1b) 장소 안내 · 가이드(4단계 잘라 찍기) ───────────────────────────────
+  const { placeVariantOfSlug, placeScreenVariant, placeSlugsOfSitemap, screenAlt, screenFactGaps, screenAspectRatio, isScreenKind } = lib
+  const placeInfo = profile?.screens.find((s) => s.id === 'place-info')
+  const kidsGuide = profile?.screens.find((s) => s.id === 'kids-guide')
+  ok(
+    '장소 안내 — 잘라 찍기(이름 · 안내 카드 필수, 분류 · 다른 이름 · 소개는 있으면) · 자사 호스트만 · 변형은 사이트 장소마다(표에 없음)',
+    placeInfo?.kind === 'place' && placeInfo.placePages === true && placeInfo.ownHostOnly === true && placeInfo.variants.length === 0 &&
+      JSON.stringify(placeInfo.clip?.selectors) === JSON.stringify(['article.place .pl-head h1', 'article.place dl.kf.kf-hero']) &&
+      (placeInfo.clip?.optional ?? []).includes('article.place .pl-head .kicker') && placeInfo.clip?.padding === 16 && placeInfo.slotWords instanceof RegExp,
+  )
+  ok(
+    '아이와 함께 가이드 — 제목 · 자사 일러스트 필수, 분류 · 첫 줄은 있으면 · 변형 하나(/guides/아이와-함께-군산/)',
+    kidsGuide?.kind === 'guide' && kidsGuide.ownHostOnly === true && kidsGuide.variants.length === 1 &&
+      JSON.stringify(kidsGuide.clip?.selectors) === JSON.stringify(['header.gd-head h1', 'header.gd-head figure.art-camp']) &&
+      screenUrl(profile!, kidsGuide.variants[0]!) === `https://gunsan.webforai.kr/guides/${encodeURIComponent('아이와-함께-군산')}/`,
+  )
+  ok('찍는 종류 — 코스 · 지도 · 장소 안내 · 가이드', ['course', 'map', 'place', 'guide'].every(isScreenKind) && !isScreenKind('action') && !isScreenKind('unrelated') && !isScreenKind(undefined))
+  const museum = placeVariantOfSlug('가상박물관')
+  ok(
+    '장소 이름(slug)으로 만든 변형 — 주소는 /places/<이름>/(퍼센트 표기) · 이름표는 하이픈을 띄어쓰기로',
+    museum?.id === '가상박물관' && museum.label === '가상박물관' && museum.path === `/places/${encodeURIComponent('가상박물관')}/` &&
+      placeVariantOfSlug('가상-해양-공원')?.label === '가상 해양 공원' && placeVariantOfSlug('31운동-100주년-기념관')?.id === '31운동-100주년-기념관',
+  )
+  ok(
+    '장소 이름 모양이 아니면 변형이 없다(경로 글자 · 띄어쓰기 · % · ? · # · 앞뒤 하이픈 · 너무 긺 · 글자 아님 · 조합 전 한글)',
+    ['', '../x', 'a/b', 'a\\b', '가상 박물관', '%2F', '가상%EB', 'x?y', 'x#y', '-x', 'x-', 'a--b', 'a'.repeat(61), '가상박물관'.normalize('NFD')].every((x) => placeVariantOfSlug(x) === null) &&
+      placeVariantOfSlug(123) === null && placeVariantOfSlug(null) === null,
+  )
+  ok(
+    '장소 안내 화면 찾기 — 변형 id 모양만 보고 만든다(사이트 목록은 찍기 전에 서버가 본다)',
+    findScreenVariant(profile!, 'place-info', '가상박물관')?.variant.path === museum?.path && findScreenVariant(profile!, 'place-info', '../x') === null &&
+      findScreenVariant(profile!, 'kids-guide', 'default')?.screen.kind === 'guide' && findScreenVariant(profile!, 'kids-guide', '가상박물관') === null,
+  )
+  const PLACE_URL = `https://gunsan.webforai.kr/places/${encodeURIComponent('가상박물관')}/`
+  ok(
+    '장소 사전 주소로 만든 변형 — https · 프로필 호스트 · /places/<이름>/ 하나만(다른 호스트 · 하위 도메인 · 언어 경로 · 더 깊은 경로 · 쿼리 · 포트 · 계정은 아니다)',
+    placeScreenVariant(profile!, PLACE_URL)?.id === '가상박물관' && placeScreenVariant(profile!, 'https://gunsan.webforai.kr/places/가상박물관/')?.id === '가상박물관' &&
+      [
+        'http://gunsan.webforai.kr/places/가상박물관/', 'https://evil.example/places/가상박물관/', 'https://www.gunsan.webforai.kr/places/가상박물관/',
+        'https://gunsan.webforai.kr/en/places/x/', 'https://gunsan.webforai.kr/places/가상박물관/사진/', 'https://gunsan.webforai.kr/places/가상박물관/?x=1',
+        'https://gunsan.webforai.kr:8443/places/가상박물관/', 'https://u:p@gunsan.webforai.kr/places/가상박물관/', 'https://gunsan.webforai.kr/places/',
+        'https://gunsan.webforai.kr/places/%E0%A4%A/', 'https://gunsan.webforai.kr/places/..%2Fx/', 'not a url',
+      ].every((u) => placeScreenVariant(profile!, u) === null),
+  )
+  const sitemap = [
+    '<urlset>', `<url><loc>${PLACE_URL}</loc></url>`, '<url><loc>https://gunsan.webforai.kr/places/가상-해양-공원/</loc></url>',
+    '<url><loc>https://gunsan.webforai.kr/en/places/virtual-museum/</loc></url>', '<url><loc>https://evil.example/places/바깥/</loc></url>',
+    '<url><loc>https://gunsan.webforai.kr/plan/</loc></url>', '</urlset>',
+  ].join('\n')
+  ok('sitemap의 장소 이름 — 프로필 호스트의 /places/<이름>/만', JSON.stringify([...placeSlugsOfSitemap(sitemap, profile!)]) === JSON.stringify(['가상박물관', '가상-해양-공원']))
+  ok(
+    '대체 텍스트 — 장소 안내는 장소 이름을 앞에, 다른 화면은 화면 이름만',
+    screenAlt('가상각', placeInfo!, museum!) === "가상각 웹사이트 '가상박물관 장소 안내' 화면" && screenAlt('가상각', kidsGuide!, kidsGuide!.variants[0]) === "가상각 웹사이트 '아이와 함께 안내' 화면" &&
+      screenAlt('가상각', course!, course!.variants[0]) === "가상각 웹사이트 'AI 코스 만들기' 화면",
+  )
+  ok('썸네일 비율 — 찍은 크기 그대로(모르면 없음)', screenAspectRatio({ width: 425, height: 677 }) === '425 / 677' && screenAspectRatio(undefined) === undefined && screenAspectRatio({ width: 0, height: 5 }) === undefined)
   const kidsTarget = { profile: profile!, ...findScreenVariant(profile!, 'course', 'kids')! }
   const wondosim = { profile: profile!, ...findScreenVariant(profile!, 'map', 'r-원도심')! }
   ok('찾을 수 없는 화면 · 변형은 null', findScreenVariant(profile!, 'course', 'nope') === null && findScreenVariant(profile!, 'nope', 'default') === null && findScreenVariant(profile!, 1, 2) === null)
@@ -207,6 +290,15 @@ try {
     kidsOpts.host === 'gunsan.webforai.kr' && !kidsOpts.map && kidsOpts.scrollTo === 'fieldset:has(input[name="with"])' && JSON.stringify(kidsOpts.hide) === '[".trp-handed-w","[data-wx]"]' &&
       mapOpts.map === true && mapOpts.scrollTo === '.map-grid' && mapOpts.activateFragmentLink === true && JSON.stringify(mapOpts.hide) === '["[data-wx]"]' &&
       screenUrl(profile!, wondosim.variant) === new URL('https://gunsan.webforai.kr/map/#r-원도심').href,
+  )
+  const placeOpts = screenCaptureOptions({ profile: profile!, ...findScreenVariant(profile!, 'place-info', '가상박물관')! })
+  const guideOpts = screenCaptureOptions({ profile: profile!, ...findScreenVariant(profile!, 'kids-guide', 'default')! })
+  ok(
+    '찍기 옵션 — 장소 안내 · 가이드는 프로필의 잘라 찍기 · 자사 호스트만(지도 · 스크롤 없음)',
+    JSON.stringify(placeOpts.clip?.selectors) === JSON.stringify(['article.place .pl-head h1', 'article.place dl.kf.kf-hero']) && placeOpts.clip?.padding === 16 &&
+      (placeOpts.clip?.optional ?? []).length === 3 && placeOpts.ownHostOnly === true && !placeOpts.map && !placeOpts.scrollTo && JSON.stringify(placeOpts.hide) === '["[data-wx]"]' &&
+      JSON.stringify(guideOpts.clip?.selectors) === JSON.stringify(['header.gd-head h1', 'header.gd-head figure.art-camp']) && guideOpts.ownHostOnly === true &&
+      kidsOpts.clip === undefined && kidsOpts.ownHostOnly === undefined && mapOpts.clip === undefined,
   )
 
   // ── 2) id · 앱 주소 · 경로 ─────────────────────────────────────────────
@@ -284,10 +376,56 @@ try {
       kindOf('AI 코스 결과 화면') === 'action' && kindOf('가상각 웹사이트의 AI 코스 만들기 조건 선택 화면') === 'course' && kindOf('AI 코스 만들기 화면에서 조건을 선택한 모습') === 'course',
   )
   ok('다른 회사 · 휴대폰 화면은 other', kindOf('지도 앱에서 숙소까지 도보 경로를 띄운 휴대폰 화면') === 'other' && kindOf('네이버 플레이스 예약 화면') === 'other')
+  // 예전 기대값은 「'아이와 함께' 안내 화면」 · 「관광정보 사이트에서 한 장소의 요금이 표시된 화면」이 unrelated였다 — 4단계에서 그 둘이 찍는
+  // 화면(가이드 · 장소 안내)이 되어, 목록에 없는 화면의 예를 첫 화면 · 행사 안내로 바꿨다.
   ok(
     '목록에 없는 화면은 unrelated, 프로필이 없는 브랜드는 none',
-    kindOf("가상각 웹사이트의 '아이와 함께' 안내 화면") === 'unrelated' && kindOf('관광정보 사이트에서 한 장소의 요금이 표시된 화면') === 'unrelated' &&
-      screenKindOf('가상스테이 웹사이트의 예약 화면', null).kind === 'none',
+    kindOf('가상각 웹사이트의 첫 화면') === 'unrelated' && kindOf("가상각 웹사이트의 '이번 주 행사' 안내 화면") === 'unrelated' &&
+      screenKindOf('가상스테이 웹사이트의 예약 화면', null).kind === 'none' && screenKindOf('가상각 웹사이트에서 가상박물관의 이용시간이 표시된 화면', null).kind === 'none',
+  )
+  ok(
+    '장소 안내 화면 자리 — 화면 이름 없이 이용시간 · 여는 시간 · 휴관 · 입장료 · 요금 낱말(웹사이트 낱말이 없어도 「관광정보 사이트」면)',
+    screenKindOf('가상각 웹사이트에서 가상박물관의 이용시간과 휴관일, 입장료가 표시된 화면', profile).screen?.id === 'place-info' &&
+      kindOf('가상각 웹사이트에서 가상박물관의 여는 시간과 요금 안내가 보이는 화면') === 'place' &&
+      kindOf('관광정보 사이트에서 한 장소의 여는 시간, 요금, 가는 길이 함께 표시된 화면') === 'place' && kindOf('가상각 홈페이지의 가상박물관 쉬는 날 안내 화면') === 'place',
+  )
+  ok(
+    '가이드 화면 자리 — 「아이와 함께」 안내(따옴표 · 띄어쓰기 무시)',
+    screenKindOf("가상각 웹사이트의 '아이와 함께' 안내 화면", profile).screen?.id === 'kids-guide' && kindOf('가상각 웹사이트의 아이와 함께 안내 화면') === 'guide' &&
+      kindOf("가상각 사이트의 '아이와 함께' 안내 메뉴 화면") === 'guide',
+  )
+  ok(
+    '장소 안내 낱말이 있어도 다른 종류를 뺏지 않는다 — 누르기 · 결과 화면은 action, 화면 이름이 있으면 그 화면, 다른 회사는 other',
+    kindOf("가상각 '지도에서 찾기' 화면에서 가상박물관을 선택해 이용시간과 입장료가 보이는 모습") === 'action' &&
+      kindOf('코스 결과 화면에서 한 장소를 눌러 여는 시간과 요금, 가는 길이 함께 표시된 모습') === 'action' &&
+      kindOf('가상각 웹사이트의 지도에서 찾기 화면에서 가상박물관을 눌러 여는 시간과 요금이 함께 보이는 장면') === 'action' &&
+      kindOf('가상각 웹사이트의 지도에서 찾기 화면에 가상박물관의 이용시간이 표시된 모습') === 'map' &&
+      kindOf('가상각 웹사이트의 AI 코스 만들기 화면에서 입장료가 없는 곳을 고르는 모습') === 'course' &&
+      kindOf('네이버 플레이스 화면에서 가상박물관 이용시간이 보이는 모습') === 'other' && kindOf('가상각 웹사이트의 지도에서 찾기 화면') === 'map',
+  )
+  // 설명 줄 · 장면 글자의 사실과 찍은 글자 — 값(시각 · 금액 · 달 · 요일 · 무료 · 입장 마감)과 말(이용시간 · 요금 · 휴관)
+  const SHOWN = '관광지\n가상박물관\n이용시간\n3~10월 09:00–18:00(입장마감 17:30)\n11~2월 09:00–17:00(입장마감 16:30)\n쉬는 날\n매주 월요일\n요금\n개별 성인 2,000원\n주차 요금\n무료'
+  ok(
+    '사실 확인 — 설명 줄의 시각 · 입장 마감 · 달, 장면 글자의 이용시간 · 휴관일 · 입장료가 찍은 글자에 있으면 빈 것이 없다',
+    screenFactGaps('가상각 웹사이트에서 가상박물관의 이용시간과 휴관일, 입장료가 표시된 화면\n가상박물관 3~10월 이용시간은 09:00–18:00 (입장마감 17:30)입니다.', SHOWN).length === 0 &&
+      screenFactGaps('성인 2000원 · 9:00 개장 · 월요일 휴관 · 주차 무료', SHOWN).length === 0 && screenFactGaps('', SHOWN).length === 0,
+  )
+  ok(
+    '사실 확인 — 찍은 글자에 없는 값은 적힌 모양 그대로(금액 · 시각 · 요일 · 달 · 무료 · 입장 마감)',
+    JSON.stringify(screenFactGaps('성인 3,000원, 09:30 개장, 화요일 휴관, 4~10월', SHOWN)) === JSON.stringify(['09:30', '3,000원', '4~10월', '화요일']) &&
+      JSON.stringify(screenFactGaps('주차 무료 · 입장마감 17:30', '가상박물관\n09:00–18:00\n2,000원')) === JSON.stringify(['17:30', '무료', '입장 마감']),
+  )
+  ok(
+    '사실 확인 — 값 없이 말한 이용시간 · 요금 · 휴관은 찍은 글자에 시각 · 금액(무료) · 쉬는 날 안내가 있어야(연중무휴도 쉬는 날 안내)',
+    JSON.stringify(screenFactGaps('이용시간과 휴관일, 입장료가 보이는 화면', '가상박물관\n전화')) === JSON.stringify(['휴관', '이용시간', '입장료']) &&
+      screenFactGaps('휴관일이 보이는 화면', '쉬는 날\n연중무휴').length === 0 && screenFactGaps('요금 안내', '입장료 무료').length === 0,
+  )
+  ok('사실 확인 — 「월요일에도 여는 곳」은 월요일이 찍은 글자에 있어야', JSON.stringify(screenFactGaps('월요일에도 여는 곳을 확인할 수 있습니다.', '아이와 함께 가상 여행\n두 묶음으로 나눠 다니면 됩니다.')) === JSON.stringify(['월요일']))
+  ok(
+    '장소 안내 · 가이드 화면도 내보낸다(앱 주소 · 프로필의 장소 이름 모양)',
+    screenExportable({ src: appSrc, origin: 'screen', screenId: 'place-info', variantId: '가상박물관' }) && screenExportable({ src: appSrc, origin: 'screen', screenId: 'kids-guide', variantId: 'default' }) &&
+      !screenExportable({ src: appSrc, origin: 'screen', screenId: 'place-info', variantId: '../x' }) &&
+      screenOfPick({ origin: 'screen', screenId: 'place-info', variantId: '가상박물관' }, ['gunsan.webforai.kr'])?.screen.kind === 'place',
   )
   const tiersOf = (screen: NonNullable<typeof map>, text: string, named: string[] = [], context = '') => {
     const c = screenVariantChoice(screen, text, named, context)
@@ -376,6 +514,7 @@ try {
       screenShotMeta('가상각', screenUrl(profile!, wondosim.variant), '2026-11-04T05:00:00.000Z') === '가상각 웹사이트 화면 · gunsan.webforai.kr/map/#r-원도심 · 11-04 캡처' &&
       screenShotMeta('가상각', 'https://gunsan.webforai.kr/plan/?with=kids&kids=7') === '가상각 웹사이트 화면 · gunsan.webforai.kr/plan/',
   )
+  ok('설명 줄 — 장소 페이지 주소는 읽는 글자로', screenShotMeta('가상각', PLACE_URL, '2026-11-04T05:00:00.000Z') === '가상각 웹사이트 화면 · gunsan.webforai.kr/places/가상박물관/ · 11-04 캡처')
   ok(
     '찍은 날은 한국 날짜(UTC 15시 이후는 다음 날) · 읽지 못하면 null',
     screenShotDay('2026-11-03T14:59:00.000Z') === '11-03' && screenShotDay('2026-11-03T15:00:00.000Z') === '11-04' && screenShotDay('nope') === null && screenShotDay(undefined) === null,
@@ -435,7 +574,19 @@ try {
     ok('모르는 id · 다른 type · 모양이 틀린 메시지는 지나친다', port.posted.length === 1)
     port.emit({ type: 'screen-capture-result', id: first?.id, ok: true, png: pngA.toString('base64'), width: 1280, height: 800, finalUrl: req1.url, warnings: ['w1', 3] })
     const got = await p1
-    ok('답의 PNG(base64)를 바이트로 받는다', got.png.equals(pngA) && got.finalUrl === req1.url && JSON.stringify(got.warnings) === '["w1"]')
+    ok('답의 PNG(base64)를 바이트로 받는다', got.png.equals(pngA) && got.finalUrl === req1.url && JSON.stringify(got.warnings) === '["w1"]' && got.text === undefined)
+    {
+      const portT = new FakePort()
+      const bridgeT = createCaptureBridge(portT, { waitMs: () => 300 })
+      const pT = bridgeT.capture(req1)
+      await flush()
+      portT.emit({ type: 'screen-capture-result', id: portT.posted[0]?.id, ok: true, png: pngA.toString('base64'), text: 'x'.repeat(2500) })
+      const gotT = await pT
+      const pT2 = bridgeT.capture(req1)
+      await flush()
+      portT.emit({ type: 'screen-capture-result', id: portT.posted[1]?.id, ok: true, png: pngA.toString('base64'), text: 42 })
+      ok('잘라 찍은 부분의 글자(text)를 받는다 — 2000자까지, 글자가 아니면 없음', gotT.text?.length === 2000 && (await pT2).text === undefined)
+    }
     await flush()
     ok('앞 답이 오면 다음 요청을 보낸다', port.posted.length === 2)
     port.emit({ type: 'screen-capture-result', id: port.posted[1]?.id, ok: false, code: 'kogl-image', message: '공공누리 그림이 보입니다.' })
@@ -535,6 +686,110 @@ try {
       capture.countClosedShadowRoots(tree(true)) === 1 && capture.countClosedShadowRoots(tree(false)) === 0 && capture.countClosedShadowRoots(null) === 0,
     )
 
+    // 잘라 찍기 — 요소마다 자리(data-r="x,y,w,h", 화면 좌표)를 주고 jsdom에서 페이지 안 함수를 그대로 돌린다(군산각 장소 페이지 실측 자리).
+    const rectWindow = (html: string) => {
+      const dom = new JSDOM(html, { url: 'https://gunsan.webforai.kr/places/x/', runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
+      const w = dom.window
+      w.innerWidth = 1280
+      w.innerHeight = 800
+      w.Element.prototype.getBoundingClientRect = function (this: Element) {
+        const [x, y, width, height] = (this.getAttribute('data-r') ?? '0,0,0,0').split(',').map(Number) as [number, number, number, number]
+        return { left: x, top: y, right: x + width, bottom: y + height, width, height, x, y, toJSON: () => ({}) }
+      }
+      return w
+    }
+    const inPage = <T,>(w: ReturnType<typeof rectWindow>, fn: (...a: never[]) => unknown, ...args: unknown[]) => w.eval(`(${fn.toString()})(${args.map((a) => JSON.stringify(a)).join(',')})`) as T
+    const PLACE_HTML = [
+      '<nav class="lnav" style="position:sticky" data-r="320,0,945,52">바로가기</nav>',
+      '<article class="place"><div class="pl-head" data-r="364,108,384,857">',
+      '<p class="kicker" data-r="364,108,403,32">관광지</p><h1 data-r="364,146,384,47">가상박물관</h1><div class="summary" data-r="364,235,384,167">가상 소개</div>',
+      '<dl class="kf kf-hero" data-r="364,430,384,323"><dt>이용시간</dt><dd><img src="/assets/icons/fact-hours-64.webp" data-r="390,600,32,32">09:00–18:00</dd><dt>요금</dt><dd>성인 2,000원</dd></dl>',
+      '</div><figure class="pv" data-r="799,114,342,323"><img src="https://tong.visitkorea.or.kr/a.jpg" data-kogl="3" data-r="799,114,342,291"></figure></article>',
+      '<div class="fab" style="position:fixed" data-r="1167,452,56,195"></div>',
+    ].join('')
+    const SEL = ['article.place .pl-head h1', 'article.place dl.kf.kf-hero']
+    const OPT = ['article.place .pl-head .kicker', 'article.place .pl-head .pl-alt', 'article.place .pl-head .summary']
+    const pw = rectWindow(PLACE_HTML)
+    const state = inPage<ClipState>(pw, capture.pageClipState, SEL, OPT)
+    ok(
+      '잘라 찍을 요소 — 필수 · 있는 선택 요소의 자리(문서 좌표)와 글자(문서 순서), 위에 붙은 머리 높이',
+      state.missing.length === 0 && state.rects.length === 4 && state.text.startsWith('관광지\n가상박물관\n가상 소개\n이용시간') && state.text.includes('성인 2,000원') &&
+        state.cover === 52 && state.docWidth === 1280,
+    )
+    ok('필수 요소가 없으면 missing(선택 요소는 없어도 된다)', JSON.stringify(inPage<ClipState>(pw, capture.pageClipState, ['article.place .nope', 'h1'], ['.pl-alt']).missing) === '["article.place .nope"]')
+    const page = { docWidth: 1280, docHeight: 16000, viewWidth: 1280, viewHeight: 800, scrollX: 0, scrollY: 0, cover: 52 }
+    const plan = capture.clipPlan(state.rects, 16, { ...state, viewWidth: 1280, viewHeight: 800, scrollX: 0, scrollY: 0, docHeight: 16000 })
+    ok(
+      '잘라 찍기 계획 — 요소를 합친 사각형 + 여백 16(정수) · 첫 화면에 들어가면 스크롤하지 않는다',
+      plan.problem === null && JSON.stringify(plan.rect) === JSON.stringify({ x: 348, y: 92, width: 435, height: 677 }) && plan.scrollY === 0,
+    )
+    const tall = [{ x: 364, y: 146, w: 384, h: 700 }]
+    ok(
+      '잘라 찍기 계획 — 아래가 넘치면 머리 아래에 들어오는 가장 덜 움직이는 스크롤(위에서 62 · 아래에서 78)',
+      capture.clipPlan(tall, 16, page).scrollY === 62 && capture.clipPlan(tall, 16, { ...page, scrollY: 500 }).scrollY === 78 && capture.clipPlan(tall, 16, page).problem === null,
+    )
+    ok(
+      '잘라 찍기 계획 — 화면보다 크면 clip-too-large(머리를 뺀 높이 · 가로), 너무 작으면 clip-too-small, 머리에 가리면 clip-covered, 요소가 없으면 clip-missing',
+      capture.clipPlan([{ x: 364, y: 146, w: 384, h: 740 }], 16, page).problem === 'clip-too-large' &&
+        capture.clipPlan([{ x: 100, y: 146, w: 1200, h: 100 }], 16, { ...page, docWidth: 1500 }).problem === 'clip-too-large' &&
+        capture.clipPlan([{ x: 10, y: 300, w: 50, h: 20 }], 16, page).problem === 'clip-too-small' &&
+        capture.clipPlan([{ x: 364, y: 30, w: 384, h: 200 }], 16, page).problem === 'clip-covered' && capture.clipPlan([], 16, page).problem === 'clip-missing',
+    )
+    ok('잘라 찍기 계획 — 여백은 문서 안으로 자른다', JSON.stringify(capture.clipPlan([{ x: 5, y: 200, w: 300, h: 200 }], 16, page).rect) === JSON.stringify({ x: 0, y: 184, width: 321, height: 232 }))
+    const clipInspect = (region?: Rect) =>
+      inPage<InspectResult>(pw, capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region ?? null)
+    const inside = clipInspect(plan.rect!)
+    const wide = clipInspect({ x: 348, y: 92, width: 824, height: 364 })
+    ok(
+      '그림 검사(잘라 찍기) — 사각형 밖의 공공누리 · 바깥 그림은 괜찮고, 사각형에 걸치면 잡는다 · 사각형이 없으면 첫 화면 전체',
+      inside.kogl === 0 && inside.foreign.length === 0 && inside.images === 1 && wide.kogl > 0 && wide.foreign.includes('tong.visitkorea.or.kr') && clipInspect().kogl > 0,
+    )
+    ok(
+      '그림 검사(잘라 찍기) — 1px만 걸쳐도 걸친 것(799에서 끝나면 밖, 800이면 안)',
+      clipInspect({ x: 348, y: 92, width: 451, height: 300 }).kogl === 0 && clipInspect({ x: 348, y: 92, width: 452, height: 300 }).kogl > 0,
+    )
+    ok(
+      '가리는 고정 요소 — 사각형에 걸친 고정 · sticky 요소를 알린다(밖이면 · 잘라 찍을 요소를 품으면 아니다)',
+      JSON.stringify(inPage<string[]>(pw, capture.pageClipCovers, SEL, OPT, plan.rect)) === '[]' &&
+        JSON.stringify(inPage<string[]>(pw, capture.pageClipCovers, SEL, OPT, { x: 348, y: 92, width: 900, height: 500 })) === '["div.fab"]' &&
+        JSON.stringify(inPage<string[]>(rectWindow('<div class="stick" style="position:sticky" data-r="300,80,600,700"><h1 data-r="364,146,384,47">x</h1></div>'), capture.pageClipCovers, ['h1'], [], plan.rect)) === '[]',
+    )
+    const hosts = capture.closedShadowHosts(tree(true))
+    ok('닫힌 shadow root를 단 요소(잘라 찍기는 그 상자로 본다)', hosts.length === 1 && hosts[0]?.nodeName === 'X-INNER' && capture.closedShadowHosts(tree(false)).length === 0 && capture.closedShadowHosts(null).length === 0)
+    const dnsCache = new Map([['gunsan.webforai.kr', Promise.resolve(false)], ['tong.visitkorea.or.kr', Promise.resolve(false)]])
+    const own = { host: 'gunsan.webforai.kr', ownHostOnly: true, dnsCache }
+    ok(
+      '자사 호스트만(ownHostOnly) — 바깥 그림 요청은 off-host, 자사 · data: 는 통과, 끄면 바깥 그림도 통과(지도 · 코스 화면)',
+      (await capture.requestBlockReason({ url: 'https://tong.visitkorea.or.kr/a.jpg', method: 'GET', resourceType: 'image' }, own)) === 'off-host' &&
+        (await capture.requestBlockReason({ url: 'https://gunsan.webforai.kr/assets/a.webp', method: 'GET', resourceType: 'image' }, own)) === null &&
+        (await capture.requestBlockReason({ url: 'data:image/png;base64,AA==', method: 'GET', resourceType: 'image' }, own)) === null &&
+        (await capture.requestBlockReason({ url: 'https://gunsan.webforai.kr/api/plan/', method: 'POST', resourceType: 'xhr' }, own)) === 'method' &&
+        (await capture.requestBlockReason({ url: 'https://tong.visitkorea.or.kr/a.jpg', method: 'GET', resourceType: 'image' }, { ...own, ownHostOnly: false })) === null,
+    )
+    // 옵션 검사 — 선택자 · 여백 · 함께 쓸 수 없는 옵션(지도 · 스크롤)은 창을 만들기 전에 invalid-options.
+    const optCode = (options: Record<string, unknown>) => codeOf(capture.captureScreen('https://gunsan.webforai.kr/places/x/', { host: 'gunsan.webforai.kr', ...options }))
+    const badClips = await Promise.all([
+      optCode({ clip: { selectors: [] } }),
+      optCode({ clip: { selectors: ['h1{color:red}'] } }),
+      optCode({ clip: { selectors: ['h1'], padding: 99 } }),
+      optCode({ clip: { selectors: ['h1'], padding: 1.5 } }),
+      optCode({ clip: { selectors: ['h1'], optional: 'x' } }),
+      optCode({ clip: { selectors: ['h1'], optional: ['<b>'] } }),
+      optCode({ clip: { selectors: Array(9).fill('h1') } }),
+      optCode({ clip: { selectors: ['h1'] }, map: true }),
+      optCode({ clip: { selectors: ['h1'] }, scrollTo: 'h1' }),
+      optCode({ clip: 'h1' }),
+      optCode({ ownHostOnly: 'yes' }),
+    ])
+    ok('잘라 찍기 옵션 검사 — 잘못된 선택자 · 여백 · 지도/스크롤과 함께 · ownHostOnly 모양은 invalid-options(창을 만들지 않는다)', badClips.every((c) => c === 'invalid-options') && capture.windowsCreated() === 0)
+    const relay = capture as unknown as { handleCaptureRequest: (m: unknown) => Promise<{ ok: boolean; code?: string; message?: string } | null> }
+    const viaRelay = await relay.handleCaptureRequest({ type: 'screen-capture', id: 'clip-1', url: 'https://gunsan.webforai.kr/places/x/', options: { host: 'gunsan.webforai.kr', clip: { selectors: [] }, ownHostOnly: true } })
+    const unknownKey = await relay.handleCaptureRequest({ type: 'screen-capture', id: 'clip-2', url: 'https://gunsan.webforai.kr/places/x/', options: { host: 'gunsan.webforai.kr', bogus: 1 } })
+    ok(
+      '서버 요청의 옵션 이름 — clip · ownHostOnly는 받는다(선택자 검사까지 간다), 모르는 이름은 거절',
+      viaRelay?.code === 'invalid-options' && String(viaRelay.message).includes('잘라 찍을 선택자') && unknownKey?.code === 'invalid-options' && String(unknownKey.message).includes('찍기 옵션'),
+    )
+
     // 종료 경합 — 주소의 DNS를 확인하는 동안 앱이 끝나면(disposeCapture) 창을 만들지 않는다.
     const realLookup = dns.promises.lookup
     const dnsGate: { release?: () => void } = {}
@@ -560,13 +815,18 @@ try {
   {
     const T = 'fake-gunsan'
     const pngs: Buffer[] = []
+    const texts: string[] = []
     let calls = 0
     let delayMs = 0
     const port = new FakePort()
     port.onPost = (msg) => {
       calls += 1
       const png = pngs.shift()
-      setTimeout(() => port.emit({ type: 'screen-capture-result', id: msg.id, ok: true, png: png ? png.toString('base64') : '' }), delayMs)
+      const text = texts.shift()
+      setTimeout(
+        () => port.emit({ type: 'screen-capture-result', id: msg.id, ok: true, png: png ? png.toString('base64') : '', ...(text !== undefined ? { text } : {}) }),
+        delayMs,
+      )
     }
     const bridge = createCaptureBridge(port, { waitMs: () => 3000 })
     const day1 = new Date('2026-11-04T03:00:00.000Z') // KST 12:00
@@ -631,6 +891,44 @@ try {
         (await screenFileForPick(T, owned, pickOfShot(sha16(pngB), 'course', 'parents'))) === 'gone' &&
         (await screenFileForPick(T, ['stay.example'], pickOfShot(sha16(pngB), 'course', 'kids'))) === 'gone',
     )
+
+    // 장소 안내 — 찍기 전에 사이트 장소 목록을 본다(가짜 목록) · 찍은 부분의 글자(text)와 잘라 찍은 크기를 적는다
+    const placeTarget = { profile: profile!, ...findScreenVariant(profile!, 'place-info', '가상박물관')! }
+    let listedCalls = 0
+    const listed = (slugs: string[]) => async () => {
+      listedCalls += 1
+      return new Set(slugs)
+    }
+    const callsBefore = calls
+    const notListed = await codeOf(captureScreenShot(T, placeTarget, { bridge, now: () => day3, listedPlaces: listed(['다른곳']) }))
+    ok('장소 안내 — 사이트 장소 목록에 없는 장소는 찍지 않는다(not-listed · 400)', notListed === 'not-listed' && calls === callsBefore && screens.captureErrorStatus('not-listed') === 400)
+    const dirFail = await codeOf(
+      captureScreenShot(T, placeTarget, {
+        bridge,
+        now: () => day3,
+        listedPlaces: async () => {
+          throw new Error('HTTP 500')
+        },
+      }),
+    )
+    ok('장소 안내 — 장소 목록을 읽지 못하면 찍지 않는다(directory-failed · 502)', dirFail === 'directory-failed' && calls === callsBefore && screens.captureErrorStatus('directory-failed') === 502)
+    const pngP = fakePng(21, 425, 677)
+    pngs.push(pngP)
+    texts.push('가상박물관\n이용시간\n09:00–18:00')
+    const placeShot = await captureScreenShot(T, placeTarget, { bridge, now: () => day3, listedPlaces: listed(['가상박물관']) })
+    const placeRow = (await readScreenShots(T)).find((x) => x.screenId === 'place-info')
+    ok(
+      '장소 안내 — 목록에 있으면 찍고, 찍은 부분의 글자 · 잘라 찍은 크기 · 장소 주소를 적는다',
+      !placeShot.reused && calls === callsBefore + 1 && placeRow?.variantId === '가상박물관' && placeRow.text === '가상박물관\n이용시간\n09:00–18:00' &&
+        placeRow.width === 425 && placeRow.height === 677 && placeRow.url === screenUrl(profile!, placeTarget.variant),
+    )
+    const listedBefore = listedCalls
+    const placeAgain = await captureScreenShot(T, placeTarget, { bridge, now: () => day3, listedPlaces: listed(['가상박물관']) })
+    ok('장소 안내 — 같은 날 다시 청하면 목록도 보지 않고 찍어 둔 것을 준다', placeAgain.reused && placeAgain.shot.sha16 === sha16(pngP) && listedCalls === listedBefore && calls === callsBefore + 1)
+    const placeFile = await screenFileForPick(T, owned, pickOfShot(sha16(pngP), 'place-info', '가상박물관'))
+    ok('사진 받기 — 장소 안내 화면도 이 PC의 파일', Buffer.isBuffer(placeFile) && placeFile.equals(pngP))
+    writeFileSync(path.join(dir, 'screens.json'), JSON.stringify({ shots: [...(await readScreenShots(T)), { ...placeRow, sha16: 'dddddddddddddddd', text: 42 }] }))
+    ok('글자(text)가 글자가 아닌 줄은 목록에서 뺀다', !(await readScreenShots(T)).some((x) => x.sha16 === 'dddddddddddddddd'))
 
     const C = 'fake-corrupt'
     mkdirSync(screensDir(C), { recursive: true })
@@ -738,7 +1036,13 @@ try {
   const emptyDraft = (id: string, extra: Record<string, unknown> = {}) => ({ actionId: id, generatedAt: AT, draft: { format: 'article', title: '가상 글', sections: [], gapCount: 0, usedFacts: [] }, ...extra })
   writeFileSync(
     path.join(tDir, 'drafts.json'),
-    JSON.stringify({ 'content:a': emptyDraft('content:a'), 'content:b': emptyDraft('content:b'), 'content:c': emptyDraft('content:c'), 'content:d': emptyDraft('content:d', { photos: [mapPlanted] }) }),
+    JSON.stringify({
+      'content:a': emptyDraft('content:a'),
+      'content:b': emptyDraft('content:b'),
+      'content:c': emptyDraft('content:c'),
+      'content:d': emptyDraft('content:d', { photos: [mapPlanted] }),
+      'content:e': emptyDraft('content:e'),
+    }),
   )
   writeFileSync(path.join(tDir, 'publish-settings.json'), JSON.stringify({ photoRights: { confirmedAt: AT } }))
 
@@ -800,11 +1104,18 @@ try {
   const list = await json(listRes)
   const listScreens = (list.screens ?? []) as { id: string; saveAllowed: boolean; variants: { url: string }[] }[]
   const listShots = (list.shots ?? []) as { id: string; src: string; screenId: string }[]
+  // 예전 기대값은 화면 2개(코스 · 지도)였다 — 4단계에서 장소 안내 · 가이드를 더해 4개다.
   ok(
     '목록 — 화면(코스는 넣기 가능 · 지도는 미리보기만)과 찍어 둔 화면(늦게 찍은 것부터 · 앱 주소)',
-    listRes.status === 200 && list.available === false && list.host === 'gunsan.webforai.kr' && listScreens.length === 2 &&
+    listRes.status === 200 && list.available === false && list.host === 'gunsan.webforai.kr' && listScreens.length === 4 &&
       listScreens.find((s) => s.id === 'course')?.saveAllowed === true && listScreens.find((s) => s.id === 'map')?.saveAllowed === false &&
       listScreens.find((s) => s.id === 'map')?.variants.length === 6 && listShots.length === 2 && listShots[0]?.id === shaK && listShots[1]?.src === `/api/screens/${TENANT}/${shaM}.png`,
+  )
+  const listPlace = listScreens.find((s) => s.id === 'place-info') as ({ saveAllowed: boolean; placePages?: boolean; variants: unknown[] } | undefined)
+  const listGuide = listScreens.find((s) => s.id === 'kids-guide')
+  ok(
+    '목록 — 장소 안내는 넣기 가능 · 변형은 사이트 장소마다(비어 있음 · placePages), 가이드는 넣기 가능 · 변형 하나',
+    listPlace?.saveAllowed === true && listPlace.placePages === true && listPlace.variants.length === 0 && listGuide?.saveAllowed === true && listGuide.variants.length === 1,
   )
   const plain = await json(await getRaw('/api/screens/vplain'))
   ok('프로필 없는 브랜드의 목록은 화면이 없다', Array.isArray(plain.screens) && (plain.screens as unknown[]).length === 0 && plain.host === null)
@@ -836,6 +1147,28 @@ try {
   )
   ok('화면 파일 — 목록에 없는 id · 다른 모양 · 경로 글자 · 다른 브랜드는 404(다른 파일이 새지 않는다)', notServed.every(Boolean))
 
+  const placeBad = await Promise.all(['../x', '가상 박물관', '%2F', ''].map((variantId) => post('/api/screens/capture', { tenantId: TENANT, screenId: 'place-info', variantId })))
+  const placeUnavailable = await post('/api/screens/capture', { tenantId: TENANT, screenId: 'place-info', variantId: '가상박물관' })
+  ok(
+    '장소 안내 찍기 — 장소 이름 모양이 아니면 400, 모양이 맞으면(찍을 수 없는 서버) 503 — 사이트 목록은 찍을 수 있을 때만 받는다',
+    placeBad.every((r) => r.status === 400) && placeUnavailable.status === 503 && placeUnavailable.body.code === 'unavailable',
+  )
+  // 장소 안내 화면 한 장을 목록에 더한다(목록 검사 뒤 — 찍어 둔 화면 수 기대값은 그대로).
+  const pngP = fakePng(13, 425, 677)
+  const shaP = sha16(pngP)
+  const PLACE_URL_V = `https://gunsan.webforai.kr/places/${encodeURIComponent('가상박물관')}/`
+  writeFileSync(path.join(sDir, `${shaP}.png`), pngP)
+  const listed0 = JSON.parse(readFileSync(path.join(sDir, 'screens.json'), 'utf-8')) as { shots: unknown[] }
+  writeFileSync(
+    path.join(sDir, 'screens.json'),
+    JSON.stringify({
+      shots: [
+        ...listed0.shots,
+        { sha16: shaP, screenId: 'place-info', variantId: '가상박물관', url: PLACE_URL_V, capturedAt: AT, width: 425, height: 677, bytes: pngP.length, text: '가상박물관\n09:00–18:00' },
+      ],
+    }),
+  )
+
   // 사진 넣기(op pick) — 화면이 보낸 src · pageUrl · alt는 쓰지 않는다
   const place = (slot: string, heading: string) => ({ slot, nth: 1, same: 1, heading })
   const screenBody = (over: Record<string, unknown>, actionId = 'content:a') => ({
@@ -857,6 +1190,15 @@ try {
   const noShot = await put(`/api/content-draft/${TENANT}/photos`, screenBody({ shotId: undefined }, 'content:b'))
   ok('목록에 없는 화면 · 변형이 다른 화면 · 찍은 화면 id 없음은 400', badShot.status === 400 && wrongVariant.status === 400 && noShot.status === 400 && !stored()['content:b']?.photos)
 
+  const placePick = await put(`/api/content-draft/${TENANT}/photos`, screenBody({ slot: '가상박물관 안내 화면', heading: '안내', screenId: 'place-info', variantId: '가상박물관', shotId: shaP }, 'content:e'))
+  const savedPlace = stored()['content:e']?.photos?.[0]
+  ok(
+    '장소 안내 넣기 — 서버가 목록에서 앱 주소 · 장소 주소 · 장소 이름을 넣은 대체 텍스트를 단다',
+    placePick.status === 200 && savedPlace?.src === `/api/screens/${TENANT}/${shaP}.png` && savedPlace.pageUrl === PLACE_URL_V &&
+      savedPlace.alt === "가상 군산여행 웹사이트 '가상박물관 장소 안내' 화면" && savedPlace.screenId === 'place-info' && savedPlace.variantId === '가상박물관',
+  )
+  const placeOther = await put(`/api/content-draft/${TENANT}/photos`, screenBody({ slot: '가상박물관 안내 화면', heading: '안내', screenId: 'place-info', variantId: '다른박물관', shotId: shaP }, 'content:e'))
+  ok('장소 안내 넣기 — 찍은 화면과 장소가 다르면 400', placePick.status === 200 && placeOther.status === 400)
   const photoFile = async (actionId: string, slot: string, heading: string) => {
     const q = new URLSearchParams({ actionId, generatedAt: AT, slot, nth: '1', heading })
     return getRaw(`/api/content-draft/${TENANT}/photo-file?${q.toString()}`)
@@ -864,6 +1206,8 @@ try {
   const pf = await photoFile('content:a', '코스 만들기 화면', '코스')
   ok('사진 받기 — 화면은 이 PC의 파일을 png로', pf.status === 200 && pf.headers.get('content-type') === 'image/png' && Buffer.from(await pf.arrayBuffer()).equals(pngK))
   ok('사진 받기 — 글에 남아 있는 지도 화면은 409', (await photoFile('content:d', '지도 화면', '지도')).status === 409)
+  const pfPlace = await photoFile('content:e', '가상박물관 안내 화면', '안내')
+  ok('사진 받기 — 장소 안내 화면도 이 PC의 파일을 png로', pfPlace.status === 200 && Buffer.from(await pfPlace.arrayBuffer()).equals(pngP))
 
   // 자동 채우기(op auto) — 지도는 빼고, 글 하나에 같은 화면 · 변형 한 번
   const autoPick = (slot: string, heading: string, over: Record<string, unknown> = {}) => ({

@@ -17,6 +17,9 @@
 //     지도 상자 안의 카카오 타일만 예외다.
 //   - 빈 그림(한 가지 색)이면 실패로 돌려준다.
 //   - 동의 배너는 숨기기만 하고 절대 누르지 않는다.
+//   - 잘라 찍기(clip): 선택자들의 요소를 합친 사각형(+ 여백)만 찍는다. 그림 검사도 그 사각형에 걸친 것만 본다(밖의 공공누리 사진은 괜찮다).
+//     사각형이 첫 화면(1280×800, 위에 붙은 머리 아래)에 들어가게 스크롤하고, 들어가지 않으면 찍지 않는다. 배율은 1 그대로.
+//   - ownHostOnly: 자사 호스트 밖의 요청을 모두 막는다(관광공사 사진 · 지도 SDK · 동영상 썸네일 — 잘라 찍는 부분에 필요 없다).
 'use strict'
 
 const { app, BrowserWindow, nativeImage, session } = require('electron')
@@ -74,6 +77,13 @@ const DEFAULT_HIDE = [
 const DAY_THEME_ATTRS = [['data-wxt', 'day']]
 const DEFAULT_MAP_SELECTOR = '.map'
 const DEFAULT_MAP_READY_EVENT = 'gs:mapready'
+/** 잘라 찍기 — 여백 기본 · 최대, 블로그 그림으로 쓸 수 있는 가장 작은 크기, 함께 돌려주는 글자의 최대 길이. */
+const CLIP_DEFAULT_PADDING = 16
+const CLIP_MAX_PADDING = 48
+const CLIP_MIN_WIDTH = 200
+const CLIP_MIN_HEIGHT = 120
+const CLIP_MAX_SELECTORS = 8
+const CLIP_TEXT_MAX = 2000
 
 function captureError(code, message, extra) {
   const err = new Error(message)
@@ -220,6 +230,23 @@ function normalizeOptions(options) {
     }
     map = { selector, readyEvent }
   }
+  let clip = null
+  if (o.clip !== undefined) {
+    const c = o.clip && typeof o.clip === 'object' && !Array.isArray(o.clip) ? o.clip : null
+    const selectors = c && Array.isArray(c.selectors) ? c.selectors : null
+    const optional = c && c.optional !== undefined ? c.optional : []
+    const padding = c && c.padding !== undefined ? c.padding : CLIP_DEFAULT_PADDING
+    if (!selectors || selectors.length === 0 || selectors.length > CLIP_MAX_SELECTORS || !selectors.every(safeSelector)) {
+      throw captureError('invalid-options', '잘라 찍을 선택자가 올바르지 않습니다.')
+    }
+    if (!Array.isArray(optional) || optional.length > CLIP_MAX_SELECTORS || !optional.every(safeSelector)) {
+      throw captureError('invalid-options', '함께 넣을 선택자가 올바르지 않습니다.')
+    }
+    if (!Number.isInteger(padding) || padding < 0 || padding > CLIP_MAX_PADDING) throw captureError('invalid-options', '잘라 찍기 여백이 올바르지 않습니다.')
+    if (map || o.scrollTo !== undefined) throw captureError('invalid-options', '잘라 찍기는 지도 · 스크롤 선택자와 함께 쓰지 않습니다.')
+    clip = { selectors: [...selectors], optional: [...optional], padding }
+  }
+  if (o.ownHostOnly !== undefined && typeof o.ownHostOnly !== 'boolean') throw captureError('invalid-options', 'ownHostOnly가 올바르지 않습니다.')
   const asked = Number(o.timeoutMs)
   const timeoutMs = Number.isFinite(asked) && asked > 0 ? Math.min(Math.max(asked, 5000), MAX_TIMEOUT_MS) : DEFAULT_TIMEOUT_MS
   return {
@@ -227,6 +254,8 @@ function normalizeOptions(options) {
     hide: [...DEFAULT_HIDE, ...hide],
     scrollTo: o.scrollTo || null,
     map,
+    clip,
+    ownHostOnly: o.ownHostOnly === true,
     activateFragmentLink: o.activateFragmentLink === true,
     timeoutMs,
   }
@@ -375,10 +404,93 @@ async function pageDecode() {
   return { count: imgs.length, failed: failed.length }
 }
 
-function pageInspect(ownHost, mapSelector, mapHosts) {
+/**
+ * 잘라 찍을 요소들 — 선택자마다 보이는 요소(여럿이면 모두)의 자리(문서 좌표)와 글자(innerText, 문서 순서). 필수 선택자(selectors)에 보이는
+ * 요소가 없으면 missing에 적는다(optional은 없어도 된다). 화면 맨 위에 붙은 고정 · sticky 머리의 높이(cover), 문서 · 화면 크기, 스크롤도 준다.
+ */
+function pageClipState(selectors, optional) {
+  const shown = (el) => {
+    const r = el.getBoundingClientRect()
+    return r.width > 0 && r.height > 0 && (el.checkVisibility ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true)
+  }
+  const els = []
+  const missing = []
+  for (const [list, required] of [
+    [selectors, true],
+    [optional, false],
+  ]) {
+    for (const s of list) {
+      const found = [...document.querySelectorAll(s)].filter(shown)
+      if (required && found.length === 0) missing.push(s)
+      for (const el of found) if (!els.includes(el)) els.push(el)
+    }
+  }
+  const rects = els.map((el) => {
+    const r = el.getBoundingClientRect()
+    return { x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height }
+  })
+  // 글자는 화면에 보이는 차례(문서 순서)로, 다른 요소 안에 든 요소는 한 번만.
+  const ordered = els
+    .filter((el) => !els.some((o) => o !== el && o.contains(el)))
+    .sort((p, q) => (p.compareDocumentPosition(q) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+  const text = ordered
+    .map((el) => (typeof el.innerText === 'string' ? el.innerText : el.textContent || ''))
+    .join('\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ *\n[\n ]*/g, '\n')
+    .trim()
+  let cover = 0
+  for (const el of document.querySelectorAll('body *')) {
+    const pos = getComputedStyle(el).position
+    if (pos !== 'fixed' && pos !== 'sticky') continue
+    const r = el.getBoundingClientRect()
+    if (r.top <= 2 && r.bottom > 0 && r.bottom < innerHeight / 2 && shown(el)) cover = Math.max(cover, r.bottom)
+  }
+  const root = document.documentElement
+  const body = document.body
+  return {
+    missing,
+    rects,
+    text,
+    docWidth: Math.max(root.scrollWidth, body ? body.scrollWidth : 0, innerWidth),
+    docHeight: Math.max(root.scrollHeight, body ? body.scrollHeight : 0, innerHeight),
+    viewWidth: innerWidth,
+    viewHeight: innerHeight,
+    scrollX: Math.round(scrollX),
+    scrollY: Math.round(scrollY),
+    cover: Math.ceil(cover),
+  }
+}
+
+/**
+ * 잘라 찍을 사각형(화면 좌표)에 걸친 고정 · sticky 요소 — 잘라 찍을 요소를 품거나 그 안에 든 것은 빼고. 있으면 그림을 가리므로 찍지 않는다.
+ */
+function pageClipCovers(selectors, optional, region) {
+  const clipEls = [...selectors, ...optional].flatMap((s) => [...document.querySelectorAll(s)])
+  const out = []
+  for (const el of document.querySelectorAll('body *')) {
+    const pos = getComputedStyle(el).position
+    if (pos !== 'fixed' && pos !== 'sticky') continue
+    const r = el.getBoundingClientRect()
+    if (!(r.width > 0 && r.height > 0)) continue
+    if (el.checkVisibility && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue
+    const hit = r.right > region.x && r.bottom > region.y && r.left < region.x + region.width && r.top < region.y + region.height
+    if (!hit || clipEls.some((c) => c === el || c.contains(el) || el.contains(c))) continue
+    const cls = typeof el.className === 'string' && el.className.trim() ? `.${el.className.trim().split(/\s+/).join('.')}` : ''
+    out.push(`${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${cls}`.slice(0, 80))
+  }
+  return out
+}
+
+/**
+ * 그림 검사 — 첫 화면(region이 없을 때) 또는 잘라 찍을 사각형(region, 화면 좌표)에 걸친 그림 · 배경 · 프레임을 본다. 사각형 밖에 있는
+ * 공공누리 · 바깥 그림은 찍히지 않으므로 괜찮다. <html> · <body> 배경은 어디든 비치므로 늘 본다.
+ */
+function pageInspect(ownHost, mapSelector, mapHosts, region) {
   const vw = innerWidth
   const vh = innerHeight
-  const inView = (r) => r.width > 1 && r.height > 1 && r.bottom > 0 && r.right > 0 && r.top < vh && r.left < vw
+  const box = region || { x: 0, y: 0, width: vw, height: vh }
+  const inView = (r) => r.width > 1 && r.height > 1 && r.bottom > box.y && r.right > box.x && r.top < box.y + box.height && r.left < box.x + box.width
   const shown = (el) => (el.checkVisibility ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true)
   const parse = (u) => {
     try {
@@ -432,7 +544,7 @@ function pageInspect(ownHost, mapSelector, mapHosts) {
     }
   }
   const urlsIn = (v) => [...String(v || '').matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/g)].map((m) => m[2])
-  // CSS 배경 — <html> · <body>는 첫 화면 전체를 덮으므로 자리와 상관없이 보고, 나머지는 첫 화면에 걸친 요소만 본다.
+  // CSS 배경 — <html> · <body>는 첫 화면 전체를 덮으므로 자리와 상관없이 보고, 나머지는 첫 화면(잘라 찍기면 그 사각형)에 걸친 요소만 본다.
   const page = [document.documentElement, document.body].filter(Boolean)
   const boxes = roots.flatMap((root) => [...root.querySelectorAll(root === document ? 'body *' : '*')])
   for (const el of [...page, ...boxes]) {
@@ -462,6 +574,91 @@ function countClosedShadowRoots(root) {
     if (node.contentDocument) stack.push(node.contentDocument)
   }
   return closed
+}
+
+/**
+ * 닫힌 shadow root를 단 요소(host)들 — 잘라 찍기는 그 상자가 사각형에 걸친 것만 센다(closedRootsIn). CDP 노드 트리(DOM.getDocument pierce)에서
+ * 찾는다. 브라우저 기본 root(user-agent)는 보지 않는다.
+ */
+function closedShadowHosts(root) {
+  const out = []
+  const stack = root ? [root] : []
+  while (stack.length) {
+    const node = stack.pop()
+    if (Array.isArray(node.shadowRoots) && node.shadowRoots.some((s) => s && s.shadowRootType === 'closed')) {
+      out.push({ backendNodeId: node.backendNodeId, nodeName: node.nodeName })
+    }
+    for (const list of [node.children, node.shadowRoots, node.pseudoElements]) if (Array.isArray(list)) stack.push(...list)
+    if (node.contentDocument) stack.push(node.contentDocument)
+  }
+  return out
+}
+
+// ── 잘라 찍기 계획 ────────────────────────────────────────────────────────
+
+/**
+ * 잘라 찍을 사각형과 스크롤 — 요소 자리(문서 좌표 { x, y, w, h })를 합쳐 여백을 두르고 문서 안으로 자른 사각형(정수, 문서 좌표)과, 그
+ * 사각형이 화면 안(위에 붙은 머리 cover 아래)에 들어오는 스크롤 가운데 지금 자리에서 가장 덜 움직이는 값. 가로로는 스크롤하지 않는다.
+ * problem: clip-missing 요소 없음 · clip-too-small 블로그 그림으로 너무 작음 · clip-too-large 화면(머리를 뺀 높이)보다 큼 ·
+ * clip-covered 어떤 스크롤로도 머리 아래에 다 들어오지 않음(문서 맨 위가 머리에 가림). 문제가 없으면 null.
+ */
+function clipPlan(rects, padding, page) {
+  if (!rects.length) return { rect: null, scrollY: page.scrollY, problem: 'clip-missing' }
+  const x0 = Math.max(0, Math.floor(Math.min(...rects.map((r) => r.x)) - padding))
+  const y0 = Math.max(0, Math.floor(Math.min(...rects.map((r) => r.y)) - padding))
+  const x1 = Math.min(page.docWidth, Math.ceil(Math.max(...rects.map((r) => r.x + r.w)) + padding))
+  const y1 = Math.min(page.docHeight, Math.ceil(Math.max(...rects.map((r) => r.y + r.h)) + padding))
+  const rect = { x: x0, y: y0, width: Math.max(0, x1 - x0), height: Math.max(0, y1 - y0) }
+  const keep = { rect, scrollY: page.scrollY }
+  if (rect.width < CLIP_MIN_WIDTH || rect.height < CLIP_MIN_HEIGHT) return { ...keep, problem: 'clip-too-small' }
+  if (x0 < page.scrollX || x1 > page.scrollX + page.viewWidth || rect.height > page.viewHeight - page.cover) return { ...keep, problem: 'clip-too-large' }
+  const lo = Math.max(0, y1 - page.viewHeight)
+  const hi = Math.min(Math.max(0, page.docHeight - page.viewHeight), y0 - page.cover)
+  if (lo > hi) return { ...keep, problem: 'clip-covered' }
+  return { rect, scrollY: Math.min(Math.max(page.scrollY, lo), hi), problem: null }
+}
+
+const CLIP_PROBLEM_TEXT = {
+  'clip-missing': '잘라 찍을 요소가 페이지에 없습니다',
+  'clip-too-small': `잘라 찍을 부분이 너무 작습니다(최소 ${CLIP_MIN_WIDTH}×${CLIP_MIN_HEIGHT})`,
+  'clip-too-large': '잘라 찍을 부분이 화면(1280×800, 위에 붙은 머리 아래)보다 큽니다',
+  'clip-covered': '잘라 찍을 부분이 위에 붙은 머리에 가립니다',
+}
+
+function clipError(plan) {
+  const size = plan.rect ? ` — ${plan.rect.width}×${plan.rect.height}` : ''
+  return captureError(plan.problem, `${CLIP_PROBLEM_TEXT[plan.problem]}${size}.`)
+}
+
+/** 두 사각형이 겹치나 — a는 { left, top, right, bottom }, region은 { x, y, width, height }. */
+function rectHits(a, region) {
+  return a.right > region.x && a.bottom > region.y && a.left < region.x + region.width && a.top < region.y + region.height
+}
+
+/**
+ * 잘라 찍을 사각형(화면 좌표)에 걸친 닫힌 shadow root 수 — host의 상자(DOM.getBoxModel)로 본다. 그려지지 않은 host(상자 없음)는 보이지
+ * 않으니 세지 않고, 그 밖에 상자를 읽지 못하면 볼 수 없으니 센다.
+ */
+async function closedRootsIn(ctx, root, region) {
+  let n = 0
+  for (const host of closedShadowHosts(root)) {
+    let model = null
+    try {
+      model = (await cdp(ctx, 'DOM.getBoxModel', { backendNodeId: host.backendNodeId })).model
+    } catch (err) {
+      if (!/box model/i.test(err && err.message ? err.message : String(err))) n += 1
+      continue
+    }
+    const q = model && model.border
+    if (!Array.isArray(q) || q.length < 8) {
+      n += 1
+      continue
+    }
+    const xs = [q[0], q[2], q[4], q[6]]
+    const ys = [q[1], q[3], q[5], q[7]]
+    if (rectHits({ left: Math.min(...xs), top: Math.min(...ys), right: Math.max(...xs), bottom: Math.max(...ys) }, region)) n += 1
+  }
+  return n
 }
 
 // ── 픽셀 검사 ────────────────────────────────────────────────────────────
@@ -537,6 +734,7 @@ async function requestBlockReason(details, ctx) {
   const host = bareHost(u.hostname)
   if (hostMatches(host, ANALYTICS_HOST_SUFFIXES) || ANALYTICS_PATHS.some((re) => re.test(u.pathname))) return 'analytics'
   if ((details.resourceType === 'mainFrame' || details.resourceType === 'subFrame') && host !== ctx.host) return 'off-host'
+  if (ctx.ownHostOnly && host !== ctx.host) return 'off-host'
   if (!ctx.dnsCache.has(host)) ctx.dnsCache.set(host, resolvesPrivate(host))
   if (await ctx.dnsCache.get(host)) return 'private-address'
   return null
@@ -885,23 +1083,64 @@ async function captureSteps(url, opts, ctx) {
   mark('quiet2Ms')
   if (!ctx.cssReady) ctx.warnings.add('css-not-confirmed')
 
-  // 보이는 그림 검사: 바깥 호스트 · 공공누리 그림이 있으면 버린다
-  const seen = await evalIn(ctx, pageCall(pageInspect, ctx.host, opts.map ? opts.map.selector : null, MAP_IMAGE_HOST_SUFFIXES))
-  if (seen.kogl > 0) throw captureError('kogl-image', `공공누리 표시가 붙은 그림이 첫 화면에 있습니다(${seen.kogl}개).`, { inspect: seen })
-  if (seen.foreign.length > 0) {
-    throw captureError('foreign-image', `자사 호스트가 아닌 그림이 첫 화면에 있습니다(${seen.foreign.join(', ')}).`, { inspect: seen })
+  // 잘라 찍기: 요소 자리 → 사각형 · 스크롤 → (스크롤했으면 그림 decode · 조용함을 다시) → 다시 재어 화면 안인지 · 가리는 고정 요소가 없는지
+  let clipRect = null
+  let clipView = null
+  let clipText = null
+  let clipScrollY = null
+  if (opts.clip) {
+    const { selectors, optional, padding } = opts.clip
+    const measure = async () => {
+      const state = await evalIn(ctx, pageCall(pageClipState, selectors, optional))
+      if (state.missing.length) {
+        throw captureError('clip-missing', `잘라 찍을 요소가 페이지에 없습니다(${state.missing.join(', ')}).`, { clipState: { missing: state.missing } })
+      }
+      return { state, plan: clipPlan(state.rects, padding, state) }
+    }
+    let { state, plan } = await measure()
+    if (plan.problem) throw clipError(plan)
+    if (plan.scrollY !== state.scrollY) {
+      await evalIn(ctx, `(window.scrollTo({ top: ${Number(plan.scrollY)}, left: 0, behavior: 'instant' }), true)`)
+      const again = await evalIn(ctx, pageCall(pageDecode), remaining())
+      if (again.failed > 0) ctx.warnings.add(`images-failed-clip:${again.failed}`)
+      if (!(await waitQuiet(ctx))) ctx.warnings.add('network-busy-clip')
+      ;({ state, plan } = await measure())
+      if (plan.problem) throw clipError(plan)
+      if (plan.scrollY !== state.scrollY) throw captureError('clip-covered', '스크롤한 뒤에도 잘라 찍을 부분이 화면에 다 들어오지 않습니다.')
+    }
+    clipRect = plan.rect
+    clipView = { x: plan.rect.x - state.scrollX, y: plan.rect.y - state.scrollY, width: plan.rect.width, height: plan.rect.height }
+    const covers = await evalIn(ctx, pageCall(pageClipCovers, selectors, optional, clipView))
+    if (covers.length) throw captureError('clip-covered', `잘라 찍을 부분을 고정 요소가 가립니다(${covers.slice(0, 3).join(', ')}).`)
+    clipText = state.text.slice(0, CLIP_TEXT_MAX)
+    clipScrollY = state.scrollY
+    mark('clipMs')
   }
-  if (seen.frames.length > 0) throw captureError('foreign-image', `첫 화면에 iframe이 있습니다(${seen.frames.join(', ')}).`, { inspect: seen })
-  // 닫힌 shadow root 안은 위 검사가 볼 수 없다 — 하나라도 있으면 바깥 · 공공누리 그림이 없다고 말할 수 없으므로 버린다.
+
+  // 보이는 그림 검사: 바깥 호스트 · 공공누리 그림이 있으면 버린다(잘라 찍기면 그 사각형에 걸친 것만)
+  const where = clipView ? '잘라 찍을 부분' : '첫 화면'
+  const seen = await evalIn(ctx, pageCall(pageInspect, ctx.host, opts.map ? opts.map.selector : null, MAP_IMAGE_HOST_SUFFIXES, clipView))
+  if (seen.kogl > 0) throw captureError('kogl-image', `공공누리 표시가 붙은 그림이 ${where}에 있습니다(${seen.kogl}개).`, { inspect: seen })
+  if (seen.foreign.length > 0) {
+    throw captureError('foreign-image', `자사 호스트가 아닌 그림이 ${where}에 있습니다(${seen.foreign.join(', ')}).`, { inspect: seen })
+  }
+  if (seen.frames.length > 0) throw captureError('foreign-image', `${where}에 iframe이 있습니다(${seen.frames.join(', ')}).`, { inspect: seen })
+  // 닫힌 shadow root 안은 위 검사가 볼 수 없다 — 하나라도 있으면(잘라 찍기면 사각형에 걸친 것) 바깥 · 공공누리 그림이 없다고 말할 수 없으므로 버린다.
   const tree = await cdp(ctx, 'DOM.getDocument', { depth: -1, pierce: true })
-  const closedRoots = countClosedShadowRoots(tree && tree.root)
+  const closedRoots = clipView ? await closedRootsIn(ctx, tree && tree.root, clipView) : countClosedShadowRoots(tree && tree.root)
   if (closedRoots > 0) throw captureError('closed-shadow', `그림을 검사할 수 없는 닫힌 shadow root가 ${closedRoots}개 있습니다.`, { inspect: seen })
   mark('inspectMs')
 
   const shot = await cdp(
     ctx,
     'Page.captureScreenshot',
-    { format: 'png', fromSurface: true, captureBeyondViewport: false },
+    {
+      format: 'png',
+      fromSurface: true,
+      captureBeyondViewport: false,
+      // CDP clip은 문서 좌표다(스크롤한 화면에서 실측 2026-11-04 — 화면 좌표로 주면 스크롤만큼 아래가 찍힌다).
+      ...(clipRect ? { clip: { x: clipRect.x, y: clipRect.y, width: clipRect.width, height: clipRect.height, scale: 1 } } : {}),
+    },
     SHOT_TIMEOUT_MS,
   )
   mark('shotMs')
@@ -909,8 +1148,9 @@ async function captureSteps(url, opts, ctx) {
   const png = Buffer.from(shot.data, 'base64')
   const image = nativeImage.createFromBuffer(png)
   const size = image.getSize()
-  if (size.width !== VIEW_WIDTH || size.height !== VIEW_HEIGHT) {
-    throw captureError('bad-size', `찍힌 크기가 ${size.width}×${size.height}입니다(기대 ${VIEW_WIDTH}×${VIEW_HEIGHT}).`)
+  const want = clipRect ? { width: clipRect.width, height: clipRect.height } : { width: VIEW_WIDTH, height: VIEW_HEIGHT }
+  if (size.width !== want.width || size.height !== want.height) {
+    throw captureError('bad-size', `찍힌 크기가 ${size.width}×${size.height}입니다(기대 ${want.width}×${want.height}).`)
   }
   const bitmap = image.toBitmap()
   const pixels = regionStats(bitmap, size.width, size.height, { x: 0, y: 0, w: size.width, h: size.height })
@@ -942,7 +1182,9 @@ async function captureSteps(url, opts, ctx) {
     mapPixels,
     mapTiles: ctx.mapTiles || 0,
     activated: Boolean(ctx.activated),
-    scrollY: scroll2.y,
+    scrollY: clipScrollY === null ? scroll2.y : clipScrollY,
+    clip: clipRect,
+    clipText,
     memoryPeakKB: ctx.memoryPeakKB || null,
     privatePeakKB: ctx.privatePeakKB || null,
   }
@@ -973,6 +1215,7 @@ function newContext(opts) {
     memoryPeakKB: 0,
     privatePeakKB: 0,
     mapTiles: 0,
+    ownHostOnly: opts.ownHostOnly,
   }
 }
 
@@ -1014,13 +1257,18 @@ async function runJob(rawUrl, options) {
  *   scrollTo   이 선택자의 요소가 화면 맨 위(고정 머리 아래)에 오게 스크롤한다. 없으면 주소의 #조각.
  *   hide       더 숨길 선택자 목록(최대 20).
  *   activateFragmentLink  true면 주소의 #조각을 가리키는 페이지 안 링크를 한 번 누른다(지도면 지도 준비 뒤).
+ *   clip       { selectors, optional?, padding? } — 선택자들(필수 1~8개 · 있으면 넣는 optional 0~8개)의 요소를 합친 사각형에 여백
+ *              (기본 16, 최대 48)을 둘러 그 부분만 찍는다. 그림 검사도 그 사각형에 걸친 것만 본다. map · scrollTo와 함께 쓰지 않는다.
+ *   ownHostOnly  true면 자사 호스트 밖의 요청을 모두 막는다.
  *   timeoutMs  기다리는 한도(기본 25초, 최대 45초). 찍기 · 검사에 12초를 더 준다.
  * @returns {Promise<{png: Buffer, width: number, height: number, waitedMs: number, url: string,
  *   finalUrl: string, warnings: string[], timings: object, blocked: object[], inspect: object,
- *   pixels: object, mapPixels: object|null, mapTiles: number, memoryPeakKB: number|null}>}
+ *   pixels: object, mapPixels: object|null, mapTiles: number, memoryPeakKB: number|null,
+ *   clip: {x: number, y: number, width: number, height: number}|null, clipText: string|null}>}
+ *   clip은 찍은 사각형(문서 좌표), clipText는 잘라 찍은 요소들의 글자(CLIP_TEXT_MAX자까지 — 서버가 설명 줄의 사실과 견준다).
  *   실패하면 code가 붙은 Error로 거부한다: invalid-url · off-host · private-address · invalid-options · busy ·
- *   disposed · timeout · load-failed · map-not-ready · kogl-image · foreign-image · closed-shadow · bad-size · blank · map-blank ·
- *   renderer-gone · aborted · eval-timeout · cdp-timeout.
+ *   disposed · timeout · load-failed · map-not-ready · clip-missing · clip-too-large · clip-too-small · clip-covered · kogl-image ·
+ *   foreign-image · closed-shadow · bad-size · blank · map-blank · renderer-gone · aborted · eval-timeout · cdp-timeout.
  */
 function captureScreen(url, options) {
   if (disposed) return Promise.reject(captureError('disposed', '앱이 종료 중입니다.'))
@@ -1053,13 +1301,13 @@ function captureStatus() {
 
 // ── 서버(utilityProcess)와 주고받는 메시지 ──────────────────────────────────
 // 서버(server/screens.ts)가 process.parentPort로 찍기를 청하면 main.cjs가 여기로 넘기고, 돌려준 답을 서버로 보낸다.
-//   요청 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, timeoutMs? } }
-//   답   { type: 'screen-capture-result', id, ok: true, png(base64), width, height, url, finalUrl, waitedMs, warnings }
+//   요청 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, clip?, ownHostOnly?, timeoutMs? } }
+//   답   { type: 'screen-capture-result', id, ok: true, png(base64), width, height, url, finalUrl, waitedMs, warnings, text? }
 //        { type: 'screen-capture-result', id, ok: false, code, message }
 const REQUEST_TYPE = 'screen-capture'
 const RESULT_TYPE = 'screen-capture-result'
 const REQUEST_ID = /^[\w-]{1,64}$/
-const REQUEST_OPTION_KEYS = new Set(['host', 'map', 'scrollTo', 'hide', 'activateFragmentLink', 'timeoutMs'])
+const REQUEST_OPTION_KEYS = new Set(['host', 'map', 'scrollTo', 'hide', 'activateFragmentLink', 'clip', 'ownHostOnly', 'timeoutMs'])
 
 /**
  * 서버가 보낸 찍기 요청 하나를 처리하고 서버로 보낼 답을 돌려준다. 거부하지 않는다 — 실패도 답(ok false)이다. 요청 모양이 아니거나 id가
@@ -1088,6 +1336,7 @@ async function handleCaptureRequest(msg) {
       finalUrl: shot.finalUrl,
       waitedMs: shot.waitedMs,
       warnings: shot.warnings,
+      ...(typeof shot.clipText === 'string' ? { text: shot.clipText } : {}),
     }
   } catch (err) {
     const code = err && typeof err.code === 'string' ? err.code : 'failed'
@@ -1125,7 +1374,12 @@ module.exports = {
   isPrivateAddress,
   blankCheck,
   pageInspect,
+  pageClipState,
+  pageClipCovers,
+  clipPlan,
+  requestBlockReason,
   countClosedShadowRoots,
+  closedShadowHosts,
   VIEW_WIDTH,
   VIEW_HEIGHT,
   DEFAULT_TIMEOUT_MS,

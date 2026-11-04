@@ -1,15 +1,18 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { collectPage } from './aeo/collectPage.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { writeJsonAtomic } from './tenantWriteQueue.js';
 import {
   isScreenShotId,
   parseScreenAppSrc,
+  placeSlugsOfSitemap,
   screenAppSrc,
   screenOfPick,
   screenSaveAllowed,
   screenUrl,
+  SCREEN_TEXT_MAX,
   type ScreenDef,
   type ScreenProfile,
   type ScreenShot,
@@ -26,8 +29,8 @@ import type { PhotoPick } from '../src/lib/articlePhotos.js';
  * 찍기는 쓸 수 없고(/api/health screens false), 이미 찍어 둔 화면은 그대로 쓴다.
  *
  * 메시지(같은 parentPort를 electron/server-entry.cjs의 set-env도 쓴다 — type으로 가른다):
- *   서버 → 메인 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, timeoutMs? } }
- *   메인 → 서버 { type: 'screen-capture-result', id, ok: true, png(base64), width, height, url, finalUrl, waitedMs, warnings }
+ *   서버 → 메인 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, clip?, ownHostOnly?, timeoutMs? } }
+ *   메인 → 서버 { type: 'screen-capture-result', id, ok: true, png(base64), width, height, url, finalUrl, waitedMs, warnings, text? }
  *              { type: 'screen-capture-result', id, ok: false, code, message }
  * 한 번에 한 장(줄 세우기). 답이 한도 안에 오지 않으면 timeout으로 끝내고, 늦게 온 답은 버린다.
  */
@@ -56,10 +59,14 @@ export class ScreenCaptureError extends Error {
   }
 }
 
-/** 찍기 실패를 HTTP 상태로 — 쓸 수 없음 503 · 줄이 가득 참 429 · 시간 초과 504 · 그 밖(페이지 · 그림 검사)은 502. */
+/**
+ * 찍기 실패를 HTTP 상태로 — 쓸 수 없음 503 · 줄이 가득 참 429 · 시간 초과 504 · 사이트의 장소 사전에 없는 장소 400 · 그 밖(페이지 · 그림
+ * 검사 · 장소 사전을 읽지 못함)은 502.
+ */
 export function captureErrorStatus(code: string): number {
   if (code === 'unavailable' || code === 'disposed') return 503;
   if (code === 'busy') return 429;
+  if (code === 'not-listed') return 400;
   if (code === 'timeout') return 504;
   return 502;
 }
@@ -73,6 +80,10 @@ export interface ScreenCaptureOptions {
   scrollTo?: string;
   hide?: string[];
   activateFragmentLink?: true;
+  /** 잘라 찍기 — 선택자들의 요소를 합친 사각형만(electron/capture.cjs clip). */
+  clip?: { selectors: string[]; optional?: string[]; padding?: number };
+  /** 자사 호스트 밖의 요청을 모두 막는다. */
+  ownHostOnly?: true;
   timeoutMs?: number;
 }
 
@@ -85,6 +96,8 @@ export interface CapturedPng {
   png: Buffer;
   finalUrl: string;
   warnings: string[];
+  /** 잘라 찍은 요소들의 글자(잘라 찍기만). */
+  text?: string;
 }
 
 /** Electron utilityProcess의 process.parentPort에서 쓰는 만큼(검증에서는 가짜를 넣는다). */
@@ -143,6 +156,7 @@ export function createCaptureBridge(
         png: Buffer.from(m.png, 'base64'),
         finalUrl: typeof m.finalUrl === 'string' ? m.finalUrl.slice(0, 2048) : '',
         warnings: Array.isArray(m.warnings) ? m.warnings.filter((w): w is string => typeof w === 'string').slice(0, 20) : [],
+        ...(typeof m.text === 'string' ? { text: m.text.slice(0, SCREEN_TEXT_MAX) } : {}),
       });
       return;
     }
@@ -238,7 +252,8 @@ function validShot(v: unknown): v is ScreenShot {
     Number.isFinite(Date.parse(String(s.capturedAt))) &&
     int(s.width) &&
     int(s.height) &&
-    int(s.bytes)
+    int(s.bytes) &&
+    (s.text === undefined || (typeof s.text === 'string' && s.text.length <= SCREEN_TEXT_MAX))
   );
 }
 
@@ -321,20 +336,31 @@ export interface ScreenTarget {
 /** 캡처 모듈에 넘길 옵션 — 프로필에서만 만든다(화면이 보낸 값은 쓰지 않는다). */
 export function screenCaptureOptions(target: ScreenTarget): ScreenCaptureOptions {
   const { profile, screen, variant } = target;
+  const clip = screen.clip;
   return {
     host: profile.host,
     ...(screen.map ? { map: true as const } : {}),
     ...(variant.scrollTo ? { scrollTo: variant.scrollTo } : {}),
     ...(screen.hide?.length ? { hide: [...screen.hide] } : {}),
     ...(variant.activateFragmentLink ? { activateFragmentLink: true as const } : {}),
+    ...(clip
+      ? {
+          clip: {
+            selectors: [...clip.selectors],
+            ...(clip.optional?.length ? { optional: [...clip.optional] } : {}),
+            ...(clip.padding !== undefined ? { padding: clip.padding } : {}),
+          },
+        }
+      : {}),
+    ...(screen.ownHostOnly ? { ownHostOnly: true as const } : {}),
   };
 }
 
 /**
  * 찍은 PNG를 저장한다 — <sha16>.png(이미 있으면 그대로)와 screens.json 한 줄. 같은 화면 · 변형의 같은 그림이 이미 적혀 있으면 새 줄을
- * 더하지 않고 찍은 때 · 주소만 새로 적는다. PNG가 아니거나 크면 bad-png(아무것도 쓰지 않는다).
+ * 더하지 않고 찍은 때 · 주소(잘라 찍었으면 찍은 부분의 글자 text)만 새로 적는다. PNG가 아니거나 크면 bad-png(아무것도 쓰지 않는다).
  */
-export async function storeScreenShot(tenantId: string, target: ScreenTarget, url: string, png: Buffer, at: Date): Promise<ScreenShot> {
+export async function storeScreenShot(tenantId: string, target: ScreenTarget, url: string, png: Buffer, at: Date, text?: string): Promise<ScreenShot> {
   const size = pngSize(png);
   if (!size || png.length > MAX_SCREEN_PNG_BYTES) throw new ScreenCaptureError('bad-png', '찍은 그림이 PNG가 아니거나 너무 커요.');
   const sha16 = createHash('sha256').update(png).digest('hex').slice(0, 16);
@@ -361,6 +387,7 @@ export async function storeScreenShot(tenantId: string, target: ScreenTarget, ur
     width: size.width,
     height: size.height,
     bytes: png.length,
+    ...(text ? { text: text.slice(0, SCREEN_TEXT_MAX) } : {}),
   };
   return updateShots(tenantId, (shots) => {
     const same = shots.findIndex((s) => s.sha16 === sha16 && s.screenId === shot.screenId && s.variantId === shot.variantId);
@@ -382,14 +409,53 @@ async function sameDayShot(tenantId: string, target: ScreenTarget, url: string, 
 
 const inflight = new Map<string, Promise<{ shot: ScreenShot; reused: boolean }>>();
 
+/** 사이트 장소 목록(sitemap.xml)을 기억하는 시간 — 같은 자동 채우기에서 장소마다 다시 받지 않게. */
+const PLACE_LIST_TTL_MS = 60 * 60 * 1000;
+const placeLists = new Map<string, { at: number; slugs: Promise<ReadonlySet<string>> }>();
+
+/**
+ * 사이트의 장소 이름(sitemap.xml의 https://<호스트>/places/<이름>/ — src/lib/screenCapture.ts placeSlugsOfSitemap) — GET으로 받아 호스트마다
+ * 한 시간 기억한다(실패는 기억하지 않는다). 받기는 사이트 진단과 같은 수집기(collectPage — 사설 주소 · 크기 · 시간 한도)다.
+ */
+export function listedPlaceSlugs(profile: ScreenProfile): Promise<ReadonlySet<string>> {
+  const hit = placeLists.get(profile.host);
+  if (hit && Date.now() - hit.at < PLACE_LIST_TTL_MS) return hit.slugs;
+  const slugs = collectPage(`https://${profile.host}/sitemap.xml`, { probes: false }).then((page) => {
+    if (page.fetchError) throw new Error(page.fetchError);
+    if (page.status >= 400) throw new Error(`HTTP ${page.status}`);
+    return placeSlugsOfSitemap(page.html, profile);
+  });
+  placeLists.set(profile.host, { at: Date.now(), slugs });
+  slugs.catch((err: unknown) => {
+    if (placeLists.get(profile.host)?.slugs === slugs) placeLists.delete(profile.host);
+    console.warn(`[screens] ${profile.host} 장소 목록(sitemap.xml)을 읽지 못했습니다:`, err);
+  });
+  return slugs;
+}
+
+/**
+ * 장소 안내 변형이 사이트의 장소인가 — 변형 id(장소 이름)는 화면이 보낸 값이라 찍기 전에 사이트 장소 목록에서 다시 본다. 없으면 not-listed,
+ * 목록을 읽지 못하면 directory-failed(찍지 않는다).
+ */
+async function assertPlaceListed(target: ScreenTarget, listed: (profile: ScreenProfile) => Promise<ReadonlySet<string>>): Promise<void> {
+  let slugs: ReadonlySet<string>;
+  try {
+    slugs = await listed(target.profile);
+  } catch (err) {
+    throw new ScreenCaptureError('directory-failed', `사이트의 장소 목록(sitemap.xml)을 읽지 못해 찍지 않았어요 — ${err instanceof Error ? err.message : String(err)}`);
+  }
+  if (!slugs.has(target.variant.id)) throw new ScreenCaptureError('not-listed', `사이트의 장소 목록에 없는 장소(「${target.variant.label}」)라 찍지 않았어요.`);
+}
+
 /**
  * 화면 · 변형 한 장을 찍어 저장한다. 오늘(KST) 같은 주소로 찍어 둔 것이 있으면 다시 찍지 않고 그것을 준다(reused — 다리를 쓸 수 없어도).
- * 같은 화면 · 변형을 찍는 중에 또 청하면 그 결과를 함께 받는다. 다리를 쓸 수 없으면 unavailable.
+ * 같은 화면 · 변형을 찍는 중에 또 청하면 그 결과를 함께 받는다. 다리를 쓸 수 없으면 unavailable. 장소 안내(placePages)는 찍기 전에 그
+ * 장소가 사이트 장소 목록에 있는지 본다(listedPlaces — 검증은 가짜를 넣는다).
  */
 export async function captureScreenShot(
   tenantId: string,
   target: ScreenTarget,
-  opts: { bridge?: CaptureBridge; now?: () => Date } = {},
+  opts: { bridge?: CaptureBridge; now?: () => Date; listedPlaces?: (profile: ScreenProfile) => Promise<ReadonlySet<string>> } = {},
 ): Promise<{ shot: ScreenShot; reused: boolean }> {
   const bridge = opts.bridge ?? captureBridge();
   const now = opts.now ?? (() => new Date());
@@ -401,8 +467,9 @@ export async function captureScreenShot(
     const today = await sameDayShot(tenantId, target, url, now());
     if (today) return { shot: today, reused: true };
     if (!bridge.available) throw new ScreenCaptureError('unavailable', UNAVAILABLE_MESSAGE);
+    if (target.screen.placePages) await assertPlaceListed(target, opts.listedPlaces ?? listedPlaceSlugs);
     const captured = await bridge.capture({ url, options: screenCaptureOptions(target) });
-    return { shot: await storeScreenShot(tenantId, target, url, captured.png, now()), reused: false };
+    return { shot: await storeScreenShot(tenantId, target, url, captured.png, now(), captured.text), reused: false };
   })();
   inflight.set(key, job);
   try {

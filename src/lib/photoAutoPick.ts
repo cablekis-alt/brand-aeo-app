@@ -23,8 +23,9 @@
  * 서버(server/index.ts op auto)도 이 파일의 후보 검사를 다시 하므로 DOM을 쓰지 않는다.
  *
  * 자사 화면(src/lib/screenCapture.ts — 2026-11-04) — 사진을 다 고른 뒤 화면 자리(웹사이트 화면 자리 가운데 프로필 표의 화면 이름이 정확히
- * 하나 나온 코스 · 지도 자리)를 이 PC에 찍어 둔 화면으로 채운다(자사 화면 단계). 화면은 브랜드 상한을 받지 않고, 글 하나 · 작성자 한
- * 사람에게 「화면 + 변형」 한 번(결정 3). 지도 화면은 미리보기만 하고 저장하지 않는다(결정 4 — SCREEN_AUTO_SAVE_KINDS).
+ * 하나 나온 코스 · 지도 · 가이드 자리와 안내 낱말이 나온 장소 안내 자리)를 이 PC에 찍어 둔 화면으로 채운다(자사 화면 단계). 화면은 브랜드
+ * 상한을 받지 않고, 글 하나 · 작성자 한 사람에게 「화면 + 변형」 한 번(결정 3). 지도 화면은 미리보기만 하고 저장하지 않는다(결정 4 —
+ * SCREEN_AUTO_SAVE_KINDS). 장소 안내 · 가이드는 잘라 찍은 화면이라 자리 글자의 사실이 찍은 글자에 없으면 「확인 필요」다.
  */
 import {
   canonicalPhotoSrc,
@@ -58,7 +59,9 @@ import {
   isScreenSlotText,
   parseScreenAppSrc,
   photoRepeatKey,
+  placeScreenVariant,
   screenAlt,
+  screenFactGaps,
   screenKindOf,
   screenProfileFor,
   screenSaveAllowed,
@@ -698,9 +701,9 @@ export interface AutoArticle {
  * 사진이 공공누리 제1유형이 아님 · scene 후보는 있었는데 장면이 자리와 맞지 않음(장면을 읽지 못한 사진 포함) · unread 장면을 아직 읽지
  * 않은 사진이 남음(읽기 상한 · 키 · 한도 · Claude 과부하로 멈춤 — 다시 누르면 이어서 읽는다) · replace 이미 넣은 자동 사진의 장면이
  * 자리와 어긋나 다른 사진으로 바꿈 · remove 이미 넣은 자동 사진의 장면이 어긋나고 바꿀 사진도 없어 뺌.
- * 자사 화면 자리(screen) — 찍지 않는 화면이면 screen 그대로(row.screenSlot이 까닭), 코스 화면을 넣으면 filled, 글에 넣지 않는 화면(지도 —
- * SCREEN_AUTO_SAVE_KINDS 밖)이면 preview(미리보기만), 고른 화면 · 변형을 아직 찍지 않았으면 uncaptured(찍은 뒤 다시 누른다 — screenWanted),
- * 쓸 변형이 모두 상한에 걸리면 used, 글이 다 찼으면 full.
+ * 자사 화면 자리(screen) — 찍지 않는 화면이면 screen 그대로(row.screenSlot이 까닭 — 장소 안내 자리에 장소를 찾지 못했으면 screenMiss),
+ * 코스 · 장소 안내 · 가이드 화면을 넣으면 filled, 글에 넣지 않는 화면(지도 — SCREEN_AUTO_SAVE_KINDS 밖)이면 preview(미리보기만), 고른
+ * 화면 · 변형을 아직 찍지 않았으면 uncaptured(찍은 뒤 다시 누른다 — screenWanted), 쓸 변형이 모두 상한에 걸리면 used, 글이 다 찼으면 full.
  */
 export type AutoSlotState =
   | 'filled'
@@ -753,13 +756,18 @@ export interface AutoScreenPick {
   by?: ScreenVariantChoice['by']
 }
 
-/** 자사 화면 단계가 쓰는 찍어 둔 화면(GET /api/screens의 shots 한 장). */
-export type AutoScreenShot = Pick<ScreenShotView, 'id' | 'screenId' | 'variantId' | 'url' | 'capturedAt' | 'src'>
+/**
+ * 자사 화면 단계가 쓰는 찍어 둔 화면(GET /api/screens의 shots 한 장). 잘라 찍은 화면은 크기(썸네일 비율)와 찍은 부분의 글자(text — 설명
+ * 줄의 사실과 견준다)가 있다.
+ */
+export type AutoScreenShot = Pick<ScreenShotView, 'id' | 'screenId' | 'variantId' | 'url' | 'capturedAt' | 'src'> &
+  Partial<Pick<ScreenShotView, 'width' | 'height' | 'text'>>
 
-/** 찍을 화면 · 변형 하나(screenWanted) — 화면이 POST /api/screens/capture로 찍고 다시 고른다. */
+/** 찍을 화면 · 변형 하나(screenWanted) — 화면이 POST /api/screens/capture로 찍고 다시 고른다. 변형 이름(장소 안내는 장소 이름)도 함께. */
 export interface AutoScreenWant {
   screenId: string
   variantId: string
+  variantLabel?: string
 }
 
 export interface AutoSlotRow {
@@ -816,10 +824,20 @@ export interface AutoSlotRow {
    * (브랜드 이름 · 객실 · 독채 · 매장 · 메뉴)이나 고유한 장소 이름이 나온 자리가 아니다. 화면은 이런 자리가 있을 때만 지역 사진을 부른다.
    */
   regionSlot?: true
-  /** 화면 자리(state screen으로 시작한 자리)의 종류(src/lib/screenCapture.ts screenKindOf) — course · map이 아니면 찍지 않는 까닭. */
+  /** 화면 자리(state screen으로 시작한 자리)의 종류(src/lib/screenCapture.ts screenKindOf) — 찍는 종류(SCREEN_KINDS)가 아니면 찍지 않는 까닭. */
   screenSlot?: ScreenSlotKind
   /** 화면 자리에 고른 자사 화면 · 변형(filled · preview · uncaptured). */
   screenPick?: AutoScreenPick
+  /**
+   * 장소 안내 화면 자리인데 찍을 장소를 정하지 못했다 — no-place 자리 글자(장면 · 설명 줄 · 소제목)에 사이트 장소 사전의 장소가 없음,
+   * no-directory 장소 사전(sitemap)을 읽지 못함. 자리는 비워 둔다(screen).
+   */
+  screenMiss?: 'no-place' | 'no-directory'
+  /**
+   * 잘라 찍은 화면(장소 안내 · 가이드)을 넣었는데 자리 글자(장면 · 설명 줄)가 말한 사실이 찍은 부분의 글자에 없다 — 그 사실들
+   * (src/lib/screenCapture.ts screenFactGaps, 「09:30」 · 「휴관」 · 「월요일」). 「확인 필요」를 단다.
+   */
+  factGaps?: string[]
 }
 
 /** 이미 넣은 자동 사진을 바꾸거나 뺄 것 — 저장할 때 서버가 그 자리에 같은 자동 사진이 아직 있을 때만 한다(server/contentDraft.ts). */
@@ -1055,6 +1073,11 @@ export function autoPickPhotos(input: {
    * /api/screens). 주지 않으면 화면 자리는 지금처럼 비워 둔다(screen).
    */
   screens?: { available: boolean; shots: readonly AutoScreenShot[] }
+  /**
+   * 사이트 장소 사전(sitemap의 /places/<이름>/ — src/lib/sitePhotos.ts loadPlaceDirectory의 이름 · 주소) — 장소 안내 화면 자리의 장소를
+   * 여기서 찾아 그 주소의 변형을 쓴다(자리 글자로 주소를 만들지 않는다). 주지 않으면 장소 안내 자리는 비워 둔다(screenMiss no-directory).
+   */
+  placePages?: readonly { name: string; url: string }[]
 }): AutoPickResult {
   const stop = new Set(contentWords(input.brandName ?? ''))
   const scenes = input.scenes
@@ -1228,6 +1251,33 @@ export function autoPickPhotos(input: {
   }
   const screenWanted = new Map<string, AutoScreenWant>()
   const screenKey = (screen: ScreenDef, v: ScreenVariant) => photoRepeatKey({ src: '', origin: 'screen', screenId: screen.id, variantId: v.id })
+  // 장소 안내 화면의 변형 — 사이트 장소 사전의 이름 → 그 주소로 만든 변형(프로필 호스트의 /places/<이름>/만, src/lib/screenCapture.ts placeScreenVariant).
+  const placeVariants = new Map<string, ScreenVariant>()
+  if (screenProfile) {
+    for (const e of input.placePages ?? []) {
+      const v = placeScreenVariant(screenProfile, e.url)
+      if (v && e.name && !placeVariants.has(e.name)) placeVariants.set(e.name, v)
+    }
+  }
+  const placeNames = [...placeVariants.keys()]
+  /**
+   * 장소 안내 자리의 장소 — 장면 글자 · 설명 줄 · 소제목 차례로 사전에서 찾은 첫 장소(findPlaces 순서). 소제목에만 나온 장소(by heading)나
+   * 장면 글자가 장소를 둘 이상 말하는 자리(한 장소의 안내만 찍힌다)는 「확인 필요」.
+   */
+  const placeChoice = (row: AutoSlotRow): { choice: ScreenVariantChoice; review: boolean } | { miss: 'no-place' | 'no-directory' } => {
+    if (!placeVariants.size) return { miss: 'no-directory' }
+    const named = findPlaces(row.slot.key, placeNames)
+    for (const [text, by] of [
+      [row.slot.key, 'place'],
+      [row.caption, 'place'],
+      [row.slot.heading, 'heading'],
+    ] as const) {
+      const name = text ? findPlaces(text, placeNames)[0] : undefined
+      const v = name ? placeVariants.get(name) : undefined
+      if (v) return { choice: { tiers: [[v]], by }, review: by === 'heading' || named.length > 1 }
+    }
+    return { miss: 'no-place' }
+  }
 
   // 글마다 자리를 정하고(이미 넣은 자동 사진을 장면으로 다시 본다 — 모든 글을 먼저 보아 그 사진의 장면을 먼저 읽게), 모든 글에서 장면이
   // 맞는 사진(①②③③b)을 고른 뒤에 비슷한 사진(④)을 고른다 — 앞 글의 비슷한 사진이 뒤 글의 맞는 사진을 반복 상한으로 막지 않게.
@@ -1581,17 +1631,19 @@ export function autoPickPhotos(input: {
     }
 
     /**
-     * 자사 화면 — 모든 글의 사진(①②③③b · 비슷한 사진)을 고른 뒤, 화면 자리(state screen) 가운데 코스 · 지도 자리(screenOfRow)에 글에 남은
-     * 자리만큼. 변형은 자리 글자로 좁힌 묶음(screenVariantChoice — 원도심 장소 → #r-원도심, 장면 글자 · 소제목 · 설명 줄이 아이 · 부모님 ·
-     * 혼자 · 연인 → 그 조건 다음 기본, 조건을 말하지 않으면 기본 다음 조건) 앞부터, 묶음 안에서는 브랜드에서 덜 쓴 변형(같으면 표 순서). 같은
+     * 자사 화면 — 모든 글의 사진(①②③③b · 비슷한 사진)을 고른 뒤, 화면 자리(state screen) 가운데 찍는 화면 자리(screenOfRow — 코스 · 지도 ·
+     * 장소 안내 · 가이드)에 글에 남은 자리만큼. 변형은 자리 글자로 좁힌 묶음(screenVariantChoice — 원도심 장소 → #r-원도심, 장면 글자 · 소제목 ·
+     * 설명 줄이 아이 · 부모님 · 혼자 · 연인 → 그 조건 다음 기본, 조건을 말하지 않으면 기본 다음 조건 · 장소 안내는 자리 글자의 장소 한 곳 —
+     * placeChoice, 찾지 못하면 screenMiss로 비워 둠) 앞부터, 묶음 안에서는 브랜드에서 덜 쓴 변형(같으면 표 순서). 같은
      * 「화면 + 변형」은 글 하나 · 작성자 한 사람에게 한 번이고 브랜드 상한은 받지 않는다(결정 3).
      * 사람이 그 자리에서 뺀 화면(refill — removed의 화면 열쇠)은 고르지 않는다. 사람 장면 규칙(isPeopleScene)은 보지 않는다(화면이다).
      * 찍을 수 있으면 변형은 찍었는지와 상관없이 고르고, 아직 찍지 않았으면 uncaptured로 두어 screenWanted로 청한다(찍은 뒤 같은 결과가
      * 나오게). 찍을 수 없으면(웹 · dev) 찍어 둔 변형을 먼저 고른다. 글에 넣지 않는 종류(지도 — SCREEN_AUTO_SAVE_KINDS 밖)는 미리보기
      * (preview)만 — 보낼 사진(out)에 넣지 않고 글의 사진 수도 쓰지 않는다. 지도는 늘 「확인 필요」(지도에 장소 이름이 보이지 않을 수 있다),
      * 코스는 첫 묶음 밖의 변형을 쓸 때 — 자리가 말한 조건의 변형을 쓰지 못했거나, 조건을 말하지 않는 자리에 조건 변형을 쓸 때 — 「확인
-     * 필요」. 글의 사진 수(room)는 고치지 않는다 — finish가 사진 자리의 상태를
-     * 지금처럼 정하게(사진이 먼저다).
+     * 필요」. 장소 안내는 소제목에만 나온 장소이거나 장면 글자가 장소를 둘 이상 말할 때, 잘라 찍은 화면(장소 안내 · 가이드)은 자리 글자의
+     * 사실(시각 · 금액 · 요일 · 휴관 …)이 찍은 부분의 글자에 없을 때(factGaps) 「확인 필요」. 글의 사진 수(room)는 고치지 않는다 — finish가
+     * 사진 자리의 상태를 지금처럼 정하게(사진이 먼저다).
      */
     const screenStage = () => {
       const screens = input.screens
@@ -1606,7 +1658,17 @@ export function autoPickPhotos(input: {
           row.state = 'full'
           continue
         }
-        const choice = screenVariantChoice(screen, row.slot.key, places.length ? findPlaces(row.slot.key, places) : [], `${row.slot.heading}\n${row.caption}`)
+        let choice: ScreenVariantChoice
+        let placeReview = false
+        if (screen.placePages) {
+          const found = placeChoice(row)
+          if ('miss' in found) {
+            row.screenMiss = found.miss
+            continue
+          }
+          choice = found.choice
+          placeReview = found.review
+        } else choice = screenVariantChoice(screen, row.slot.key, places.length ? findPlaces(row.slot.key, places) : [], `${row.slot.heading}\n${row.caption}`)
         const open = (v: ScreenVariant) => !blocked(screenKey(screen, v)) && !removed(row, screenKey(screen, v))
         const shotOf = (v: ScreenVariant) => shotAt.get(`${screen.id}:${v.id}`)
         const byUse = (a: ScreenVariant, b: ScreenVariant) =>
@@ -1645,7 +1707,9 @@ export function autoPickPhotos(input: {
         if (!shot) {
           row.state = 'uncaptured'
           const k = `${screen.id}:${variant.id}`
-          if (screens.available && !screenWanted.has(k)) screenWanted.set(k, { screenId: screen.id, variantId: variant.id })
+          if (screens.available && !screenWanted.has(k)) {
+            screenWanted.set(k, { screenId: screen.id, variantId: variant.id, ...(screen.placePages ? { variantLabel: variant.label } : {}) })
+          }
           continue
         }
         const pick: AutoPickInput = {
@@ -1654,7 +1718,7 @@ export function autoPickPhotos(input: {
           same: row.slot.same,
           heading: row.slot.heading,
           src: shot.src,
-          alt: cleanPhotoAlt(screenAlt(input.brandName ?? '', screen)),
+          alt: cleanPhotoAlt(screenAlt(input.brandName ?? '', screen, variant)),
           pageUrl: shot.url,
           auto: true,
           origin: 'screen',
@@ -1663,7 +1727,11 @@ export function autoPickPhotos(input: {
           capturedAt: shot.capturedAt,
           shotId: shot.id,
         }
-        Object.assign(row, { state: saveAllowed ? 'filled' : 'preview', pick, ...(screen.kind === 'map' || chosen.tier > 0 ? { review: true } : {}) })
+        // 잘라 찍은 화면은 자리 글자(장면 · 설명 줄)가 말한 사실이 찍은 부분의 글자에 있는지 본다 — 없으면 「확인 필요」(막지 않는다).
+        const gaps = screen.clip ? screenFactGaps(`${row.slot.key}\n${row.caption}`, shot.text ?? '') : []
+        if (gaps.length) row.factGaps = gaps
+        const review = screen.kind === 'map' || chosen.tier > 0 || placeReview || gaps.length > 0
+        Object.assign(row, { state: saveAllowed ? 'filled' : 'preview', pick, ...(review ? { review: true } : {}) })
         if (saveAllowed) out.push(pick)
       }
     }

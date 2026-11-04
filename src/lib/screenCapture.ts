@@ -12,8 +12,21 @@
  */
 import type { PhotoPick } from './articlePhotos.js'
 
-/** 화면 종류 — course(코스 만들기 화면) · map(지도 화면). */
-export type ScreenKind = 'course' | 'map'
+/**
+ * 화면 종류 — course(코스 만들기 화면) · map(지도 화면) · place(장소 페이지의 안내 칸 — 장소마다 변형) · guide(목적별 가이드 페이지의 머리).
+ * place · guide는 페이지의 자사 부분만 잘라 찍는다(clip — 같은 페이지의 공공누리 사진은 그림에 넣지 않는다).
+ */
+export type ScreenKind = 'course' | 'map' | 'place' | 'guide'
+
+/**
+ * 잘라 찍기(electron/capture.cjs clip) — 선택자들의 요소를 합친 사각형에 여백(padding)을 둘러 그 부분만 찍는다. selectors는 다 있어야
+ * 하고(없으면 찍지 않는다 — clip-missing), optional은 있으면 함께 넣는다. 사각형 안에 걸친 그림만 검사한다(공공누리 · 바깥 그림).
+ */
+export interface ScreenClip {
+  selectors: readonly string[]
+  optional?: readonly string[]
+  padding?: number
+}
 
 /** 한 화면의 변형 하나 — 같은 페이지를 다른 조건 · 권역으로 연 것. 「화면 + 변형」이 한 장의 단위다. */
 export interface ScreenVariant {
@@ -50,6 +63,20 @@ export interface ScreenDef {
   map?: true
   /** 이 화면에서 더 숨길 것(챗봇 단추 · 캐러셀 · 동의 배너는 캡처 모듈이 늘 숨긴다). */
   hide?: readonly string[]
+  /** 페이지의 이 부분만 잘라 찍는다 — 찍은 부분의 글자도 함께 저장해 설명 줄의 사실과 견준다(screenFactGaps). */
+  clip?: ScreenClip
+  /** 자사 호스트 밖의 요청을 모두 막는다(관광공사 사진 · 지도 SDK · 동영상 썸네일을 받지 않는다 — 잘라 찍는 부분은 자사 글자 · 그림뿐). */
+  ownHostOnly?: true
+  /**
+   * 변형이 사이트의 장소 페이지(/places/<이름>/)다 — variants는 비고, 자리 글자에 나온 장소를 사이트의 장소 사전(sitemap)에서 찾아
+   * 변형을 만든다(placeScreenVariant). 변형 id는 주소의 장소 이름(slug)이다.
+   */
+  placePages?: true
+  /**
+   * 화면 이름이 자리 글자에 없을 때 이 화면으로 볼 낱말 — 장소 안내 칸이 보여 주는 것(이용시간 · 휴관 · 입장료 …). 화면 이름 · 다른 회사 ·
+   * 누르기 낱말이 먼저다(screenKindOf).
+   */
+  slotWords?: RegExp
   variants: readonly ScreenVariant[]
 }
 
@@ -72,7 +99,12 @@ export interface ScreenShot {
   width: number
   height: number
   bytes: number
+  /** 잘라 찍은 화면이면 찍은 부분의 글자(요소들의 innerText, SCREEN_TEXT_MAX자까지) — 설명 줄의 사실과 견준다(screenFactGaps). */
+  text?: string
 }
+
+/** 찍은 부분 글자의 최대 길이. */
+export const SCREEN_TEXT_MAX = 2000
 
 /** 목록 · 찍기 응답에 나가는 한 장 — id(= sha16)와 앱 주소(src)를 붙인다. */
 export interface ScreenShotView extends ScreenShot {
@@ -95,6 +127,12 @@ const GUNSAN_COUPLE =
   /연인(?!원)|커플|(?<!업)데이트|신혼|부부(?!터)|(?<!플러스\s?)친구(?!\s?(?:같|처럼|추가|맺|신청|등록))|둘이서|둘만|둘이\s?(?:걷|걸|가|간|갈|떠나|여행|나란히|함께)|두\s?사람이?\s?(?:함께|나란히|걷|걸)|우정\s?여행/
 /** 군산각 날씨 카드 — 실시간 날씨 · 점수 · 밤에는 달이 그려져 오래 남는 블로그 그림에 맞지 않는다. */
 const GUNSAN_WEATHER = '[data-wx]'
+/**
+ * 장소 안내 칸(장소 페이지 첫머리의 이용시간 · 쉬는 날 · 요금 · 주차 · 전화 카드)이 보여 주는 것 — 화면 이름(코스 · 지도)이 없는 화면 자리에
+ * 이 낱말이 있으면 장소 안내 화면 자리다(「근대역사박물관의 이용시간과 휴관일, 입장료가 표시된 화면」). 다른 회사 · 누르기 · 결과 낱말이
+ * 먼저다(「지도에서 찾기 화면에서 근대역사박물관을 눌러 요금이 보이는 장면」은 누르기 화면).
+ */
+const PLACE_INFO_WORDS = /이용\s?시간|여는\s?시간|운영\s?시간|영업\s?시간|관람\s?시간|휴관|쉬는\s?날|휴무|입장료|관람료|입장\s?마감|요금/
 
 function gunsanRegion(name: string, places: readonly string[], label = name): ScreenVariant {
   return { id: `r-${name}`, label, path: `/map/#r-${name}`, scrollTo: '.map-grid', activateFragmentLink: true, places }
@@ -120,6 +158,11 @@ const GUNSAN_REGION_PLACES = {
  * 자사 화면 프로필 표. 군산각의 코스 화면 5장(기본 · 「누구와 가세요?」의 네 칸 아이와 · 부모님 · 혼자 · 연인·친구)과 지도 화면 6장(전체 +
  * 권역 5)이다. 주소의 쿼리 이름(with=solo|couple|kids|parents · adults · seniors · kids 나이) · 권역 조각은 사이트(plan.js fromAddress ·
  * /map/의 권역 탭)에서 확인한 것이다(2026-11-04). 프로필이 없는 브랜드는 찍을 화면이 없다.
+ *
+ * 장소 안내(장소마다 한 장)와 「아이와 함께」 가이드는 잘라 찍는다(4단계, 2026-11-04) — 두 페이지 모두 같은 화면에 관광공사 사진(공공누리
+ * 제3유형)이 있어 첫 화면을 통째로 찍을 수 없다. 장소 페이지는 왼쪽 칸의 분류 · 이름 · 소개 · 안내 카드(dl.kf-hero — 자사 아이콘뿐)까지,
+ * 가이드는 분류 · 제목 · 자사 일러스트(/assets/art/camp-kids) · 첫 줄까지다. 장소 페이지의 공공누리 사진(figure.pv)은 오른쪽 칸이라 잘라 낸
+ * 사각형 밖이고, 가이드의 장소 카드 줄(공공누리 사진)은 캡처 모듈이 늘 숨기는 캐러셀([data-gallery])이며 첫 줄 아래다(숨긴 창 실측).
  */
 export const SCREEN_PROFILES: readonly ScreenProfile[] = [
   {
@@ -153,6 +196,34 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
           gunsanRegion('새만금-비응', GUNSAN_REGION_PLACES['새만금-비응'], '새만금·비응'),
         ],
       },
+      {
+        id: 'place-info',
+        kind: 'place',
+        label: '장소 안내',
+        placePages: true,
+        ownHostOnly: true,
+        slotWords: PLACE_INFO_WORDS,
+        hide: [GUNSAN_WEATHER],
+        clip: {
+          selectors: ['article.place .pl-head h1', 'article.place dl.kf.kf-hero'],
+          optional: ['article.place .pl-head .kicker', 'article.place .pl-head .pl-alt', 'article.place .pl-head .summary'],
+          padding: 16,
+        },
+        variants: [],
+      },
+      {
+        id: 'kids-guide',
+        kind: 'guide',
+        label: '아이와 함께 안내',
+        ownHostOnly: true,
+        hide: [GUNSAN_WEATHER],
+        clip: {
+          selectors: ['header.gd-head h1', 'header.gd-head figure.art-camp'],
+          optional: ['header.gd-head .kicker', 'header.gd-head .gd-ans-l'],
+          padding: 16,
+        },
+        variants: [{ id: 'default', label: '아이와 함께 군산', path: '/guides/아이와-함께-군산/' }],
+      },
     ],
   },
 ]
@@ -160,9 +231,17 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
 /**
  * 글에 저장해도 되는 화면 종류 — 사람이 고르기(op pick)와 자동 채우기(op auto) 모두, 그리고 사진 받기(photo-file)도 이 값을 본다.
  * 카카오 지도 화면은 운영자가 이용 조건(로고 · 출처를 그대로 두고 블로그에 다시 싣는 것)을 확인하기 전까지 찍기 · 미리보기만 한다
- * (2026-11-04 결정 4). 확인되면 여기에 'map'을 더한다 — 서버와 화면이 이 값 하나만 본다.
+ * (2026-11-04 결정 4). 확인되면 여기에 'map'을 더한다 — 서버와 화면이 이 값 하나만 본다. 장소 안내 · 가이드는 고객 사이트의 자사 글자 ·
+ * 아이콘 · 일러스트만 잘라 찍으므로 넣는다(설명 줄의 사실이 찍은 글자에 없으면 「확인 필요」 — screenFactGaps).
  */
-export const SCREEN_AUTO_SAVE_KINDS: readonly ScreenKind[] = ['course']
+export const SCREEN_AUTO_SAVE_KINDS: readonly ScreenKind[] = ['course', 'place', 'guide']
+
+/** 찍는 화면 종류 — 화면 자리의 종류(ScreenSlotKind) 가운데 자사 화면 단계가 채우는 것. */
+export const SCREEN_KINDS: readonly ScreenKind[] = ['course', 'map', 'place', 'guide']
+
+export function isScreenKind(kind: unknown): kind is ScreenKind {
+  return SCREEN_KINDS.includes(kind as ScreenKind)
+}
 
 export function screenSaveAllowed(kind: ScreenKind): boolean {
   return SCREEN_AUTO_SAVE_KINDS.includes(kind)
@@ -226,11 +305,62 @@ export function screenProfileFor(ownedDomains: readonly string[] | undefined): S
   return SCREEN_PROFILES.find((p) => owned.has(p.host)) ?? null
 }
 
-/** 프로필에서 화면 · 변형을 찾는다. 없으면 null. */
+/**
+ * 프로필에서 화면 · 변형을 찾는다. 장소 안내(placePages)는 변형 id(장소 이름 slug)의 모양만 보고 변형을 만든다 — 사이트의 장소인지는
+ * 찍기 전에 서버가 sitemap으로 본다(server/screens.ts). 없으면 null.
+ */
 export function findScreenVariant(profile: ScreenProfile, screenId: unknown, variantId: unknown): { screen: ScreenDef; variant: ScreenVariant } | null {
   const screen = profile.screens.find((s) => s.id === screenId)
-  const variant = screen?.variants.find((v) => v.id === variantId)
-  return screen && variant ? { screen, variant } : null
+  if (!screen) return null
+  const variant = screen.placePages ? placeVariantOfSlug(variantId) : screen.variants.find((v) => v.id === variantId)
+  return variant ? { screen, variant } : null
+}
+
+/** 사이트 장소 페이지 주소의 장소 이름(slug) 모양 — 글자 · 숫자를 하이픈으로 이은 것(군산각 sitemap의 380곳 모두 이 모양, 2026-11-04). */
+const PLACE_SLUG = /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u
+const PLACE_SLUG_MAX = 60
+
+/**
+ * 장소 이름(slug — 주소 /places/<slug>/의 이름, 「일제강점기-군산역사관」)으로 만든 장소 안내 변형. 이름표는 하이픈을 띄어쓰기로 바꾼
+ * 것(사이트 장소 사전 src/lib/sitePhotos.ts와 같다). 모양이 아니면(경로 글자 · 띄어쓰기 · % 표기 · 너무 긺) null.
+ */
+export function placeVariantOfSlug(slug: unknown): ScreenVariant | null {
+  if (typeof slug !== 'string' || slug.length > PLACE_SLUG_MAX || slug !== slug.normalize('NFC') || !PLACE_SLUG.test(slug)) return null
+  return { id: slug, label: slug.replace(/-/g, ' '), path: `/places/${encodeURIComponent(slug)}/` }
+}
+
+/**
+ * 사이트 장소 사전 한 곳의 주소(sitemap의 https://<호스트>/places/<이름>/)로 만든 장소 안내 변형 — https · 프로필 호스트 · 기본 포트 ·
+ * 계정 · 쿼리 · #조각 없음 · 경로가 /places/<이름>/ 하나일 때만(다른 언어 경로 /en/places/… 는 아니다). 자리 글자로 주소를 만들지 않는다 —
+ * 자리에 나온 장소 이름을 사전에서 찾아 그 주소만 쓴다. 아니면 null.
+ */
+export function placeScreenVariant(profile: ScreenProfile, pageUrl: string): ScreenVariant | null {
+  let u: URL
+  try {
+    u = new URL(pageUrl)
+  } catch {
+    return null
+  }
+  if (u.protocol !== 'https:' || u.hostname !== profile.host || u.port || u.username || u.password || u.search || u.hash) return null
+  const seg = /^\/places\/([^/]+)\/$/.exec(u.pathname)?.[1]
+  if (!seg) return null
+  let slug: string
+  try {
+    slug = decodeURIComponent(seg)
+  } catch {
+    return null
+  }
+  return placeVariantOfSlug(slug)
+}
+
+/** sitemap.xml에 있는 프로필 호스트의 장소 이름(slug) — 서버가 장소 안내를 찍기 전에 그 장소가 사이트에 있는지 본다(server/screens.ts). */
+export function placeSlugsOfSitemap(xml: string, profile: ScreenProfile): Set<string> {
+  const out = new Set<string>()
+  for (const m of xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)) {
+    const v = placeScreenVariant(profile, m[1]!.replace(/&amp;/g, '&'))
+    if (v) out.add(v.id)
+  }
+  return out
 }
 
 /** 자사 화면 사진(origin screen)의 화면 · 변형 — 브랜드 프로필에 없으면 null. */
@@ -250,10 +380,19 @@ export function screenUrl(profile: ScreenProfile, variant: ScreenVariant): strin
 
 /**
  * 자사 화면의 대체 텍스트 — 화면 이름만(「군산각 웹사이트 'AI 코스 만들기' 화면」). 사진 자리의 장면 글자(「박물관 위치가 표시된」)를
- * 쓰면 화면에 실제로 없는 사실이 나갈 수 있다.
+ * 쓰면 화면에 실제로 없는 사실이 나갈 수 있다. 장소 안내는 장소 이름을 앞에 둔다(「군산각 웹사이트 '근대역사박물관 장소 안내' 화면」 —
+ * 찍은 부분에 장소 이름이 있다).
  */
-export function screenAlt(brandName: string, screen: Pick<ScreenDef, 'label'>): string {
-  return `${brandName} 웹사이트 '${screen.label}' 화면`
+export function screenAlt(brandName: string, screen: Pick<ScreenDef, 'label' | 'placePages'>, variant?: Pick<ScreenVariant, 'label'>): string {
+  const name = screen.placePages && variant ? `${variant.label} ${screen.label}` : screen.label
+  return `${brandName} 웹사이트 '${name}' 화면`
+}
+
+/** 찍은 화면의 가로 · 세로 비율(CSS aspect-ratio 「416 / 677」) — 잘라 찍은 화면은 16:10이 아니다. 크기를 모르면 undefined. */
+export function screenAspectRatio(shot: { width?: number; height?: number } | undefined): string | undefined {
+  const w = shot?.width
+  const h = shot?.height
+  return typeof w === 'number' && typeof h === 'number' && w > 0 && h > 0 ? `${w} / ${h}` : undefined
 }
 
 /** 찍은 때의 한국 날짜 「11-04」 — 읽지 못하면 null. */
@@ -262,12 +401,12 @@ export function screenShotDay(capturedAt: string | undefined): string | null {
   return Number.isNaN(t) ? null : new Date(t + 9 * 3600_000).toISOString().slice(5, 10)
 }
 
-/** 주소의 #조각을 사람이 읽는 글자로(「#r-%EC%9B%90…」 → 「#r-원도심」). 풀 수 없으면 그대로. */
-function readableHash(hash: string): string {
+/** 주소의 경로 · #조각을 사람이 읽는 글자로(「/places/%EA%B7%BC…/」 → 「/places/근대역사박물관/」 · 「#r-%EC%9B%90…」 → 「#r-원도심」). 풀 수 없으면 그대로. */
+function readableUrlPart(part: string): string {
   try {
-    return decodeURIComponent(hash)
+    return decodeURIComponent(part)
   } catch {
-    return hash
+    return part
   }
 }
 
@@ -277,7 +416,7 @@ function readableHash(hash: string): string {
  */
 export function screenShotMeta(brandName: string, url: string, capturedAt?: string): string {
   const m = /^https?:\/\/([^/?#]+)([^?#]*)(?:\?[^#]*)?(#.*)?$/i.exec(url.trim())
-  const page = m ? `${m[1]}${m[2] || '/'}${m[3] ? readableHash(m[3]) : ''}` : url.trim()
+  const page = m ? `${m[1]}${readableUrlPart(m[2] || '/')}${m[3] ? readableUrlPart(m[3]) : ''}` : url.trim()
   const day = screenShotDay(capturedAt)
   return [`${brandName ? `${brandName} ` : ''}웹사이트 화면`, page, ...(day ? [`${day} 캡처`] : [])].join(' · ')
 }
@@ -358,15 +497,18 @@ export function isScreenSlotText(text: string): boolean {
 }
 
 /**
- * 화면 자리의 종류 — course 코스 화면 · map 지도 화면(프로필 표의 화면 이름이 장면 글자에 정확히 하나 있을 때), 그 밖에는 찍지 않는다:
+ * 화면 자리의 종류 — course 코스 화면 · map 지도 화면 · guide 가이드 화면(프로필 표의 화면 이름이 장면 글자에 정확히 하나 있을 때),
+ * place 장소 안내 화면(화면 이름은 없고 이용시간 · 휴관 · 입장료 같은 안내 낱말이 있을 때 — slotWords), 그 밖에는 찍지 않는다:
  * other 다른 회사 · 기기 화면, action 누르거나 결과를 받아야 보이는 화면, none 브랜드에 찍을 화면 목록(프로필)이 없음, ambiguous 화면
- * 이름이 둘 이상, unrelated 목록에 없는 화면(「아이와 함께 안내」 · 장소 상세 · 브랜드와 무관한 사이트).
+ * 이름이 둘 이상, unrelated 목록에 없는 화면(첫 화면 · 행사 안내 · 브랜드와 무관한 사이트).
  */
 export type ScreenSlotKind = ScreenKind | 'other' | 'action' | 'none' | 'ambiguous' | 'unrelated'
 
 export const SCREEN_SLOT_KIND_TEXT: Record<ScreenSlotKind, string> = {
   course: '코스 화면',
   map: '지도 화면',
+  place: '장소 안내 화면',
+  guide: '가이드 화면',
   other: '다른 회사 · 휴대폰 화면',
   action: '누르거나 결과를 받아야 보이는 화면',
   none: '이 브랜드는 찍을 화면이 없음',
@@ -385,7 +527,11 @@ export function screenKindOf(text: string, profile: ScreenProfile | null): { kin
   if (!profile) return { kind: 'none' }
   const found = labelsIn(t, [profile])
   if (found.length > 1) return { kind: 'ambiguous' }
-  return found[0] ? { kind: found[0].kind, screen: found[0] } : { kind: 'unrelated' }
+  if (found[0]) return { kind: found[0].kind, screen: found[0] }
+  // 화면 이름이 없으면 안내 낱말 — 「근대역사박물관의 이용시간과 휴관일, 입장료가 표시된 화면」은 장소 안내 화면이다.
+  const worded = profile.screens.filter((s) => s.slotWords?.test(t))
+  if (worded.length > 1) return { kind: 'ambiguous' }
+  return worded[0] ? { kind: worded[0].kind, screen: worded[0] } : { kind: 'unrelated' }
 }
 
 /**
@@ -400,10 +546,12 @@ export function screenKindOf(text: string, profile: ScreenProfile | null): { kin
  *   - 조건을 말하지 않으면 기본 변형 다음 조건 변형(by general) — 기본을 이 글 · 작성자에게 이미 썼을 때만 조건 변형을 쓰고, 그때는 두 번째
  *     묶음이라 「확인 필요」가 붙는다(photoAutoPick.ts).
  * - 그 밖에는 모든 변형.
+ * 장소 안내(placePages)는 여기서 고르지 않는다 — 자리 글자의 장소를 사이트 장소 사전에서 찾아 그 한 곳(by place — 장면 글자 · 설명 줄,
+ * by heading — 소제목에만 나온 장소라 「확인 필요」)을 쓴다(src/lib/photoAutoPick.ts).
  */
 export interface ScreenVariantChoice {
   tiers: ScreenVariant[][]
-  by?: 'region' | 'named' | 'prefer' | 'general'
+  by?: 'region' | 'named' | 'prefer' | 'general' | 'place' | 'heading'
 }
 
 export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces: readonly string[] = [], context = ''): ScreenVariantChoice {
@@ -423,4 +571,46 @@ export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces
   const preferred = conditional.filter((v) => v.prefer!.test(said))
   if (preferred.length) return { tiers: [preferred, base.filter((v) => !preferred.includes(v))].filter((tier) => tier.length > 0), by: 'prefer' }
   return { tiers: [base, conditional.filter((v) => !base.includes(v))].filter((tier) => tier.length > 0), by: 'general' }
+}
+
+// ── 잘라 찍은 화면의 사실 확인 ─────────────────────────────────────────────
+
+/** 휴관을 말하는 낱말 — 자리 쪽(「휴관일」 · 「쉬는 날」 · 「휴무」 · 「문을 닫는」)과 찍은 쪽(같은 낱말 · 「연중무휴」도 쉬는 날 안내다). */
+const SAID_CLOSED = /휴관|쉬는\s?날|휴무|정기\s?휴일|문\s?(?:을\s?)?닫/
+const SHOWN_CLOSED = /휴관|쉬는\s?날|휴무|정기\s?휴일|연중\s?무휴/
+const SAID_HOURS = /이용\s?시간|여는\s?시간|운영\s?시간|영업\s?시간|관람\s?시간/
+const SAID_FEE = /입장료|관람료|이용료|요금/
+
+/**
+ * 자리 글자(장면 글자 · 설명 줄)가 말한 사실 가운데 찍은 부분의 글자(screens.json text)에 없는 것 — 잘라 찍은 화면(장소 안내 · 가이드)을
+ * 넣을 때 「확인 필요」를 붙이는 기준이다(막지는 않는다). 견주는 것:
+ * - 값: 시각(09:00 = 9:00), 금액(2,000원 = 2000원), 달 범위(3~10월), 요일(월요일), 「무료」, 「입장 마감」 — 찍은 글자에 같은 값이 있어야 한다.
+ * - 말만: 휴관(휴관일 · 쉬는 날 · 휴무 — 찍은 쪽의 「연중무휴」도 쉬는 날 안내로 본다), 이용시간(찍은 글자에 시각이 하나라도),
+ *   요금 · 입장료(찍은 글자에 금액이나 「무료」가 하나라도).
+ * 없는 것을 자리 글자에 적힌 모양 그대로(「09:00」 · 「성인 2,000원」의 「2,000원」 · 「휴관일」의 「휴관」) 돌려준다. 띄어쓰기 · 전각 글자는
+ * 무시한다.
+ */
+export function screenFactGaps(said: string, shown: string): string[] {
+  const a = said.normalize('NFKC')
+  const b = shown.normalize('NFKC')
+  type Token = { key: string; text: string }
+  const times = (s: string): Token[] => [...s.matchAll(/(?<!\d)(\d{1,2}):(\d{2})(?!\d)/g)].map((m) => ({ key: `${Number(m[1])}:${m[2]}`, text: m[0] }))
+  const wons = (s: string): Token[] => [...s.matchAll(/(?<![\d,])(\d{1,3}(?:,\d{3})+|\d+)\s?원/g)].map((m) => ({ key: `${m[1]!.replace(/,/g, '')}원`, text: m[0] }))
+  const months = (s: string): Token[] =>
+    [...s.matchAll(/(?<!\d)(\d{1,2})\s?[~∼〜\-–—]\s?(\d{1,2})\s?월/g)].map((m) => ({ key: `${Number(m[1])}~${Number(m[2])}월`, text: m[0] }))
+  const days = (s: string): Token[] => [...s.matchAll(/([월화수목금토일])요일/g)].map((m) => ({ key: m[0], text: m[0] }))
+  const gaps: string[] = []
+  const add = (text: string) => {
+    if (!gaps.includes(text)) gaps.push(text)
+  }
+  for (const pick of [times, wons, months, days]) {
+    const have = new Set(pick(b).map((t) => t.key))
+    for (const t of pick(a)) if (!have.has(t.key)) add(t.text)
+  }
+  if (/무료/.test(a) && !/무료/.test(b)) add('무료')
+  if (/입장\s?마감/.test(a) && !/입장\s?마감/.test(b)) add('입장 마감')
+  if (SAID_CLOSED.test(a) && !SHOWN_CLOSED.test(b)) add(SAID_CLOSED.exec(a)![0])
+  if (SAID_HOURS.test(a) && times(b).length === 0) add(SAID_HOURS.exec(a)![0])
+  if (SAID_FEE.test(a) && wons(b).length === 0 && !/무료/.test(b)) add(SAID_FEE.exec(a)![0])
+  return gaps
 }

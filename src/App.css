@@ -5719,16 +5719,23 @@ section.dash-card {
   border-radius: calc(var(--r-ctl) - 2px);
   flex: none;
 }
-/* 자사 화면(1280×800 캡처) — 잘리지 않게 16:10 그대로 보인다(SitePhotoPanel.tsx · PhotoAutoFill.tsx). */
+/*
+ * 자사 화면 — 잘리지 않게 그림 비율 그대로 보인다(SitePhotoPanel.tsx · PhotoAutoFill.tsx). 첫 화면 캡처는 16:10(1280×800), 잘라 찍은 화면
+ * (장소 안내 · 가이드)은 찍은 크기라 세로로 길 수 있다 — 크기를 아는 썸네일은 화면이 style로 비율을 주고, 모르면 그림 비율(auto)을 쓴다.
+ * 너무 길어지지 않게 높이를 막고 그 안에 다 보이게(contain) 한다.
+ */
 .photo-picked.is-screen img,
 .photo-option.is-screen img,
 .photo-auto-pick.is-screen img {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: auto;
+  height: auto;
+  max-height: 160px;
   object-fit: contain;
   border: 1px solid var(--line);
 }
 .photo-auto-pick.is-screen img {
   width: 96px;
+  max-height: 120px;
 }
 .photo-option-empty {
   display: grid;

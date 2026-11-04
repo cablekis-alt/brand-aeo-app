@@ -926,7 +926,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     return {
       src: screenAppSrc(tenant.tenantId, shot.sha16),
       pageUrl: shot.url,
-      alt: cleanPhotoAlt(screenAlt(tenant.brandName, target.screen)),
+      alt: cleanPhotoAlt(screenAlt(tenant.brandName, target.screen, target.variant)),
       screen: {
         fields: { origin: 'screen' as const, screenId: shot.screenId, variantId: shot.variantId, capturedAt: shot.capturedAt },
         saveAllowed: screenSaveAllowed(target.screen.kind),
@@ -1423,7 +1423,8 @@ app.post('/api/screens/capture', async (req, res) => {
 });
 
 // 자사 화면 목록 — 이 브랜드의 화면 · 변형(프로필, 지금 글에 넣을 수 있는지 saveAllowed)과 이 PC에 찍어 둔 화면(늦게 찍은 것부터).
-// 프로필이 없는 브랜드는 screens가 비어 있다. available은 이 실행에서 찍을 수 있는지(/api/health screens와 같다).
+// 프로필이 없는 브랜드는 screens가 비어 있다. available은 이 실행에서 찍을 수 있는지(/api/health screens와 같다). 장소 안내(placePages)는
+// 변형이 사이트 장소마다라 variants가 비어 있다 — 화면이 장소 사전에서 고르고, 찍기는 서버가 장소 목록으로 다시 본다.
 app.get('/api/screens/:tenantId', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -1442,6 +1443,7 @@ app.get('/api/screens/:tenantId', async (req, res) => {
           kind: s.kind,
           label: s.label,
           saveAllowed: screenSaveAllowed(s.kind),
+          ...(s.placePages ? { placePages: true } : {}),
           variants: s.variants.map((v) => ({ id: v.id, label: v.label, url: screenUrl(profile, v) })),
         }))
       : [],

@@ -51,13 +51,32 @@ function base64Of(bytes: Uint8Array): string {
   return btoa(s)
 }
 
-/** 받은 화면 그림을 data:image/png로 — PNG가 아니거나 비었거나 너무 크면 throw. */
-async function dataUrlOf(blob: Blob): Promise<string> {
+/** PNG 머리(IHDR)의 가로 — 읽지 못하면 null. */
+function pngWidth(bytes: Uint8Array): number | null {
+  if (bytes.length < 24 || String.fromCharCode(...bytes.subarray(12, 16)) !== 'IHDR') return null
+  const w = bytes[16]! * 0x1000000 + bytes[17]! * 0x10000 + bytes[18]! * 0x100 + bytes[19]!
+  return w > 0 ? w : null
+}
+
+/** 받은 화면 그림을 data:image/png로(그림의 가로와 함께) — PNG가 아니거나 비었거나 너무 크면 throw. */
+async function dataUrlOf(blob: Blob): Promise<{ url: string; width: number | null }> {
   if (blob.type && blob.type !== 'image/png') throw new Error(`PNG가 아닌 응답이에요(${blob.type}).`)
   if (!blob.size || blob.size > MAX_SCREEN_BYTES) throw new Error(`화면 그림 크기가 맞지 않아요(${blob.size}바이트).`)
   const bytes = new Uint8Array(await blob.arrayBuffer())
   if (!PNG_SIG.every((b, i) => bytes[i] === b)) throw new Error('PNG가 아닌 그림이에요.')
-  return `data:image/png;base64,${base64Of(bytes)}`
+  return { url: `data:image/png;base64,${base64Of(bytes)}`, width: pngWidth(bytes) }
+}
+
+/** 그림 줄의 표시 폭(src/lib/htmlFile.ts FIGURE_IMG_SIZE — 칸 너비에 맞추되 720px까지). */
+const FIGURE_MAX_WIDTH = 720
+
+/**
+ * 잘라 찍은 화면(장소 안내 · 가이드 — 가로 400px 남짓)은 그림 줄의 720px로 늘리면 글자가 흐려진다 — 그림 가로가 720보다 좁으면 width ·
+ * max-width를 그림 가로로 줄인다(늘리지 않는다). 가로를 모르거나 넓으면 그대로.
+ */
+function notWider(attrs: string, width: number | null): string {
+  if (!width || width >= FIGURE_MAX_WIDTH) return attrs
+  return attrs.replace(`width="${FIGURE_MAX_WIDTH}"`, `width="${width}"`).replace(`max-width:${FIGURE_MAX_WIDTH}px`, `max-width:${width}px`)
 }
 
 export interface InlinedScreens {
@@ -76,7 +95,7 @@ export interface InlinedScreens {
 export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promise<InlinedScreens> {
   if (!APP_PATH.test(html)) return { html, inlined: 0, dropped: 0 }
   const srcs = new Set([...html.matchAll(ANY_IMG)].map((m) => m[1]!))
-  const data = new Map<string, string | null>()
+  const data = new Map<string, { url: string; width: number | null } | null>()
   for (const src of srcs) {
     try {
       // HTML 속성 안의 주소라 &amp;가 있을 수 있다(앱 주소에는 없지만 되돌려 받는다).
@@ -92,10 +111,10 @@ export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promi
 }
 
 /**
- * HTML의 화면 그림(앱 주소)을 바꾼다 — data에 그 주소의 data: 그림이 있으면 그것으로, 없으면 그림을 빼고 「[화면: 이름]」 글자로(그림 줄이면
- * 사진 자리처럼 figure 안 문단으로).
+ * HTML의 화면 그림(앱 주소)을 바꾼다 — data에 그 주소의 data: 그림이 있으면 그것으로(그림이 그림 줄 폭보다 좁으면 늘리지 않게 — notWider),
+ * 없으면 그림을 빼고 「[화면: 이름]」 글자로(그림 줄이면 사진 자리처럼 figure 안 문단으로).
  */
-function replaceScreens(html: string, data: ReadonlyMap<string, string | null>): InlinedScreens {
+function replaceScreens(html: string, data: ReadonlyMap<string, { url: string; width: number | null } | null>): InlinedScreens {
   let inlined = 0
   let dropped = 0
   const out = html
@@ -105,10 +124,10 @@ function replaceScreens(html: string, data: ReadonlyMap<string, string | null>):
       return `<figure class="image-slot"><p>${screenPlaceholder(alt)}</p>`
     })
     .replace(ANY_IMG, (_whole, src: string, alt: string, rest: string) => {
-      const url = data.get(src)
-      if (url) {
+      const got = data.get(src)
+      if (got) {
         inlined += 1
-        return `<img src="${url}" alt="${alt}"${rest}>`
+        return `<img src="${got.url}" alt="${alt}"${notWider(rest, got.width)}>`
       }
       dropped += 1
       return screenPlaceholder(alt)

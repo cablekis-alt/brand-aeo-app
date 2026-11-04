@@ -1801,12 +1801,16 @@ export function loadScreenCaptureStatus(): Promise<boolean> {
   return loadPhotoFlags().then((f) => f.screens)
 }
 
-/** 자사 화면 목록(GET /api/screens/:tenantId)의 화면 하나 — 프로필 표의 화면과 변형(찍을 주소), 글에 넣을 수 있는지. */
+/**
+ * 자사 화면 목록(GET /api/screens/:tenantId)의 화면 하나 — 프로필 표의 화면과 변형(찍을 주소), 글에 넣을 수 있는지. 장소 안내(placePages)는
+ * 변형이 사이트 장소마다라 variants가 비어 있다(화면이 장소 사전에서 고른다).
+ */
 export interface ScreenListScreen {
   id: string
   kind: ScreenKind
   label: string
   saveAllowed: boolean
+  placePages?: boolean
   variants: { id: string; label: string; url: string }[]
 }
 

@@ -39,7 +39,7 @@ import {
   type SceneSkip,
 } from '../lib/photoAutoPick'
 import { REGION_SCENE_LIMITS, SCENE_SETTING_TEXT, sceneMeta, type PhotoScene, type SceneWant } from '../lib/photoScenes'
-import { MAP_PREVIEW_ONLY_TEXT, SCREEN_SLOT_KIND_TEXT, screenCaptureOrder, screenProfileFor, screenShotMeta } from '../lib/screenCapture'
+import { isScreenKind, MAP_PREVIEW_ONLY_TEXT, SCREEN_SLOT_KIND_TEXT, screenAspectRatio, screenCaptureOrder, screenProfileFor, screenShotMeta } from '../lib/screenCapture'
 import {
   loadPlaceDirectory,
   loadPublicPhotos,
@@ -53,6 +53,7 @@ import {
   regionCandidatesOf,
   siteRootOf,
   tourCandidatesOf,
+  type PlaceEntry,
   type PublicPhotoPage,
   type SitePhotoResult,
 } from '../lib/sitePhotos'
@@ -87,11 +88,13 @@ import { TOUR_PLACE_LIMIT, TOUR_SOURCES, tourRegionOf, tourSourceOf, type TourSo
  * 장소 사전(sitemap)을 읽지 못했으면 장소 없는 자리를 알 수 없어 하지 않고, 브랜드 자기 시설(브랜드 이름 · 객실 · 독채 · 매장 · 메뉴)이나
  * 고유한 장소 이름이 나온 자리에는 넣지 않는다(다른 곳의 사진은 틀린 사진이다).
  *
- * 자사 화면 — 브랜드 자사 사이트에 화면 프로필(src/lib/screenCapture.ts)이 있으면 사진을 다 고른 뒤 코스 · 지도 화면 자리를 이 PC에
- * 찍어 둔 자사 화면으로 맞춘다(GET /api/screens). 설치한 데스크톱 앱에서 찍을 수 있으면(/api/health screens) 아직 찍지 않은 화면을
- * 한 번 누를 때 SCREEN_CAPTURES_PER_RUN장까지 찍고(코스 먼저 — 「자사 화면 찍는 중 n/m」) 다시 고른다 — 남은 화면은 다시 누르면 이어서
+ * 자사 화면 — 브랜드 자사 사이트에 화면 프로필(src/lib/screenCapture.ts)이 있으면 사진을 다 고른 뒤 코스 · 지도 · 장소 안내 · 가이드 화면
+ * 자리를 이 PC에 찍어 둔 자사 화면으로 맞춘다(GET /api/screens — 장소 안내는 자리 글자의 장소를 사이트 장소 사전에서 찾는다). 설치한
+ * 데스크톱 앱에서 찍을 수 있으면(/api/health screens) 아직 찍지 않은 화면을 한 번 누를 때 SCREEN_CAPTURES_PER_RUN장까지 찍고(글에 넣는
+ * 화면 먼저 — 「자사 화면 찍는 중 n/m」) 다시 고른다 — 남은 화면은 다시 누르면 이어서
  * 찍는다. 찍을 수 없으면(웹 · 개발 서버) 찍어 둔 화면만 쓰고 그렇다고 알린다. 지도 화면은 카카오 지도 이용 조건을 확인하기 전이라
- * 미리보기만 하고 저장하지 않는다(결정 4 — 저장 수에 세지 않는다). 코스 화면은 사진과 같이 op auto로 저장한다(서버가 다시 본다).
+ * 미리보기만 하고 저장하지 않는다(결정 4 — 저장 수에 세지 않는다). 코스 · 장소 안내 · 가이드 화면은 사진과 같이 op auto로 저장한다(서버가
+ * 다시 본다). 장소 안내 · 가이드는 잘라 찍은 화면이라 자리 글자의 시각 · 요금 · 요일이 찍은 글자에 없으면 「확인 필요」로 보인다.
  *
  * 미리보기는 계산한 때의 초안으로 고른다 — 그사이 다른 미리보기 · 사람이 고른 사진이 저장되거나 글이 바뀌면(photoStateKey) 그
  * 미리보기로는 저장하지 않고 다시 맞추게 한다(작성자 · 브랜드 반복 상한이 달라진다). 서버도 쓰기 안에서 상한을 다시 본다.
@@ -264,6 +267,7 @@ export default function PhotoAutoFill({
           ...(regionCity ? { regionCity, ...(regionCandidates ? { regionCandidates } : {}) } : {}),
           pagesRead,
           places: pub.places,
+          placePages: pub.placePages,
           placesUnknown: pub.placesFailed,
           others: otherPhotoUses(drafts, ids, groupOf),
           brandName: brand.brandName,
@@ -323,7 +327,7 @@ export default function PhotoAutoFill({
         const list = screenList
         const nameOf = (w: AutoScreenWant) => {
           const s = list.screens.find((x) => x.id === w.screenId)
-          return `${s?.label ?? w.screenId} · ${s?.variants.find((v) => v.id === w.variantId)?.label ?? w.variantId}`
+          return `${s?.label ?? w.screenId} · ${w.variantLabel ?? s?.variants.find((v) => v.id === w.variantId)?.label ?? w.variantId}`
         }
         const saveAllowedOf = (id: string) => list.screens.find((s) => s.id === id)?.saveAllowed === true
         const batch = screenCaptureOrder(result.screenWanted, saveAllowedOf, captureFailed.current).slice(0, SCREEN_CAPTURES_PER_RUN)
@@ -355,7 +359,7 @@ export default function PhotoAutoFill({
           screenNotes.push(`찍지 못한 화면 ${failedNow.length}장 — ${failedNow.join(' · ')}`)
         }
       }
-      const screenRows = result.articles.flatMap((a) => a.rows).filter((r) => r.screenSlot === 'course' || r.screenSlot === 'map')
+      const screenRows = result.articles.flatMap((a) => a.rows).filter((r) => isScreenKind(r.screenSlot))
       const screenWaiting = screenRows.filter((r) => r.state === 'uncaptured').length
       const screenPreviews = screenRows.filter((r) => r.state === 'preview').length
       if (screenWaiting) {
@@ -366,7 +370,7 @@ export default function PhotoAutoFill({
         )
       }
       if (screenProfile && !screenList && !screenListFailed && screenRows.length) {
-        screenNotes.push(`코스 · 지도 화면 자리 ${screenRows.length}곳 — 자사 화면은 설치한 데스크톱 앱에서만 찍고 넣을 수 있어요.`)
+        screenNotes.push(`자사 화면 자리 ${screenRows.length}곳 — 자사 화면은 설치한 데스크톱 앱에서만 찍고 넣을 수 있어요.`)
       }
       if (screenPreviews) screenNotes.push(`지도 화면 자리 ${screenPreviews}곳 — 카카오 지도 이용 조건 확인 전이라 미리보기만 하고 저장하지 않아요.`)
       if (result.region) {
@@ -433,27 +437,38 @@ export default function PhotoAutoFill({
     refillCleared: boolean,
     withScenes: boolean,
     recheckAuto: boolean,
-  ): Promise<{ candidates: AutoCandidate[]; places: string[]; placesFailed: boolean; pages: PublicPhotoPage[]; off: boolean; note: string | null }> => {
+  ): Promise<{
+    candidates: AutoCandidate[]
+    places: string[]
+    /** 장소 사전(이름 · 주소) — 장소 안내 화면 자리의 장소를 찾는다. */
+    placePages: PlaceEntry[]
+    placesFailed: boolean
+    pages: PublicPhotoPage[]
+    off: boolean
+    note: string | null
+  }> => {
     const root = siteRootOf(site.pageUrl)
-    if (!root) return { candidates: [], places: [], placesFailed: true, pages: [], off: !allowed, note: null }
-    let places: string[]
+    if (!root) return { candidates: [], places: [], placePages: [], placesFailed: true, pages: [], off: !allowed, note: null }
+    let directory: PlaceEntry[]
     try {
-      places = (await loadPlaceDirectory(root)).map((e) => e.name)
+      directory = await loadPlaceDirectory(root)
     } catch (e) {
       if (!allowed) {
         console.warn('[PhotoAutoFill] 장소 목록(sitemap.xml)을 읽지 못했습니다(공공 사진 사용 확인 전이라 알리지 않음)', e)
-        return { candidates: [], places: [], placesFailed: true, pages: [], off: true, note: null }
+        return { candidates: [], places: [], placePages: [], placesFailed: true, pages: [], off: true, note: null }
       }
       return {
         candidates: [],
         places: [],
+        placePages: [],
         placesFailed: true,
         pages: [],
         off: false,
         note: `장소 목록(sitemap.xml)을 읽지 못해 공공 사진 · 장소 없는 자리의 지역 사진은 건너뛰었어요 — ${e instanceof Error ? e.message : String(e)}`,
       }
     }
-    if (!places.length || !allowed) return { candidates: [], places, placesFailed: false, pages: [], off: !allowed, note: null }
+    const places = directory.map((e) => e.name)
+    if (!places.length || !allowed) return { candidates: [], places, placePages: directory, placesFailed: false, pages: [], off: !allowed, note: null }
     const siteAlt = new Map(site.photos.map((p) => [p.src, p.alt]))
     const hinted = list.flatMap((a) =>
       (a.picks ?? []).flatMap((p) =>
@@ -461,13 +476,20 @@ export default function PhotoAutoFill({
       ),
     )
     const wanted = [...new Set([...placesToRead(list, places, refillCleared, withScenes, recheckAuto), ...hinted])]
-    const directory = await loadPlaceDirectory(root)
     const load = await loadPublicPhotos(directory, wanted)
     const notes = [
       ...(load.failed.length ? [`장소 페이지 ${load.failed.length}곳을 읽지 못했어요(${load.failed.map((x) => x.place).join(' · ')}).`] : []),
       ...(load.capped ? [`장소 페이지는 한 번에 ${load.pages.length + load.failed.length}곳까지 읽어요 — ${load.capped}곳은 다음에 다시 눌러 주세요.`] : []),
     ]
-    return { candidates: publicCandidatesOf(load.pages), places, placesFailed: false, pages: load.pages, off: false, note: notes.length ? notes.join(' ') : null }
+    return {
+      candidates: publicCandidatesOf(load.pages),
+      places,
+      placePages: directory,
+      placesFailed: false,
+      pages: load.pages,
+      off: false,
+      note: notes.length ? notes.join(' ') : null,
+    }
   }
 
   const save = async () => {
@@ -755,14 +777,15 @@ function OldBrief({ row }: { row: AutoSlotRow }) {
 }
 
 /**
- * 화면 자리에 고른 자사 화면 — 썸네일(찍었으면) · 「자사 화면」 칩 · 화면 · 변형 이름 · 설명 줄(「군산각 웹사이트 화면 · 주소 · 11-04
- * 캡처」). 지도 화면은 저장하지 않는다는 안내를 붙인다(결정 4).
+ * 화면 자리에 고른 자사 화면 — 썸네일(찍었으면 — 잘라 찍은 화면은 그 비율 그대로) · 「자사 화면」 칩 · 화면 · 변형 이름 · 설명 줄(「군산각
+ * 웹사이트 화면 · 주소 · 11-04 캡처」). 지도 화면은 저장하지 않는다는 안내를 붙인다(결정 4).
  */
 function ScreenBrief({ brandName, pick }: { brandName: string; pick: AutoScreenPick }) {
   const shot = pick.shot
+  const ratio = screenAspectRatio(shot)
   return (
     <span className="photo-auto-pick is-screen">
-      {shot && <img src={shot.src} alt="" loading="lazy" />}
+      {shot && <img src={shot.src} alt="" loading="lazy" style={ratio ? { aspectRatio: ratio } : undefined} />}
       <span>
         <span className="status-pill st-info no-glyph">자사 화면</span> {pick.label} · {pick.variantLabel}
         <span className="doc-meta" style={{ display: 'block' }}>
@@ -778,26 +801,35 @@ function ScreenBrief({ brandName, pick }: { brandName: string; pick: AutoScreenP
   )
 }
 
-/** 화면 자리의 까닭 — 자리 종류(코스 · 지도 · 찍지 않는 화면)와 변형을 고른 까닭. */
+/** 화면 자리의 까닭 — 자리 종류(코스 · 지도 · 장소 안내 · 가이드 · 찍지 않는 화면)와 변형을 고른 까닭, 찍은 화면에 없는 자리 글자의 사실. */
 function screenWhy(row: AutoSlotRow): string {
   const kind = row.screenSlot!
   const sp = row.screenPick
-  if (!sp) return kind === 'course' || kind === 'map' ? SCREEN_SLOT_KIND_TEXT[kind] : `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요)`
-  const by =
-    sp.by === 'region'
-      ? `자리 글자의 권역 — ${sp.variantLabel}`
-      : sp.by === 'named'
-        ? '자리의 장소가 한 권역으로 정해지지 않아 전체 지도'
-        : sp.by === 'prefer'
-          ? sp.kind === 'course' && row.review
-            ? '자리 글자가 말한 조건의 화면은 이 글 · 작성자에게 이미 써서 다른 변형'
-            : `자리 글자가 말한 조건 — ${sp.variantLabel}`
-          : sp.by === 'general'
-            ? row.review
-              ? `자리 글자가 조건을 말하지 않는데 기본 화면을 이 글 · 작성자에게 이미 써서 조건 화면 — ${sp.variantLabel}(맞는지 확인)`
-              : `자리 글자가 조건을 말하지 않음 — ${sp.variantLabel}`
-            : '브랜드에서 덜 쓴 변형'
-  return `${SCREEN_SLOT_KIND_TEXT[kind]} · ${by}`
+  if (!sp && row.screenMiss === 'no-place') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 자리 글자 · 소제목에 사이트의 장소 이름이 없어 찍지 않아요(장소 이름을 넣거나 직접 골라요)`
+  if (!sp && row.screenMiss === 'no-directory') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 사이트 장소 목록(sitemap.xml)을 읽지 못해 찍을 장소를 정하지 못했어요`
+  if (!sp) return isScreenKind(kind) ? SCREEN_SLOT_KIND_TEXT[kind] : `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요)`
+  const facts = row.factGaps?.length ? ` · 자리 글자의 ${row.factGaps.map((g) => `「${g}」`).join(' ')}이(가) 찍은 화면에 없어요(맞는지 확인)` : ''
+  return `${SCREEN_SLOT_KIND_TEXT[kind]} · ${screenByText(row, sp)}${facts}`
+}
+
+/** 자사 화면의 변형을 고른 까닭 — 장소 안내는 자리 글자 · 소제목의 장소, 가이드는 그 이름, 코스 · 지도는 조건 · 권역. */
+function screenByText(row: AutoSlotRow, sp: AutoScreenPick): string {
+  if (sp.by === 'place') return `자리 글자의 장소 — ${sp.variantLabel}${row.review && !row.factGaps?.length ? '(자리 글자에 장소가 둘 이상 — 맞는지 확인)' : ''}`
+  if (sp.by === 'heading') return `소제목의 장소 — ${sp.variantLabel}(맞는지 확인)`
+  if (sp.kind === 'guide') return sp.variantLabel
+  return sp.by === 'region'
+    ? `자리 글자의 권역 — ${sp.variantLabel}`
+    : sp.by === 'named'
+      ? '자리의 장소가 한 권역으로 정해지지 않아 전체 지도'
+      : sp.by === 'prefer'
+        ? sp.kind === 'course' && row.review
+          ? '자리 글자가 말한 조건의 화면은 이 글 · 작성자에게 이미 써서 다른 변형'
+          : `자리 글자가 말한 조건 — ${sp.variantLabel}`
+        : sp.by === 'general'
+          ? row.review
+            ? `자리 글자가 조건을 말하지 않는데 기본 화면을 이 글 · 작성자에게 이미 써서 조건 화면 — ${sp.variantLabel}(맞는지 확인)`
+            : `자리 글자가 조건을 말하지 않음 — ${sp.variantLabel}`
+          : '브랜드에서 덜 쓴 변형'
 }
 
 /** 다시 본 자동 사진의 상태 글자 — 「장면 안 맞음 → 바꿈」 · 「비슷한 사진으로 둠」 · 「장면 맞음 · 그대로」. */

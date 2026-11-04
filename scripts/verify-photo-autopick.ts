@@ -10,6 +10,8 @@
  * - 공공 사진은 공공누리 제1유형 · 출처가 있을 때만, 내보낼 때 사진 바로 아래에 출처 줄이 붙어야 한다(출처 표시는 이용 조건이다).
  * - 단계 순서(홈페이지 → 장소 페이지 → 관광공사)를 지켜야 한다 — 장소 페이지를 읽지 못한 장소의 자리를 관광공사 사진으로 먼저 채우면
  *   다음에 눌러도 그 자리의 장소 페이지 사진을 다시 보지 않는다.
+ * - 장소 안내 화면은 자리 글자의 장소를 사이트 장소 사전에서 찾아야 한다 — 다른 장소 · 사전 밖의 주소를 찍으면 틀린 화면이다. 설명 줄의
+ *   시각 · 요금 · 요일이 찍은 글자에 없으면 「확인 필요」여야 한다.
  *
  *   npx tsx scripts/verify-photo-autopick.ts
  */
@@ -652,7 +654,9 @@ const mdScreen = [
   '## 1. 코스', '', `![${COURSE_SLOT}](#image-slot)`, '*조건만 고르면 일정을 짜 줍니다.*',
   '', '## 2. 지도', '', `![${MAP_SLOT}](#image-slot)`,
   '', '## 3. 결과', '', '![코스 결과 화면에서 한 장소를 눌러 요금이 보이는 모습](#image-slot)',
-  '', '## 4. 안내', '', `![${SB} 웹사이트의 '아이와 함께' 안내 화면](#image-slot)`,
+  // 예전에는 「'아이와 함께' 안내 화면」을 목록에 없는 화면(unrelated)의 예로 썼다 — 4단계에서 그 자리가 찍는 화면(가이드)이 되어 「이번 주
+  // 행사」 안내로 바꿨다(이 묶음의 기대값 screen:unrelated · 보낼 사진 1장 · 찍을 화면 없음은 그대로).
+  '', '## 4. 안내', '', `![${SB} 웹사이트의 '이번 주 행사' 안내 화면](#image-slot)`,
   '', '## 5. 정원', '', `![${SB} 정원과 한옥이 한 화면에 담긴 장면](#image-slot)`,
 ]
 const screenRun = (articles: AutoArticle[], screens?: { available: boolean; shots: readonly AutoScreenShot[] }, over: Partial<Parameters<typeof autoPickPhotos>[0]> = {}) =>
@@ -850,6 +854,110 @@ ok(
     const row = r.articles[0]!.rows[2]!
     return row.state === 'screen' && row.screenSlot === 'none' && !row.pick && r.screenWanted.length === 0
   })(),
+)
+
+// 17) 장소 안내 · 가이드(4단계 잘라 찍기) — 장소 안내는 자리 글자(장면 · 설명 줄 · 소제목)의 장소를 사이트 장소 사전(이름 · 주소)에서 찾아
+//     그 주소의 변형을 쓴다. 잘라 찍은 화면은 자리 글자의 사실(시각 · 요금 · 요일 · 휴관)이 찍은 글자(text)에 없으면 「확인 필요」.
+const PLACE_PAGES = [
+  { name: '가상박물관', url: 'https://gunsan.webforai.kr/places/가상박물관/' },
+  { name: '가상 해양공원', url: `https://gunsan.webforai.kr/places/${encodeURIComponent('가상-해양공원')}/` },
+  { name: '바깥박물관', url: 'https://evil.example/places/바깥박물관/' },
+  { name: '영문박물관', url: 'https://gunsan.webforai.kr/en/places/virtual/' },
+]
+const PLACE_TEXT = '관광지\n가상박물관\n이용시간\n3~10월 09:00–18:00(입장마감 17:30)\n쉬는 날\n매주 월요일\n요금\n개별 성인 2,000원'
+const placeShotOf = (variantId: string, n: number, text = PLACE_TEXT): AutoScreenShot => ({
+  ...shotOf('place-info', variantId, n, `/places/${encodeURIComponent(variantId)}/`),
+  width: 425,
+  height: 677,
+  text,
+})
+const GUIDE_SHOT: AutoScreenShot = { ...shotOf('kids-guide', 'default', 31, `/guides/${encodeURIComponent('아이와-함께-군산')}/`), width: 824, height: 364, text: '목적별 가이드\n아이와 함께 가상 여행, 어디를 어떻게 갈까?\n두 묶음으로 나눠 다니면 됩니다.' }
+const PLACE_SLOT = `${SB} 웹사이트에서 가상박물관의 이용시간과 휴관일, 입장료가 표시된 화면`
+const PLACE_CAPTION = '*가상박물관 3~10월 이용시간은 09:00–18:00 (입장마감 17:30)입니다.*'
+const GUIDE_SLOT = `${SB} 웹사이트의 '아이와 함께' 안내 화면`
+const placeRun = (articles: AutoArticle[], shots: readonly AutoScreenShot[], over: Partial<Parameters<typeof autoPickPhotos>[0]> = {}) =>
+  screenRun(articles, { available: true, shots: [...ALL_SHOTS, ...shots] }, { places: PLACE_PAGES.map((p) => p.name), placePages: PLACE_PAGES, ...over })
+const placeOne = (body: string[], shots: readonly AutoScreenShot[] = [placeShotOf('가상박물관', 21)], over: Partial<Parameters<typeof autoPickPhotos>[0]> = {}, group?: string) =>
+  placeRun([article('p1', body, group ? { group } : {})], shots, over).articles[0]!
+const placeFilled = placeOne(['## 가상박물관 일정', '', `![${PLACE_SLOT}](#image-slot)`, PLACE_CAPTION])
+const pRow = placeFilled.rows[0]!
+ok(
+  '장소 안내 자리 — 자리 글자의 장소(사이트 장소 사전)의 화면으로 채운다(장소 이름을 넣은 대체 텍스트 · 찍은 주소)',
+  pRow.state === 'filled' && pRow.screenSlot === 'place' && pRow.pick?.origin === 'screen' && pRow.pick.screenId === 'place-info' && pRow.pick.variantId === '가상박물관' &&
+    pRow.pick.alt === "가상각 웹사이트 '가상박물관 장소 안내' 화면" && pRow.pick.pageUrl === `https://gunsan.webforai.kr/places/${encodeURIComponent('가상박물관')}/` &&
+    pRow.screenPick?.by === 'place' && pRow.screenPick.saveAllowed === true && placeFilled.picks.length === 1,
+)
+ok('장소 안내 자리 — 설명 줄 · 장면 글자의 시각 · 입장 마감 · 휴관 · 입장료가 찍은 글자에 있으면 「확인 필요」 없음', !pRow.review && !pRow.factGaps)
+const gapRow = placeOne(['## 가상박물관 일정', '', `![${PLACE_SLOT}](#image-slot)`, PLACE_CAPTION], [placeShotOf('가상박물관', 22, PLACE_TEXT.replace('(입장마감 17:30)', ''))]).rows[0]!
+ok(
+  '장소 안내 자리 — 설명 줄의 시각 · 입장 마감이 찍은 글자에 없으면 넣되 「확인 필요」(빠진 사실을 적는다)',
+  gapRow.state === 'filled' && gapRow.review === true && JSON.stringify(gapRow.factGaps) === JSON.stringify(['17:30', '입장 마감']),
+)
+const wantRun = placeRun([article('p2', ['## 가상박물관 일정', '', `![${PLACE_SLOT}](#image-slot)`, PLACE_CAPTION])], [])
+ok(
+  '장소 안내 — 아직 찍지 않았으면 uncaptured로 두고 그 장소를 찍기 청한다(변형 id는 장소 이름, 이름표 함께)',
+  wantRun.articles[0]!.rows[0]!.state === 'uncaptured' && JSON.stringify(wantRun.screenWanted) === JSON.stringify([{ screenId: 'place-info', variantId: '가상박물관', variantLabel: '가상박물관' }]),
+)
+const noPlace = placeOne(['## 관광정보 서비스 고르기', '', '![관광정보 사이트에서 한 장소의 여는 시간, 요금, 가는 길이 함께 표시된 화면](#image-slot)', '*장소마다 여는 시간과 요금이 따로 적혀 있는지 먼저 확인하세요.*']).rows[0]!
+ok(
+  '장소 이름이 자리 글자 · 소제목 어디에도 없으면 비워 둔다(screenMiss no-place · 찍기 청하지 않음)',
+  noPlace.state === 'screen' && noPlace.screenSlot === 'place' && noPlace.screenMiss === 'no-place' && !noPlace.screenPick && !noPlace.pick,
+)
+const headingPlace = placeOne(['## 가상 해양공원 둘러보기', '', '![관광정보 사이트에서 한 장소의 여는 시간, 요금이 함께 표시된 화면](#image-slot)'], [placeShotOf('가상-해양공원', 23, '가상 해양공원\n이용시간\n09:00–21:00\n요금\n무료')]).rows[0]!
+ok(
+  '소제목에만 장소가 나오면 그 장소(by heading) · 「확인 필요」 — 이름의 띄어쓰기는 사전 주소의 하이픈',
+  headingPlace.state === 'filled' && headingPlace.pick?.variantId === '가상-해양공원' && headingPlace.screenPick?.by === 'heading' && headingPlace.review === true && !headingPlace.factGaps,
+)
+const twoPlaces = placeOne(['## 일정', '', `![${SB} 웹사이트에서 가상박물관과 가상 해양공원의 이용시간이 표시된 화면](#image-slot)`], [placeShotOf('가상박물관', 21), placeShotOf('가상-해양공원', 23)]).rows[0]!
+ok('장면 글자가 장소를 둘 이상 말하면 한 곳의 화면만 찍히므로 「확인 필요」', twoPlaces.state === 'filled' && twoPlaces.review === true && twoPlaces.screenPick?.by === 'place')
+const foreign = placeOne(['## 일정', '', `![${SB} 웹사이트에서 바깥박물관의 이용시간이 표시된 화면](#image-slot)`]).rows[0]!
+const english = placeOne(['## 일정', '', `![${SB} 웹사이트에서 영문박물관의 이용시간이 표시된 화면](#image-slot)`]).rows[0]!
+ok(
+  '사전의 주소가 프로필 호스트의 /places/<이름>/가 아니면(다른 사이트 · 언어 경로) 그 장소로 찍지 않는다',
+  foreign.state === 'screen' && foreign.screenMiss === 'no-place' && english.state === 'screen' && english.screenMiss === 'no-place',
+)
+const noDir = placeRun([article('p3', ['## 가상박물관 일정', '', `![${PLACE_SLOT}](#image-slot)`])], [placeShotOf('가상박물관', 21)], { placePages: undefined }).articles[0]!.rows[0]!
+ok('장소 사전이 없으면 장소 안내 자리는 비워 둔다(screenMiss no-directory)', noDir.state === 'screen' && noDir.screenMiss === 'no-directory' && !noDir.pick)
+const sameWriter = placeRun(
+  [article('q1', ['## 가상박물관', '', `![${PLACE_SLOT}](#image-slot)`], { group: 'w1' }), article('q2', ['## 가상박물관', '', `![${PLACE_SLOT}](#image-slot)`], { group: 'w1' })],
+  [placeShotOf('가상박물관', 21)],
+)
+const otherWriter = placeRun(
+  [article('q3', ['## 가상박물관', '', `![${PLACE_SLOT}](#image-slot)`], { group: 'w1' }), article('q4', ['## 가상박물관', '', `![${PLACE_SLOT}](#image-slot)`], { group: 'w2' })],
+  [placeShotOf('가상박물관', 21)],
+)
+ok(
+  '같은 장소 안내는 작성자 한 사람에게 한 번(뒤 글은 used) · 다른 작성자는 다시 쓴다(브랜드 상한 면제)',
+  sameWriter.articles[0]!.rows[0]!.state === 'filled' && sameWriter.articles[1]!.rows[0]!.state === 'used' &&
+    otherWriter.articles.every((a) => a.rows[0]!.state === 'filled' && a.picks[0]?.variantId === '가상박물관'),
+)
+const guideRow = placeOne(['## 아이와 가는 1박 2일', '', `![${GUIDE_SLOT}](#image-slot)`], [GUIDE_SHOT]).rows[0]!
+ok(
+  '가이드 자리 — 「아이와 함께」 안내 화면으로 채운다(화면 이름 대체 텍스트 · 사실을 말하지 않는 자리는 「확인 필요」 없음)',
+  guideRow.state === 'filled' && guideRow.screenSlot === 'guide' && guideRow.pick?.screenId === 'kids-guide' && guideRow.pick.variantId === 'default' &&
+    guideRow.pick.alt === "가상각 웹사이트 '아이와 함께 안내' 화면" && !guideRow.review,
+)
+const guideGap = placeOne(['## 처음 가는 날', '', `![${GUIDE_SLOT}](#image-slot)`, '*아이와 함께 안내에서 월요일에도 여는 곳을 확인할 수 있습니다.*'], [GUIDE_SHOT]).rows[0]!
+ok('가이드 자리 — 설명 줄의 「월요일」이 찍은 글자에 없으면 「확인 필요」', guideGap.state === 'filled' && guideGap.review === true && JSON.stringify(guideGap.factGaps) === JSON.stringify(['월요일']))
+const notStolen = placeRun(
+  [
+    article('n1', [
+      '## 1', '', `![${SB} '지도에서 찾기' 화면에서 가상박물관을 선택해 이용시간과 입장료가 보이는 모습](#image-slot)`, PLACE_CAPTION,
+      '', '## 2', '', '![코스 결과 화면에서 한 장소를 눌러 여는 시간과 요금, 가는 길이 함께 표시된 모습](#image-slot)',
+      '', '## 3', '', `![${COURSE_SLOT}](#image-slot)`,
+    ]),
+  ],
+  [placeShotOf('가상박물관', 21)],
+).articles[0]!.rows
+ok(
+  '지도에서 고르기 · 코스 결과 자리는 장소 안내가 아니다(action — 비워 둠), 코스 자리는 그대로 코스',
+  notStolen[0]!.screenSlot === 'action' && notStolen[0]!.state === 'screen' && notStolen[1]!.screenSlot === 'action' && notStolen[1]!.state === 'screen' &&
+    notStolen[2]!.screenSlot === 'course' && notStolen[2]!.pick?.screenId === 'course',
+)
+ok(
+  '장소 사전을 주어도 코스 · 지도 · 목록에 없는 화면 자리의 결과는 같다',
+  JSON.stringify(screenRun([article('s1', mdScreen)], { available: true, shots: ALL_SHOTS }, { places: PLACE_PAGES.map((p) => p.name), placePages: PLACE_PAGES }).articles) ===
+    JSON.stringify(screenRun([article('s1', mdScreen)], { available: true, shots: ALL_SHOTS }, { places: PLACE_PAGES.map((p) => p.name) }).articles),
 )
 
 let failed = 0

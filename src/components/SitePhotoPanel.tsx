@@ -38,7 +38,10 @@ import {
   MAP_PREVIEW_ONLY_TEXT,
   parseScreenAppSrc,
   photoRepeatKey,
+  placeScreenVariant,
+  placeVariantOfSlug,
   screenAlt,
+  screenAspectRatio,
   screenKindOf,
   screenProfileFor,
   screenShotDay,
@@ -56,6 +59,7 @@ import {
   publicCandidatesOf,
   siteRootOf,
   tourCandidatesOf,
+  type PlaceEntry,
   type SitePhotoResult,
 } from '../lib/sitePhotos'
 import { isTourSourcePage, TOUR_SOURCES, type TourSource } from '../lib/tourPhotos'
@@ -85,7 +89,9 @@ import PhotoAutoFill from './PhotoAutoFill'
  * 자사 화면 — 자사 사이트에 화면 프로필(src/lib/screenCapture.ts)이 있는 브랜드는 웹사이트 화면 자리에 「화면 고르기」로 이 PC에 찍어 둔
  * 화면(썸네일 · 변형 · 찍은 날)을 고른다(열 때마다 GET /api/screens로 다시 읽는다). 설치한 데스크톱 앱에서 찍을 수 있으면(/api/health
  * screens) 아직 찍지 않았거나 오늘 찍지 않은 화면에 「찍기」 · 「다시 찍기」를 둔다(서버가 숨긴 창으로 찍는다). 지도 화면은 카카오 지도
- * 이용 조건을 확인하기 전이라 크게 보기만 하고 넣는 단추를 두지 않는다(결정 4 — 서버도 거절한다). 빼기 · 바꾸기는 사진과 같다.
+ * 이용 조건을 확인하기 전이라 크게 보기만 하고 넣는 단추를 두지 않는다(결정 4 — 서버도 거절한다). 빼기 · 바꾸기는 사진과 같다. 장소 안내는
+ * 사이트 장소마다 한 장이라, 자리 글자(장면 · 설명 줄 · 소제목)에 나온 장소(사이트 장소 사전)와 이 PC에 찍어 둔 장소만 보인다. 잘라 찍은
+ * 화면(장소 안내 · 가이드)의 썸네일은 그 비율 그대로다.
  */
 
 /** 「화면 고르기」의 화면 · 변형 하나와 가장 늦게 찍은 화면. */
@@ -98,6 +104,8 @@ interface ScreenOption {
   label: string
   variantLabel: string
   saveAllowed: boolean
+  /** 장소 안내 — 변형이 사이트 장소(대체 텍스트에 장소 이름을 넣는다). */
+  placePages?: true
   shot?: ScreenShotView
 }
 
@@ -156,6 +164,8 @@ export default function SitePhotoPanel({
   const [note, setNote] = useState<string | null>(null)
   /** 사이트의 장소 사전(sitemap /places/) — null은 아직 모름. 비면 공공 사진 칸을 그리지 않는다. */
   const [places, setPlaces] = useState<string[] | null>(null)
+  /** 장소 사전의 이름 · 주소 — 장소 안내 화면의 장소를 고른다. */
+  const [placePages, setPlacePages] = useState<PlaceEntry[]>([])
   const [agreePublic, setAgreePublic] = useState(false)
   const [publicFound, setPublicFound] = useState<{ options: PhotoOption[]; other: number; places: string[] } | null>(null)
   const [publicLoading, setPublicLoading] = useState(false)
@@ -216,7 +226,9 @@ export default function SitePhotoPanel({
     let alive = true
     loadPlaceDirectory(siteRoot).then(
       (dir) => {
-        if (alive) setPlaces(dir.map((e) => e.name))
+        if (!alive) return
+        setPlaces(dir.map((e) => e.name))
+        setPlacePages(dir)
       },
       (e: unknown) => {
         console.warn('[SitePhotoPanel] 장소 목록(sitemap.xml)을 읽지 못해 공공 사진 칸을 숨깁니다', e)
@@ -311,16 +323,47 @@ export default function SitePhotoPanel({
   const screens = screenState?.key === tenantId ? screenState : null
   /** 화면을 고를 수 있는 자리 — 사진 사용 확인 뒤, 자사 사이트에 화면 프로필이 있고 웹사이트 화면 자리이거나 이미 화면이 들어간 자리. */
   const screenable = (slot: PhotoSlot, picked?: PhotoPick) => allowed && screenProfile !== null && (isScreenSlot(slot.key) || picked?.origin === 'screen')
+  /**
+   * 장소 안내 화면의 변형 — 자리 글자(장면 · 설명 줄 · 소제목)에 나온 사이트 장소(장소 사전의 주소로 만든 변형)와 이 PC에 찍어 둔 장소.
+   * 자리 글자로 주소를 만들지 않는다(사전에 있는 장소만).
+   */
+  const placeVariantsFor = (slot: PhotoSlot, screenId: string, shots: readonly ScreenShotView[]): { id: string; label: string }[] => {
+    const out: { id: string; label: string }[] = []
+    const add = (v: { id: string; label: string } | null) => {
+      if (v && !out.some((x) => x.id === v.id)) out.push({ id: v.id, label: v.label })
+    }
+    if (screenProfile && placePages.length) {
+      const names = placePages.map((e) => e.name)
+      for (const text of [slot.key, captionAt(md, slot), slot.heading]) {
+        for (const name of findPlaces(text, names)) {
+          const entry = placePages.find((e) => e.name === name)
+          add(entry ? placeScreenVariant(screenProfile, entry.url) : null)
+        }
+      }
+    }
+    for (const shot of shots) if (shot.screenId === screenId) add(placeVariantOfSlug(shot.variantId))
+    return out
+  }
   /** 그 자리의 화면 · 변형 — 자리 글자가 말한 화면(screenKindOf)을 앞에. */
   const screenOptionsFor = (slot: PhotoSlot): ScreenOption[] => {
     const list = screens?.list
     if (!list) return []
     const latest = latestScreenShots(list.shots)
     const all = list.screens.flatMap((s) =>
-      s.variants.map((v): ScreenOption => {
+      (s.placePages ? placeVariantsFor(slot, s.id, list.shots) : s.variants).map((v): ScreenOption => {
         const key = `${s.id}:${v.id}`
         const shot = latest.get(key)
-        return { key, screenId: s.id, variantId: v.id, kind: s.kind, label: s.label, variantLabel: v.label, saveAllowed: s.saveAllowed, ...(shot ? { shot } : {}) }
+        return {
+          key,
+          screenId: s.id,
+          variantId: v.id,
+          kind: s.kind,
+          label: s.label,
+          variantLabel: v.label,
+          saveAllowed: s.saveAllowed,
+          ...(s.placePages ? { placePages: true as const } : {}),
+          ...(shot ? { shot } : {}),
+        }
       }),
     )
     const first = screenKindOf(slot.key, screenProfile).screen?.id
@@ -578,7 +621,11 @@ export default function SitePhotoPanel({
                     disabled={!o.shot}
                     onChange={() => setChoice(o.key)}
                   />
-                  {o.shot ? <img src={o.shot.src} alt="" loading="lazy" /> : <span className="photo-option-empty">아직 찍지 않음</span>}
+                  {o.shot ? (
+                    <img src={o.shot.src} alt="" loading="lazy" style={screenAspectRatio(o.shot) ? { aspectRatio: screenAspectRatio(o.shot) } : undefined} />
+                  ) : (
+                    <span className="photo-option-empty">아직 찍지 않음</span>
+                  )}
                   <span>
                     {o.label} · {o.variantLabel}
                   </span>
@@ -598,7 +645,7 @@ export default function SitePhotoPanel({
         </ul>
         {chosen?.shot && (
           <figure className="screen-preview">
-            <img src={chosen.shot.src} alt={screenAlt(brand.brandName, chosen)} />
+            <img src={chosen.shot.src} alt={screenAlt(brand.brandName, chosen, { label: chosen.variantLabel })} />
             <figcaption className="doc-meta">{screenShotMeta(brand.brandName, chosen.shot.url, chosen.shot.capturedAt)}</figcaption>
           </figure>
         )}
@@ -621,7 +668,14 @@ export default function SitePhotoPanel({
                 // 이 자리에 이미 들어간 사진 · 화면이 있으면 바꾼다(소제목을 고쳐 자리 열쇠가 달라졌어도 옛 사진이 남지 않게).
                 void putScreen(
                   slot,
-                  { screenId: chosen.screenId, variantId: chosen.variantId, shotId: shot.id, src: shot.src, url: shot.url, alt: screenAlt(brand.brandName, chosen) },
+                  {
+                    screenId: chosen.screenId,
+                    variantId: chosen.variantId,
+                    shotId: shot.id,
+                    src: shot.src,
+                    url: shot.url,
+                    alt: screenAlt(brand.brandName, chosen, { label: chosen.variantLabel }),
+                  },
                   picked,
                 )
               }}
