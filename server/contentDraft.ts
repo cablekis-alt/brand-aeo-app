@@ -635,10 +635,11 @@ export interface AutoPhotoSaveResult {
  * refillCleared(「사람이 뺀 자리도 다시 채우기」)면 사람이 뺀 자리에도 넣되, 그 자리(clearedMatches — 화면과 같은 넉넉한 기준)에서
  * 사람이 뺀 사진(removed)은 넣지 않는다. 뺀 기록은 지우지 않는다 — 다시 빼면 뺀 사진이 쌓인다.
  * replaces(장면으로 다시 본 자동 사진)는 새 사진보다 먼저 — 쓰는 때에 그 자리(samePhotoPlace)에 화면이 본 그 자동 사진(auto · 같은 주소)이
- * 아직 있을 때만 바꾸거나 빼고, 아니면(사람이 고른 사진이 되었거나 다른 사진으로 바뀌었다) 건드리지 않고 stale로 알린다. 나가는 사진은
- * 상한에서 덜어 낸 뒤 바꿀 사진을 같은 상한 · 그 자리에서 사람이 뺀 사진 검사로 본다(걸리면 그 자동 사진은 그대로). 뺀 자리는 사람이 뺀
- * 자리(photoCleared)로 적지 않는다 — 다음 자동 채우기가 다시 채운다(같은 사진은 읽어 둔 장면이 막는다). 사람이 고른 사진 · 뺀 기록은
- * 건드리지 않는다.
+ * 아직 있을 때만 바꾸거나 빼고, 아니면(사람이 고른 사진이 되었거나 다른 사진으로 바뀌었다) 건드리지 않고 stale로 알린다. 한 글의 나가는
+ * 사진은 모두 먼저 비우고 상한에서 덜어 낸 뒤(같은 글의 다른 자리가 그 사진으로 바뀌어도 걸리지 않게) 바꿀 사진을 같은 상한 · 그 자리에서
+ * 사람이 뺀 사진 검사로 본다(걸리면 그 자동 사진은 그대로 — 그사이 같은 글의 다른 자리가 그 사진을 받았으면 뺀다). 뺀 자리는 사람이 뺀
+ * 자리(photoCleared)로 적지 않는다 — 다음 자동 채우기가 다시 채운다(같은 사진은 읽어 둔 장면이 막는다 — 키가 없는 PC도 읽어 둔 장면을
+ * 받는다). 사람이 고른 사진 · 뺀 기록은 건드리지 않는다.
  */
 export async function saveAutoPhotoPicks(
   tenantId: string,
@@ -674,43 +675,54 @@ export async function saveAutoPhotoPicks(
         continue;
       }
       const fixed = applyPhotoCredits(current.photos ?? [], entry.credits ?? []);
-      const photos = fixed.photos;
       const cleared = current.photoCleared ?? [];
       const group = groupOf(entry.actionId);
       let added = 0;
       let swapped = 0;
+      // 나가는 자동 사진을 모두 먼저 비운다 — 같은 글의 다른 자리가 그 사진으로 바뀌어도(앞에 적혀도) 걸리지 않게(화면은 나가기로 정한
+      // 사진을 같은 글의 다른 자리에 쓸 수 있다 — src/lib/photoAutoPick.ts release).
+      const slots: (PhotoPick | null)[] = [...fixed.photos];
+      const vacated: { at: number; old: PhotoPick; place: AutoPhotoReplace['place']; pick?: PhotoPick }[] = [];
       for (const swap of entry.replaces ?? []) {
-        const at = photos.findIndex((p) => samePhotoPlace(p, swap.place) && p.auto === true && p.src === swap.src);
+        const at = slots.findIndex((p) => p !== null && samePhotoPlace(p, swap.place) && p.auto === true && p.src === swap.src);
         if (at < 0) {
           result.stale.push({ actionId: entry.actionId, slot: swap.place.slot, nth: swap.place.nth });
           continue;
         }
-        const old = photos[at]!;
-        count(group, old.src, -1);
-        const pick = swap.pick;
+        vacated.push({ at, old: slots[at]!, place: swap.place, ...(swap.pick ? { pick: swap.pick } : {}) });
+        count(group, slots[at]!.src, -1);
+        slots[at] = null;
+      }
+      const taken = (src: string) => slots.some((p) => p?.src === src) || groupHas(group, src) || (brandCount.get(src) ?? 0) >= brandRepeat;
+      for (const { at, old, place, pick } of vacated) {
         if (!pick) {
-          photos.splice(at, 1);
           result.removed += 1;
           swapped += 1;
           continue;
         }
         const blocked =
           pick.src === old.src ||
-          !samePhotoPlace(pick, swap.place) ||
-          cleared.filter((c) => clearedMatches(c, swap.place)).some((c) => (c.removed ?? []).includes(pick.src)) ||
-          photos.some((p, i) => i !== at && p.src === pick.src) ||
-          groupHas(group, pick.src) ||
-          (brandCount.get(pick.src) ?? 0) >= brandRepeat;
-        if (blocked) {
-          count(group, old.src, 1);
-          result.skipped += 1;
+          !samePhotoPlace(pick, place) ||
+          cleared.filter((c) => clearedMatches(c, place)).some((c) => (c.removed ?? []).includes(pick.src)) ||
+          taken(pick.src);
+        if (!blocked) {
+          slots[at] = pick;
+          count(group, pick.src, 1);
+          result.replaced += 1;
+          swapped += 1;
           continue;
         }
-        photos[at] = pick;
-        count(group, pick.src, 1);
-        result.replaced += 1;
-        swapped += 1;
+        result.skipped += 1;
+        // 바꿀 사진이 걸리면 그 자동 사진은 그대로 — 그사이 같은 글의 다른 자리가 그 사진을 받아 되돌릴 수 없으면 뺀다.
+        if (taken(old.src)) {
+          result.removed += 1;
+          swapped += 1;
+          continue;
+        }
+        slots[at] = old;
+        count(group, old.src, 1);
       }
+      const photos = slots.filter((p): p is PhotoPick => p !== null);
       for (const pick of entry.picks) {
         const clearedHere = opts.refillCleared
           ? cleared.filter((c) => clearedMatches(c, pick)).some((c) => (c.removed ?? []).includes(pick.src))

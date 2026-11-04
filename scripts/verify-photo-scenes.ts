@@ -23,6 +23,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import {
   autoPickPhotos,
+  autoPreviewCounts,
   isPeopleScene,
   placesToRead,
   regionRowsWanted,
@@ -569,6 +570,151 @@ ok(
 )
 ok('dev 실행의 장면 캐시(server/photo-scenes.json)는 저장소에 올리지 않는다', spawnSync('git', ['check-ignore', '-q', 'server/photo-scenes.json']).status === 0)
 
+// 5f) 2026-11-04 검토 2 — 장소 없는 자리 · 비슷한 사진 · 다시 보기의 빈틈
+// (1) 장소 사전이 없거나 읽지 못했을 때, 브랜드 자기 시설 자리 — 다른 곳의 지역 사진은 분명히 틀린 사진이다.
+const parkWalk = reg('parkwalk', '군산 월명공원 산책로', '군산, 월명공원, 산책로, 공원')
+const hanokRoom = reg('hanokroom', '군산 고우당 한옥 객실', '군산, 고우당, 한옥, 객실')
+const hiroGarden = reg('hirogarden', '군산 히로쓰 가옥 정원', '군산, 히로쓰가옥, 일본식, 가옥, 정원')
+const namedScenes = freshScenes([
+  [parkWalk, S({ text: '나무가 늘어선 공원 산책로', tags: ['공원', '산책로', '나무'] })],
+  [hanokRoom, S({ setting: 'interior', time: 'unknown', text: '한옥 객실 내부, 이불과 창호', tags: ['한옥', '객실', '창호'] })],
+  [hiroGarden, S({ text: '일본식 가옥 앞 정원', tags: ['일본식', '가옥', '정원', '외관'] })],
+  [alley, regionScenes.get(alley.src)!],
+])
+const noDir = regionRun([placeless('n1', '은파호수공원 둘레 산책로'), placeless('n2', ALLEY_SLOT)], { places: [], regionCandidates: [parkWalk, alley], scenes: namedScenes })
+ok(
+  '장소 사전이 없는 브랜드 — 고유한 장소 이름(은파호수공원)이 나온 자리에는 다른 곳의 지역 사진을 넣지 않는다(장소 이름이 없는 골목 자리는 넣는다)',
+  rowsOf(noDir, 'n1')[0]!.state !== 'filled' && !rowsOf(noDir, 'n1')[0]!.regionSlot && rowsOf(noDir, 'n2')[0]!.pick?.src === alley.src,
+)
+const dirFailed = regionRun([placeless('n3', ALLEY_SLOT)], { places: [], placesUnknown: true, regionCandidates: [parkWalk, alley], scenes: namedScenes })
+ok(
+  '장소 사전을 읽지 못했으면 — 장소 없는 자리인지 알 수 없어 지역 사진을 넣지 않고 부르지도 않는다',
+  rowsOf(dirFailed, 'n3')[0]!.state !== 'filled' && !rowsOf(dirFailed, 'n3')[0]!.placeless && regionRowsWanted(dirFailed) === 0,
+)
+const staySlots = ['스테이,머뭄 일본식 가옥 독채의 외관', '스테이,머뭄 독채 앞의 독립된 아담한 정원 풍경', '스테이머뭄 한옥 객실 내부', '한옥 독채의 아담한 정원']
+const stayRun = regionRun(staySlots.map((s, i) => placeless(`st${i}`, s)), { brandName: '스테이,머뭄', places: ['근대역사박물관'], regionCandidates: [hiroGarden, hanokRoom], scenes: namedScenes })
+ok(
+  '브랜드 자기 시설 자리(브랜드 이름 · 독채 · 객실) — 장소 사전이 있어도 다른 숙소 · 장소의 지역 사진을 넣지 않는다',
+  staySlots.every((_, i) => rowsOf(stayRun, `st${i}`)[0]!.state !== 'filled' && !rowsOf(stayRun, `st${i}`)[0]!.regionSlot) && regionRowsWanted(stayRun) === 0,
+)
+// (2) 장면을 아직 읽지 않은 후보가 남으면 비슷한 사진을 넣지 않는다 — 맞는 사진이 있는지 모른다.
+const dayRead = jt(40)
+const notRead = jt(41)
+const halfRead = run([duskDoc], { candidates: [], publicCandidates: [], tourCandidates: [dayRead, notRead], scenes: freshScenes([[dayRead, DAY_SEA]]), pagesRead: new Set(['진포해양공원']) })
+const halfRow = rowsOf(halfRead, 'd1')[0]!
+ok('읽지 않은 사진이 남은 자리 — 비슷한 사진을 넣지 않고 「장면을 아직 읽지 않음」(다시 누르면 이어서)', halfRow.state === 'unread' && !halfRow.similar && !halfRow.pick && halfRead.articles[0]!.picks.length === 0)
+const allRead = rowsOf(run([duskDoc], { candidates: [], publicCandidates: [], tourCandidates: [dayRead, notRead], scenes: freshScenes([[dayRead, DAY_SEA], [notRead, DIORAMA]]), pagesRead: new Set(['진포해양공원']) }), 'd1')[0]!
+ok('모두 읽었는데 맞는 사진이 없으면 그때 비슷한 사진', allRead.state === 'filled' && allRead.pick?.src === dayRead.src && Boolean(allRead.similar))
+const keepUnread = rowsOf(recheckRun([duskWith('k20', [pickOfCand(DUSK_SLOT, '바다', dayOld)])], [dayOld, notRead], [[dayOld, DAY_SEA]]), 'k20')[0]!
+ok('다시 보기 — 시간만 다른 자동 사진은 읽지 않은 사진이 남아도 그대로(비슷한 사진으로 둠 · 읽지 않은 사진 수)', keepUnread.state === 'kept' && keepUnread.recheck === 'similar' && keepUnread.sceneSkips?.unread === 1)
+const hardUnread = recheckRun([duskWith('k21', [pickOfCand(DUSK_SLOT, '바다', inside)])], [inside, dayOld, notRead], [[inside, DIORAMA], [dayOld, DAY_SEA]])
+const hardUnreadRow = rowsOf(hardUnread, 'k21')[0]!
+ok(
+  '다시 보기 — 종류가 어긋난 자동 사진은 읽지 않은 사진이 남으면 비슷한 사진으로 바꾸지 않고 뺀다',
+  hardUnreadRow.state === 'remove' && !hardUnreadRow.pick && !hardUnreadRow.similar && hardUnread.articles[0]!.replaces.length === 1 && !hardUnread.articles[0]!.replaces[0]!.pick,
+)
+// (3) 나가는 자동 사진은 나가기로 정해진 때 상한에서 덜어 낸다 — 같은 글의 다른 자리 · 뒤 글이 쓸 수 있다(앞 글은 아니다 — 서버가 글 순서대로 저장).
+const SEA_PLAIN = '진포해양공원 바다 풍경'
+const xDay = jt(42)
+const yDusk = jt(43)
+const sameDoc = doc('k22', ['## 1. 노을', '', `![${DUSK_SLOT}](#image-slot)`, '', '## 2. 바다', '', `![${SEA_PLAIN}](#image-slot)`], { group: 'W', picks: [pickOfCand(DUSK_SLOT, '노을', xDay)] })
+const sameRows = rowsOf(recheckRun([sameDoc], [xDay, yDusk], [[xDay, DAY_SEA], [yDusk, DUSK_SEA]]), 'k22')
+ok(
+  '같은 글 — 시간만 다른 자동 사진을 맞는 사진으로 바꾸면 그 사진은 같은 글의 맞는 빈 자리에 쓴다',
+  sameRows[0]!.state === 'replace' && sameRows[0]!.pick?.src === yDusk.src && sameRows[1]!.state === 'filled' && sameRows[1]!.pick?.src === xDay.src,
+)
+const zIn = jt(44)
+const hardDoc = (id: string, insideFirst: boolean) => {
+  const parts = [
+    { title: '노을', slot: DUSK_SLOT },
+    { title: '전시', slot: INSIDE_SLOT },
+  ]
+  const ordered = insideFirst ? [...parts].reverse() : parts
+  return doc(id, ordered.flatMap((p, i) => [`## ${i + 1}. ${p.title}`, '', `![${p.slot}](#image-slot)`, '']), { group: `W-${id}`, picks: [pickOfCand(DUSK_SLOT, '노을', zIn)] })
+}
+for (const insideFirst of [false, true]) {
+  const id = insideFirst ? 'k23b' : 'k23a'
+  const hardRows = rowsOf(recheckRun([hardDoc(id, insideFirst)], [zIn, yDusk], [[zIn, DIORAMA], [yDusk, DUSK_SEA]]), id)
+  const duskRow = hardRows.find((r) => r.slot.key === DUSK_SLOT)!
+  const innerRow = hardRows.find((r) => r.slot.key === INSIDE_SLOT)!
+  ok(
+    `같은 글 — 종류가 어긋난 자동 사진은 반드시 나가므로 같은 글의 맞는 빈 자리(${insideFirst ? '앞' : '뒤'})에 쓴다`,
+    duskRow.state === 'replace' && duskRow.pick?.src === yDusk.src && innerRow.state === 'filled' && innerRow.pick?.src === zIn.src,
+  )
+}
+const backDocs = [
+  doc('kb1', ['## 1. 전시', '', `![${INSIDE_SLOT}](#image-slot)`], { group: 'W3' }),
+  doc('kb2', ['## 1. 노을', '', `![${DUSK_SLOT}](#image-slot)`], { group: 'W3', picks: [pickOfCand(DUSK_SLOT, '노을', zIn)] }),
+]
+const backRun = recheckRun(backDocs, [zIn, yDusk], [[zIn, DIORAMA], [yDusk, DUSK_SEA]])
+ok('뒤 글이 내보내는 자동 사진은 앞 글에 넣지 않는다(서버가 글 순서대로 저장해 걸린다)', rowsOf(backRun, 'kb1')[0]!.pick?.src !== zIn.src && rowsOf(backRun, 'kb2')[0]!.state === 'replace')
+const fwdRun = recheckRun([...backDocs].reverse(), [zIn, yDusk], [[zIn, DIORAMA], [yDusk, DUSK_SEA]])
+ok('앞 글이 내보내는 자동 사진은 뒤 글의 맞는 자리에 쓴다', rowsOf(fwdRun, 'kb1')[0]!.pick?.src === zIn.src && rowsOf(fwdRun, 'kb2')[0]!.state === 'replace')
+// (4) 비슷한 사진은 모든 글의 맞는 사진을 고른 뒤에 — 앞 글의 비슷한 사진이 뒤 글의 맞는 사진을 막지 않는다.
+const qDay = jpPub(20)
+const orderDocs = [doc('e1', ['## 1. 노을', '', `![${DUSK_SLOT}](#image-slot)`], { group: 'WE' }), doc('e2', ['## 1. 바다', '', `![${SEA_PLAIN}](#image-slot)`], { group: 'WE' })]
+const orderRun = run(orderDocs, { candidates: [], publicCandidates: [qDay], tourCandidates: [], scenes: freshScenes([[qDay, DAY_SEA]]), pagesRead: new Set(['진포해양공원']) })
+ok(
+  '비슷한 사진은 맞는 사진 다음 — 같은 작성자의 뒤 글이 맞는 자리에 그 사진을 쓴다(앞 글은 빈자리)',
+  rowsOf(orderRun, 'e2')[0]!.state === 'filled' && rowsOf(orderRun, 'e2')[0]!.pick?.src === qDay.src && !rowsOf(orderRun, 'e2')[0]!.similar && !rowsOf(orderRun, 'e1')[0]!.pick,
+)
+// (5) 이미 넣은 자동 사진은 앞 글의 후보로 먼저 줄에 섰어도 먼저 읽는다.
+const autoP: AutoCandidate = { ...pubInside[0]!, src: 'https://gunsan.example/places/auto-p.jpg' }
+const exDocs = [doc('x1', ['## 1. 구도심', '', `![${EXT_SLOT}](#image-slot)`]), doc('x2', ['## 1. 구도심', '', `![${EXT_SLOT}](#image-slot)`], { picks: [pickOfCand(EXT_SLOT, '구도심', autoP)] })]
+const exRun = run(exDocs, { candidates: [], publicCandidates: [autoP], tourCandidates: [], scenes: new Map(), recheckAuto: true })
+ok('이미 넣은 자동 사진 — 앞 글의 후보로 먼저 줄에 섰어도 먼저 읽는다(existing)', exRun.sceneWanted.find((w) => w.src === autoP.src)?.existing === true && exRun.sceneWanted[0]?.src === autoP.src)
+// (6) 사진이 다 찬 글의 장소 없는 자리 — 지역 사진 장면을 청하지 않는다.
+const fullPlaceless = doc('fp', ['## 1. 바다', '', `![${DUSK_SLOT}](#image-slot)`, '', '## 2. 거리', '', '![진포해양공원 옆 거리](#image-slot)', '', '## 3. 다리', '', '![진포해양공원 다리](#image-slot)', '', '## 4. 골목', '', `![${ALLEY_SLOT}](#image-slot)`], {
+  group: 'fp',
+  picks: [pickOfCand(DUSK_SLOT, '바다', jt(50), { auto: undefined }), pickOfCand('진포해양공원 옆 거리', '거리', jt(51), { auto: undefined }), pickOfCand('진포해양공원 다리', '다리', jt(52), { auto: undefined })],
+})
+const fullRegion = regionRun([fullPlaceless], { scenes: new Map() })
+const fpRow = rowsOf(fullRegion, 'fp')[3]!
+ok(
+  '사진이 다 찬 글의 장소 없는 자리 — 지역 사진 장면을 청하지 않고 「사진 3장이 다 참」',
+  fpRow.state === 'full' && !fpRow.regionTried && !fullRegion.sceneWanted.some((w) => w.source === 'region') && regionRowsWanted(fullRegion) === 0,
+)
+// (7) 키가 없는 PC — 읽어 둔 장면(knownScenes)으로 장면이 어긋난 사진을 뺀다(장면 때문에 뺀 자동 사진을 다시 넣지 않게). 읽지 않은 사진은 지금처럼.
+const kp1: AutoCandidate = { ...pubInside[0]!, src: 'https://gunsan.example/places/k1.jpg' }
+const kp2: AutoCandidate = { ...pubInside[0]!, src: 'https://gunsan.example/places/k2.jpg' }
+const kExt = doc('kn', ['## 1. 구도심', '', `![${EXT_SLOT}](#image-slot)`])
+const knownRow = rowsOf(run([kExt], { candidates: [], publicCandidates: [kp1, kp2], tourCandidates: [], knownScenes: freshScenes([[kp1, DIORAMA]]) }), 'kn')[0]!
+ok('키가 없어도 읽어 둔 장면이 어긋난 사진(실내 디오라마)은 외관 자리에 넣지 않고 다음 사진(장면 모름 — 지금처럼)을', knownRow.state === 'filled' && knownRow.pick?.src === kp2.src)
+const knownNext = rowsOf(run([doc('ka', ['## 1. 전시', '', `![${INSIDE_SLOT}](#image-slot)`], { group: 'ga' })], { candidates: [], tourCandidates: [xPhoto], knownScenes: freshScenes([[xPhoto, DAY_SEA]]) }), 'ka')[0]!
+ok('키가 없어도 — 장면 때문에 뺀 자리에 같은 사진을 다시 고르지 않는다(읽어 둔 장면)', !knownNext.pick && knownNext.state === 'scene')
+ok('읽어 둔 장면이 없으면(키 없음) 지금처럼 고른다', rowsOf(run([kExt], { candidates: [], publicCandidates: [kp1], tourCandidates: [] }), 'kn')[0]!.pick?.src === kp1.src)
+const knownSoft = rowsOf(run([duskDoc], { candidates: [], publicCandidates: [jpPub(30)], tourCandidates: [], knownScenes: freshScenes([[jpPub(30), DAY_SEA]]) }), 'd1')[0]!
+ok('키가 없어도 읽어 둔 장면이 시간만 다르면 「비슷한 사진」으로 표시한다', knownSoft.state === 'filled' && knownSoft.pick?.src === jpPub(30).src && Boolean(knownSoft.similar) && knownSoft.review === true)
+// (8) 미리보기 요약 — 채울 자리의 「확인 필요」 · 비슷한 사진은 채울 자리만, 바꾸는 자리의 것은 바꿈에, 장소가 나온 빈 자리는 빈 자리만.
+const rowsAll = (r: AutoPickResult) => r.articles.flatMap((a) => a.rows)
+const keptCounts = autoPreviewCounts(rowsAll(softKeep))
+ok(
+  '요약 — 비슷한 사진으로 둔 자리는 채울 자리의 「확인 필요」에 세지 않는다(옛 셈은 1)',
+  rowsAll(softKeep).filter((r) => r.review).length === 1 && keptCounts.filled.all === 0 && keptCounts.filled.review === 0 && keptCounts.kept.similar === 1,
+)
+const hardSimilarRun = recheckRun([duskWith('k4b', [pickOfCand(DUSK_SLOT, '바다', inside)])], [inside, dayOld], [[inside, DIORAMA], [dayOld, DAY_SEA]])
+const swapCounts = autoPreviewCounts(rowsAll(hardSimilarRun))
+ok(
+  '요약 — 비슷한 사진으로 바꾸는 자리는 바꿈에(비슷한 사진 · 확인 필요), 채울 자리에는 세지 않는다',
+  swapCounts.replaced.all === 1 && swapCounts.replaced.similar === 1 && swapCounts.replaced.review === 1 && swapCounts.filled.similar === 0 && swapCounts.filled.review === 0,
+)
+const regionSwap = regionRun([doc('rs', ['## 1. 산책', '', `![${ALLEY_SLOT}](#image-slot)`], { group: 'rs', picks: [pickOfCand(ALLEY_SLOT, '산책', market)] })], { recheckAuto: true })
+const regionSwapCounts = autoPreviewCounts(rowsAll(regionSwap))
+ok(
+  '요약 — 장소 없는 자리의 지역 사진으로 바꾸는 자리는 바꿈의 「장소 없는 자리」에(옛 셈은 어디에도 없음)',
+  rowsOf(regionSwap, 'rs')[0]!.state === 'replace' && rowsOf(regionSwap, 'rs')[0]!.pick?.src === alley.src && regionSwapCounts.replaced.placeless === 1 && regionSwapCounts.filled.placeless === 0,
+)
+const homeExt: AutoCandidate = { src: 'https://gunsan.example/img/ext.jpg', alt: '근대역사박물관 건물 외관', pageUrl: 'https://gunsan.example/' }
+const keptPlaceRows = rowsAll(
+  run([doc('pc', ['## 1. 구도심', '', `![${EXT_SLOT}](#image-slot)`], { picks: [pickOfCand(EXT_SLOT, '구도심', homeExt)] })], {
+    candidates: [], publicCandidates: [], tourCandidates: [], scenes: freshScenes([[homeExt, S({})]]), recheckAuto: true,
+  }),
+)
+ok(
+  '요약 — 장면이 맞아 그대로 둔 자동 사진 자리는 「장소가 나온 빈 자리」에 세지 않는다(옛 셈은 1)',
+  keptPlaceRows[0]!.recheck === 'fit' && keptPlaceRows.filter((r) => r.place && r.state !== 'filled').length === 1 && autoPreviewCounts(keptPlaceRows).emptyPlaces === 0,
+)
+
 // 6) 서버 — 장면 읽기 · 캐시 · 원자적 쓰기(가짜 장면 읽기 함수)
 const { describePhotoScenes, SCENE_MAX_NEW } = await import('../server/photoScenes')
 const { saveAutoPhotoPicks } = await import('../server/contentDraft')
@@ -757,6 +903,30 @@ const roomSwap = await saveAutoPhotoPicks(
   3,
 )
 ok('빼기는 새 사진보다 먼저 — 나간 자리만큼 새 사진을 넣을 수 있다', roomSwap.removed === 1 && roomSwap.saved === 1 && readStored()['content:s']!.photos?.map((p) => p.src.split('/').pop()).join(',') === 'manual.jpg,fresh.jpg')
+// 같은 글 안에서는 나가는 자동 사진을 모두 먼저 비운다 — 앞에 적힌 바꾸기가 뒤 자리의 나가는 사진을 받아도 걸리지 않는다.
+writeFileSync(
+  path.join(tenantDir, 'drafts.json'),
+  JSON.stringify({ 'content:v': draftOf('content:v', { photos: [sitePick('전시', '전시', `${SITE}/sea.jpg`), sitePick('노을', '노을', `${SITE}/diorama.jpg`)] }) }),
+)
+const vacateFirst = await saveAutoPhotoPicks(
+  TENANT,
+  [
+    {
+      actionId: 'content:v',
+      generatedAt: AT,
+      picks: [],
+      replaces: [
+        { place: placeOfPick('전시', '전시'), src: `${SITE}/sea.jpg`, pick: sitePick('전시', '전시', `${SITE}/diorama.jpg`) },
+        { place: placeOfPick('노을', '노을'), src: `${SITE}/diorama.jpg`, pick: sitePick('노을', '노을', `${SITE}/dusk.jpg`) },
+      ],
+    },
+  ],
+  3,
+)
+ok(
+  '같은 글 — 나가는 자동 사진을 먼저 비우므로 다른 자리가 그 사진으로 바뀌어도(앞에 적혀도) 둘 다 바꾼다',
+  vacateFirst.replaced === 2 && vacateFirst.skipped === 0 && readStored()['content:v']!.photos?.map((p) => `${p.slot}=${p.src.split('/').pop()}`).join(',') === '전시=diorama.jpg,노을=dusk.jpg',
+)
 
 // 8) 서버 길 — 검사 · 키 없음 · 키 노출 · 뺀 사진 기록
 const PORT = 4104
