@@ -11,10 +11,12 @@
  */
 import { publishMarkdownOf, workMarkdownOf } from '../src/lib/draftGaps'
 import { buildPublishHtml, markdownToHtml } from '../src/lib/htmlFile'
-import { articleTailMarkdown, brandSiteUrl, publishArticleOf } from '../src/lib/publishArticle'
+import { articleTailMarkdown, brandSiteUrl, channelArticleParts, publishArticleOf, publishArticleParts } from '../src/lib/publishArticle'
 import { sourceKeyOf } from '../src/prompts/b9d-channel-adapt'
 import type { StoredDraft, TenantSummary } from '../src/lib/api'
 import type { PhotoPick } from '../src/lib/articlePhotos'
+import { screenAppSrc } from '../src/lib/screenCapture'
+import { exportLeaks, inlineScreens, richCopyWithScreens, screenPlainText, type ScreenFetcher } from '../src/lib/screenExport'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -139,6 +141,100 @@ ok(
 const onlyPublic = buildPublishHtml({ stored: { ...articleDraft, photos: [publicPhoto] }, brand, facts: [], settings: publicRights })
 ok('공공 사진뿐이면 og:image · og:image:alt를 쓰지 않는다', !onlyPublic.includes('og:image') && onlyPublic.includes('tong.example.or.kr/cms/alley_image2_1.jpg'))
 ok('의료 업종은 의료광고 확인까지 있어야 넣는다', !publishArticleOf(withPhoto, { brand: { ...brand, industry: '피부과' }, settings: rights }).includes('img/garden') && publishArticleOf(withPhoto, { brand: { ...brand, industry: '피부과' }, settings: { photoRights: { ...rights.photoRights, medical: true as const } } }).includes('img/garden'))
+
+// 3-3) 자사 화면(origin screen) — 글에는 앱 주소만 들어가고(앱 안 미리보기), 앱 밖으로 나가는 .html · 서식째 복사에는 그림을 문서 안
+//      (data:)에 넣는다. og:image · JSON-LD image에는 넣지 않는다. 앱 주소 · 이 PC 주소가 내보낸 글에 남으면 독자에게는 깨진다.
+const SHOT = '0123456789abcdef'
+const SCREEN_SRC = screenAppSrc('vtravel', SHOT)
+const screenPick = photo({
+  slot: '가상 골목 풍경', heading: '지역은 어떻게 고르나요?', src: SCREEN_SRC, alt: "가상 여행 웹사이트 'AI 코스 만들기' 화면",
+  pageUrl: 'https://gunsan.webforai.kr/plan/?with=kids&kids=7', origin: 'screen', screenId: 'course', variantId: 'kids', capturedAt: '2026-11-04T05:00:00.000Z',
+})
+const screenParts = publishArticleParts({ ...articleDraft, photos: [screenPick] }, { brand, settings: rights })
+ok(
+  '자사 화면은 앱 주소로 사진 자리에 들어간다(설명 줄은 그대로)',
+  screenParts.markdown.includes(`![가상 여행 웹사이트 'AI 코스 만들기' 화면](${SCREEN_SRC})\n*골목 입구*`) &&
+    screenParts.photos.length === 1 && screenParts.photos[0]!.screen?.screenId === 'course' && screenParts.photos[0]!.screen.variantId === 'kids',
+)
+ok(
+  '앱 안 미리보기 — 앱 주소도 그림(img)으로',
+  markdownToHtml(`![화면](${SCREEN_SRC})\n*캡션*`) === `<figure><img src="${SCREEN_SRC}" alt="화면" ${FIGURE_SIZE}><figcaption>캡션</figcaption></figure>` &&
+    markdownToHtml(`문장 속 ![화면](${SCREEN_SRC}) 그림`).includes(`<img src="${SCREEN_SRC}" alt="화면" style="max-width:100%;height:auto">`),
+)
+ok(
+  '앱 주소 모양이 아니면 그림으로 만들지 않는다(경로 글자 · 대문자 id)',
+  markdownToHtml('![x](/api/screens/../0123456789abcdef.png)') === '<p>![x](/api/screens/../0123456789abcdef.png)</p>' && !markdownToHtml('![x](/api/screens/t/0123456789ABCDEF.png)').includes('<img'),
+)
+const unplaced = (over: Partial<PhotoPick>) => publishArticleOf({ ...articleDraft, photos: [{ ...screenPick, ...over }] }, { brand, settings: rights }) === publishArticleOf(articleDraft, { brand, settings: rights })
+ok(
+  '지도 화면 · 모르는 화면 · 앱 주소가 아닌 화면 · 화면 id 없는 앱 주소는 넣지 않는다',
+  unplaced({ screenId: 'map', variantId: 'default' }) && unplaced({ variantId: 'nope' }) && unplaced({ src: 'https://gunsan.webforai.kr/plan.png' }) && unplaced({ origin: undefined }),
+)
+const screenDoc = buildPublishHtml({ stored: { ...articleDraft, photos: [screenPick] }, brand, facts: [], settings: rights })
+ok('.html — 화면뿐이면 og:image · JSON-LD image가 없다', !screenDoc.includes('og:image') && !screenDoc.includes('"image"') && screenDoc.includes(`<img src="${SCREEN_SRC}"`))
+const bothDoc = buildPublishHtml({ stored: { ...articleDraft, photos: [screenPick, photo()] }, brand, facts: [], settings: rights })
+ok(
+  '.html — 홈페이지 사진이 함께 있으면 og:image · JSON-LD image는 그 사진만',
+  bothDoc.includes('<meta property="og:image" content="https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg">') &&
+    bothDoc.includes('"image": [\n    "https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg"\n  ]') && !/og:image"[^>]*api\/screens/.test(bothDoc) && !/"image": \[[^\]]*api\/screens/.test(bothDoc),
+)
+
+// 가짜 PNG(시그니처 + 몇 바이트) — 화면 그림 받기
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 73, 72, 68, 82])
+const fetched: string[] = []
+const okFetch: ScreenFetcher = async (src) => {
+  fetched.push(src)
+  return new Blob([PNG], { type: 'image/png' })
+}
+const failFetch: ScreenFetcher = async () => {
+  throw new Error('HTTP 404')
+}
+const notPng: ScreenFetcher = async () => new Blob([new Uint8Array([0xff, 0xd8, 0xff])], { type: 'image/png' })
+const inlined = await inlineScreens(screenDoc, okFetch)
+const PNG_DATA = `data:image/png;base64,${Buffer.from(PNG).toString('base64')}`
+ok(
+  '.html 내보내기 — 화면 그림은 문서 안(data:image/png)으로, 앱 주소 · 이 PC 주소가 남지 않는다',
+  inlined.inlined === 1 && inlined.dropped === 0 && inlined.html.includes(`<figure><img src="${PNG_DATA}" alt="가상 여행 웹사이트 'AI 코스 만들기' 화면" ${FIGURE_SIZE}><figcaption>골목 입구</figcaption></figure>`) &&
+    exportLeaks(inlined.html).length === 0 && fetched.length === 1 && fetched[0] === SCREEN_SRC,
+)
+const twoSame = await inlineScreens(`${markdownToHtml(`![화면](${SCREEN_SRC})`)}\n${markdownToHtml(`![화면](${SCREEN_SRC})`)}`, okFetch)
+ok('같은 화면은 한 번만 받는다', twoSame.inlined === 2 && fetched.length === 2)
+const dropped = await inlineScreens(screenDoc, failFetch)
+ok(
+  '화면 그림을 받지 못하면 그림을 빼고 「[화면: 이름]」 글자로(설명 줄은 그대로)',
+  dropped.dropped === 1 && dropped.inlined === 0 && dropped.html.includes('<figure class="image-slot"><p>[화면: AI 코스 만들기]</p><figcaption>골목 입구</figcaption></figure>') &&
+    exportLeaks(dropped.html).length === 0,
+)
+ok('PNG가 아닌 응답도 넣지 않는다', (await inlineScreens(screenDoc, notPng)).dropped === 1)
+const inlineDrop = await inlineScreens(markdownToHtml(`문장 속 ![가상 여행 웹사이트 'AI 코스 만들기' 화면](${SCREEN_SRC}) 그림`), failFetch)
+ok('문장 속 화면도 받지 못하면 글자로', inlineDrop.html === '<p>문장 속 [화면: AI 코스 만들기] 그림</p>' && exportLeaks(inlineDrop.html).length === 0)
+ok('화면이 없는 문서는 그대로(받지 않는다)', (await inlineScreens(bothDoc.replace(/<img src="\/api\/screens\/[^>]*>/, ''), failFetch)).html === bothDoc.replace(/<img src="\/api\/screens\/[^>]*>/, ''))
+let leakError = ''
+try {
+  await inlineScreens(`<p>주소 ${SCREEN_SRC}</p>`, okFetch)
+} catch (err) {
+  leakError = err instanceof Error ? err.message : String(err)
+}
+ok('그림이 아닌 곳에 앱 주소가 남으면 내보내지 않는다(throw)', leakError.includes('/api/screens/'))
+const copyMd = publishArticleOf({ ...articleDraft, photos: [screenPick] }, { brand, settings: rights })
+ok('서식째 복사의 글자 쪽 — 화면은 「[화면: 이름]」, 사진 자리 · 글 끝은 그대로', screenPlainText(copyMd).includes('[화면: AI 코스 만들기]\n*골목 입구*') && !screenPlainText(copyMd).includes('/api/screens/'))
+ok('화면이 없으면 글자 쪽도 그대로', screenPlainText(publishArticleOf(withPhoto, { brand, settings: rights })) === publishArticleOf(withPhoto, { brand, settings: rights }))
+const rich = await richCopyWithScreens(copyMd, markdownToHtml(copyMd), okFetch)
+ok(
+  '서식째 복사 — html은 data:, 글자는 「[화면: …]」, 앱 주소 · 이 PC 주소 없음',
+  rich.inlined === 1 && rich.html.includes(PNG_DATA) && rich.markdown.includes('[화면: AI 코스 만들기]') && exportLeaks(rich.markdown).length === 0 && exportLeaks(rich.html).length === 0,
+)
+const blogParts = channelArticleParts(
+  { markdown: publishMarkdownOf(articleDraft), style: 'blog' },
+  { brand, settings: rights },
+  { markdown: publishMarkdownOf(articleDraft), picks: [screenPick] },
+)
+const blogRich = await richCopyWithScreens(blogParts.markdown, markdownToHtml(blogParts.markdown), okFetch)
+ok(
+  '채널 줄(블로그 문체)도 같은 길 — 앱 주소로 들어가고, 복사하면 data: · 「[화면: …]」',
+  blogParts.markdown.includes(SCREEN_SRC) && blogRich.inlined === 1 && exportLeaks(blogRich.markdown).length === 0 && exportLeaks(blogRich.html).length === 0,
+)
+ok('누출 검사 — 앱 주소 · 127.0.0.1 · localhost를 찾는다', JSON.stringify(exportLeaks(`a ${SCREEN_SRC} http://127.0.0.1:4000/x http://localhost/`)) === '["/api/screens/","127.0.0.1","localhost"]')
 
 // 4) 인용 — 빈 `>` 줄은 문단 나눔
 ok('여러 문단 인용', markdownToHtml('> 첫 문단\n>\n> 둘째 문단') === '<blockquote><p>첫 문단</p><p>둘째 문단</p></blockquote>')

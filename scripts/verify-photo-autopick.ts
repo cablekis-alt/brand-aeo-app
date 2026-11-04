@@ -19,6 +19,7 @@ import {
   AUTO_PICK_RULES,
   autoCandidateSkip,
   autoPickPhotos,
+  autoPreviewCounts,
   contentWords,
   isPeopleScene,
   isScreenSlot,
@@ -29,7 +30,9 @@ import {
   scoreSlot,
   type AutoArticle,
   type AutoCandidate,
+  type AutoScreenShot,
 } from '../src/lib/photoAutoPick'
+import { screenAppSrc } from '../src/lib/screenCapture'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -98,6 +101,10 @@ ok('장면 글자가 하나도 맞지 않으면 넣지 않는다', !s3.pass)
 
 // 3) 자리 거르기
 ok('웹사이트 화면 자리', isScreenSlot('군산각 웹사이트의 지도에서 찾기 화면') && isScreenSlot('앱 검색 결과') && !isScreenSlot('정원 풍경'))
+ok(
+  '「화면」 · 「사이트」 · 「스크린」만 있는 자리는 사진 자리(좁힌 판정 — 2026-11-04)',
+  !isScreenSlot('가상스테이 가옥 외관과 정원이 한 화면에 담긴 장면') && !isScreenSlot('오토캠핑 사이트 전경') && !isScreenSlot('스크린 골프장 내부'),
+)
 ok('사람이 나오는 장면 자리', isPeopleScene('진포해양공원 산책로를 둘이 나란히 걷는 모습') && isPeopleScene('가족이 걷는 장면') && !isPeopleScene('정원 풍경'))
 
 // 4) 배정
@@ -619,6 +626,165 @@ ok(
   '같은 관광공사 사진을 받은 두 장소 — 두 자리 모두 다른 사진으로',
   JSON.stringify(peakRows([...peakA, ...peakB])) === JSON.stringify([`filled:${peakA[0]!.src}`, `filled:${peakA[1]!.src}`]) &&
     JSON.stringify(peakRows([...peakB, ...peakA])) === JSON.stringify([`filled:${peakA[0]!.src}`, `filled:${peakA[1]!.src}`]),
+)
+
+// 16) 자사 화면 단계(src/lib/screenCapture.ts) — 화면 자리 가운데 코스 · 지도 자리만, 찍어 둔 화면으로. 지도는 미리보기만(결정 4),
+//     화면은 브랜드 상한 없이 글 하나 · 작성자 한 사람에게 「화면 + 변형」 한 번(결정 3). 브랜드 이름은 가짜, 프로필 호스트는 표에 있는 것.
+const SCREEN_HOST = ['gunsan.webforai.kr']
+const SB = '가상각'
+const shotOf = (screenId: string, variantId: string, n: number, path: string): AutoScreenShot => {
+  const id = n.toString(16).padStart(16, '0')
+  return { id, screenId, variantId, url: `https://gunsan.webforai.kr${path}`, capturedAt: '2026-11-04T05:00:00.000Z', src: screenAppSrc('fake-gunsan', id) }
+}
+const SHOTS = {
+  cDefault: shotOf('course', 'default', 1, '/plan/'),
+  cKids: shotOf('course', 'kids', 2, '/plan/?with=kids&kids=7'),
+  cParents: shotOf('course', 'parents', 3, '/plan/?with=parents&adults=3&seniors=2'),
+  mDefault: shotOf('map', 'default', 4, '/map/'),
+  mOld: shotOf('map', 'r-원도심', 5, '/map/#r-원도심'),
+}
+const ALL_SHOTS = Object.values(SHOTS)
+const COURSE_SLOT = `${SB} 웹사이트의 AI 코스 만들기 화면에서 조건을 고르는 모습`
+const MAP_SLOT = `${SB} 웹사이트의 지도에서 찾기 화면에 근대역사박물관 위치가 표시된 모습`
+const mdScreen = [
+  '## 1. 코스', '', `![${COURSE_SLOT}](#image-slot)`, '*조건만 고르면 일정을 짜 줍니다.*',
+  '', '## 2. 지도', '', `![${MAP_SLOT}](#image-slot)`,
+  '', '## 3. 결과', '', '![코스 결과 화면에서 한 장소를 눌러 요금이 보이는 모습](#image-slot)',
+  '', '## 4. 안내', '', `![${SB} 웹사이트의 '아이와 함께' 안내 화면](#image-slot)`,
+  '', '## 5. 정원', '', `![${SB} 정원과 한옥이 한 화면에 담긴 장면](#image-slot)`,
+]
+const screenRun = (articles: AutoArticle[], screens?: { available: boolean; shots: readonly AutoScreenShot[] }, over: Partial<Parameters<typeof autoPickPhotos>[0]> = {}) =>
+  autoPickPhotos({ articles, candidates: [], brandName: SB, ownedDomains: SCREEN_HOST, ...(screens ? { screens } : {}), ...over })
+const plain = screenRun([article('s1', mdScreen)]).articles[0]!
+ok(
+  '화면을 주지 않으면 화면 자리는 지금처럼 비워 두고(screen) 종류만 단다 — 「한 화면에 담긴」 자리는 사진 자리(nomatch)',
+  JSON.stringify(plain.rows.map((r) => `${r.state}:${r.screenSlot ?? ''}`)) === JSON.stringify(['screen:course', 'screen:map', 'screen:action', 'screen:unrelated', 'nomatch:']) &&
+    plain.picks.length === 0,
+)
+const sRun = screenRun([article('s1', mdScreen)], { available: true, shots: ALL_SHOTS })
+const sRows = sRun.articles[0]!.rows
+const coursePick = sRows[0]!.pick
+ok(
+  '코스 화면 자리 — 찍어 둔 코스 화면으로 채운다(앱 주소 · 찍은 주소 · 화면 이름 대체 텍스트 · 화면 · 변형 · 찍은 화면 id)',
+  sRows[0]!.state === 'filled' && coursePick?.origin === 'screen' && coursePick.src === SHOTS.cDefault.src && coursePick.pageUrl === SHOTS.cDefault.url &&
+    coursePick.alt === "가상각 웹사이트 'AI 코스 만들기' 화면" && coursePick.screenId === 'course' && coursePick.variantId === 'default' &&
+    coursePick.shotId === SHOTS.cDefault.id && coursePick.capturedAt === SHOTS.cDefault.capturedAt && coursePick.auto === true && !sRows[0]!.review,
+)
+ok(
+  '지도 화면 자리 — 원도심 장소를 말하면 #r-원도심, 미리보기만(preview · 보낼 사진에 없음) · 늘 확인 필요',
+  sRows[1]!.state === 'preview' && sRows[1]!.pick?.variantId === 'r-원도심' && sRows[1]!.screenPick?.by === 'region' && sRows[1]!.screenPick.saveAllowed === false &&
+    sRows[1]!.review === true && !sRun.articles[0]!.picks.some((p) => p.screenId === 'map'),
+)
+ok(
+  '누르기 · 결과 화면 · 목록에 없는 화면은 비워 둔다(screen + 까닭)',
+  sRows[2]!.state === 'screen' && sRows[2]!.screenSlot === 'action' && !sRows[2]!.pick && sRows[3]!.state === 'screen' && sRows[3]!.screenSlot === 'unrelated' && !sRows[3]!.pick,
+)
+ok('보낼 사진은 코스 화면 한 장뿐(지도 미리보기는 저장하지 않는다)', sRun.articles[0]!.picks.length === 1 && sRun.articles[0]!.picks[0] === coursePick)
+ok('미리보기 셈 — 채울 자리는 코스 화면만', autoPreviewCounts(sRows).filled.all === 1)
+ok('찍어 둔 화면으로 다 채우면 찍을 화면이 없다', sRun.screenWanted.length === 0)
+ok(
+  '같은 입력이면 같은 결과(찍어 둔 화면 순서와 무관)',
+  JSON.stringify(screenRun([article('s1', mdScreen)], { available: true, shots: [...ALL_SHOTS].reverse() }).articles) === JSON.stringify(sRun.articles),
+)
+
+// 아직 찍지 않은 화면 — 찍을 수 있으면 같은 변형을 고르고 uncaptured로 두어 찍기를 청한다(찍은 뒤 같은 결과).
+const uRun = screenRun([article('s1', mdScreen)], { available: true, shots: [] })
+const uRows = uRun.articles[0]!.rows
+ok(
+  '아직 찍지 않은 화면 — uncaptured, 같은 변형, screenWanted로 청한다(보낼 사진 없음)',
+  uRows[0]!.state === 'uncaptured' && uRows[0]!.screenPick?.variantId === 'default' && !uRows[0]!.pick && uRows[1]!.state === 'uncaptured' &&
+    uRows[1]!.screenPick?.variantId === 'r-원도심' && uRun.articles[0]!.picks.length === 0 &&
+    JSON.stringify(uRun.screenWanted) === JSON.stringify([{ screenId: 'course', variantId: 'default' }, { screenId: 'map', variantId: 'r-원도심' }]),
+)
+const noCap = screenRun([article('s1', mdScreen)], { available: false, shots: [SHOTS.cParents] })
+ok(
+  '찍을 수 없으면(웹 · dev) 찍어 둔 변형을 먼저 — 없으면 uncaptured로 두되 청하지 않는다',
+  noCap.articles[0]!.rows[0]!.state === 'filled' && noCap.articles[0]!.rows[0]!.pick?.variantId === 'parents' && noCap.articles[0]!.rows[1]!.state === 'uncaptured' &&
+    noCap.screenWanted.length === 0,
+)
+
+// 변형 고르기 — 아이 · 부모님 자리는 그 조건, 브랜드에서 덜 쓴 변형, 사람 장면 규칙은 보지 않는다.
+const KIDS_SLOT = `아이와 함께 ${SB} 웹사이트의 AI 코스 만들기 화면에서 조건을 고르는 모습`
+const kidsRow = screenRun([article('k1', ['## 아이', '', `![${KIDS_SLOT}](#image-slot)`])], { available: true, shots: ALL_SHOTS }).articles[0]!.rows[0]!
+ok('「아이」 자리는 아이와 변형 — 사람 장면 자리여도 「확인 필요」를 달지 않는다', isPeopleScene(KIDS_SLOT) && kidsRow.state === 'filled' && kidsRow.pick?.variantId === 'kids' && !kidsRow.review && kidsRow.screenPick?.by === 'prefer')
+const leastUsed = screenRun([article('l1', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`])], { available: true, shots: ALL_SHOTS }, {
+  others: [{ src: 'screen:course:default' }, { src: 'screen:course:kids' }],
+}).articles[0]!.rows[0]!
+ok('브랜드에서 가장 덜 쓴 변형(다른 글에서 기본 · 아이와를 썼다)', leastUsed.pick?.variantId === 'parents')
+
+// 상한 — 화면은 브랜드 상한을 받지 않고, 글 하나 · 작성자 한 사람에게 「화면 + 변형」 한 번.
+const busy = ['default', 'kids', 'parents'].flatMap((v) => [0, 1, 2, 3].map((i) => ({ src: `screen:course:${v}`, group: `o${i}` })))
+const exempt = screenRun([article('e1', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w1' })], { available: true, shots: ALL_SHOTS }, { others: busy }).articles[0]!.rows[0]!
+ok('브랜드에서 모든 변형을 네 번씩 썼어도 화면은 넣는다(브랜드 상한 3 면제)', exempt.state === 'filled' && exempt.pick?.variantId === 'default')
+const writerFull = screenRun([article('w1a', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w1' })], { available: true, shots: ALL_SHOTS }, {
+  others: ['default', 'kids', 'parents'].map((v) => ({ src: `screen:course:${v}`, group: 'w1' })),
+}).articles[0]!.rows[0]!
+ok('같은 작성자가 코스 화면 세 변형을 다 썼으면 used', writerFull.state === 'used' && !writerFull.pick)
+const twoInArticle = screenRun([article('t1', ['## 1', '', `![${COURSE_SLOT}](#image-slot)`, '', '## 2', '', `![${COURSE_SLOT}](#image-slot)`])], { available: true, shots: ALL_SHOTS })
+ok(
+  '한 글의 두 코스 자리는 다른 변형',
+  twoInArticle.articles[0]!.rows.every((r) => r.state === 'filled') && new Set(twoInArticle.articles[0]!.picks.map((p) => p.variantId)).size === 2,
+)
+const twoWriters = screenRun(
+  [
+    article('g1', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w2' }),
+    article('g2', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w2' }),
+    article('g3', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w3' }),
+  ],
+  { available: true, shots: ALL_SHOTS },
+)
+const gv = twoWriters.articles.map((a) => a.picks[0]?.variantId)
+ok('같은 작성자의 두 글은 다른 변형, 다른 작성자는 다시 쓸 수 있다', gv[0] === 'default' && gv[1] === 'kids' && gv[2] === 'parents')
+
+// 사람이 넣은 사진(일러스트) · 사람이 뺀 화면 · 다 찬 글
+const illustration: PhotoPick = {
+  slot: COURSE_SLOT, nth: 1, same: 1, heading: '코스', src: 'https://gunsan.webforai.kr/img/course-illust.png', alt: '일러스트: 코스 만들기', pageUrl: 'https://gunsan.webforai.kr/', confirmedAt: '2026-11-01T00:00:00.000Z',
+}
+const keptIllust = screenRun([article('i1', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { picks: [illustration] })], { available: true, shots: ALL_SHOTS }).articles[0]!
+ok('사람이 이미 넣은 일러스트는 덮지 않는다(kept)', keptIllust.rows[0]!.state === 'kept' && !keptIllust.rows[0]!.pick && keptIllust.picks.length === 0)
+const clearedScreen = { slot: COURSE_SLOT, nth: 1, heading: '코스', removed: ['screen:course:default'] }
+const notRefilled = screenRun([article('c1', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { cleared: [clearedScreen] })], { available: true, shots: ALL_SHOTS }).articles[0]!.rows[0]!
+const refilled = screenRun([article('c1', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { cleared: [clearedScreen] })], { available: true, shots: ALL_SHOTS }, { refillCleared: true }).articles[0]!.rows[0]!
+ok('사람이 뺀 화면 자리는 다시 채우지 않고, 다시 채우기를 켜도 뺀 「화면 + 변형」은 고르지 않는다', notRefilled.state === 'cleared' && refilled.state === 'filled' && refilled.refill === true && refilled.pick?.variantId === 'kids')
+const fullScreen = screenRun([article('f1', ['## 지도', '', `![${MAP_SLOT}](#image-slot)`, '', '## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { picks: [lost(1), lost(2), lost(3)] })], {
+  available: true,
+  shots: ALL_SHOTS,
+}).articles[0]!.rows
+ok('사진 3장이 다 찬 글의 화면 자리는 full', fullScreen.every((r) => r.state === 'full' && !r.pick))
+const oneLeft = screenRun([article('o1', ['## 지도', '', `![${MAP_SLOT}](#image-slot)`, '', '## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { picks: [lost(1), lost(2)] })], {
+  available: true,
+  shots: ALL_SHOTS,
+}).articles[0]!
+ok('지도 미리보기는 글의 사진 자리를 쓰지 않는다 — 남은 한 자리는 코스 화면', oneLeft.rows[0]!.state === 'preview' && oneLeft.rows[1]!.state === 'filled' && oneLeft.picks.length === 1)
+
+// 사진 단계가 먼저 — 사진 자리 · 화면 자리가 함께 있는 글
+const mixed = screenRun(
+  [article('m1', ['## 1. 가상스테이 정원', '', '![가상스테이 독채 앞의 아담한 정원 풍경](#image-slot)', '*가상스테이에는 독립된 아담한 정원이 있습니다.*', '', '## 2. 코스', '', `![${COURSE_SLOT}](#image-slot)`])],
+  { available: true, shots: ALL_SHOTS },
+  { candidates: all, brandName: '가상스테이' },
+).articles[0]!
+ok(
+  '사진 자리는 지금처럼 사진으로, 화면 자리는 화면으로 — 보낼 사진은 사진이 먼저',
+  mixed.rows[0]!.state === 'filled' && mixed.rows[0]!.pick?.src === C.garden.src && mixed.rows[1]!.state === 'filled' && mixed.rows[1]!.pick?.origin === 'screen' &&
+    mixed.picks.map((p) => p.origin ?? 'site').join(',') === 'site,screen',
+)
+ok(
+  '다른 글의 화면은 「화면 + 변형」 열쇠로 센다(otherPhotoUses)',
+  JSON.stringify(
+    otherPhotoUses(
+      { x: { photos: [{ ...illustration, src: SHOTS.cKids.src, origin: 'screen', screenId: 'course', variantId: 'kids' }, illustration] } },
+      new Set(),
+      () => 'w1',
+    ),
+  ) === JSON.stringify([{ src: 'screen:course:kids', group: 'w1' }, { src: illustration.src, group: 'w1' }]),
+)
+ok(
+  '프로필이 없는 브랜드는 화면 자리를 비워 둔다(none)',
+  (() => {
+    const r = autoPickPhotos({ articles: [article('n1', md1)], candidates: [], brandName: '가상스테이', ownedDomains: ['stay.example'], screens: { available: true, shots: ALL_SHOTS } })
+    const row = r.articles[0]!.rows[2]!
+    return row.state === 'screen' && row.screenSlot === 'none' && !row.pick && r.screenWanted.length === 0
+  })(),
 )
 
 let failed = 0

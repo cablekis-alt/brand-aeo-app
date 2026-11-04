@@ -12,6 +12,8 @@ import type { StoredDraft, TenantSummary } from '../src/lib/api'
 import type { PhotoPick } from '../src/lib/articlePhotos'
 import { buildPublishHtml } from '../src/lib/htmlFile'
 import type { WriterPlan, WriterPlanArticle } from '../src/lib/probePlan'
+import { screenAppSrc } from '../src/lib/screenCapture'
+import { exportLeaks } from '../src/lib/screenExport'
 import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos } from '../src/lib/sitePhotos'
 import { bundlePhotoName, canSaveToFolder, PHOTO_CREDITS_FILE, photoCreditsText, saveWriterBundle, writerBundle } from '../src/lib/writerBundle'
 
@@ -348,6 +350,50 @@ async function main(): Promise<void> {
   singleDownloads.length = 0
   await downloadArticlePhotos('vstay', drafts[a1.id]!, articlePhotoFiles(drafts[a1.id]!, { settings: rights, industry: brand.industry }))
   ok('글 하나 사진 받기 — 홈페이지 사진뿐이면 출처 파일은 없다', singleDownloads.length === 1 && !singleDownloads.some((d) => d.name === ARTICLE_CREDITS_FILE))
+
+  // 7) 자사 화면(origin screen — 운영자 PC에 찍어 둔 화면) — 묶음의 .html에는 저장할 때 그림을 문서 안(data:image/png)에 넣고, 사진 파일은
+  //    photo-file 라우트가 준 PNG 그대로(「NN-사진k-소제목.png」). 앱 주소가 작성자에게 가면 작성자 PC에서 깨진다.
+  const SCREEN_SRC = screenAppSrc('vstay', '0123456789abcdef')
+  const screenPhoto = photo({
+    src: SCREEN_SRC, alt: "가상 스테이 웹사이트 'AI 코스 만들기' 화면", pageUrl: 'https://gunsan.webforai.kr/plan/', origin: 'screen', screenId: 'course', variantId: 'default',
+    capturedAt: '2026-11-04T05:00:00.000Z',
+  })
+  const sb = writerBundle({ ...input, drafts: { ...drafts, [a1.id]: { ...drafts[a1.id]!, photos: [screenPhoto] } } })
+  const sbHtml = sb.files.find((f): f is Extract<typeof f, { kind: 'html' }> => f.kind === 'html' && f.name.startsWith('01-'))!
+  const sbPhoto = sb.files.find((f): f is Extract<typeof f, { kind: 'photo' }> => f.kind === 'photo')
+  ok(
+    '자사 화면 — 묶음 계산의 .html 글자는 앱 주소(저장할 때 넣는다), 화면 사진 파일 하나 · 출처 파일 없음',
+    sbHtml.text.includes(`<img src="${SCREEN_SRC}"`) && sb.photos === 1 && sbPhoto?.photo.screen?.screenId === 'course' && !sb.files.some((f) => f.kind === 'credits'),
+  )
+  const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13])
+  const screenFetches: string[] = []
+  const pngFetch = async (url: string) => {
+    screenFetches.push(url)
+    return new Response(new Blob([PNG], { type: 'image/png' }), { status: 200 })
+  }
+  g.fetch = pngFetch
+  const screenWritten: Written = new Map()
+  g.window = { showDirectoryPicker: async () => fakeFolder('바탕 화면', screenWritten, []) }
+  const screenSaved = await saveWriterBundle('vstay', sb)
+  const savedScreenHtml = (await screenWritten.get(`${sb.folder}/${sbHtml.name}`)?.blob?.text()) ?? ''
+  ok(
+    '저장한 .html — 화면 그림은 문서 안(data:image/png), 앱 주소 · 이 PC 주소가 없다',
+    savedScreenHtml.includes(`<img src="data:image/png;base64,${Buffer.from(PNG).toString('base64')}"`) && exportLeaks(savedScreenHtml).length === 0 && screenSaved?.screensDropped === 0,
+  )
+  ok(
+    '화면 사진 파일은 photo-file 라우트에서 받아 .png로(그림은 앱 주소로 한 번 더 받는다)',
+    screenWritten.has(`${sb.folder}/01-사진1-무엇부터-보나요.png`) && screenFetches.some((u) => u.includes('/photo-file?')) && screenFetches.includes(SCREEN_SRC),
+  )
+  g.fetch = async (url: string) => (url.startsWith('/api/screens/') ? new Response(JSON.stringify({ error: '그 화면 파일이 없어요.' }), { status: 404 }) : pngFetch(url))
+  const lostWritten: Written = new Map()
+  g.window = { showDirectoryPicker: async () => fakeFolder('바탕 화면', lostWritten, []) }
+  const lostSaved = await saveWriterBundle('vstay', sb)
+  const lostHtml = (await lostWritten.get(`${sb.folder}/${sbHtml.name}`)?.blob?.text()) ?? ''
+  ok(
+    '화면 그림을 받지 못하면 .html에는 「[화면: 이름]」 글자 — 앱 주소 없이, screensDropped로 알린다',
+    lostHtml.includes('<figure class="image-slot"><p>[화면: AI 코스 만들기]</p>') && exportLeaks(lostHtml).length === 0 && lostSaved?.screensDropped === 1,
+  )
+  g.fetch = okFetch
 
   let failed = 0
   for (const [label, pass] of checks) {

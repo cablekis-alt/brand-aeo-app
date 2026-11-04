@@ -21,6 +21,10 @@
  *
  * 같은 사진은 한 글에 한 번, 한 작성자(group)의 글 사이에 한 번, 브랜드 전체에서 AUTO_PICK_RULES.brandRepeat번까지.
  * 서버(server/index.ts op auto)도 이 파일의 후보 검사를 다시 하므로 DOM을 쓰지 않는다.
+ *
+ * 자사 화면(src/lib/screenCapture.ts — 2026-11-04) — 사진을 다 고른 뒤 화면 자리(웹사이트 화면 자리 가운데 프로필 표의 화면 이름이 정확히
+ * 하나 나온 코스 · 지도 자리)를 이 PC에 찍어 둔 화면으로 채운다(자사 화면 단계). 화면은 브랜드 상한을 받지 않고, 글 하나 · 작성자 한
+ * 사람에게 「화면 + 변형」 한 번(결정 3). 지도 화면은 미리보기만 하고 저장하지 않는다(결정 4 — SCREEN_AUTO_SAVE_KINDS).
  */
 import {
   canonicalPhotoSrc,
@@ -50,6 +54,23 @@ import {
   type SceneTime,
   type SceneWant,
 } from './photoScenes.js'
+import {
+  isScreenSlotText,
+  parseScreenAppSrc,
+  photoRepeatKey,
+  screenAlt,
+  screenKindOf,
+  screenProfileFor,
+  screenSaveAllowed,
+  screenUrl,
+  screenVariantChoice,
+  type ScreenDef,
+  type ScreenKind,
+  type ScreenShotView,
+  type ScreenSlotKind,
+  type ScreenVariant,
+  type ScreenVariantChoice,
+} from './screenCapture.js'
 import type { TourSource } from './tourPhotos.js'
 
 export { needsPhotoCredit }
@@ -65,8 +86,6 @@ export const AUTO_PICK_RULES = {
   weights: { key: 2, caption: 1, heading: 0.5, bigram: 2 },
 } as const
 
-/** 웹사이트 화면 자리 — 사진이 아니라 화면 캡처가 맞는 자리라 비워 둔다. */
-const SCREEN_SLOT = /화면|웹사이트|사이트|앱|홈페이지|검색 결과|스크린|캡처/
 /** 「아이」로 시작하지만 사람이 아닌 낱말(아이보리 · 아이콘 · 아이디어 · 아이스(크림 · 링크) · 아이폰 · 아이템)은 뺀다. */
 const CHILD = '아이(?!보리|콘|디어|스|폰|템)'
 /** 사람을 가리키는 흔한 낱말 — 손님 · 일하는 사람 · 가족 호칭(관람객과 같은 부류). */
@@ -288,9 +307,13 @@ export function findPlace(text: string, places: readonly string[]): string | nul
   return findPlaces(text, places)[0] ?? null
 }
 
-/** 웹사이트 화면 자리인가. */
+/**
+ * 웹사이트 화면 자리인가 — 사진이 아니라 화면 캡처가 맞는 자리라 사진을 넣지 않는다(src/lib/screenCapture.ts isScreenSlotText — 「화면」과
+ * 함께 웹사이트 · 홈페이지 · 사이트 · 앱 · 화면 이름 · 다른 회사 낱말이 있거나, 검색 결과 · 캡처 · 스크린샷). 코스 · 지도 화면 자리는 자사
+ * 화면 단계가 찍어 둔 화면으로 채운다.
+ */
 export function isScreenSlot(slotKey: string): boolean {
-  return SCREEN_SLOT.test(slotKey)
+  return isScreenSlotText(slotKey)
 }
 
 /**
@@ -648,8 +671,11 @@ export function scoreSlot(slot: { key: string; caption: string; heading: string 
   }
 }
 
-/** 자동 채우기로 보낼 사진 — 확인 시각은 서버가 저장할 때 찍는다. */
-export type AutoPickInput = Omit<PhotoPick, 'confirmedAt'> & { auto: true }
+/**
+ * 자동 채우기로 보낼 사진 — 확인 시각은 서버가 저장할 때 찍는다. 자사 화면(origin screen)이면 찍은 화면 id(shotId)도 보낸다 — 서버는 화면이
+ * 보낸 src · pageUrl · alt를 쓰지 않고 screens.json에서 그 화면을 찾아 단다.
+ */
+export type AutoPickInput = Omit<PhotoPick, 'confirmedAt'> & { auto: true; shotId?: string }
 
 /** 자동 채우기를 돌릴 글 하나. */
 export interface AutoArticle {
@@ -672,8 +698,25 @@ export interface AutoArticle {
  * 사진이 공공누리 제1유형이 아님 · scene 후보는 있었는데 장면이 자리와 맞지 않음(장면을 읽지 못한 사진 포함) · unread 장면을 아직 읽지
  * 않은 사진이 남음(읽기 상한 · 키 · 한도 · Claude 과부하로 멈춤 — 다시 누르면 이어서 읽는다) · replace 이미 넣은 자동 사진의 장면이
  * 자리와 어긋나 다른 사진으로 바꿈 · remove 이미 넣은 자동 사진의 장면이 어긋나고 바꿀 사진도 없어 뺌.
+ * 자사 화면 자리(screen) — 찍지 않는 화면이면 screen 그대로(row.screenSlot이 까닭), 코스 화면을 넣으면 filled, 글에 넣지 않는 화면(지도 —
+ * SCREEN_AUTO_SAVE_KINDS 밖)이면 preview(미리보기만), 고른 화면 · 변형을 아직 찍지 않았으면 uncaptured(찍은 뒤 다시 누른다 — screenWanted),
+ * 쓸 변형이 모두 상한에 걸리면 used, 글이 다 찼으면 full.
  */
-export type AutoSlotState = 'filled' | 'kept' | 'cleared' | 'screen' | 'nomatch' | 'used' | 'full' | 'license' | 'scene' | 'unread' | 'replace' | 'remove'
+export type AutoSlotState =
+  | 'filled'
+  | 'kept'
+  | 'cleared'
+  | 'screen'
+  | 'nomatch'
+  | 'used'
+  | 'full'
+  | 'license'
+  | 'scene'
+  | 'unread'
+  | 'replace'
+  | 'remove'
+  | 'preview'
+  | 'uncaptured'
 
 export const AUTO_SLOT_STATE_TEXT: Record<AutoSlotState, string> = {
   filled: '채움',
@@ -688,6 +731,35 @@ export const AUTO_SLOT_STATE_TEXT: Record<AutoSlotState, string> = {
   unread: '장면을 아직 읽지 않음',
   replace: '장면 안 맞음 → 바꿈',
   remove: '장면 안 맞음 → 뺌',
+  preview: '화면 미리보기만(글에 넣지 않음)',
+  uncaptured: '화면을 아직 찍지 않음',
+}
+
+/** 화면 자리에 고른 자사 화면 · 변형(자사 화면 단계) — 찍어 둔 화면이 있으면 shot. */
+export interface AutoScreenPick {
+  screenId: string
+  variantId: string
+  kind: ScreenKind
+  /** 화면 이름(「AI 코스 만들기」) · 변형 이름(「아이와」). */
+  label: string
+  variantLabel: string
+  /** 찍을(찍은) 주소 — 프로필에서 만든 것. */
+  url: string
+  /** 글에 넣는 종류인가(SCREEN_AUTO_SAVE_KINDS) — 아니면 미리보기만(preview). */
+  saveAllowed: boolean
+  /** 이 PC에 찍어 둔 그 화면 · 변형(가장 늦게 찍은 것). 없으면 아직 찍지 않았다(uncaptured). */
+  shot?: AutoScreenShot
+  /** 자리 글자로 변형을 좁힌 까닭(screenVariantChoice). */
+  by?: ScreenVariantChoice['by']
+}
+
+/** 자사 화면 단계가 쓰는 찍어 둔 화면(GET /api/screens의 shots 한 장). */
+export type AutoScreenShot = Pick<ScreenShotView, 'id' | 'screenId' | 'variantId' | 'url' | 'capturedAt' | 'src'>
+
+/** 찍을 화면 · 변형 하나(screenWanted) — 화면이 POST /api/screens/capture로 찍고 다시 고른다. */
+export interface AutoScreenWant {
+  screenId: string
+  variantId: string
 }
 
 export interface AutoSlotRow {
@@ -744,6 +816,10 @@ export interface AutoSlotRow {
    * (브랜드 이름 · 객실 · 독채 · 매장 · 메뉴)이나 고유한 장소 이름이 나온 자리가 아니다. 화면은 이런 자리가 있을 때만 지역 사진을 부른다.
    */
   regionSlot?: true
+  /** 화면 자리(state screen으로 시작한 자리)의 종류(src/lib/screenCapture.ts screenKindOf) — course · map이 아니면 찍지 않는 까닭. */
+  screenSlot?: ScreenSlotKind
+  /** 화면 자리에 고른 자사 화면 · 변형(filled · preview · uncaptured). */
+  screenPick?: AutoScreenPick
 }
 
 /** 이미 넣은 자동 사진을 바꾸거나 뺄 것 — 저장할 때 서버가 그 자리에 같은 자동 사진이 아직 있을 때만 한다(server/contentDraft.ts). */
@@ -796,6 +872,11 @@ export interface AutoPickResult {
    * 중복 없이). 화면이 이 사진들의 장면을 서버에 묻고(src/lib/sitePhotos.ts loadScenesFor) 다시 고른다.
    */
   sceneWanted: SceneWant[]
+  /**
+   * 찍으면 화면 자리에 쓰일 자사 화면 · 변형(uncaptured 자리, 처음 나온 순서, 중복 없이) — 이 실행에서 찍을 수 있을 때만(screens.available).
+   * 화면이 찍고(POST /api/screens/capture) 다시 고른다. 변형은 찍었는지와 상관없이 고르므로 찍은 뒤에도 같은 자리에 같은 변형이 간다.
+   */
+  screenWanted: AutoScreenWant[]
 }
 
 /** 사진 자리 바로 아랫줄의 설명(`*설명*`) — 없으면 ''(articlePhotos.ts captionAfter와 같은 모양). */
@@ -968,6 +1049,12 @@ export function autoPickPhotos(input: {
   regionCandidates?: readonly AutoCandidate[]
   /** 브랜드 도시(「군산」) — 지역 사진에 다 들어 있어 견주는 낱말에서 뺀다. */
   regionCity?: string
+  /**
+   * 자사 화면(src/lib/screenCapture.ts) — 주면 화면 자리를 찍어 둔 화면으로 채운다(자사 화면 단계, 브랜드 프로필은 ownedDomains로 찾는다).
+   * available은 이 실행에서 화면을 찍을 수 있는가(/api/health screens — 설치한 데스크톱 앱만), shots는 이 PC에 찍어 둔 화면(GET
+   * /api/screens). 주지 않으면 화면 자리는 지금처럼 비워 둔다(screen).
+   */
+  screens?: { available: boolean; shots: readonly AutoScreenShot[] }
 }): AutoPickResult {
   const stop = new Set(contentWords(input.brandName ?? ''))
   const scenes = input.scenes
@@ -1096,8 +1183,9 @@ export function autoPickPhotos(input: {
     mine.set(key, Math.max(0, (mine.get(key) ?? 0) + by))
     groupUsed.set(group, mine)
   }
+  // 고른 사진은 반복 열쇠로 센다 — 사진은 주소, 자사 화면은 「화면 + 변형」(photoRepeatKey · otherPhotoUses).
   for (const o of input.others ?? []) countUse(o.src, o.group)
-  for (const a of input.articles) for (const p of a.picks ?? []) countUse(p.src, a.group)
+  for (const a of input.articles) for (const p of a.picks ?? []) countUse(photoRepeatKey(p), a.group)
   /**
    * 나가는 자동 사진(장면으로 다시 본 사진)은 나가기로 정해진 때 상한에서 덜어 낸다 — 종류 · 사람이 어긋난 사진은 글을 볼 때(반드시
    * 나간다), 시간만 다른 사진은 맞는 사진으로 바꿀 때. 서버는 글 순서대로 저장하고 같은 글 안에서는 나가는 사진을 먼저 비우므로
@@ -1129,6 +1217,18 @@ export function autoPickPhotos(input: {
   const sceneScore = (o: Option) => o.fit?.score ?? 0
   const used = (o: Option) => brandCount.get(o.candidate.src) ?? 0
 
+  // 자사 화면 — 브랜드 프로필(자사 사이트에 프로필 호스트가 있을 때만)과 화면 · 변형마다 가장 늦게 찍은 화면(앱 주소 모양이 맞는 것만).
+  const screenProfile = screenProfileFor(input.ownedDomains)
+  const shotAt = new Map<string, AutoScreenShot>()
+  for (const s of input.screens?.shots ?? []) {
+    if (parseScreenAppSrc(s.src)?.shotId !== s.id) continue
+    const k = `${s.screenId}:${s.variantId}`
+    const had = shotAt.get(k)
+    if (!had || Date.parse(s.capturedAt) > Date.parse(had.capturedAt)) shotAt.set(k, s)
+  }
+  const screenWanted = new Map<string, AutoScreenWant>()
+  const screenKey = (screen: ScreenDef, v: ScreenVariant) => photoRepeatKey({ src: '', origin: 'screen', screenId: screen.id, variantId: v.id })
+
   // 글마다 자리를 정하고(이미 넣은 자동 사진을 장면으로 다시 본다 — 모든 글을 먼저 보아 그 사진의 장면을 먼저 읽게), 모든 글에서 장면이
   // 맞는 사진(①②③③b)을 고른 뒤에 비슷한 사진(④)을 고른다 — 앞 글의 비슷한 사진이 뒤 글의 맞는 사진을 반복 상한으로 막지 않게.
   const workers = input.articles.map((article, index) => {
@@ -1137,14 +1237,24 @@ export function autoPickPhotos(input: {
     const picks = article.picks ?? []
     const match = matchPhotos(article.markdown, picks)
     const occupied = new Set([...match.applied, ...match.suggested].map((m) => m.slot.line))
-    const inArticle = new Set(picks.map((p) => canonicalPhotoSrc(p.src) ?? p.src))
+    const inArticle = new Set(
+      picks.map((p) => {
+        const key = photoRepeatKey(p)
+        return canonicalPhotoSrc(key) ?? key
+      }),
+    )
     let room = Math.max(0, PHOTO_LIMITS.picks - picks.length)
-    // 다시 볼 자동 사진 — 장면으로 고를 때 「이미 넣은 자동 사진도 장면 확인」이면, 자리를 찾아 넣은(applied) 자동 사진(auto)만(화면 자리 제외).
+    // 다시 볼 자동 사진 — 장면으로 고를 때 「이미 넣은 자동 사진도 장면 확인」이면, 자리를 찾아 넣은(applied) 자동 사진(auto)만(화면 자리 ·
+    // 자사 화면 제외).
     const recheckAt = new Map<number, PhotoPick>()
-    if (scenes && input.recheckAuto) for (const m of match.applied) if (m.pick.auto && !isScreenSlot(m.slot.key)) recheckAt.set(m.slot.line, m.pick)
+    if (scenes && input.recheckAuto) {
+      for (const m of match.applied) if (m.pick.auto && m.pick.origin !== 'screen' && !isScreenSlot(m.slot.key)) recheckAt.set(m.slot.line, m.pick)
+    }
 
     /** 다시 채우는 자리(refillCleared)에서 사람이 뺀 사진, 다시 보는 자동 사진의 자리에서 사람이 뺀 사진과 그 자동 사진 — 그 자리에는 고르지 않는다. */
     const removedAt = new Map<AutoSlotRow, Set<string>>()
+    /** 화면 자리의 화면(코스 · 지도 — screenKindOf) — 자사 화면 단계가 채운다. */
+    const screenOfRow = new Map<AutoSlotRow, ScreenDef>()
     const rows: AutoSlotRow[] = slots.map((slot) => {
       const caption = captionOf(lines, slot)
       const cleared = clearedAt(slot, article.cleared)
@@ -1157,17 +1267,21 @@ export function autoPickPhotos(input: {
             ? 'screen'
             : 'nomatch'
       const found = (state === 'nomatch' || old) && places.length ? slotPlaces({ key: slot.key, caption }, places) : []
+      const screenKind = state === 'screen' ? screenKindOf(slot.key, screenProfile) : null
       const row: AutoSlotRow = {
         slot,
         caption,
         state,
         ...(found.length ? { place: found[0]!, places: found } : {}),
-        ...(state === 'nomatch' && cleared.length ? { refill: true as const } : {}),
+        ...((state === 'nomatch' || state === 'screen') && cleared.length ? { refill: true as const } : {}),
         ...(old ? { old } : {}),
+        ...(screenKind ? { screenSlot: screenKind.kind } : {}),
       }
+      // 사람이 뺀 사진(자사 화면은 「화면 + 변형」 열쇠 — photoRepeatKey)은 다시 채우는 그 자리에 고르지 않는다.
       const gone = cleared.flatMap((c) => (c.removed ?? []).map((s) => canonicalPhotoSrc(s) ?? s))
       if (row.refill) removedAt.set(row, new Set(gone))
       if (old) removedAt.set(row, new Set([...gone, canonicalPhotoSrc(old.src) ?? old.src]))
+      if (screenKind?.screen) screenOfRow.set(row, screenKind.screen)
       return row
     })
     const removed = (row: AutoSlotRow, src: string) => Boolean(removedAt.get(row)?.has(src))
@@ -1466,6 +1580,92 @@ export function autoPickPhotos(input: {
       }
     }
 
+    /**
+     * 자사 화면 — 모든 글의 사진(①②③③b · 비슷한 사진)을 고른 뒤, 화면 자리(state screen) 가운데 코스 · 지도 자리(screenOfRow)에 글에 남은
+     * 자리만큼. 변형은 자리 글자로 좁힌 묶음(screenVariantChoice — 원도심 장소 → #r-원도심, 아이 · 부모님 → 그 조건) 앞부터, 묶음 안에서는
+     * 브랜드에서 덜 쓴 변형(같으면 표 순서). 같은 「화면 + 변형」은 글 하나 · 작성자 한 사람에게 한 번이고 브랜드 상한은 받지 않는다(결정 3).
+     * 사람이 그 자리에서 뺀 화면(refill — removed의 화면 열쇠)은 고르지 않는다. 사람 장면 규칙(isPeopleScene)은 보지 않는다(화면이다).
+     * 찍을 수 있으면 변형은 찍었는지와 상관없이 고르고, 아직 찍지 않았으면 uncaptured로 두어 screenWanted로 청한다(찍은 뒤 같은 결과가
+     * 나오게). 찍을 수 없으면(웹 · dev) 찍어 둔 변형을 먼저 고른다. 글에 넣지 않는 종류(지도 — SCREEN_AUTO_SAVE_KINDS 밖)는 미리보기
+     * (preview)만 — 보낼 사진(out)에 넣지 않고 글의 사진 수도 쓰지 않는다. 지도는 늘 「확인 필요」(지도에 장소 이름이 보이지 않을 수 있다),
+     * 코스는 자리가 말한 조건의 변형을 쓰지 못했을 때 「확인 필요」. 글의 사진 수(room)는 고치지 않는다 — finish가 사진 자리의 상태를
+     * 지금처럼 정하게(사진이 먼저다).
+     */
+    const screenStage = () => {
+      const screens = input.screens
+      if (!screens || !screenProfile) return
+      let left = room
+      const blocked = (key: string) =>
+        inArticle.has(key) || (article.group !== undefined && (groupUsed.get(article.group)?.get(key) ?? 0) > 0)
+      for (const row of rows) {
+        const screen = screenOfRow.get(row)
+        if (row.state !== 'screen' || !screen) continue
+        if (left <= 0) {
+          row.state = 'full'
+          continue
+        }
+        const choice = screenVariantChoice(screen, row.slot.key, places.length ? findPlaces(row.slot.key, places) : [])
+        const open = (v: ScreenVariant) => !blocked(screenKey(screen, v)) && !removed(row, screenKey(screen, v))
+        const shotOf = (v: ScreenVariant) => shotAt.get(`${screen.id}:${v.id}`)
+        const byUse = (a: ScreenVariant, b: ScreenVariant) =>
+          (brandCount.get(screenKey(screen, a)) ?? 0) - (brandCount.get(screenKey(screen, b)) ?? 0) || screen.variants.indexOf(a) - screen.variants.indexOf(b)
+        const choose = (ok: (v: ScreenVariant) => boolean) => {
+          for (const [tier, list] of choice.tiers.entries()) {
+            const best = list.filter(ok).sort(byUse)[0]
+            if (best) return { variant: best, tier }
+          }
+          return null
+        }
+        const any = choose(open)
+        if (!any) {
+          row.state = 'used'
+          continue
+        }
+        const chosen = screens.available ? any : (choose((v) => open(v) && Boolean(shotOf(v))) ?? any)
+        const { variant } = chosen
+        const key = screenKey(screen, variant)
+        const shot = shotOf(variant)
+        const saveAllowed = screenSaveAllowed(screen.kind)
+        inArticle.add(key)
+        countUse(key, article.group)
+        if (saveAllowed) left -= 1
+        row.screenPick = {
+          screenId: screen.id,
+          variantId: variant.id,
+          kind: screen.kind,
+          label: screen.label,
+          variantLabel: variant.label,
+          url: screenUrl(screenProfile, variant),
+          saveAllowed,
+          ...(shot ? { shot } : {}),
+          ...(choice.by ? { by: choice.by } : {}),
+        }
+        if (!shot) {
+          row.state = 'uncaptured'
+          const k = `${screen.id}:${variant.id}`
+          if (screens.available && !screenWanted.has(k)) screenWanted.set(k, { screenId: screen.id, variantId: variant.id })
+          continue
+        }
+        const pick: AutoPickInput = {
+          slot: row.slot.key,
+          nth: row.slot.nth,
+          same: row.slot.same,
+          heading: row.slot.heading,
+          src: shot.src,
+          alt: cleanPhotoAlt(screenAlt(input.brandName ?? '', screen)),
+          pageUrl: shot.url,
+          auto: true,
+          origin: 'screen',
+          screenId: screen.id,
+          variantId: variant.id,
+          capturedAt: shot.capturedAt,
+          shotId: shot.id,
+        }
+        Object.assign(row, { state: saveAllowed ? 'filled' : 'preview', pick, ...(screen.kind === 'map' || chosen.tier > 0 ? { review: true } : {}) })
+        if (saveAllowed) out.push(pick)
+      }
+    }
+
     // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소의 공공 사진이 모두 「제1유형 아님」으로 빠졌으면 license.
     // 홈페이지 사진 짝만 상한에 걸리고 장소 사진이 없던 자리는 homeOnly, 장면으로 고를 때 장면이 맞는 장소 페이지 사진이 상한에 걸리고 그
     // 장소들의 관광공사 사진은 아직 없는 자리는 askTour — 관광공사 사진을 찾을 자리다(tourPlacesWanted). 지역 사진으로 채울 장소 없는 자리인데
@@ -1527,10 +1727,11 @@ export function autoPickPhotos(input: {
       }
       return { actionId: article.actionId, generatedAt: article.generatedAt, rows, picks: out, replaces, credits }
     }
-    return { fitStages, similarStage, finish }
+    return { fitStages, similarStage, screenStage, finish }
   })
   for (const w of workers) w.fitStages()
   for (const w of workers) w.similarStage()
+  for (const w of workers) w.screenStage()
   const articles = workers.map((w) => w.finish())
   // 지역 사진의 장면 — 자리를 돌아가며(첫째 자리의 1번 · 둘째 자리의 1번 …) 넣는다. 한 번 누를 때 REGION_SCENE_LIMITS.perRun장까지는 읽기
   // 쪽(src/lib/sitePhotos.ts loadScenesFor)이 REGION_SCENE_PLACE로 센다.
@@ -1550,6 +1751,7 @@ export function autoPickPhotos(input: {
     usablePublic,
     usableTour,
     sceneWanted,
+    screenWanted: [...screenWanted.values()],
     ...(regionPool ? { region: { rows: regionWants.length, pool: regionPool.length, matched: regionMatched.size, wanted: regionWanted.size } } : {}),
   }
 }
@@ -1614,7 +1816,10 @@ export function autoPreviewCounts(rows: readonly AutoSlotRow[]): AutoPreviewCoun
   }
 }
 
-/** 이번에 돌지 않는 글의 고른 사진 — 브랜드 · 작성자 반복 상한에 센다. */
+/**
+ * 이번에 돌지 않는 글의 고른 사진 — 브랜드 · 작성자 반복 상한에 센다. src는 반복 열쇠(photoRepeatKey) — 사진은 주소, 자사 화면은 「화면 +
+ * 변형」(다른 날 다시 찍은 같은 화면도 같은 화면으로 센다).
+ */
 export function otherPhotoUses(
   drafts: Readonly<Record<string, { photos?: readonly PhotoPick[] }>>,
   exclude: ReadonlySet<string>,
@@ -1624,7 +1829,7 @@ export function otherPhotoUses(
   for (const [id, d] of Object.entries(drafts)) {
     if (exclude.has(id)) continue
     const group = groupOf(id)
-    for (const p of d.photos ?? []) out.push({ src: p.src, ...(group ? { group } : {}) })
+    for (const p of d.photos ?? []) out.push({ src: photoRepeatKey(p), ...(group ? { group } : {}) })
   }
   return out
 }

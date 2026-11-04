@@ -5,8 +5,10 @@
  * 「원문 바뀜」이 되고, 사실 가드가 주소 속 숫자를 지어낸 숫자로 읽어 사진 줄을 지울 수 있다. 글 끝 안내처럼 복사 · .md ·
  * .html로 내보내는 순간에만 넣는다(src/lib/publishArticle.ts publishArticleParts).
  *
- * 서버(server/contentDraft.ts · server/index.ts)도 같은 검사를 쓰므로 아무것도 import하지 않는다 — 서버 타입 검사는 DOM이 없다.
+ * 서버(server/contentDraft.ts · server/index.ts)도 같은 검사를 쓰므로 DOM을 쓰는 모듈은 import하지 않는다 — 서버 타입 검사는 DOM이 없다
+ * (src/lib/screenCapture.ts는 DOM 없이 자사 화면의 앱 주소만 본다).
  */
+import { screenExportable } from './screenCapture.js'
 
 /** 사람이 고른 사진 하나 — 초안별로 저장한다(server/contentDraft.ts StoredDraft.photos). */
 export interface PhotoPick {
@@ -165,7 +167,8 @@ export function needsPhotoCredit(src: string, ownedDomains?: readonly string[]):
  */
 export function photoCreditState(p: Pick<PhotoPick, 'src' | 'origin' | 'license' | 'credit' | 'creditUrl'>): 'site' | 'public' | 'missing' {
   if (p.origin === 'public') return typeof publicPhotoFields(p) === 'object' ? 'public' : 'missing'
-  if (p.origin === 'site') return 'site'
+  // 자사 화면(origin screen — 운영자 PC에 찍어 둔 자사 사이트 화면)은 출처 표시가 필요 없다 — 홈페이지 사진과 같다.
+  if (p.origin === 'site' || p.origin === 'screen') return 'site'
   return needsPhotoCredit(p.src) ? 'missing' : 'site'
 }
 
@@ -191,6 +194,11 @@ export interface AppliedPhoto {
   pageUrl?: string
   /** 사람이 넣기로 확인한(자동이면 저장한) 때. */
   confirmedAt?: string
+  /**
+   * 자사 화면(origin screen) — src는 앱 주소(/api/screens/<tenant>/<id>.png)라 앱 밖으로 그대로 나가면 안 된다: .html · 서식째 복사는
+   * src/lib/screenExport.ts가 그림을 문서 안(data:)에 넣고, JSON-LD image · og:image에는 넣지 않는다(공개된 절대 주소가 아니다).
+   */
+  screen?: Required<Pick<PhotoPick, 'screenId' | 'variantId'>> & Pick<PhotoPick, 'capturedAt'>
 }
 
 export const PHOTO_LIMITS = { picks: 3, alt: 160, src: 2048 } as const
@@ -238,6 +246,16 @@ export function canonicalPhotoSrc(raw: string): string | null {
   url.hash = ''
   const href = url.href.replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/\*/g, '%2A').replace(/`/g, '%60')
   return href.length <= PHOTO_LIMITS.src ? href : null
+}
+
+/**
+ * 고른 사진을 글에 넣을 주소 — 사진은 https(canonicalPhotoSrc). 자사 화면(origin screen)은 앱 주소(/api/screens/<tenant>/<id>.png) 그대로 —
+ * 모양이 맞고 글에 넣는 종류의 화면일 때만(src/lib/screenCapture.ts screenExportable — 지도 화면은 넣지 않는다). 아니면 null(넣지 않는다).
+ * canonicalPhotoSrc는 https만 받는 그대로 둔다 — 서버가 화면이 보낸 사진 주소를 거르는 데 쓴다(앱 주소는 서버가 screens.json에서 단다).
+ */
+export function photoPickSrc(p: Pick<PhotoPick, 'src' | 'origin' | 'screenId' | 'variantId'>): string | null {
+  if (p.origin === 'screen') return screenExportable(p) ? p.src : null
+  return canonicalPhotoSrc(p.src)
 }
 
 /** 글 안의 사진 자리 하나. */
@@ -390,6 +408,8 @@ function mapSlots(sourceCaptions: readonly string[], targets: readonly PhotoSlot
  * 짝지은 자리 줄만 `![사진 설명](https 주소)`로 바꾼다. 공공 사진은 바로 아랫줄 설명에 출처를 붙이고(`*설명 (사진: 한국관광공사,
  * [공공누리 제1유형](주소))*`), 설명 줄이 없으면 출처 줄을 한 줄 끼운다 — 줄 번호가 밀리지 않게 뒤 자리부터 바꾼다. 출처가 맞지
  * 않는 공공 사진(photoCreditState missing)은 넣지 않는다. 넣은 사진이 없으면 원고를 그대로(바이트까지 같게) 돌려준다.
+ * 자사 화면은 `![화면 이름](앱 주소)`로 넣는다(photoPickSrc) — 앱 안 미리보기는 같은 출처라 바로 보이고, 앱 밖으로 내보낼 때는
+ * src/lib/screenExport.ts가 그림을 문서 안에 넣거나 「[화면: …]」 글자로 바꾼다.
  */
 function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot: PhotoSlot }[]): { markdown: string; applied: AppliedPhoto[] } {
   if (!applied.length) return { markdown, applied: [] }
@@ -397,7 +417,7 @@ function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot
   const crlf = markdown.includes('\r\n')
   const out: AppliedPhoto[] = []
   for (const { pick, slot } of [...applied].sort((a, b) => b.slot.line - a.slot.line)) {
-    const src = canonicalPhotoSrc(pick.src)
+    const src = photoPickSrc(pick)
     const state = photoCreditState(pick)
     if (!src || state === 'missing') continue
     const alt = cleanPhotoAlt(pick.alt) || cleanPhotoAlt(slot.alt)
@@ -425,6 +445,9 @@ function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot
       ...(credit ? { credit } : {}),
       pageUrl: pick.pageUrl,
       confirmedAt: pick.confirmedAt,
+      ...(pick.origin === 'screen' && pick.screenId && pick.variantId
+        ? { screen: { screenId: pick.screenId, variantId: pick.variantId, ...(pick.capturedAt ? { capturedAt: pick.capturedAt } : {}) } }
+        : {}),
     })
   }
   out.reverse()

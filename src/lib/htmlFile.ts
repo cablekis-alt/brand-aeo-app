@@ -3,6 +3,7 @@ import { effectiveDraft } from './draftGaps'
 import { draftTitle, IMAGE_SLOT } from './markdownFile'
 import { publishArticleParts } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
+import { parseScreenAppSrc } from './screenCapture'
 
 /**
  * 발행용 .html — 발행용 마크다운을 완성된 HTML 문서로.
@@ -33,6 +34,14 @@ export function escapeHtml(s: string): string {
 const FIGURE_IMG_SIZE = 'width="720" style="width:100%;max-width:720px;height:auto"'
 const INLINE_IMG_SIZE = 'style="max-width:100%;height:auto"'
 
+/**
+ * 그림으로 낼 주소인가 — http(s), 또는 자사 화면의 앱 주소(/api/screens/<tenant>/<id>.png — src/lib/screenCapture.ts). 앱 주소는 앱 안
+ * 미리보기(같은 출처)에서만 열린다 — 앱 밖으로 내보낼 때는 src/lib/screenExport.ts inlineScreens가 그림을 문서 안(data:)에 넣는다.
+ */
+function imageUrlOk(url: string): boolean {
+  return /^https?:\/\//i.test(url) || parseScreenAppSrc(url) !== null
+}
+
 /** 인라인 문법 — 굵게·기울임·코드·이미지·링크. 먼저 이스케이프한 뒤 문법만 태그로 바꾼다. */
 function inline(text: string): string {
   let s = escapeHtml(text)
@@ -40,7 +49,9 @@ function inline(text: string): string {
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
   // 이미지는 링크보다 먼저 — 아니면 `![x](주소)`가 「!」 + 링크로 남는다. 사진 자리는 글자로 알린다.
-  s = s.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g, `<img src="$2" alt="$1" ${INLINE_IMG_SIZE}>`)
+  s = s.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/api\/screens\/[^)\s]+)\)/g, (whole, alt: string, url: string) =>
+    imageUrlOk(url) ? `<img src="${url}" alt="${alt}" ${INLINE_IMG_SIZE}>` : whole,
+  )
   s = s.replace(new RegExp(`!\\[([^\\]]*)\\]\\(${IMAGE_SLOT}\\)`, 'g'), '[사진: $1]')
   // 링크는 http(s)만 — javascript: 같은 스킴은 그대로 글자로 남긴다.
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" rel="noopener">$1</a>')
@@ -54,7 +65,7 @@ const CAPTION_LINE = /^\*(?!\*)(.+?)\*$/
 
 function figureHtml(alt: string, url: string, caption: string | null): string | null {
   const cap = caption ? `<figcaption>${inline(caption)}</figcaption>` : ''
-  if (/^https?:\/\//i.test(url)) return `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" ${FIGURE_IMG_SIZE}>${cap}</figure>`
+  if (imageUrlOk(url)) return `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" ${FIGURE_IMG_SIZE}>${cap}</figure>`
   // 편집기가 figure를 버려도 글자는 남도록 안내를 <p>에 둔다.
   if (url === IMAGE_SLOT) return `<figure class="image-slot"><p>[사진 넣을 자리] ${escapeHtml(alt)}</p>${cap}</figure>`
   return null
@@ -191,15 +202,17 @@ export interface PublishHtmlInput {
 export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtmlInput): string {
   const { markdown: md, photos } = publishArticleParts(stored, { brand, settings })
   // 실제로 글에 들어간 사진만 — 같은 사진을 두 자리에 썼으면 한 번. 공공 사진은 출처 · 이용 허락과 함께 ImageObject로(본문 figcaption의
-  // 출처 줄과 같은 내용), 홈페이지 사진은 지금처럼 주소 글자로.
-  const images = [...new Map(photos.map((p) => [p.src, p])).values()].map((p) =>
+  // 출처 줄과 같은 내용), 홈페이지 사진은 지금처럼 주소 글자로. 자사 화면은 넣지 않는다 — 앱 주소는 공개된 절대 주소가 아니다(본문의
+  // 그림은 내보낼 때 src/lib/screenExport.ts가 문서 안에 넣는다).
+  const webPhotos = photos.filter((p) => !p.screen)
+  const images = [...new Map(webPhotos.map((p) => [p.src, p])).values()].map((p) =>
     p.credit
       ? { '@type': 'ImageObject', contentUrl: p.src, creditText: p.credit.credit, license: p.credit.creditUrl, acquireLicensePage: p.credit.creditUrl }
       : p.src,
   )
   // 링크 미리보기 대표 사진(og:image)은 홈페이지 사진만 — 미리보기 카드에는 공공 사진의 출처 줄(figcaption · JSON-LD)이 따라가지 않는다.
-  // 홈페이지 사진이 없으면 og:image를 쓰지 않는다.
-  const ogPhoto = photos.find((p) => !p.credit)
+  // 홈페이지 사진이 없으면 og:image를 쓰지 않는다(자사 화면도 쓰지 않는다).
+  const ogPhoto = webPhotos.find((p) => !p.credit)
   const keywords = settings?.tags?.join(', ')
   // 블로그 글 형식은 본문 첫 줄(# 제목)과 같은 제목 — 빈칸을 채우거나 본문을 고치면 {N}이 바뀐다. 옛 형식은 예전처럼 초안 제목.
   const title =

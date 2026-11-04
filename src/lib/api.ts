@@ -9,6 +9,7 @@ import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './ext
 import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { AnswerEvidence } from './answerEvidence'
 import { validScene, type PhotoScene } from './photoScenes'
+import { parseScreenAppSrc, type ScreenKind, type ScreenShotView } from './screenCapture'
 import type { ConditionChange } from './comparability'
 import type {
   AiReferralReport,
@@ -1673,8 +1674,11 @@ export async function saveDraftGaps(
 
 /** 사진 자리 하나 — 장면 글자 · 몇 번째 · 소제목(src/lib/articlePhotos.ts PhotoPick과 같은 열쇠). */
 export type PhotoPlace = Pick<import('./articlePhotos').PhotoPick, 'slot' | 'nth' | 'heading'>
-/** 사진을 고를 때 보내는 값 — 확인 시각은 서버가 찍는다. */
-export type PhotoPickInput = Omit<import('./articlePhotos').PhotoPick, 'confirmedAt'>
+/**
+ * 사진을 고를 때 보내는 값 — 확인 시각은 서버가 찍는다. 자사 화면(origin screen)이면 화면 id · 변형 id와 찍은 화면 id(shotId)를 보낸다 —
+ * 서버는 화면이 보낸 src · pageUrl · alt를 쓰지 않고 이 PC의 screens.json에서 찾아 단다.
+ */
+export type PhotoPickInput = Omit<import('./articlePhotos').PhotoPick, 'confirmedAt'> & { shotId?: string }
 
 /** 출처 붙이기 — 이미 고른 출처 없는 공공 사진(자리 · 주소)에 붙일 공공 사진 표시와 그 사진을 찾은 장소 페이지. */
 export type PhotoCreditInput = { place: PhotoPlace; src: string; pageUrl: string } & import('./articlePhotos').PublicPhotoFields
@@ -1770,22 +1774,119 @@ export async function saveDraftPhotosAuto(
   return total
 }
 
-let photoFlags: Promise<{ tourApi: boolean; photoScenes: boolean }> | null = null
+let photoFlags: Promise<{ tourApi: boolean; photoScenes: boolean; screens: boolean }> | null = null
 
 /**
- * 이 PC의 사진 기능 — /api/health의 tourApi(관광공사 사진 3단계 · TourAPI 키) · photoScenes(사진 장면 · Claude 키). 키가 있는지만 온다.
- * 웹(Vercel)에는 그 값이 없어 둘 다 false. 화면이 열려 있는 동안 한 번 묻는다(실패하면 다음에 다시).
+ * 이 PC의 사진 기능 — /api/health의 tourApi(관광공사 사진 3단계 · TourAPI 키) · photoScenes(사진 장면 · Claude 키)는 키가 있는지만,
+ * screens는 자사 화면을 찍을 수 있는지(설치한 데스크톱 앱 — server/screens.ts). 웹(Vercel)에는 그 값이 없어 모두 false. 화면이 열려 있는
+ * 동안 한 번 묻는다(실패하면 다음에 다시).
  */
-function loadPhotoFlags(): Promise<{ tourApi: boolean; photoScenes: boolean }> {
+function loadPhotoFlags(): Promise<{ tourApi: boolean; photoScenes: boolean; screens: boolean }> {
   photoFlags ??= fetch('/api/health')
-    .then(async (res) => (res.ok ? ((await res.json()) as { tourApi?: unknown; photoScenes?: unknown }) : {}))
-    .then((h) => ({ tourApi: h.tourApi === true, photoScenes: h.photoScenes === true }))
+    .then(async (res) => (res.ok ? ((await res.json()) as { tourApi?: unknown; photoScenes?: unknown; screens?: unknown }) : {}))
+    .then((h) => ({ tourApi: h.tourApi === true, photoScenes: h.photoScenes === true, screens: h.screens === true }))
     .catch((e: unknown) => {
-      console.warn('[api] /api/health를 읽지 못해 관광공사 사진 · 사진 장면을 건너뜁니다', e)
+      console.warn('[api] /api/health를 읽지 못해 관광공사 사진 · 사진 장면 · 화면 찍기를 건너뜁니다', e)
       photoFlags = null
-      return { tourApi: false, photoScenes: false }
+      return { tourApi: false, photoScenes: false, screens: false }
     })
   return photoFlags
+}
+
+/**
+ * 이 PC에서 자사 화면을 찍을 수 있는가 — /api/health의 screens(설치한 데스크톱 앱만). 웹 · dev에는 없거나 false라 화면은 「화면 찍기」를
+ * 숨긴다(찍어 둔 화면은 그래도 쓴다).
+ */
+export function loadScreenCaptureStatus(): Promise<boolean> {
+  return loadPhotoFlags().then((f) => f.screens)
+}
+
+/** 자사 화면 목록(GET /api/screens/:tenantId)의 화면 하나 — 프로필 표의 화면과 변형(찍을 주소), 글에 넣을 수 있는지. */
+export interface ScreenListScreen {
+  id: string
+  kind: ScreenKind
+  label: string
+  saveAllowed: boolean
+  variants: { id: string; label: string; url: string }[]
+}
+
+/** 자사 화면 목록 — available 이 실행에서 찍을 수 있는가, host 프로필 호스트(없으면 null), shots 이 PC에 찍어 둔 화면(늦게 찍은 것부터). */
+export interface ScreenList {
+  available: boolean
+  host: string | null
+  screens: ScreenListScreen[]
+  shots: ScreenShotView[]
+}
+
+/**
+ * 이 브랜드의 자사 화면 목록과 이 PC에 찍어 둔 화면(server/index.ts GET /api/screens/:tenantId). **null은 "이 환경에는 화면 기능이 없다"
+ * (웹 — 라우트 없음)**는 뜻이다. 그 밖의 실패는 이유와 함께 throw한다. 찍어 둔 화면은 앱 주소 모양이 맞는 것만 받는다.
+ */
+export async function loadScreens(tenantId: string): Promise<ScreenList | null> {
+  let res: Response
+  try {
+    res = await fetch(`/api/screens/${encodeURIComponent(tenantId)}`)
+  } catch (err) {
+    throw new Error(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`, { cause: err })
+  }
+  const body = (await res.json().catch(() => null)) as Partial<ScreenList> & { error?: string } | null
+  if (res.status === 404 && !body?.error?.startsWith('tenant not found')) return null
+  if (!res.ok || !body || !Array.isArray(body.screens) || !Array.isArray(body.shots)) throw new Error(body?.error || `자사 화면 목록을 읽지 못했습니다 (HTTP ${res.status})`)
+  return {
+    available: body.available === true,
+    host: typeof body.host === 'string' ? body.host : null,
+    screens: body.screens,
+    shots: body.shots.filter((s) => parseScreenAppSrc(s?.src)?.shotId === s.id),
+  }
+}
+
+/** 화면 찍기를 기다리는 최대 시간 — 서버가 한 장씩 찍는다(한 장 최대 45초 + 정리 · 앞에 줄 선 화면). */
+const SCREEN_CAPTURE_TIMEOUT_MS = 180_000
+
+/** 화면 찍기 결과(server/index.ts POST /api/screens/capture) — reused 오늘 같은 주소로 찍어 둔 것을 다시 씀, saveAllowed 글에 넣는 종류인가. */
+export interface ScreenCaptureReply {
+  shot: ScreenShotView
+  reused: boolean
+  saveAllowed: boolean
+}
+
+/**
+ * 자사 화면 한 장을 찍는다(서버가 메인 프로세스에 청해 숨긴 창으로 찍고 이 PC에 저장한다). 찍을 주소는 서버가 프로필에서 만든다 — 화면은
+ * 화면 id · 변형 id만 보낸다. 실패하면 이유와 서버의 오류 코드(code — unavailable · busy · timeout · kogl-image · blank …)를 담아 throw.
+ */
+export async function captureScreen(tenantId: string, screenId: string, variantId: string): Promise<ScreenCaptureReply> {
+  let res: Response
+  try {
+    res = await fetch('/api/screens/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenantId, screenId, variantId }),
+      signal: AbortSignal.timeout(SCREEN_CAPTURE_TIMEOUT_MS),
+    })
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'TimeoutError') {
+      throw Object.assign(new Error(`화면 찍기가 ${SCREEN_CAPTURE_TIMEOUT_MS / 1000}초 안에 끝나지 않았어요.`, { cause: e }), { code: 'timeout' })
+    }
+    throw e
+  }
+  const out = (await res.json().catch(() => ({}))) as Partial<ScreenCaptureReply> & { error?: string; code?: string }
+  if (!res.ok || !out.shot || parseScreenAppSrc(out.shot.src)?.shotId !== out.shot.id) {
+    throw Object.assign(new Error(out.error || `화면을 찍지 못했어요 (HTTP ${res.status})`), { status: res.status, code: typeof out.code === 'string' ? out.code : 'failed' })
+  }
+  return { shot: out.shot, reused: out.reused === true, saveAllowed: out.saveAllowed === true }
+}
+
+/**
+ * 찍어 둔 자사 화면 파일(앱 주소 /api/screens/<tenant>/<id>.png) — 내보낼 때 그림을 문서 안에 넣는다(src/lib/screenExport.ts). 앱 주소
+ * 모양이 아니면 받지 않는다(다른 주소를 부르지 않게). 실패하거나 PNG가 아니면 throw.
+ */
+export async function fetchScreenFile(src: string): Promise<Blob> {
+  if (!parseScreenAppSrc(src)) throw new Error('자사 화면 주소가 아니에요.')
+  const res = await fetch(src)
+  if (!res.ok) throw new Error(`화면 그림을 받지 못했어요 (HTTP ${res.status})`)
+  const blob = await res.blob()
+  if (blob.type !== 'image/png') throw new Error(`화면 그림이 PNG가 아니에요(${blob.type || '형식 없음'}).`)
+  return blob
 }
 
 /** 이 PC에서 관광공사 사진(3단계, TourAPI)을 쓸 수 있는가 — /api/health의 tourApi. 웹에는 없어 false. */

@@ -167,6 +167,71 @@ try {
     screenOfPick(screenPhoto, ['gunsan.webforai.kr'])?.screen.kind === 'course' && screenOfPick(screenPhoto, ['stay.example']) === null && screenOfPick(sitePhoto, ['gunsan.webforai.kr']) === null,
   )
 
+  // ── 3b) 화면 자리 판정 · 종류 · 변형 · 내보내기(src/lib/screenCapture.ts) ──────────────────
+  const { isScreenSlotText, screenKindOf, screenVariantChoice, screenExportable } = lib
+  ok(
+    '「화면」만으로는 화면 자리가 아니다(한 화면에 담긴 · 대형 화면)',
+    !isScreenSlotText('가상스테이 가옥 외관과 정원이 한 화면에 담긴 장면') && !isScreenSlotText('대형 화면이 걸린 카페 내부'),
+  )
+  ok(
+    '「사이트」 · 「앱」 · 「스크린」 · 「웹사이트」만 있으면 사진 자리',
+    !isScreenSlotText('오토캠핑 사이트 전경') && !isScreenSlotText('스크린 골프장 내부') && !isScreenSlotText('앱으로 주문하는 손님') && !isScreenSlotText('가상스테이 웹사이트 소개'),
+  )
+  ok(
+    '화면 + 웹사이트 · 홈페이지 · 사이트 · 앱이면 화면 자리',
+    isScreenSlotText('가상스테이 웹사이트의 예약 화면') && isScreenSlotText('홈페이지 첫 화면') && isScreenSlotText('예약 사이트 화면') && isScreenSlotText('지도 앱 화면'),
+  )
+  ok(
+    '화면 + 화면 이름 · 다른 회사 · 누르기 · 결과도 화면 자리(웹사이트 낱말이 없어도)',
+    isScreenSlotText("가상각 '지도에서 찾기' 화면에 박물관이 표시된 모습") && isScreenSlotText('가상각 AI 코스 만들기 화면에서 조건을 고르는 모습') &&
+      isScreenSlotText('네이버 플레이스 예약 화면의 달력') && isScreenSlotText('코스 결과 화면에서 한 장소를 눌러 요금이 보이는 모습'),
+  )
+  ok('검색 결과 · 캡처 · 스크린샷은 「화면」이 없어도 화면 자리', isScreenSlotText('앱 검색 결과') && isScreenSlotText('예약 페이지 캡처') && isScreenSlotText('홈페이지 스크린샷'))
+  const kindOf = (t: string) => screenKindOf(t, profile).kind
+  ok(
+    '화면 이름이 하나면 그 화면(코스 · 지도) — 따옴표 · 띄어쓰기는 무시',
+    kindOf('가상각 웹사이트의 AI 코스 만들기 화면에서 조건을 고르는 모습') === 'course' && kindOf("가상각 'AI코스 만들기' 화면") === 'course' &&
+      kindOf("가상각 '지도에서 찾기' 화면") === 'map' && screenKindOf('가상각 화면에서 지도에서 찾기로 숙소 위치를 띄운 모습', profile).screen?.id === 'map',
+  )
+  ok('화면 이름이 둘이면 ambiguous', kindOf('AI 코스 만들기 화면과 지도에서 찾기 화면') === 'ambiguous')
+  ok(
+    '누르거나 결과를 받아야 보이는 화면은 action — 조건 고르기 · 조건 선택은 아니다',
+    kindOf('지도에서 찾기 화면에서 박물관을 눌러 요금이 보이는 장면') === 'action' && kindOf("'지도에서 찾기' 화면에서 박물관을 선택해 이용시간이 보이는 모습") === 'action' &&
+      kindOf('AI 코스 결과 화면') === 'action' && kindOf('가상각 웹사이트의 AI 코스 만들기 조건 선택 화면') === 'course' && kindOf('AI 코스 만들기 화면에서 조건을 선택한 모습') === 'course',
+  )
+  ok('다른 회사 · 휴대폰 화면은 other', kindOf('지도 앱에서 숙소까지 도보 경로를 띄운 휴대폰 화면') === 'other' && kindOf('네이버 플레이스 예약 화면') === 'other')
+  ok(
+    '목록에 없는 화면은 unrelated, 프로필이 없는 브랜드는 none',
+    kindOf("가상각 웹사이트의 '아이와 함께' 안내 화면") === 'unrelated' && kindOf('관광정보 사이트에서 한 장소의 요금이 표시된 화면') === 'unrelated' &&
+      screenKindOf('가상스테이 웹사이트의 예약 화면', null).kind === 'none',
+  )
+  const tiersOf = (screen: NonNullable<typeof map>, text: string, named: string[] = []) => {
+    const c = screenVariantChoice(screen, text, named)
+    return `${c.tiers.map((t) => t.map((v) => v.id).join(',')).join(' | ')}${c.by ? ` (${c.by})` : ''}`
+  }
+  ok(
+    '원도심 장소를 말하는 지도 자리는 #r-원도심만',
+    tiersOf(map!, '지도에서 찾기 화면에 근대역사박물관·진포해양공원·테디베어박물관 위치가 표시된 모습', ['근대역사박물관', '진포해양공원', '테디베어박물관']) === 'r-원도심 (region)',
+  )
+  ok('다른 권역의 이름 · 장소면 그 권역만', tiersOf(map!, '지도에서 찾기 화면에 선유도 위치가 표시된 모습', ['선유도']) === 'r-고군산 (region)' && tiersOf(map!, '은파호수 둘레 지도에서 찾기 화면') === 'r-은파 (region)')
+  ok(
+    '권역이 둘이거나 권역 목록에 없는 장소(장소 사전)가 나오면 전체 지도만',
+    tiersOf(map!, '근대역사박물관과 선유도가 표시된 지도에서 찾기 화면') === 'default (named)' && tiersOf(map!, '가상식당 위치가 표시된 지도에서 찾기 화면', ['가상식당']) === 'default (named)',
+  )
+  ok('장소 없는 지도 자리는 모든 변형', tiersOf(map!, '지도에서 찾기 화면에 관광지 위치가 표시된 모습') === 'default,r-원도심,r-은파,r-고군산,r-금강,r-새만금-비응')
+  ok(
+    '아이 · 부모님 코스 자리는 그 조건 다음 기본 — 다른 조건은 쓰지 않는다(「아이콘」은 아이가 아니다)',
+    tiersOf(course!, '아이와 함께 AI 코스 만들기 조건을 고르는 모습') === 'kids | default (prefer)' && tiersOf(course!, '부모님과 가는 여행의 AI 코스 만들기 화면') === 'parents | default (prefer)' &&
+      tiersOf(course!, 'AI 코스 만들기 화면에서 조건을 고르는 모습') === 'default,kids,parents' && tiersOf(course!, '아이콘이 보이는 AI 코스 만들기 화면') === 'default,kids,parents',
+  )
+  ok('코스 자리에 장소가 나와도 권역으로 좁히지 않는다', tiersOf(course!, 'AI 코스 만들기 화면에 근대역사박물관을 넣는 모습', ['근대역사박물관']) === 'default,kids,parents')
+  const exportPick = { src: appSrc, origin: 'screen' as const, screenId: 'course', variantId: 'kids' }
+  ok(
+    '내보내는 화면 — 앱 주소 · 프로필의 코스 화면만(지도 · 모르는 변형 · https 주소 · origin 없음은 아니다)',
+    screenExportable(exportPick) && !screenExportable({ ...exportPick, screenId: 'map', variantId: 'default' }) && !screenExportable({ ...exportPick, variantId: 'nope' }) &&
+      !screenExportable({ ...exportPick, src: 'https://gunsan.webforai.kr/a.png' }) && !screenExportable({ src: appSrc, screenId: 'course', variantId: 'kids' }),
+  )
+
   // ── 4) PNG 크기 ────────────────────────────────────────────────────────
   const pngA = fakePng(1)
   const size = pngSize(pngA)

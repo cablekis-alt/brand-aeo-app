@@ -1,10 +1,11 @@
-import { fetchDraftPhotoFile, type FactNode, type StoredDraft, type TenantSummary } from './api'
+import { fetchDraftPhotoFile, fetchScreenFile, type FactNode, type StoredDraft, type TenantSummary } from './api'
 import type { AppliedPhoto } from './articlePhotos'
 import { workMarkdownOf } from './draftGaps'
 import { buildPublishHtml } from './htmlFile'
 import { countGapNotes, downloadBlob, safeFileName } from './markdownFile'
 import type { WriterPlan } from './probePlan'
 import type { PublishSettings } from './publishSettings'
+import { inlineScreens, type ScreenFetcher } from './screenExport'
 import { articlePhotoFiles, photoCreditsTable, photoFileName } from './sitePhotos'
 
 /**
@@ -17,6 +18,9 @@ import { articlePhotoFiles, photoCreditsTable, photoFileName } from './sitePhoto
  * 그 글에 들어간 홈페이지 사진 파일(articlePhotoFiles — 사진 사용 확인이 없으면 없다). 파일 이름 앞의 두 자리 번호는 배정표(scripts/
  * writer-plan.ts writerHandouts)의 번호 — 작성자 안의 배정 순서 — 라 작성자가 배정표와 맞춰 본다. 초안이 없는 글은 빼고 알린다.
  *
+ * 자사 화면(origin screen — 운영자 PC에 찍어 둔 화면)은 사진 파일이 photo-file 라우트에서 그대로 온다(「NN-사진k-소제목.png」). 묶음의 .html에는
+ * 저장할 때 그림을 문서 안(data:image/png)에 넣는다(src/lib/screenExport.ts inlineScreens) — 앱 주소나 상대 주소로 걸면 작성자 PC에서 깨진다.
+ *
  * 공공 사진(공공누리 제1유형)이 하나라도 있으면 「00-사진 출처.txt」를 함께 둔다 — 블로그 편집기에 사진 파일을 직접 올리면 .html의 사진
  * 설명(출처 줄)이 따라가지 않을 수 있어, 작성자가 사진마다 출처를 적도록 글 번호 · 파일 이름 · 출처 · 유형 · 원 주소 · 받은 날을 적는다.
  *
@@ -24,7 +28,10 @@ import { articlePhotoFiles, photoCreditsTable, photoFileName } from './sitePhoto
  * 파일마다 내려받는다(이름 앞에 묶음 이름을 붙여 한데 모인다).
  */
 
-/** html은 글자를 그대로, photo는 저장할 때 서버에서 받아 형식(확장자)을 정한다. credits는 사진을 다 받은 뒤 그 파일 이름으로 쓴다. */
+/**
+ * html은 글자(자사 화면은 앱 주소 — 저장할 때 문서 안에 넣는다), photo는 저장할 때 서버에서 받아 형식(확장자)을 정한다. credits는 사진을
+ * 다 받은 뒤 그 파일 이름으로 쓴다.
+ */
 export type WriterBundleFile =
   | { kind: 'html'; name: string; text: string }
   | { kind: 'photo'; prefix: string; k: number; photo: AppliedPhoto; actionId: string; generatedAt: string }
@@ -133,15 +140,19 @@ export function canSaveToFolder(): boolean {
 }
 
 /**
- * 파일 하나의 내용 — 사진은 서버에서 받는다(글 카드 「사진 N장 받기」와 같은 길, 받은 바이트 그대로). 출처 파일은 앞에서 저장한 사진
- * 파일 이름(names)으로 쓴다. 실패하면 throw.
+ * 파일 하나의 내용 — 사진은 서버에서 받는다(글 카드 「사진 N장 받기」와 같은 길, 받은 바이트 그대로). .html의 자사 화면은 그림을 받아
+ * 문서 안에 넣고(받지 못하면 「[화면: 이름]」 글자 — dropped로 센다), 출처 파일은 앞에서 저장한 사진 파일 이름(names)으로 쓴다. 실패하면 throw.
  */
-async function contentOf(
+export async function bundleFileContent(
   tenantId: string,
   file: WriterBundleFile,
   names: ReadonlyMap<WriterBundleFile, string>,
-): Promise<{ name: string; blob: Blob }> {
-  if (file.kind === 'html') return { name: file.name, blob: new Blob([file.text], { type: 'text/html;charset=utf-8' }) }
+  fetchScreen: ScreenFetcher = fetchScreenFile,
+): Promise<{ name: string; blob: Blob; dropped?: number }> {
+  if (file.kind === 'html') {
+    const { html, dropped } = await inlineScreens(file.text, fetchScreen)
+    return { name: file.name, blob: new Blob([html], { type: 'text/html;charset=utf-8' }), ...(dropped ? { dropped } : {}) }
+  }
   if (file.kind === 'credits') return { name: file.name, blob: new Blob([photoCreditsText(file, (p) => names.get(p))], { type: 'text/plain;charset=utf-8' }) }
   const blob = await fetchDraftPhotoFile(tenantId, { actionId: file.actionId, generatedAt: file.generatedAt, place: file.photo.place })
   return { name: bundlePhotoName(file, blob.type), blob }
@@ -176,22 +187,30 @@ async function freshBundleFolder(parent: FileSystemDirectoryHandle, base: string
  * 공공 사진 출처 파일(「00-사진 출처.txt」)은 사진을 받다 멈춰도 남아야 한다 — 출처 없이 공공 사진 파일만 남은 폴더가 작성자에게 가면
  * 안 된다. 폴더에는 맨 먼저 주소로 어림한 이름으로 써 두고, 끝나면(멈춰도) 받은 사진 이름으로 다시 쓴다. 내려받기는 다시 쓸 수 없어 끝에
  * 한 번 받는다 — 멈췄으면 그때까지 받은 공공 사진이 있을 때 받는다.
+ *
+ * screensDropped는 .html에 그림을 넣지 못해 「[화면: 이름]」 글자로 둔 자사 화면 수 — 작성자가 같은 묶음의 화면 사진 파일을 그 자리에 올린다.
  */
-export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): Promise<{ saved: number; where: string } | null> {
+export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): Promise<{ saved: number; where: string; screensDropped: number } | null> {
   const picker = directoryPicker()
   const names = new Map<WriterBundleFile, string>()
+  let screensDropped = 0
+  const contentOf = async (file: WriterBundleFile) => {
+    const got = await bundleFileContent(tenantId, file, names)
+    screensDropped += got.dropped ?? 0
+    return got
+  }
   const credits = bundle.files.find((f) => f.kind === 'credits')
   const rest = bundle.files.filter((f) => f !== credits)
   if (!picker) {
     let creditedSaved = false
     const saveCredits = async () => {
       if (!credits) return
-      const { name, blob } = await contentOf(tenantId, credits, names)
+      const { name, blob } = await contentOf(credits)
       downloadBlob(`${bundle.folder}-${name}`, blob)
     }
     try {
       for (const file of rest) {
-        const { name, blob } = await contentOf(tenantId, file, names)
+        const { name, blob } = await contentOf(file)
         names.set(file, `${bundle.folder}-${name}`)
         downloadBlob(`${bundle.folder}-${name}`, blob)
         if (file.kind === 'photo' && file.photo.credit) creditedSaved = true
@@ -201,7 +220,7 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
       throw err
     }
     await saveCredits()
-    return { saved: bundle.files.length, where: '내려받기 폴더' }
+    return { saved: bundle.files.length, where: '내려받기 폴더', screensDropped }
   }
   let parent: FileSystemDirectoryHandle
   try {
@@ -212,7 +231,7 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
   }
   const dir = await freshBundleFolder(parent, bundle.folder)
   const write = async (file: WriterBundleFile) => {
-    const { name, blob } = await contentOf(tenantId, file, names)
+    const { name, blob } = await contentOf(file)
     const writable = await (await dir.getFileHandle(name, { create: true })).createWritable()
     try {
       await writable.write(blob)
@@ -233,5 +252,5 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
     throw err
   }
   if (credits) await write(credits)
-  return { saved: bundle.files.length, where: `${parent.name}/${dir.name}` }
+  return { saved: bundle.files.length, where: `${parent.name}/${dir.name}`, screensDropped }
 }
