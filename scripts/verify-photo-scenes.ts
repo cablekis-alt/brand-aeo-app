@@ -502,6 +502,26 @@ ok(
 const alleyFirst = regionRun([placeless('s5', ALLEY_SLOT)], { regionCandidates: [street, alley], scenes: new Map() }).sceneWanted.filter((w) => w.source === 'region').map((w) => w.src)
 const alleyBoth = rowsOf(regionRun([placeless('s6', ALLEY_SLOT)], { regionCandidates: [street, alley], scenes: freshScenes([[street, STREET_SCENE], [alley, regionScenes.get(alley.src)!]]) }), 's6')[0]!
 ok('골목 자리 — 골목이 맞는 사진을 거리만 맞는 사진보다 먼저 읽고(받은 순서가 뒤여도) 먼저 고른다', JSON.stringify(alleyFirst) === JSON.stringify([alley.src, street.src]) && alleyBoth.pick?.src === alley.src)
+// 2026-11-04 검토 — 더한 낱말 「거리」는 낱말이 같거나 「거리」로 끝날 때만 맞는다(「이색거리」 · 「길거리」). 「먹거리」 · 「볼거리」는 거리가 아니다.
+const sights = reg('sights', '군산 볼거리', '군산, 볼거리, 근대건축')
+const foodMarket = reg('foodmarket', '군산 야시장', '군산, 야시장, 먹거리')
+const foodKw = reg('foodkw', '군산 야시장', '군산, 야시장, 이색거리')
+const STALLS = S({ text: '천막 아래 먹거리 노점이 늘어선 장터, 사람 없음', tags: ['노점', '천막', '먹거리', '장터'] })
+const thingRun = regionRun([placeless('s7', ALLEY_SLOT)], { regionCandidates: [sights, foodMarket], scenes: freshScenes([[sights, S({ text: '붉은 벽돌 건물 외관, 사람 없음', tags: ['건물', '외관', '벽돌'] })], [foodMarket, STALLS]]) })
+ok('골목 자리 — 「볼거리」 · 「먹거리」 사진은 거리 사진이 아니다(장면을 읽을 사진으로도 고르지 않는다)', rowsOf(thingRun, 's7')[0]!.regionTried === 0 && rowsOf(thingRun, 's7')[0]!.state === 'nomatch' && !rowsOf(thingRun, 's7')[0]!.pick)
+const thingScene = rowsOf(regionRun([placeless('s8', ALLEY_SLOT)], { regionCandidates: [foodKw], scenes: freshScenes([[foodKw, STALLS]]) }), 's8')[0]!
+ok('골목 자리 — 검색 낱말 「이색거리」로 장면을 읽었어도 장면 · 제목의 거리 낱말이 「먹거리」뿐이면 넣지 않는다', thingScene.regionTried === 1 && thingScene.state === 'scene' && thingScene.sceneSkips?.words === 1 && !thingScene.pick)
+// 더한 낱말은 자리 낱말이 장면 · 제목에 하나도 맞지 않을 때만 쓰고 장면 점수에 더하지 않는다 — 골목 사진끼리는 「거리」가 더 맞아도 고르는 사진 · 맞은 낱말이 그대로.
+const alleyA = reg('alleya', '군산 신흥동 골목', '군산, 신흥동, 골목')
+const alleyB = reg('alleyb', '군산 월명동 골목', '군산, 월명동, 골목')
+const twoAlley = rowsOf(
+  regionRun([placeless('s9', ALLEY_SLOT)], {
+    regionCandidates: [alleyA, alleyB],
+    scenes: freshScenes([[alleyA, S({ text: '좁은 골목길과 담장, 사람 없음', tags: ['골목', '담장'] })], [alleyB, S({ text: '상점이 늘어선 거리 옆 골목, 사람 없음', tags: ['골목', '거리', '상점'] })]]),
+  }),
+  's9',
+)[0]!
+ok('골목 자리 — 골목 사진끼리는 「거리」가 더 맞아도 점수가 같다(먼저 받은 골목 사진 · 맞은 낱말 「골목」만)', twoAlley.pick?.src === alleyA.src && JSON.stringify(twoAlley.fit?.words) === JSON.stringify(['골목']))
 
 // 읽지 못한 사진(failed)은 「아직 읽지 않음」이 아니다 — 장면이 맞는 사진 없음으로 관광공사 사진을 찾는다.
 const fa = pubInside[0]!
