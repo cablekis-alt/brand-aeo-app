@@ -570,6 +570,34 @@ const twoStreet = rowsOf(
 ok('거리 자리 — 거리 사진끼리는 「골목」이 더 맞아도 점수가 같다(먼저 받은 거리 사진 · 맞은 낱말 「거리」만)', twoStreet.pick?.src === streetA.src && JSON.stringify(twoStreet.fit?.words) === JSON.stringify(['거리']))
 const alleyStill = rowsOf(regionRun([placeless('t9', ALLEY_SLOT)], { regionCandidates: [street, alley], scenes: freshScenes([[street, STREET_SCENE], [alley, regionScenes.get(alley.src)!]]) }), 't9')[0]!
 ok('골목 자리 — 두 방향이 되어도 골목 사진을 먼저 고르고 맞은 낱말에 「거리」를 더하지 않는다', alleyStill.pick?.src === alley.src && !alleyStill.fit?.words.includes('거리'))
+// 2026-11-04 검토 — 걸리는 시간 · 길이를 말하는 「거리」(「걸어서 10분 거리」 · 「걸어갈 수 있는 거리」)와 거리로 끝나지 않는 낱말(「먹거리들」 ·
+// 「볼거리마다」 · 「거리두기」 · 「거리감」)은 길이 아니라 골목을 더하지 않는다(자리 낱말이 하나도 맞지 않는 철길 골목 사진이 바닷가 산책로 자리에 들어갔다).
+const placelessCap = (id: string, slot: string, caption: string) => doc(id, ['## 1. 산책', '', `![${slot}](#image-slot)`, `*${caption}*`], { group: id })
+const distanceRun = regionRun(
+  [
+    placelessCap('u1', '바닷가 산책로를 가족이 걷는 모습', '숙소에서 걸어서 10분 거리'),
+    placeless('u2', '터미널에서 걸어갈 수 있는 거리의 바닷가 풍경'),
+    placeless('u3', '역에서 걸어서 갈 수 있는 거리'),
+  ],
+  { regionCandidates: [railAlley], scenes: freshScenes([[railAlley, RAIL_ALLEY]]) },
+)
+ok(
+  '걸리는 시간 · 길이를 말하는 거리(「걸어서 10분 거리」 설명 줄 · 「걸어갈 수 있는 거리」) 자리에는 골목 사진을 넣지 않는다',
+  ['u1', 'u2', 'u3'].every((id) => !rowsOf(distanceRun, id)[0]!.pick && rowsOf(distanceRun, id)[0]!.sceneSkips?.words === 1),
+)
+const bothStreet = rowsOf(regionRun([placeless('u4', '역에서 10분 거리의 구도심 거리')], { regionCandidates: [railAlley], scenes: freshScenes([[railAlley, RAIL_ALLEY]]) }), 'u4')[0]!
+ok('길을 말하는 거리가 따로 있으면(「10분 거리의 구도심 거리」) 골목 사진을 넣는다', bothStreet.pick?.src === railAlley.src)
+const notStreetSlots = ['군산 먹거리들이 놓인 장터 풍경', '다양한 먹거리랑 볼거리 장터 풍경', '군산 볼거리마다 붙은 안내판 풍경', '거리두기 안내판이 붙은 장터 입구', '거리감이 느껴지는 풍경']
+const notStreetRun = regionRun(
+  notStreetSlots.map((slot, i) => placeless(`u${i + 5}`, slot)),
+  { regionCandidates: [alleyOnly], scenes: freshScenes([[alleyOnly, ALLEY_ONLY]]) },
+)
+ok(
+  '거리로 끝나지 않는 낱말(먹거리들 · 먹거리랑 · 볼거리마다 · 거리두기 · 거리감)뿐인 자리는 골목을 더하지 않는다(장면을 읽을 사진으로도 고르지 않는다)',
+  notStreetSlots.every((_, i) => rowsOf(notStreetRun, `u${i + 5}`)[0]!.regionTried === 0 && rowsOf(notStreetRun, `u${i + 5}`)[0]!.state === 'nomatch'),
+)
+const alleyRoad = rowsOf(regionRun([placeless('u10', '벽화가 그려진 골목길')], { regionCandidates: [street], scenes: freshScenes([[street, STREET_SCENE]]) }), 'u10')[0]!
+ok('골목 자리 — 「골목길」처럼 골목이 낱말 안에 있어도 거리 사진을 같이 찾는다(전과 같다)', alleyRoad.pick?.src === street.src && alleyRoad.placeless === true)
 
 // 읽지 못한 사진(failed)은 「아직 읽지 않음」이 아니다 — 장면이 맞는 사진 없음으로 관광공사 사진을 찾는다.
 const fa = pubInside[0]!

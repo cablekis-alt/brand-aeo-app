@@ -543,12 +543,21 @@ const REGION_ALSO_NOT: Readonly<Record<string, RegExp>> = {
 }
 
 /**
- * 자리 낱말(own)에 더할 낱말(REGION_TERM_ALSO) — 자리 글자에서 그 낱말이 든 낱말이 REGION_ALSO_NOT 낱말뿐이면(「먹거리」 자리) 더하지 않는다.
- * 자리 낱말에 이미 있는 낱말은 더하지 않는다.
+ * 걸리는 시간 · 길이를 말하는 「거리」(「걸어서 10분 거리」 · 「차로 5km 거리」 · 「걸어갈 수 있는 거리」 · 「가까운 거리」 · 「역까지의 거리」 ·
+ * 「거리가 가깝다」) — 길이 아니라 골목을 더하지 않는다(2026-11-04 검토 — 설명 줄 「숙소에서 걸어서 10분 거리」 때문에 바닷가 산책로 자리에
+ * 철길 골목 사진이 들어갔다).
+ */
+const DISTANCE_GEORI = /(\d\s*(분|초|시간|km|㎞|m|미터|킬로미터|킬로)|도보|수\s*있는|가까운|먼|떨어진|까지의)\s*거리|거리\s*(가|는|도)\s*(가깝|가까|멀|먼|짧)/gu
+
+/**
+ * 자리 낱말(own)에 더할 낱말(REGION_TERM_ALSO) — 뜻이 여럿인 낱말(REGION_ALSO_NOT이 있는 「거리」)은 자리 글자에서도 사진 쪽과 같은 규칙
+ * (alsoHits — 낱말이 같거나 거리로 끝나고 먹거리 · 볼거리가 아님)으로, 걸리는 시간 · 길이를 말하는 거리(DISTANCE_GEORI)는 빼고 본다
+ * (「먹거리들」 · 「볼거리마다」 · 「거리두기」 · 「거리감」 · 「걸어서 10분 거리」 자리에는 골목을 더하지 않는다). 「골목」은 자리 낱말에 있으면
+ * 더한다(「골목길」 · 「골목골목」도 — 전과 같다). 자리 낱말에 이미 있는 낱말은 더하지 않는다.
  */
 function regionAlso(own: readonly string[], text: string): string[] {
-  const words = normSlotAlt(text).toLowerCase().split(/[^\p{L}\p{N}]+/u).map(stripJosa)
-  const from = own.filter((t) => REGION_TERM_ALSO.has(t) && words.some((w) => w.includes(t) && !REGION_ALSO_NOT[t]?.test(w)))
+  const words = normSlotAlt(text).toLowerCase().replace(DISTANCE_GEORI, ' ').split(/[^\p{L}\p{N}]+/u).map(stripJosa)
+  const from = own.filter((t) => REGION_TERM_ALSO.has(t) && (!REGION_ALSO_NOT[t] || alsoHits([t], words).length > 0))
   return [...new Set(from.flatMap((t) => REGION_TERM_ALSO.get(t)!))].filter((t) => !own.includes(t))
 }
 
