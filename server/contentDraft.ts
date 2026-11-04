@@ -1,5 +1,13 @@
 import type { AnswerEvidence } from '../src/lib/answerEvidence.js';
-import { PHOTO_LIMITS, photoCreditState, type PhotoPick, type PhotoPlace, type PublicPhotoFields } from '../src/lib/articlePhotos.js';
+import {
+  clearedMatches,
+  PHOTO_LIMITS,
+  photoCreditState,
+  type ClearedPhotoPlace,
+  type PhotoPick,
+  type PhotoPlace,
+  type PublicPhotoFields,
+} from '../src/lib/articlePhotos.js';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -65,9 +73,10 @@ export interface StoredDraft {
   photos?: PhotoPick[];
   /**
    * 사람이 사진을 뺀 자리 — 자동 채우기(src/lib/photoAutoPick.ts)가 다시 채우지 않는다. 그 자리에 사진을 고르면 지운다. 다시 만들기로
-   * 새 초안이 오면 고른 사진과 함께 버린다.
+   * 새 초안이 오면 고른 사진과 함께 버린다. 뺀 사진 주소(removed)도 적는다 — 「사람이 뺀 자리도 다시 채우기」로 그 자리를 다시 채워도
+   * 기록은 남기고, 뺀 사진은 다시 고르지 않는다.
    */
-  photoCleared?: PhotoPlace[];
+  photoCleared?: ClearedPhotoPlace[];
 }
 
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(아직 확인 전). */
@@ -529,14 +538,15 @@ export function samePhotoPlace(a: PhotoPlace, b: PhotoPlace): boolean {
 /**
  * 고른 홈페이지 사진을 바꾼다 — update가 지금 목록을 받아 새 목록을 돌려준다. 판정 호출이 없다. 화면이 본 초안(generatedAt)과
  * 지금 초안이 다르면 DraftChangedError — 다시 만드는 1~2분 사이에 고른 사진이 새 초안에 엉뚱하게 붙지 않게.
- * cleared가 있으면 사람이 뺀 자리 기록(photoCleared)도 같은 쓰기에서 바꾼다.
+ * cleared가 있으면 사람이 뺀 자리 기록(photoCleared)도 같은 쓰기에서 바꾼다 — 바꾸기 전의 고른 사진(before)도 받는다(뺀 사진 주소를
+ * 적으려고).
  */
 export async function savePhotoPicks(
   tenantId: string,
   actionId: string,
   generatedAt: string,
   update: (current: PhotoPick[]) => PhotoPick[],
-  cleared?: (current: PhotoPlace[]) => PhotoPlace[],
+  cleared?: (current: ClearedPhotoPlace[], before: readonly PhotoPick[]) => ClearedPhotoPlace[],
 ): Promise<StoredDraft> {
   return updateDrafts(tenantId, (map) => {
     const current = map[actionId];
@@ -546,7 +556,7 @@ export async function savePhotoPicks(
     const stored: StoredDraft = { ...current, photos };
     if (!photos.length) delete stored.photos;
     if (cleared) {
-      const places = cleared(current.photoCleared ?? []).slice(-MAX_PHOTO_CLEARED);
+      const places = cleared(current.photoCleared ?? [], current.photos ?? []).slice(-MAX_PHOTO_CLEARED);
       if (places.length) stored.photoCleared = places;
       else delete stored.photoCleared;
     }
@@ -576,12 +586,23 @@ export function applyPhotoCredits(photos: readonly PhotoPick[], credits: readonl
   return { photos: out, credited };
 }
 
-/** 자동 채우기로 저장할 글 하나 — 화면이 본 초안(generatedAt)과 넣을 사진 · 붙일 출처(서버가 검사한 것). */
+/**
+ * 이미 넣은 자동 사진을 바꾸거나 뺄 것(장면으로 다시 본 결과 — src/lib/photoAutoPick.ts AutoReplaceInput) — 자리 열쇠 · 화면이 본 그 자리의
+ * 자동 사진 주소 · 바꿀 사진(서버가 검사한 것, 없으면 뺀다).
+ */
+export interface AutoPhotoReplace {
+  place: PhotoPlace;
+  src: string;
+  pick?: PhotoPick;
+}
+
+/** 자동 채우기로 저장할 글 하나 — 화면이 본 초안(generatedAt)과 넣을 사진 · 붙일 출처 · 바꾸거나 뺄 자동 사진(서버가 검사한 것). */
 export interface AutoPhotoEntry {
   actionId: string;
   generatedAt: string;
   picks: PhotoPick[];
   credits?: PhotoCreditPatch[];
+  replaces?: AutoPhotoReplace[];
 }
 
 export interface AutoPhotoSaveResult {
@@ -590,12 +611,18 @@ export interface AutoPhotoSaveResult {
   saved: number;
   /** 출처를 붙인 사진 수(이미 고른 출처 없는 공공 사진). */
   credited: number;
-  /** 넣지 않은 사진 수 — 그사이 그 자리에 사진이 생겼거나 사람이 뺐거나, 글이 다 찼거나, 반복 상한에 걸렸다. */
+  /** 넣지 않은 사진 수 — 그사이 그 자리에 사진이 생겼거나 사람이 뺐거나, 글이 다 찼거나, 반복 상한에 걸렸다(바꿀 사진이 걸리면 그 자동 사진은 그대로). */
   skipped: number;
   /** 그사이 다시 만들어진 글 — 건너뛰었다. */
   changed: string[];
   /** 초안이 없어진 글 — 건너뛰었다. */
   missing: string[];
+  /** 장면이 어긋나 다른 사진으로 바꾼 자동 사진 수. */
+  replaced: number;
+  /** 장면이 어긋나 뺀 자동 사진 수(사람이 뺀 자리로 적지 않는다). */
+  removed: number;
+  /** 바꾸거나 빼지 않은 자리 — 그사이 그 자리의 사진이 사람이 고른 사진이 되었거나 다른 사진으로 바뀌었다(화면이 본 자동 사진이 아니다). */
+  stale: { actionId: string; slot: string; nth: number }[];
 }
 
 /**
@@ -605,27 +632,38 @@ export interface AutoPhotoSaveResult {
  * 한 번, 같은 작성자(groupOf)의 글 사이에 한 번, 브랜드 전체에서 brandRepeat번까지(사람이 고른 것 포함). 작성자 상한을 여기서도 보는
  * 까닭 — 화면의 미리보기는 계산한 때의 초안으로 골라, 그사이 다른 미리보기 · 사람이 고른 사진이 저장되면 같은 작성자의 두 글에 같은
  * 사진이 들어갔다. groupOf가 없거나 작성자를 모르는 글은 글 · 브랜드 상한만.
+ * refillCleared(「사람이 뺀 자리도 다시 채우기」)면 사람이 뺀 자리에도 넣되, 그 자리(clearedMatches — 화면과 같은 넉넉한 기준)에서
+ * 사람이 뺀 사진(removed)은 넣지 않는다. 뺀 기록은 지우지 않는다 — 다시 빼면 뺀 사진이 쌓인다.
+ * replaces(장면으로 다시 본 자동 사진)는 새 사진보다 먼저 — 쓰는 때에 그 자리(samePhotoPlace)에 화면이 본 그 자동 사진(auto · 같은 주소)이
+ * 아직 있을 때만 바꾸거나 빼고, 아니면(사람이 고른 사진이 되었거나 다른 사진으로 바뀌었다) 건드리지 않고 stale로 알린다. 한 글의 나가는
+ * 사진은 모두 먼저 비우고 상한에서 덜어 낸 뒤(같은 글의 다른 자리가 그 사진으로 바뀌어도 걸리지 않게) 바꿀 사진을 같은 상한 · 그 자리에서
+ * 사람이 뺀 사진 검사로 본다(걸리면 그 자동 사진은 그대로 — 그사이 같은 글의 다른 자리가 그 사진을 받았으면 뺀다). 뺀 자리는 사람이 뺀
+ * 자리(photoCleared)로 적지 않는다 — 다음 자동 채우기가 다시 채운다(같은 사진은 읽어 둔 장면이 막는다 — 키가 없는 PC도 읽어 둔 장면을
+ * 받는다). 사람이 고른 사진 · 뺀 기록은 건드리지 않는다.
  */
 export async function saveAutoPhotoPicks(
   tenantId: string,
   entries: AutoPhotoEntry[],
   brandRepeat: number,
   groupOf: (actionId: string) => string | undefined = () => undefined,
+  opts: { refillCleared?: boolean } = {},
 ): Promise<AutoPhotoSaveResult> {
   return updateDrafts(tenantId, (map) => {
-    const result: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [] };
+    const result: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [], replaced: 0, removed: 0, stale: [] };
     const brandCount = new Map<string, number>();
-    const groupUsed = new Map<string, Set<string>>();
-    const markGroup = (group: string | undefined, src: string) => {
-      if (group !== undefined) groupUsed.set(group, (groupUsed.get(group) ?? new Set<string>()).add(src));
+    const groupUsed = new Map<string, Map<string, number>>();
+    const count = (group: string | undefined, src: string, by: number) => {
+      brandCount.set(src, Math.max(0, (brandCount.get(src) ?? 0) + by));
+      if (group === undefined) return;
+      const mine = groupUsed.get(group) ?? new Map<string, number>();
+      mine.set(src, Math.max(0, (mine.get(src) ?? 0) + by));
+      groupUsed.set(group, mine);
     };
     for (const [id, d] of Object.entries(map)) {
       const group = groupOf(id);
-      for (const p of d.photos ?? []) {
-        brandCount.set(p.src, (brandCount.get(p.src) ?? 0) + 1);
-        markGroup(group, p.src);
-      }
+      for (const p of d.photos ?? []) count(group, p.src, 1);
     }
+    const groupHas = (group: string | undefined, src: string) => group !== undefined && (groupUsed.get(group)?.get(src) ?? 0) > 0;
     for (const entry of entries) {
       const current = map[entry.actionId];
       if (!current) {
@@ -637,28 +675,75 @@ export async function saveAutoPhotoPicks(
         continue;
       }
       const fixed = applyPhotoCredits(current.photos ?? [], entry.credits ?? []);
-      const photos = fixed.photos;
       const cleared = current.photoCleared ?? [];
       const group = groupOf(entry.actionId);
       let added = 0;
+      let swapped = 0;
+      // 나가는 자동 사진을 모두 먼저 비운다 — 같은 글의 다른 자리가 그 사진으로 바뀌어도(앞에 적혀도) 걸리지 않게(화면은 나가기로 정한
+      // 사진을 같은 글의 다른 자리에 쓸 수 있다 — src/lib/photoAutoPick.ts release).
+      const slots: (PhotoPick | null)[] = [...fixed.photos];
+      const vacated: { at: number; old: PhotoPick; place: AutoPhotoReplace['place']; pick?: PhotoPick }[] = [];
+      for (const swap of entry.replaces ?? []) {
+        const at = slots.findIndex((p) => p !== null && samePhotoPlace(p, swap.place) && p.auto === true && p.src === swap.src);
+        if (at < 0) {
+          result.stale.push({ actionId: entry.actionId, slot: swap.place.slot, nth: swap.place.nth });
+          continue;
+        }
+        vacated.push({ at, old: slots[at]!, place: swap.place, ...(swap.pick ? { pick: swap.pick } : {}) });
+        count(group, slots[at]!.src, -1);
+        slots[at] = null;
+      }
+      const taken = (src: string) => slots.some((p) => p?.src === src) || groupHas(group, src) || (brandCount.get(src) ?? 0) >= brandRepeat;
+      for (const { at, old, place, pick } of vacated) {
+        if (!pick) {
+          result.removed += 1;
+          swapped += 1;
+          continue;
+        }
+        const blocked =
+          pick.src === old.src ||
+          !samePhotoPlace(pick, place) ||
+          cleared.filter((c) => clearedMatches(c, place)).some((c) => (c.removed ?? []).includes(pick.src)) ||
+          taken(pick.src);
+        if (!blocked) {
+          slots[at] = pick;
+          count(group, pick.src, 1);
+          result.replaced += 1;
+          swapped += 1;
+          continue;
+        }
+        result.skipped += 1;
+        // 바꿀 사진이 걸리면 그 자동 사진은 그대로 — 그사이 같은 글의 다른 자리가 그 사진을 받아 되돌릴 수 없으면 뺀다.
+        if (taken(old.src)) {
+          result.removed += 1;
+          swapped += 1;
+          continue;
+        }
+        slots[at] = old;
+        count(group, old.src, 1);
+      }
+      const photos = slots.filter((p): p is PhotoPick => p !== null);
       for (const pick of entry.picks) {
+        const clearedHere = opts.refillCleared
+          ? cleared.filter((c) => clearedMatches(c, pick)).some((c) => (c.removed ?? []).includes(pick.src))
+          : cleared.some((c) => samePhotoPlace(c, pick));
         const taken =
           photos.some((p) => samePhotoPlace(p, pick) || p.src === pick.src) ||
-          cleared.some((c) => samePhotoPlace(c, pick)) ||
+          clearedHere ||
           photos.length >= PHOTO_LIMITS.picks ||
-          (group !== undefined && Boolean(groupUsed.get(group)?.has(pick.src))) ||
+          groupHas(group, pick.src) ||
           (brandCount.get(pick.src) ?? 0) >= brandRepeat;
         if (taken) {
           result.skipped += 1;
           continue;
         }
         photos.push(pick);
-        brandCount.set(pick.src, (brandCount.get(pick.src) ?? 0) + 1);
-        markGroup(group, pick.src);
+        count(group, pick.src, 1);
         added += 1;
       }
-      if (!added && !fixed.credited) continue;
+      if (!added && !swapped && !fixed.credited) continue;
       const stored: StoredDraft = { ...current, photos };
+      if (!photos.length) delete stored.photos;
       map[entry.actionId] = stored;
       result.drafts.push(stored);
       result.saved += added;

@@ -49,6 +49,22 @@ export interface PhotoPick {
 /** 사진 자리 하나의 열쇠 — 장면 글자 · 몇 번째 · 소제목. */
 export type PhotoPlace = Pick<PhotoPick, 'slot' | 'nth' | 'heading'>
 
+/**
+ * 사람이 사진을 뺀 자리(StoredDraft.photoCleared) — 뺀 사진 주소(removed, 오래된 것부터)도 적는다. 「사람이 뺀 자리도 다시 채우기」가 그
+ * 사진을 다시 고르지 않게. 옛 기록에는 removed가 없다(그때는 막을 사진을 모른다).
+ */
+export interface ClearedPhotoPlace extends PhotoPlace {
+  removed?: string[]
+}
+
+/** 한 자리에 적어 두는 뺀 사진 주소의 최대 수. */
+export const MAX_REMOVED_SRCS = 10
+
+/** 사람이 뺀 기록이 이 자리의 것인가 — 장면 글자가 같고 소제목이나 몇 번째가 같으면(넉넉하게 본다 — 다시 채우는 것보다 비워 두는 편이 낫다). */
+export function clearedMatches(c: PhotoPlace, place: PhotoPlace): boolean {
+  return c.slot === place.slot && (c.heading === place.heading || c.nth === place.nth)
+}
+
 export type PhotoOrigin = 'site' | 'public'
 
 /**

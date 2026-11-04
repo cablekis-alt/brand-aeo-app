@@ -8,6 +8,7 @@ import {
   knownRegion,
   korTourPhotos,
   pickTourPlace,
+  regionGalleryPhotos,
   regionLabel,
   regionsAgree,
   TOUR_SOURCES,
@@ -16,6 +17,7 @@ import {
   tourRegionOf,
   tourResultCode,
   tourStemKeywords,
+  tourTotalCount,
   type TourApiErrorCode,
   type TourPhoto,
   type TourPhotoQuery,
@@ -44,6 +46,14 @@ const DAILY_LIMIT = 800;
 const ROWS = '40';
 /** 국문 관광정보의 제1유형 사진이 이보다 적으면 관광사진 정보도 찾는다. */
 const GALLERY_WHEN_FEWER = 4;
+/**
+ * 관광사진 정보는 쪽마다 GALLERY_ROWS건씩 전체 건수(totalCount)까지, GALLERY_PAGES쪽까지 받는다 — 장소의 사진을 모두 보고 장면으로
+ * 고른다(군산근대역사박물관 115장 — 첫 40장은 모두 2013-01 실내 전시 사진이었다). 쪽마다 7일 캐시.
+ */
+const GALLERY_ROWS = 100;
+const GALLERY_PAGES = 5;
+/** 지역 사진(장소 없는 자리)은 브랜드 도시 이름으로 관광사진 정보를 이만큼 쪽까지 받는다(쪽마다 GALLERY_ROWS건 · 7일 캐시). */
+const REGION_PAGES = 5;
 
 type Service = 'KorService2' | 'PhotoGalleryService1';
 const SERVICE_NAME: Record<Service, string> = { KorService2: TOUR_SOURCES.kor.name, PhotoGalleryService1: TOUR_SOURCES.gallery.name };
@@ -81,6 +91,8 @@ function baseUrl(): string {
 interface CacheEntry {
   at: number;
   items: Record<string, unknown>[];
+  /** 응답의 전체 건수(totalCount) — 쪽을 넘길지 정한다. 옛 기록에는 없다. */
+  total?: number | null;
 }
 /** 받은 관광공사 사진의 장소 제목 · 제1유형 여부 — 사진 저장 때 서버가 다시 본다(tourPhotoInfo). */
 interface PhotoInfo {
@@ -94,7 +106,7 @@ interface CacheFile {
 
 let cache: CacheFile | null = null;
 let saveTimer: NodeJS.Timeout | null = null;
-const inflight = new Map<string, Promise<Record<string, unknown>[]>>();
+const inflight = new Map<string, Promise<{ items: Record<string, unknown>[]; total: number | null }>>();
 const daily = new Map<string, number>();
 
 function loadCache(): CacheFile {
@@ -151,7 +163,7 @@ function classify(service: Service, text: string, code: string): TourApiError {
   return new TourApiError('UPSTREAM', `TourAPI 응답 오류${code ? `(결과 코드 ${code.slice(0, 8)})` : ''}`);
 }
 
-async function callLive(service: Service, op: string, params: Record<string, string>): Promise<Record<string, unknown>[]> {
+async function callLive(service: Service, op: string, params: Record<string, string>): Promise<{ items: Record<string, unknown>[]; total: number | null }> {
   const key = serviceKey();
   if (!key) throw new TourApiError('NO_KEY', '이 PC에 관광공사 TourAPI 키가 없어요.');
   const dayKey = `${todayKst()}|${service}`;
@@ -187,22 +199,24 @@ async function callLive(service: Service, op: string, params: Record<string, str
   }
   const code = tourResultCode(json);
   if (code !== '0000') throw classify(service, '', code);
-  return tourItems(json);
+  return { items: tourItems(json), total: tourTotalCount(json) };
 }
 
+type Page = { items: Record<string, unknown>[]; total: number | null };
+
 /** 서비스 하나를 부른다 — 7일 캐시, 같은 요청은 한 번만. 실제로 부르면 stats.live를 센다. */
-async function call(service: Service, op: string, params: Record<string, string>, stats: { live: number }): Promise<Record<string, unknown>[]> {
+async function callPage(service: Service, op: string, params: Record<string, string>, stats: { live: number }): Promise<Page> {
   const id = `${service}/${op}?${new URLSearchParams(Object.entries(params).sort(([a], [b]) => (a < b ? -1 : 1))).toString()}`;
   const c = loadCache();
   const hit = c.entries[id];
-  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.items;
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return { items: hit.items, total: hit.total ?? null };
   const running = inflight.get(id);
   if (running) return running;
   stats.live += 1;
-  const task = callLive(service, op, params).then((items) => {
-    c.entries[id] = { at: Date.now(), items };
+  const task = callLive(service, op, params).then((page) => {
+    c.entries[id] = { at: Date.now(), items: page.items, total: page.total };
     scheduleSave();
-    return items;
+    return page;
   });
   inflight.set(id, task);
   try {
@@ -210,6 +224,38 @@ async function call(service: Service, op: string, params: Record<string, string>
   } finally {
     inflight.delete(id);
   }
+}
+
+async function call(service: Service, op: string, params: Record<string, string>, stats: { live: number }): Promise<Record<string, unknown>[]> {
+  return (await callPage(service, op, params, stats)).items;
+}
+
+/**
+ * 여러 쪽을 받는다 — rows건씩 1쪽부터, 받은 건이 rows보다 적거나 전체 건수(totalCount)에 닿거나 maxPages쪽이면 멈춘다. 쪽마다 캐시.
+ * 1쪽이 실패하면 throw. 다음 쪽이 실패하면(시간 초과 · 한도 · 응답 오류) 그때까지 받은 항목과 그 오류(error)를 돌려준다 — 받은 쪽의 사진은
+ * 쓰고 오류는 알린다(군산근대역사박물관 115건은 2쪽까지 — 2쪽이 실패해도 1쪽 100장은 쓴다).
+ */
+async function callPages(
+  service: Service,
+  op: string,
+  params: Record<string, string>,
+  stats: { live: number },
+  rows: number,
+  maxPages: number,
+): Promise<{ items: Record<string, unknown>[]; error?: unknown }> {
+  const items: Record<string, unknown>[] = [];
+  for (let pageNo = 1; pageNo <= maxPages; pageNo += 1) {
+    let page: Page;
+    try {
+      page = await callPage(service, op, { ...params, numOfRows: String(rows), pageNo: String(pageNo) }, stats);
+    } catch (err) {
+      if (pageNo === 1) throw err;
+      return { items, error: err };
+    }
+    items.push(...page.items);
+    if (page.items.length < rows || (page.total !== null && pageNo * rows >= page.total)) break;
+  }
+  return { items };
 }
 
 function remember(src: string | null, title: string, type1: boolean): void {
@@ -322,9 +368,13 @@ export async function findTourPhotos(q: TourPhotoQuery, brandRegion: string): Pr
     const keywords = [...new Set([resolved?.title, names[0]].filter((k): k is string => Boolean(k)))];
     try {
       for (const keyword of keywords) {
-        const items = await call('PhotoGalleryService1', 'gallerySearchList1', { keyword }, stats);
-        gallery = galleryTourPhotos(items, q.place, allNames, region);
+        const pages = await callPages('PhotoGalleryService1', 'gallerySearchList1', { keyword }, stats, GALLERY_ROWS, GALLERY_PAGES);
+        gallery = galleryTourPhotos(pages.items, q.place, allNames, region);
         for (const p of gallery.photos) remember(p.src, p.title, true);
+        if (pages.error !== undefined) {
+          fail(pages.error);
+          break;
+        }
         if (gallery.photos.length) break;
       }
     } catch (err) {
@@ -348,6 +398,50 @@ export async function findTourPhotos(q: TourPhotoQuery, brandRegion: string): Pr
     rejectedType: kor.rejected,
     rejectedGallery: gallery.rejected,
     ...(notes.length ? { note: notes.join(' ') } : {}),
+    ...(error ? { error } : {}),
+    liveCalls: stats.live,
+  };
+}
+
+/**
+ * 장소 없는 자리의 지역 사진 — 관광사진 정보를 브랜드 도시 이름(「전북 군산」 → 「군산」)으로 찾아 촬영지가 그 지역인 공공누리 제1유형
+ * 사진(regionGalleryPhotos — 제목 · 검색 낱말에 사람 낱말이 있으면 뺀다). 브랜드 지역이 시 · 군 · 구까지 정해진 지역형 브랜드만 —
+ * 전국형 · B2B형이나 도시를 정하지 못한 지역이면 부르지 않고 알린다. 쪽마다 7일 캐시 · 하루 상한은 장소 사진과 같다. 서비스 오류는
+ * note · error로 돌려주고(받은 쪽의 사진은 그대로) 던지지 않는다 — 키가 없을 때만 TourApiError('NO_KEY'). place는 지역의 표시 글자.
+ */
+export async function findRegionTourPhotos(brandRegion: string, marketScope?: string): Promise<TourPhotoResult> {
+  if (!tourApiConfigured()) throw new TourApiError('NO_KEY', '이 PC에 관광공사 TourAPI 키가 없어요.');
+  const brand = tourRegionOf(brandRegion);
+  const empty = { resolved: null, photos: [], rejectedType: 0, rejectedGallery: 0, liveCalls: 0 };
+  if (marketScope === 'national' || marketScope === 'b2b' || !brand?.city || !knownRegion(brand)) {
+    return {
+      ...empty,
+      place: '',
+      city: null,
+      note: '지역 사진은 브랜드 지역이 시 · 군 · 구까지 정해진 지역형 브랜드만 찾아요.',
+    };
+  }
+  const city = regionLabel(brand);
+  const stats = { live: 0 };
+  let note: string | undefined;
+  let error: TourApiErrorCode | undefined;
+  let gallery: { photos: TourPhoto[]; rejected: number } = { photos: [], rejected: 0 };
+  try {
+    const pages = await callPages('PhotoGalleryService1', 'gallerySearchList1', { keyword: brand.city }, stats, GALLERY_ROWS, REGION_PAGES);
+    gallery = regionGalleryPhotos(pages.items, brand);
+    for (const p of gallery.photos) remember(p.src, p.title, true);
+    if (pages.error !== undefined) ({ note, error } = noteOf(pages.error));
+  } catch (err) {
+    ({ note, error } = noteOf(err));
+  }
+  if (!gallery.photos.length && !note) note = `관광공사 관광사진 정보에서 ${city}의 공공누리 제1유형 사진을 찾지 못했어요.`;
+  return {
+    ...empty,
+    place: city,
+    city,
+    photos: gallery.photos,
+    rejectedGallery: gallery.rejected,
+    ...(note ? { note } : {}),
     ...(error ? { error } : {}),
     liveCalls: stats.live,
   };

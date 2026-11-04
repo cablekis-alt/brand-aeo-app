@@ -49,6 +49,7 @@ import {
   savePhotoPicks,
   samePhotoPlace,
   type AutoPhotoEntry,
+  type AutoPhotoReplace,
   type PhotoCreditPatch,
 } from './contentDraft.js';
 import { createFactGuard } from './factGuard.js';
@@ -59,6 +60,7 @@ import {
   cleanPhotoAlt,
   exportPhotoPicks,
   isPhotoMedical,
+  MAX_REMOVED_SRCS,
   needsPhotoCredit,
   normSlotAlt,
   PHOTO_LIMITS,
@@ -70,7 +72,8 @@ import {
   type PublicPhotoFields,
 } from '../src/lib/articlePhotos.js';
 import { AUTO_PICK_RULES, autoCandidateSkip, placeKey } from '../src/lib/photoAutoPick.js';
-import { findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
+import { findRegionTourPhotos, findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
+import { describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
@@ -196,6 +199,8 @@ app.get('/api/health', (_req, res) => {
     collectEngines: globalCollectEngines(),
     // 관광공사 사진(3단계)을 쓸 수 있는가 — 이 PC에 TourAPI 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 건너뛴다.
     tourApi: tourApiConfigured(),
+    // 사진 장면(비전 모델)을 읽을 수 있는가 — 이 PC에 Claude 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 장면 없이 고른다.
+    photoScenes: photoScenesConfigured(),
   });
 });
 
@@ -848,6 +853,8 @@ app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
 // 않는다. 사진 사용 확인(photo-rights)이 없으면 409, 화면이 본 초안이 그사이 다시 만들어졌으면 409(auto는 그 글만 건너뛰고 알린다).
 // 사이트가 단 사진 설명에 브랜드 사실에 없는 숫자가 있으면 설명을 비운다 — 내보낼 때 사실 확인을 거친 사진 자리 글자를 쓴다.
 // 빼기는 그 자리를 「사람이 뺀 자리」로 적어 자동 채우기가 다시 채우지 않게 하고, 넣기는 그 기록을 지운다.
+// op auto는 장면으로 다시 본 자동 사진(auto)을 바꾸거나 뺄 수도 있다(replaces — 쓰는 때에 그 자리에 화면이 본 그 자동 사진이 있을 때만,
+// 아니면 stale로 알린다). 그렇게 뺀 자리는 사람이 뺀 자리로 적지 않는다(다음 자동 채우기가 다시 채운다).
 // 공공 사진(origin public — 자사 사이트 장소 페이지의 공공누리 제1유형 사진)은 공공 사진 사용 확인(photoRights.publicAt)이 없으면 409,
 // 유형 · 출처 · 이용 허락 주소가 맞지 않으면 400(publicPhotoFields). 공공 사진 호스트의 사진을 출처 없이 고르면 400(브랜드 자사 사이트
 // 주소의 사진은 홈페이지 사진 — origin site로 저장). op credit은 이미 고른
@@ -919,13 +926,19 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         res.status(400).json({ error: '뺄 사진 자리(place)가 필요합니다.' });
         return;
       }
+      // 뺀 사진 주소도 적는다 — 「사람이 뺀 자리도 다시 채우기」가 그 사진을 다시 고르지 않게(앞서 뺀 사진에 더해, 오래된 것부터 버린다).
       res.json(
         await savePhotoPicks(
           tenant.tenantId,
           actionId,
           generatedAt,
           (cur) => cur.filter((p) => !samePlace(p, place)),
-          (cleared) => [...cleared.filter((c) => !samePlace(c, place)), place],
+          (cleared, before) => {
+            const prev = cleared.find((c) => samePlace(c, place))?.removed ?? [];
+            const gone = before.filter((p) => samePlace(p, place)).map((p) => p.src);
+            const removed = [...new Set([...prev.filter((s) => !gone.includes(s)), ...gone])].slice(-MAX_REMOVED_SRCS);
+            return [...cleared.filter((c) => !samePlace(c, place)), { ...place, ...(removed.length ? { removed } : {}) }];
+          },
         ),
       );
       return;
@@ -963,6 +976,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     if (op === 'auto') {
       // 자동 채우기 저장 — 한 번에 AUTO_ARTICLES편까지(화면이 나눠 보낸다 — JSON 본문 한도). 사진마다 넣기와 같은 검사를 하고, 자동
       // 후보 검사(일러스트 · 사람 · 출처 표시가 필요한 공공 사진)를 서버에서도 다시 한다. 걸린 사진은 빼고 그 수를 알린다.
+      // replaces(장면으로 다시 본 자동 사진 — 바꾸기 · 빼기)의 바꿀 사진도 같은 검사를 하고, 걸리면 그 자동 사진을 그대로 둔다.
       const AUTO_ARTICLES = 20;
       const list = Array.isArray(b.articles) ? b.articles : null;
       if (!list || !list.length || list.length > AUTO_ARTICLES) {
@@ -972,39 +986,79 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       const now = new Date().toISOString();
       const entries: AutoPhotoEntry[] = [];
       let rejected = 0;
+      let needPublic = false;
+      // 자동으로 넣을 사진 하나 — 맞지 않으면 null(rejected로 센다). 공공 사진인데 공공 사진 사용 확인이 없으면 needPublic.
+      const autoPickOf = (raw: unknown): PhotoPick | null => {
+        const p = pickOf(raw);
+        const pub = p?.pub && typeof p.pub === 'object' ? p.pub : null;
+        if (pub && !publicAt) {
+          needPublic = true;
+          return null;
+        }
+        // 받은 적 있는 관광공사 사진이면 그 장소 제목으로 사람 낱말을 보고(장소 이름을 뗀다), 제1유형이 아니면 뺀다.
+        const tour = p ? tourPhotoInfo(p.src) : null;
+        const candidate = p
+          ? {
+              src: p.src,
+              alt: p.siteAlt,
+              pageUrl: p.pageUrl,
+              ...(pub ? { origin: 'public' as const, license: pub.license, creditText: pub.credit, ...(tour ? { place: tour.title } : {}) } : {}),
+            }
+          : null;
+        if (!p || typeof p.pub === 'string' || !candidate || (tour && !tour.type1) || autoCandidateSkip(candidate, owned)) {
+          rejected += 1;
+          return null;
+        }
+        return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...(pub ?? ownSite(p.src)) };
+      };
       for (const item of list) {
         const r = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>;
         const id = typeof r.actionId === 'string' ? r.actionId : '';
         const at = typeof r.generatedAt === 'string' ? r.generatedAt : '';
         const picks = Array.isArray(r.picks) ? r.picks : [];
         const creditList = Array.isArray(r.credits) ? r.credits : [];
-        if (!id || !at || (!picks.length && !creditList.length) || picks.length > PHOTO_LIMITS.picks || creditList.length > PHOTO_LIMITS.picks * 2) {
-          res.status(400).json({ error: `글마다 actionId · generatedAt과 사진 1~${PHOTO_LIMITS.picks}장(또는 붙일 출처)이 필요합니다.` });
+        const replaceList = Array.isArray(r.replaces) ? r.replaces : [];
+        if (
+          !id ||
+          !at ||
+          (!picks.length && !creditList.length && !replaceList.length) ||
+          picks.length > PHOTO_LIMITS.picks ||
+          creditList.length > PHOTO_LIMITS.picks * 2 ||
+          replaceList.length > PHOTO_LIMITS.picks
+        ) {
+          res.status(400).json({ error: `글마다 actionId · generatedAt과 사진 1~${PHOTO_LIMITS.picks}장(또는 붙일 출처 · 바꾸거나 뺄 자동 사진)이 필요합니다.` });
           return;
         }
         const clean: PhotoPick[] = [];
         for (const raw of picks) {
-          const p = pickOf(raw);
-          const pub = p?.pub && typeof p.pub === 'object' ? p.pub : null;
-          if (pub && !publicAt) {
+          const pick = autoPickOf(raw);
+          if (needPublic) {
             res.status(409).json({ error: PUBLIC_NEEDED });
             return;
           }
-          // 받은 적 있는 관광공사 사진이면 그 장소 제목으로 사람 낱말을 보고(장소 이름을 뗀다), 제1유형이 아니면 뺀다.
-          const tour = p ? tourPhotoInfo(p.src) : null;
-          const candidate = p
-            ? {
-                src: p.src,
-                alt: p.siteAlt,
-                pageUrl: p.pageUrl,
-                ...(pub ? { origin: 'public' as const, license: pub.license, creditText: pub.credit, ...(tour ? { place: tour.title } : {}) } : {}),
-              }
-            : null;
-          if (!p || typeof p.pub === 'string' || !candidate || (tour && !tour.type1) || autoCandidateSkip(candidate, owned)) {
-            rejected += 1;
+          if (pick) clean.push(pick);
+        }
+        // 바꾸거나 뺄 자동 사진 — 자리 열쇠 · 화면이 본 주소가 맞지 않으면 400. 바꿀 사진이 검사에 걸리면 그 자리는 그대로(rejected).
+        const replaces: AutoPhotoReplace[] = [];
+        for (const raw of replaceList) {
+          const x = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+          const place = placeOf(x.place);
+          const src = typeof x.src === 'string' ? canonicalPhotoSrc(x.src) : null;
+          if (!place || !src) {
+            res.status(400).json({ error: '바꾸거나 뺄 자동 사진의 자리(place)와 사진 주소(src)가 필요합니다.' });
+            return;
+          }
+          if (x.pick === undefined) {
+            replaces.push({ place, src });
             continue;
           }
-          clean.push({ ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...(pub ?? ownSite(p.src)) });
+          const pick = autoPickOf(x.pick);
+          if (needPublic) {
+            res.status(409).json({ error: PUBLIC_NEEDED });
+            return;
+          }
+          if (pick && samePlace(pick, place)) replaces.push({ place, src, pick });
+          else if (pick) rejected += 1;
         }
         const credits: PhotoCreditPatch[] = [];
         for (const raw of creditList) {
@@ -1019,10 +1073,15 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
           }
           credits.push(patch);
         }
-        if (clean.length || credits.length) entries.push({ actionId: id, generatedAt: at, picks: clean, ...(credits.length ? { credits } : {}) });
+        if (clean.length || credits.length || replaces.length) {
+          entries.push({ actionId: id, generatedAt: at, picks: clean, ...(credits.length ? { credits } : {}), ...(replaces.length ? { replaces } : {}) });
+        }
       }
       // 같은 작성자의 글 사이에 같은 사진 한 번 — 화면의 미리보기가 오래됐어도 쓰기 안에서 다시 본다(작성자 배정 기간에만).
-      const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat, await writerGroupOf(tenant.tenantId));
+      // refillCleared(「사람이 뺀 자리도 다시 채우기」)면 사람이 뺀 자리에도 넣되, 그 자리에서 뺀 사진은 넣지 않는다.
+      const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat, await writerGroupOf(tenant.tenantId), {
+        refillCleared: b.refillCleared === true,
+      });
       res.json({ ...saved, skipped: saved.skipped + rejected });
       return;
     }
@@ -1074,6 +1133,8 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
 // 공공 사진 사용 확인(photoRights.publicAt)이 있어야 하고, 키는 이 PC의 TOURAPI_SERVICE_KEY(server/tourPhotos.ts — 응답 7일 캐시).
 // 한 번에 장소 하나. 서비스 오류는 200의 note · error로 알린다(키 값은 어디에도 싣지 않는다). Express 전용(Vercel 함수 12/12 —
 // 웹은 /api/health에 tourApi가 없어 화면이 이 단계를 건너뛴다).
+// mode=region이면 장소 없는 자리에 견줄 지역 사진 — 브랜드 도시 이름으로 찾은 관광사진(지역형 브랜드만, server/tourPhotos.ts
+// findRegionTourPhotos). 같은 공공 사진 사용 확인 · 키 · 캐시 · 하루 상한을 쓴다.
 app.get('/api/tourapi/photos/:tenantId', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -1090,6 +1151,16 @@ app.get('/api/tourapi/photos/:tenantId', async (req, res) => {
     return;
   }
   const q = req.query as Record<string, unknown>;
+  if (q.mode === 'region') {
+    try {
+      res.json(await findRegionTourPhotos(tenant.region, tenant.marketScope));
+    } catch (err) {
+      const message = scrubTourKey(err instanceof Error ? err.message : String(err));
+      console.warn(`[tourapi] ${tenant.tenantId} 지역 사진을 찾지 못했습니다: ${message}`);
+      res.status(502).json({ error: `지역 사진을 찾지 못했어요 — ${message.slice(0, 160)}` });
+    }
+    return;
+  }
   const text = (v: unknown, max: number) => (typeof v === 'string' ? normSlotAlt(v).slice(0, max) : '');
   const place = text(q.place, 60);
   const names = (Array.isArray(q.name) ? q.name : [q.name]).map((n) => text(n, 60)).filter(Boolean).slice(0, 3);
@@ -1116,6 +1187,41 @@ app.get('/api/tourapi/photos/:tenantId', async (req, res) => {
     const message = scrubTourKey(err instanceof Error ? err.message : String(err));
     console.warn(`[tourapi] ${tenant.tenantId} 「${place}」 관광공사 사진을 찾지 못했습니다: ${message}`);
     res.status(502).json({ error: `관광공사 사진을 찾지 못했어요 — ${message.slice(0, 160)}` });
+  }
+});
+
+// 사진 장면(server/photoScenes.ts) — 자동 채우기 후보 사진의 장면 설명. 읽어 둔 장면은 그대로 주고(디스크 캐시, 모델이 바뀌기 전까지),
+// 아직 없는 사진은 비전 모델(기본 Claude Sonnet 5.5)로 limit장까지(한 번에 SCENE_MAX_NEW장) 읽는다 — limit 0은 읽어 둔 것만. 남은 사진은
+// pending · missing으로 알려 화면이 이어서 묻는다. 키가 없으면 읽어 둔 장면만 주고 알림(available false) — 화면은 장면 없이 지금처럼 고른다.
+// 키 값 · 키가 든 주소는 어디에도 싣지 않는다. Express 전용(Vercel 함수 12/12 — 웹은 /api/health에 photoScenes가 없어 묻지 않는다).
+app.post('/api/photo-scenes', async (req, res) => {
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const list = Array.isArray(b.srcs) ? b.srcs : null;
+  if (!list || !list.length || list.length > SCENE_MAX_SRCS || list.some((s) => typeof s !== 'string')) {
+    res.status(400).json({ error: `srcs(사진 주소 1~${SCENE_MAX_SRCS}개)가 필요합니다.` });
+    return;
+  }
+  const srcs = list.map((s) => canonicalPhotoSrc(s as string));
+  if (srcs.some((s) => !s)) {
+    res.status(400).json({ error: 'https 사진 주소만 받습니다.' });
+    return;
+  }
+  const limit = b.limit === undefined ? SCENE_MAX_NEW : typeof b.limit === 'number' && Number.isInteger(b.limit) && b.limit >= 0 ? Math.min(b.limit, SCENE_MAX_NEW) : -1;
+  if (limit < 0) {
+    res.status(400).json({ error: `limit(0~${SCENE_MAX_NEW})이 맞지 않습니다.` });
+    return;
+  }
+  // 화면이 요청을 버리면(시간 초과 · 창 닫힘) 새 사진을 읽기 시작하지 않는다 — 받을 쪽이 없는 호출은 비용 안내에도 잡히지 않는다.
+  const gone = new AbortController();
+  res.on('close', () => {
+    if (!res.writableFinished) gone.abort();
+  });
+  try {
+    res.json(await describePhotoScenes([...new Set(srcs as string[])], { limit, signal: gone.signal }));
+  } catch (err) {
+    const message = scrubSceneKey(err instanceof Error ? err.message : String(err));
+    console.warn(`[photo-scenes] 사진 장면을 읽지 못했습니다: ${message}`);
+    res.status(500).json({ error: `사진 장면을 읽지 못했어요 — ${message.slice(0, 160)}` });
   }
 });
 

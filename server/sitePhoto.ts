@@ -35,7 +35,14 @@ export function photoTypeOf(bytes: Uint8Array): Pick<SitePhotoFile, 'type' | 'ex
 /** 헤더만 보고 거절할 형식 — 사진이 아닌 것이 분명하다. 그 밖(octet-stream · image/jpg 등)은 바이트로 본다. */
 const NOT_PHOTO = /text\/|html|xml|svg|json|javascript/i;
 
-export async function fetchSitePhoto(src: string): Promise<SitePhotoFile> {
+/** 기본으로 청하는 형식 — avif가 앞(받는 파일이 작다). */
+const DEFAULT_ACCEPT = 'image/avif,image/webp,image/png,image/jpeg,image/gif,*/*;q=0.5';
+
+/**
+ * 사진 파일을 받는다. accept로 청하는 형식을 바꾼다 — 사진 장면 읽기(server/photoScenes.ts)는 모델이 avif를 받지 않아 avif를 빼고 청한다
+ * (Accept를 보고 형식을 고르는 CDN — Cloudinary f_auto · imgix auto=format · Next 이미지 최적화 — 은 그때 webp를 준다).
+ */
+export async function fetchSitePhoto(src: string, opts: { accept?: string } = {}): Promise<SitePhotoFile> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), DEADLINE_MS);
   try {
@@ -45,7 +52,7 @@ export async function fetchSitePhoto(src: string): Promise<SitePhotoFile> {
       const res = await fetch(current.href, {
         redirect: 'manual',
         signal: ctrl.signal,
-        headers: { 'User-Agent': UA, Accept: 'image/avif,image/webp,image/png,image/jpeg,image/gif,*/*;q=0.5' },
+        headers: { 'User-Agent': UA, Accept: opts.accept ?? DEFAULT_ACCEPT },
       });
       if ([301, 302, 303, 307, 308].includes(res.status)) {
         const location = res.headers.get('location');

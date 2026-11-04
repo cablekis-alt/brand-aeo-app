@@ -8,6 +8,7 @@ import type { PublishSettings } from './publishSettings'
 import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './extraArticles'
 import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { AnswerEvidence } from './answerEvidence'
+import { validScene, type PhotoScene } from './photoScenes'
 import type { ConditionChange } from './comparability'
 import type {
   AiReferralReport,
@@ -865,8 +866,8 @@ export interface StoredDraft {
   evidence?: AnswerEvidence
   /** 사람이 고른 홈페이지 사진 — 본문에는 넣지 않고 내보낼 때만 사진 자리에 넣는다(src/lib/articlePhotos.ts). */
   photos?: import('./articlePhotos').PhotoPick[]
-  /** 사람이 사진을 뺀 자리 — 자동 채우기가 다시 채우지 않는다(server/contentDraft.ts와 같다). */
-  photoCleared?: PhotoPlace[]
+  /** 사람이 사진을 뺀 자리와 뺀 사진 주소 — 자동 채우기가 다시 채우지 않는다(server/contentDraft.ts와 같다). */
+  photoCleared?: import('./articlePhotos').ClearedPhotoPlace[]
 }
 /** 빈칸 하나의 처리 — 확인한 값, 뺌, 또는 페이지에서 찾아 둔 후보(확인 전). server/contentDraft.ts와 같다. */
 export interface GapFill {
@@ -1707,12 +1708,18 @@ export interface AutoPhotoSaveResult {
   saved: number
   /** 출처를 붙인 사진 수(이미 고른 출처 없는 공공 사진). */
   credited: number
-  /** 넣지 않은 사진 수 — 그사이 자리에 사진이 생겼거나, 글이 다 찼거나, 반복 상한 · 후보 검사에 걸렸다. */
+  /** 넣지 않은 사진 수 — 그사이 자리에 사진이 생겼거나, 글이 다 찼거나, 반복 상한 · 후보 검사에 걸렸다(바꿀 사진이 걸리면 그 자동 사진은 그대로). */
   skipped: number
   /** 그사이 다시 만들어진 글 — 건너뛰었다. */
   changed: string[]
   /** 초안이 없어진 글 — 건너뛰었다. */
   missing: string[]
+  /** 장면이 어긋나 다른 사진으로 바꾼 자동 사진 수. */
+  replaced: number
+  /** 장면이 어긋나 뺀 자동 사진 수. */
+  removed: number
+  /** 바꾸거나 빼지 않은 자리 — 그사이 그 자리의 사진이 사람이 고른 사진이 되었거나 다른 사진으로 바뀌었다. */
+  stale: { actionId: string; slot: string; nth: number }[]
 }
 
 /** 한 번에 보내는 글 수 — 서버가 받는 수(server/index.ts op auto)와 JSON 본문 한도 안. */
@@ -1722,6 +1729,7 @@ const AUTO_PHOTO_BATCH = 10
  * 자동 채우기(src/lib/photoAutoPick.ts)가 고른 사진을 저장한다 — 글 AUTO_PHOTO_BATCH편씩 나눠 보내고(한 번에 drafts.json 쓰기 한 번),
  * 결과를 합친다. 그사이 다시 만들어진 글은 서버가 건너뛰고 changed로 알린다. 판정 호출 없음. 중간에 실패하면 그때까지 저장된 것은 남고
  * throw — 오류 응답이든 요청 자체가 끊긴 것이든(서버 재시작 · 연결 끊김) 앞 묶음까지의 결과를 partial로 붙인다(화면이 그 초안을 반영).
+ * replaces(장면으로 다시 본 자동 사진 — 바꾸기 · 빼기)는 서버가 그 자리에 화면이 본 그 자동 사진이 있을 때만 하고, 아니면 stale로 알린다.
  */
 export async function saveDraftPhotosAuto(
   tenantId: string,
@@ -1730,17 +1738,19 @@ export async function saveDraftPhotosAuto(
     generatedAt: string
     picks: readonly import('./photoAutoPick').AutoPickInput[]
     credits?: readonly PhotoCreditInput[]
+    replaces?: readonly import('./photoAutoPick').AutoReplaceInput[]
   }[],
+  opts: { refillCleared?: boolean } = {},
 ): Promise<AutoPhotoSaveResult> {
-  const total: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [] }
-  const list = articles.filter((a) => a.picks.length > 0 || (a.credits?.length ?? 0) > 0)
+  const total: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [], replaced: 0, removed: 0, stale: [] }
+  const list = articles.filter((a) => a.picks.length > 0 || (a.credits?.length ?? 0) > 0 || (a.replaces?.length ?? 0) > 0)
   for (let i = 0; i < list.length; i += AUTO_PHOTO_BATCH) {
     let res: Response
     try {
       res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photos`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ op: 'auto', articles: list.slice(i, i + AUTO_PHOTO_BATCH) }),
+        body: JSON.stringify({ op: 'auto', articles: list.slice(i, i + AUTO_PHOTO_BATCH), ...(opts.refillCleared ? { refillCleared: true } : {}) }),
       })
     } catch (e) {
       throw Object.assign(e instanceof Error ? e : new Error(String(e)), { partial: total })
@@ -1753,26 +1763,92 @@ export async function saveDraftPhotosAuto(
     total.skipped += out.skipped ?? 0
     total.changed.push(...(out.changed ?? []))
     total.missing.push(...(out.missing ?? []))
+    total.replaced += out.replaced ?? 0
+    total.removed += out.removed ?? 0
+    total.stale.push(...(out.stale ?? []))
   }
   return total
 }
 
-let tourApiStatus: Promise<boolean> | null = null
+let photoFlags: Promise<{ tourApi: boolean; photoScenes: boolean }> | null = null
 
 /**
- * 이 PC에서 관광공사 사진(3단계, TourAPI)을 쓸 수 있는가 — /api/health의 tourApi(키가 있는지만). 웹(Vercel)에는 그 값이 없어 false.
- * 화면이 열려 있는 동안 한 번 묻는다(실패하면 다음에 다시).
+ * 이 PC의 사진 기능 — /api/health의 tourApi(관광공사 사진 3단계 · TourAPI 키) · photoScenes(사진 장면 · Claude 키). 키가 있는지만 온다.
+ * 웹(Vercel)에는 그 값이 없어 둘 다 false. 화면이 열려 있는 동안 한 번 묻는다(실패하면 다음에 다시).
  */
-export function loadTourApiStatus(): Promise<boolean> {
-  tourApiStatus ??= fetch('/api/health')
-    .then(async (res) => (res.ok ? ((await res.json()) as { tourApi?: unknown }) : {}))
-    .then((h) => h.tourApi === true)
+function loadPhotoFlags(): Promise<{ tourApi: boolean; photoScenes: boolean }> {
+  photoFlags ??= fetch('/api/health')
+    .then(async (res) => (res.ok ? ((await res.json()) as { tourApi?: unknown; photoScenes?: unknown }) : {}))
+    .then((h) => ({ tourApi: h.tourApi === true, photoScenes: h.photoScenes === true }))
     .catch((e: unknown) => {
-      console.warn('[api] /api/health를 읽지 못해 관광공사 사진을 건너뜁니다', e)
-      tourApiStatus = null
-      return false
+      console.warn('[api] /api/health를 읽지 못해 관광공사 사진 · 사진 장면을 건너뜁니다', e)
+      photoFlags = null
+      return { tourApi: false, photoScenes: false }
     })
-  return tourApiStatus
+  return photoFlags
+}
+
+/** 이 PC에서 관광공사 사진(3단계, TourAPI)을 쓸 수 있는가 — /api/health의 tourApi. 웹에는 없어 false. */
+export function loadTourApiStatus(): Promise<boolean> {
+  return loadPhotoFlags().then((f) => f.tourApi)
+}
+
+/** 이 PC에서 사진 장면(비전 모델)을 읽을 수 있는가 — /api/health의 photoScenes. 웹에는 없어 false(장면 없이 고른다). */
+export function loadPhotoScenesStatus(): Promise<boolean> {
+  return loadPhotoFlags().then((f) => f.photoScenes)
+}
+
+/** 사진 장면 응답(server/photoScenes.ts PhotoScenesResult와 같다). */
+export interface PhotoScenesReply {
+  scenes: Record<string, PhotoScene>
+  missing: string[]
+  failed: Record<string, string>
+  described: number
+  calls: number
+  pending: number
+  available: boolean
+  model: string
+  notes: string[]
+}
+
+/** 장면 한 번 묻기를 기다리는 최대 시간 — 서버가 사진을 받고 모델을 부른다(한 장 수 초 · 동시에 3장). */
+const SCENE_REQUEST_TIMEOUT_MS = 180_000
+
+/**
+ * 사진들의 장면(server/photoScenes.ts) — 읽어 둔 장면은 그대로, 없는 사진은 limit장까지 새로 읽는다(0이면 읽어 둔 것만). 장면은 서버가
+ * 검사해 보내지만 화면도 모양을 다시 본다(validScene). 요청이 틀리거나 시간 안에 답이 없으면 throw.
+ */
+export async function loadPhotoScenes(srcs: readonly string[], limit: number): Promise<PhotoScenesReply> {
+  let res: Response
+  try {
+    res = await fetch('/api/photo-scenes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ srcs, limit }),
+      signal: AbortSignal.timeout(SCENE_REQUEST_TIMEOUT_MS),
+    })
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'TimeoutError') throw new Error(`사진 장면 요청이 ${SCENE_REQUEST_TIMEOUT_MS / 1000}초 안에 끝나지 않았어요.`, { cause: e })
+    throw e
+  }
+  const out = (await res.json().catch(() => ({}))) as Partial<PhotoScenesReply> & { error?: string }
+  if (!res.ok) throw new Error(out.error || `사진 장면을 읽지 못했어요 (HTTP ${res.status})`)
+  const scenes: PhotoScenesReply['scenes'] = {}
+  for (const [src, raw] of Object.entries(out.scenes ?? {})) {
+    const scene = validScene(raw)
+    if (scene) scenes[src] = scene
+  }
+  return {
+    scenes,
+    missing: Array.isArray(out.missing) ? out.missing.filter((s): s is string => typeof s === 'string') : [],
+    failed: out.failed && typeof out.failed === 'object' ? out.failed : {},
+    described: typeof out.described === 'number' ? out.described : 0,
+    calls: typeof out.calls === 'number' ? out.calls : 0,
+    pending: typeof out.pending === 'number' ? out.pending : 0,
+    available: out.available === true,
+    model: typeof out.model === 'string' ? out.model : '',
+    notes: Array.isArray(out.notes) ? out.notes.filter((s): s is string => typeof s === 'string') : [],
+  }
 }
 
 /** 장소 하나의 관광공사 사진을 기다리는 최대 시간 — 서버가 TourAPI를 몇 번(한 번에 10초까지) 부른다. 넘으면 남은 장소는 묻지 않는다. */
@@ -1803,6 +1879,28 @@ export async function loadTourPhotos(tenantId: string, q: import('./tourPhotos')
   if (!res.ok) {
     const error = (out as { error?: unknown }).error
     throw new Error(typeof error === 'string' && error ? error : `관광공사 사진을 찾지 못했어요 (HTTP ${res.status})`)
+  }
+  return out as import('./tourPhotos').TourPhotoResult
+}
+
+/**
+ * 장소 없는 자리에 견줄 지역 사진(server/tourPhotos.ts findRegionTourPhotos) — 브랜드 도시 이름으로 찾은 관광사진. 공공 사진 사용 확인이
+ * 있어야 하고 지역형 브랜드만 사진이 온다(아니면 note). 서비스 오류는 note · error로 오고, 키가 없거나 시간 안에 답이 없으면 throw.
+ */
+export async function loadRegionTourPhotos(tenantId: string): Promise<import('./tourPhotos').TourPhotoResult> {
+  let res: Response
+  try {
+    res = await fetch(`/api/tourapi/photos/${encodeURIComponent(tenantId)}?mode=region`, { signal: AbortSignal.timeout(TOUR_REQUEST_TIMEOUT_MS) })
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'TimeoutError') {
+      throw new Error(`지역 사진 요청이 ${TOUR_REQUEST_TIMEOUT_MS / 1000}초 안에 끝나지 않았어요 — 잠시 뒤 다시 눌러 주세요.`, { cause: e })
+    }
+    throw e
+  }
+  const out: unknown = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const error = (out as { error?: unknown }).error
+    throw new Error(typeof error === 'string' && error ? error : `지역 사진을 찾지 못했어요 (HTTP ${res.status})`)
   }
   return out as import('./tourPhotos').TourPhotoResult
 }

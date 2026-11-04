@@ -32,8 +32,12 @@ export const TOUR_CREDIT = '한국관광공사'
 /** 한 번에 TourAPI를 새로 부르는 장소 수의 상한 — 장소 하나에 TourAPI 2~8번(7일 캐시). 캐시에서 온 장소는 세지 않는다. */
 export const TOUR_PLACE_LIMIT = 20
 
-/** 한 장소에서 돌려줄 사진 수의 상한(서비스마다). */
-export const TOUR_PHOTOS_PER_SOURCE = 12
+/**
+ * 한 장소에서 돌려줄 사진 수의 상한(서비스마다) — 장소의 사진을 모두 돌려준다(관광사진 정보는 여러 쪽을 넘겨 받는다 —
+ * server/tourPhotos.ts). 자동 채우기가 사진 장면을 읽어 자리에 맞는 사진을 고르므로(src/lib/photoScenes.ts), 앞 몇 장만 보면 맞는 사진이
+ * 있어도 못 찾는다(군산근대역사박물관 관광사진 115장 — 앞 40장은 모두 2013-01 실내 전시 사진).
+ */
+export const TOUR_PHOTOS_PER_SOURCE = 500
 
 /** 관광공사 사진 하나 — 자동 채우기 · 손으로 고르기의 공공 사진 후보(origin public)가 된다. */
 export interface TourPhoto {
@@ -60,6 +64,10 @@ export interface TourPhoto {
   location: string
   /** 사진 이름(국문 관광정보 imgname — 대표 사진은 없다). */
   imageName?: string
+  /** 촬영 연월(YYYYMM, 관광사진 정보 galPhotographyMonth) — 장면을 읽을 사진을 시기마다 고루 고른다. */
+  month?: string
+  /** 검색 낱말(관광사진 정보 galSearchKeyword) — 장소 없는 자리에 견줄 지역 사진을 낱말로 먼저 고른다(src/lib/photoAutoPick.ts). */
+  keywords?: string
 }
 
 /** 장소 하나를 찾을 단서 — 사이트 장소 이름, 장소 페이지의 다른 이름 · 주소 · 좌표. */
@@ -282,6 +290,12 @@ export function tourResultCode(json: unknown): string {
   return typeof code === 'string' || typeof code === 'number' ? String(code) : ''
 }
 
+/** 응답의 전체 건수 — response.body.totalCount. 없거나 숫자가 아니면 null(쪽 넘기기는 받은 건수로 멈춘다). */
+export function tourTotalCount(json: unknown): number | null {
+  const n = Number(((json ?? {}) as { response?: { body?: { totalCount?: unknown } } }).response?.body?.totalCount)
+  return Number.isInteger(n) && n >= 0 ? n : null
+}
+
 /** 응답의 항목들 — response.body.items.item이 배열 · 객체 하나 · ''(결과 없음)일 수 있다. */
 export function tourItems(json: unknown): Record<string, unknown>[] {
   const items = ((json ?? {}) as { response?: { body?: { items?: unknown } } }).response?.body?.items
@@ -346,9 +360,9 @@ function tourPhoto(
   source: TourSource,
   contentId: string,
   location: string,
-  extra: { photographer?: string; imageName?: string } = {},
+  extra: { photographer?: string; imageName?: string; month?: string; keywords?: string } = {},
 ): TourPhoto {
-  const { photographer, imageName } = extra
+  const { photographer, imageName, month, keywords } = extra
   return {
     src,
     title,
@@ -363,7 +377,17 @@ function tourPhoto(
     contentId,
     location,
     ...(imageName ? { imageName } : {}),
+    ...(month ? { month } : {}),
+    ...(keywords ? { keywords } : {}),
   }
+}
+
+/** 관광사진 정보 항목 하나의 촬영자 · 촬영 연월 · 검색 낱말. */
+function galleryExtra(it: Record<string, unknown>): { photographer?: string; month?: string; keywords?: string } {
+  const photographer = cleanPhotoCredit(it.galPhotographer)
+  const month = /^\d{6}$/.test(str(it.galPhotographyMonth)) ? str(it.galPhotographyMonth) : ''
+  const keywords = cleanPhotoAlt(str(it.galSearchKeyword))
+  return { ...(photographer ? { photographer } : {}), ...(month ? { month } : {}), ...(keywords ? { keywords } : {}) }
 }
 
 /**
@@ -430,15 +454,46 @@ export function galleryTourPhotos(
       rejected += 1
       continue
     }
-    if (photos.length < TOUR_PHOTOS_PER_SOURCE) {
-      const photographer = cleanPhotoCredit(it.galPhotographer)
-      photos.push(tourPhoto(src, title, place, 'gallery', str(it.galContentId), str(it.galPhotographyLocation), photographer ? { photographer } : {}))
-    }
+    if (photos.length < TOUR_PHOTOS_PER_SOURCE) photos.push(tourPhoto(src, title, place, 'gallery', str(it.galContentId), str(it.galPhotographyLocation), galleryExtra(it)))
   }
   return { photos, rejected }
 }
 
+/** 장소 없는 자리에 견줄 지역 사진의 상한 — 관광사진 정보를 브랜드 도시 이름으로 찾아 쪽마다 100건씩 이만큼(7일 캐시). */
+export const TOUR_REGION_PHOTOS = 500
+
+/**
+ * 장소 없는 자리(「군산 원도심 골목을 걷는 뒷모습」)에 견줄 지역 사진 — 관광사진 정보를 브랜드 도시 이름으로 찾은 응답에서, 촬영지가 그
+ * 지역(cityMatches — 광역시 · 도까지)이고 제목 · 검색 낱말에 사람 낱말이 없는 사진만 응답 순서로(제목이 장소 이름과 맞을 필요는 없다).
+ * 공공누리 제1유형은 관광사진 정보 데이터 페이지가 밝혀 둔 것을 근거로 쓴다(장소 사진과 같다). place는 지역의 표시 글자(「전북 군산」).
+ */
+export function regionGalleryPhotos(items: readonly Record<string, unknown>[], region: TourRegion | string | null): { photos: TourPhoto[]; rejected: number } {
+  const want = typeof region === 'string' ? tourRegionOf(region) : region
+  const label = want ? regionLabel(want) : ''
+  const photos: TourPhoto[] = []
+  const seen = new Set<string>()
+  let rejected = 0
+  for (const it of items) {
+    const src = tourPhotoSrc(it.galWebImageUrl)
+    const title = cleanPhotoAlt(str(it.galTitle))
+    if (!src || seen.has(src)) continue
+    seen.add(src)
+    const ok = Boolean(title) && cityMatches(str(it.galPhotographyLocation), want) && !hasPeopleWords(`${title} ${str(it.galSearchKeyword)}`)
+    if (!ok) {
+      rejected += 1
+      continue
+    }
+    if (photos.length < TOUR_REGION_PHOTOS) photos.push(tourPhoto(src, title, label, 'gallery', str(it.galContentId), str(it.galPhotographyLocation), galleryExtra(it)))
+  }
+  return { photos, rejected }
+}
+
+/** 고른 사진의 찾은 페이지(pageUrl)가 관광공사 데이터 페이지면 그 서비스, 아니면 null. */
+export function tourSourceOf(pageUrl: string | undefined): TourSource | null {
+  return (Object.keys(TOUR_SOURCES) as TourSource[]).find((k) => TOUR_SOURCES[k].page === pageUrl) ?? null
+}
+
 /** 고른 사진의 찾은 페이지(pageUrl)가 관광공사 데이터 페이지인가 — 화면이 「관광공사 사진」 표시를 단다. */
 export function isTourSourcePage(pageUrl: string | undefined): boolean {
-  return Object.values(TOUR_SOURCES).some((s) => s.page === pageUrl)
+  return tourSourceOf(pageUrl) !== null
 }
