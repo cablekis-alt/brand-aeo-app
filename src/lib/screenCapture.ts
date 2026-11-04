@@ -11,6 +11,7 @@
  * 서버(server/screens.ts · server/index.ts · server/contentDraft.ts)와 화면이 함께 쓰므로 DOM에 기대지 않는다.
  */
 import type { PhotoPick } from './articlePhotos.js'
+import type { MapRegion } from './mapImage.js'
 
 /**
  * 화면 종류 — course(코스 만들기 화면) · map(지도 화면) · place(장소 페이지의 안내 칸 — 장소마다 변형) · guide(목적별 가이드 페이지의 머리).
@@ -89,6 +90,12 @@ export interface ScreenDef {
 export interface ScreenProfile {
   host: string
   screens: readonly ScreenDef[]
+  /**
+   * 지도 자리에 앱이 그린 OSM 지도를 넣을 장소 목록의 출처 — 자사 사이트의 이 경로(div.map[data-points])에서 점만 읽는다
+   * (server/mapPoints.ts · src/lib/mapImage.ts). 동봉한 지도 데이터가 군산뿐이라 군산각 프로필에만 있다. 없으면 지도 자리는 지금처럼
+   * 카카오 지도 미리보기만 한다.
+   */
+  mapPoints?: { path: string }
 }
 
 /** 찍은 화면 한 장 — server/screens.ts가 screens.json에 적는다. */
@@ -175,6 +182,7 @@ const GUNSAN_REGION_PLACES = {
 export const SCREEN_PROFILES: readonly ScreenProfile[] = [
   {
     host: 'gunsan.webforai.kr',
+    mapPoints: { path: '/map/' },
     screens: [
       {
         id: 'course',
@@ -290,18 +298,30 @@ export function parseScreenAppSrc(src: unknown): { tenantId: string; shotId: str
 
 /**
  * 같은 사진 반복 상한의 열쇠(src/lib/photoAutoPick.ts AUTO_PICK_RULES · server/contentDraft.ts saveAutoPhotoPicks). 사진은 주소, 자사 화면은
- * 「화면 + 변형」 — 다른 날 다시 찍어 파일이 달라져도 같은 화면으로 센다(2026-11-04 결정 3). 사람이 뺀 자리의 기록(removed)도 이 열쇠를 적는다.
+ * 「화면 + 변형」 — 다른 날 다시 찍어 파일이 달라져도 같은 화면으로 센다(2026-11-04 결정 3). 앱이 그린 지도(origin osm-map)는 「장소 묶음」
+ * (src/lib/mapImage.ts mapVariantKey) — 판이 바뀌어 다시 그려도 같은 지도로 센다. 사람이 뺀 자리의 기록(removed)도 이 열쇠를 적는다.
  */
-export function photoRepeatKey(p: Pick<PhotoPick, 'src' | 'origin' | 'screenId' | 'variantId'>): string {
+export function photoRepeatKey(p: Pick<PhotoPick, 'src' | 'origin' | 'screenId' | 'variantId' | 'mapVariant'>): string {
+  if (p.origin === 'osm-map' && p.mapVariant) return `osm-map:${p.mapVariant}`
   return p.origin === 'screen' && p.screenId && p.variantId ? `screen:${p.screenId}:${p.variantId}` : p.src
 }
 
 /**
- * 브랜드 전체 반복 상한(AUTO_PICK_RULES.brandRepeat)을 받지 않는 사진인가 — 자사 화면은 받지 않는다(결정 3). 글 하나에 한 번 · 작성자
- * 한 사람에게 한 번은 화면에도 그대로 지킨다(photoRepeatKey 단위).
+ * 브랜드 전체 반복 상한(AUTO_PICK_RULES.brandRepeat)을 받지 않는 사진인가 — 자사 화면 · 앱이 그린 지도는 받지 않는다(결정 3). 글 하나에
+ * 한 번 · 작성자 한 사람에게 한 번은 그대로 지킨다(photoRepeatKey 단위).
  */
 export function brandRepeatExempt(p: Pick<PhotoPick, 'origin'>): boolean {
-  return p.origin === 'screen'
+  return p.origin === 'screen' || p.origin === 'osm-map'
+}
+
+/**
+ * 지도 그림의 권역(src/lib/mapImage.ts mapChoiceOf) — 프로필 지도 화면의 권역 변형(이름 · 장소 낱말). 권역 이름은 자사 사이트 장소 목록의
+ * 권역 이름과 같다(「원도심」 · 「새만금·비응」).
+ */
+export function mapRegionsOf(profile: ScreenProfile): MapRegion[] {
+  return profile.screens
+    .filter((s) => s.kind === 'map')
+    .flatMap((s) => s.variants.filter((v) => v.places?.length).map((v) => ({ name: v.label, words: v.places! })))
 }
 
 /** ownedDomains 한 줄(「site.example」 · 「https://www.site.example/」)의 호스트 — articlePhotos.ts isOwnedPhotoHost와 같은 정리. */

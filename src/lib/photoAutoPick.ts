@@ -26,6 +26,10 @@
  * 하나 나온 코스 · 지도 · 가이드 자리와 안내 낱말이 나온 장소 안내 자리)를 이 PC에 찍어 둔 화면으로 채운다(자사 화면 단계). 화면은 브랜드
  * 상한을 받지 않고, 글 하나 · 작성자 한 사람에게 「화면 + 변형」 한 번(결정 3). 지도 화면은 미리보기만 하고 저장하지 않는다(결정 4 —
  * SCREEN_AUTO_SAVE_KINDS). 장소 안내 · 가이드는 잘라 찍은 화면이라 자리 글자의 사실이 찍은 글자에 없으면 「확인 필요」다.
+ *
+ * 군산 지도 그림(src/lib/mapImage.ts — 2026-11-05) — 장소 목록 출처가 있는 프로필(군산각)의 지도 자리는, maps를 주면 카카오 지도 미리보기
+ * 대신 앱이 OSM 데이터로 그린 지도로 채운다(표지는 자사 사이트 /map/의 장소에서 고른다). 늘 「확인 필요」, 같은 장소 묶음은 글 하나 · 작성자
+ * 한 사람에게 한 번(브랜드 상한 없음), 아직 그리지 않은 묶음은 undrawn으로 두고 mapWanted로 청한다.
  */
 import {
   canonicalPhotoSrc,
@@ -56,7 +60,20 @@ import {
   type SceneWant,
 } from './photoScenes.js'
 import {
+  MAP_CREDIT,
+  mapAltOf,
+  mapCaptionOf,
+  mapChoiceOf,
+  mapSectionText,
+  parseMapAppSrc,
+  type MapChoiceBy,
+  type MapMarker,
+  type MapPoint,
+  type MapVariant,
+} from './mapImage.js'
+import {
   isScreenSlotText,
+  mapRegionsOf,
   parseScreenAppSrc,
   photoRepeatKey,
   placeScreenVariant,
@@ -704,6 +721,8 @@ export interface AutoArticle {
  * 자사 화면 자리(screen) — 찍지 않는 화면이면 screen 그대로(row.screenSlot이 까닭 — 장소 안내 자리에 장소를 찾지 못했으면 screenMiss),
  * 코스 · 장소 안내 · 가이드 화면을 넣으면 filled, 글에 넣지 않는 화면(지도 — SCREEN_AUTO_SAVE_KINDS 밖)이면 preview(미리보기만), 고른
  * 화면 · 변형을 아직 찍지 않았으면 uncaptured(찍은 뒤 다시 누른다 — screenWanted), 쓸 변형이 모두 상한에 걸리면 used, 글이 다 찼으면 full.
+ * 앱이 그린 지도(maps를 줄 때 지도 자리)는 그려 둔 지도가 있으면 filled, 고른 장소 묶음을 아직 그리지 않았으면 undrawn(그린 뒤 다시
+ * 누른다 — mapWanted), 표지를 고르지 못하면 screen 그대로(row.mapMiss).
  */
 export type AutoSlotState =
   | 'filled'
@@ -720,6 +739,7 @@ export type AutoSlotState =
   | 'remove'
   | 'preview'
   | 'uncaptured'
+  | 'undrawn'
 
 export const AUTO_SLOT_STATE_TEXT: Record<AutoSlotState, string> = {
   filled: '채움',
@@ -736,6 +756,7 @@ export const AUTO_SLOT_STATE_TEXT: Record<AutoSlotState, string> = {
   remove: '장면 안 맞음 → 뺌',
   preview: '화면 미리보기만(글에 넣지 않음)',
   uncaptured: '화면을 아직 찍지 않음',
+  undrawn: '지도를 아직 그리지 않음',
 }
 
 /** 화면 자리에 고른 자사 화면 · 변형(자사 화면 단계) — 찍어 둔 화면이 있으면 shot. */
@@ -762,6 +783,52 @@ export interface AutoScreenPick {
  */
 export type AutoScreenShot = Pick<ScreenShotView, 'id' | 'screenId' | 'variantId' | 'url' | 'capturedAt' | 'src'> &
   Partial<Pick<ScreenShotView, 'width' | 'height' | 'text'>>
+
+/**
+ * 이 PC에 그려 둔 지도 한 장(GET /api/maps의 maps 한 장 — server/maps.ts mapImageView). alt · caption은 서버가 그린 표지(공군기지 쪽에서 뺀
+ * 표지는 빠진)로 만든 것이다. pointsVersion이 지금 장소 목록 판과 다르면 쓰지 않는다(좌표가 바뀌었을 수 있다).
+ */
+export interface AutoMapDrawn {
+  id: string
+  src: string
+  variant: string
+  pointsVersion: string
+  alt: string
+  caption: string
+  /** 장소 목록 출처(자사 사이트 /map/). */
+  source: string
+  drawnAt: string
+  markers: Pick<MapMarker, 'id' | 'label' | 'kind'>[]
+  dropped?: { id: string; name: string; why: 'avoid' | 'base' }[]
+  width?: number
+  height?: number
+}
+
+/** 지도 자리에 고른 장소 묶음(지도 단계) — 그려 둔 지도가 있으면 drawn. */
+export interface AutoMapPick {
+  /** 변형 열쇠(장소 id를 사전순으로 「|」로 이은 것). */
+  key: string
+  /** 표지 장소 id(고른 차례 — 자리에 이름이 나온 장소가 앞). */
+  ids: string[]
+  /** 0 고른 묶음 · 1 넓힌 묶음(같은 작성자 · 글에 0을 이미 썼다). */
+  tier: number
+  by: MapChoiceBy
+  /** 사람이 읽는 까닭. */
+  why: string
+  markers: MapMarker[]
+  /** 그린 지도가 있으면 그 대체 텍스트 · 위치 문장, 없으면 고른 표지로 만든 것(미리보기). */
+  alt: string
+  caption: string
+  /** 공군기지 상자 안이라 뺀 장소. */
+  avoided?: string[]
+  drawn?: AutoMapDrawn
+}
+
+/** 그릴 지도 하나(mapWanted) — 화면이 POST /api/maps/:tenantId/render로 그리고 다시 고른다. */
+export interface AutoMapWant {
+  key: string
+  ids: string[]
+}
 
 /** 찍을 화면 · 변형 하나(screenWanted) — 화면이 POST /api/screens/capture로 찍고 다시 고른다. 변형 이름(장소 안내는 장소 이름)도 함께. */
 export interface AutoScreenWant {
@@ -840,6 +907,10 @@ export interface AutoSlotRow {
   factGaps?: string[]
   /** 장소 안내 자리의 장면 글자가 말한 사이트 장소들(둘 이상일 때만) — 한 곳의 화면만 찍히므로 「확인 필요」를 단다(factGaps와 따로 보인다). */
   screenPlaces?: string[]
+  /** 지도 자리에 고른 장소 묶음(앱이 그린 지도 — filled · undrawn). */
+  mapPick?: AutoMapPick
+  /** 지도 자리에 표지를 고르지 못했다 — no-points 장소 목록이 비었음, no-markers 넣을 장소가 없음(공군기지 상자 안뿐 · 기준 장소 없음). */
+  mapMiss?: 'no-points' | 'no-markers'
 }
 
 /** 이미 넣은 자동 사진을 바꾸거나 뺄 것 — 저장할 때 서버가 그 자리에 같은 자동 사진이 아직 있을 때만 한다(server/contentDraft.ts). */
@@ -897,6 +968,11 @@ export interface AutoPickResult {
    * 화면이 찍고(POST /api/screens/capture) 다시 고른다. 변형은 찍었는지와 상관없이 고르므로 찍은 뒤에도 같은 자리에 같은 변형이 간다.
    */
   screenWanted: AutoScreenWant[]
+  /**
+   * 그리면 지도 자리에 쓰일 장소 묶음(undrawn 자리, 처음 나온 순서, 중복 없이) — 이 실행에서 그릴 수 있을 때만(maps.available). 화면이 그리고
+   * (POST /api/maps/:tenantId/render) 다시 고른다. 묶음은 그렸는지와 상관없이 고르므로 그린 뒤에도 같은 자리에 같은 묶음이 간다.
+   */
+  mapWanted: AutoMapWant[]
 }
 
 /** 사진 자리 바로 아랫줄의 설명(`*설명*`) — 없으면 ''(articlePhotos.ts captionAfter와 같은 모양). */
@@ -1080,6 +1156,12 @@ export function autoPickPhotos(input: {
    * 여기서 찾아 그 주소의 변형을 쓴다(자리 글자로 주소를 만들지 않는다). 주지 않으면 장소 안내 자리는 비워 둔다(screenMiss no-directory).
    */
   placePages?: readonly { name: string; url: string }[]
+  /**
+   * 군산 지도 그림(src/lib/mapImage.ts) — 주면 장소 목록 출처가 있는 프로필(ScreenProfile.mapPoints)의 지도 자리를 앱이 그린 지도로 채운다
+   * (카카오 지도 미리보기 대신). available은 이 실행에서 그릴 수 있는가(/api/health maps — 설치한 데스크톱 앱만), points는 자사 사이트 장소
+   * 목록(GET /api/maps/:tenantId/points)과 그 판, drawn은 이 PC에 그려 둔 지도(GET /api/maps/:tenantId). 주지 않으면 지도 자리는 지금처럼.
+   */
+  maps?: { available: boolean; points: readonly MapPoint[]; pointsVersion: string; drawn: readonly AutoMapDrawn[] }
 }): AutoPickResult {
   const stop = new Set(contentWords(input.brandName ?? ''))
   const scenes = input.scenes
@@ -1262,6 +1344,18 @@ export function autoPickPhotos(input: {
     }
   }
   const placeNames = [...placeVariants.keys()]
+  // 군산 지도 그림 — 장소 목록 출처가 있는 프로필에 maps를 줄 때만. 그려 둔 지도는 지금 장소 목록 판 · 앱 주소 모양이 맞는 것만, 장소
+  // 묶음마다 가장 늦게 그린 것.
+  const mapsIn = screenProfile?.mapPoints ? input.maps : undefined
+  const mapRegions = screenProfile ? mapRegionsOf(screenProfile) : []
+  const drawnAt = new Map<string, AutoMapDrawn>()
+  for (const d of mapsIn?.drawn ?? []) {
+    if (d.pointsVersion !== mapsIn!.pointsVersion || parseMapAppSrc(d.src)?.mapId !== d.id) continue
+    const had = drawnAt.get(d.variant)
+    if (!had || Date.parse(d.drawnAt) > Date.parse(had.drawnAt)) drawnAt.set(d.variant, d)
+  }
+  const mapWanted = new Map<string, AutoMapWant>()
+  const mapKey = (v: Pick<MapVariant, 'key'>) => photoRepeatKey({ src: '', origin: 'osm-map', mapVariant: v.key })
   /**
    * 장소 안내 자리의 장소 — 장면 글자 · 설명 줄 · 소제목 차례로 사전에서 찾은 첫 장소(findPlaces 순서). 소제목에만 나온 장소(by heading)나
    * 장면 글자가 장소를 둘 이상 말하는 자리(한 장소의 안내만 찍힌다 — many에 그 장소들)는 「확인 필요」.
@@ -1650,17 +1744,86 @@ export function autoPickPhotos(input: {
      */
     const screenStage = () => {
       const screens = input.screens
-      if (!screens || !screenProfile) return
+      if (!screenProfile || (!screens && !mapsIn)) return
       let left = room
       const blocked = (key: string) =>
         inArticle.has(key) || (article.group !== undefined && (groupUsed.get(article.group)?.get(key) ?? 0) > 0)
+      /**
+       * 지도 자리(maps를 줄 때) — 자리 글자 · 설명 줄 · 소제목 · 절 글자로 장소 묶음을 고르고(mapChoiceOf), 묶음(tier 0 다음 넓힌 tier 1)
+       * 가운데 이 글 · 작성자에게 아직 쓰지 않았고 사람이 이 자리에서 빼지 않은 첫 묶음. 그릴 수 없으면(웹 · dev) 그려 둔 묶음을 먼저.
+       * 그려 둔 지도가 있으면 넣고(filled), 없으면 undrawn으로 두어 mapWanted로 청한다. 늘 「확인 필요」 — 표지 · 설명은 자리 글자로 고른
+       * 것이라 사람이 본다.
+       */
+      const mapRow = (row: AutoSlotRow, maps: NonNullable<typeof mapsIn>) => {
+        const choice = mapChoiceOf(
+          { key: row.slot.key, caption: row.caption, heading: row.slot.heading, section: mapSectionText(lines, row.slot.line) },
+          maps.points,
+          mapRegions,
+        )
+        if ('miss' in choice) {
+          row.mapMiss = choice.miss
+          return
+        }
+        const open = choice.variants.filter((v) => !blocked(mapKey(v)) && !removed(row, mapKey(v)))
+        const variant = maps.available ? open[0] : (open.find((v) => drawnAt.has(v.key)) ?? open[0])
+        if (!variant) {
+          row.state = 'used'
+          return
+        }
+        inArticle.add(mapKey(variant))
+        countUse(mapKey(variant), article.group)
+        left -= 1
+        const drawn = drawnAt.get(variant.key)
+        row.review = true
+        row.mapPick = {
+          key: variant.key,
+          ids: variant.ids,
+          tier: variant.tier,
+          by: choice.by,
+          why: choice.why,
+          markers: variant.markers,
+          alt: drawn?.alt ?? mapAltOf(variant.markers),
+          caption: drawn?.caption ?? mapCaptionOf(variant.markers),
+          ...(choice.avoided.length ? { avoided: choice.avoided } : {}),
+          ...(drawn ? { drawn } : {}),
+        }
+        if (!drawn) {
+          row.state = 'undrawn'
+          if (maps.available && !mapWanted.has(variant.key)) mapWanted.set(variant.key, { key: variant.key, ids: variant.ids })
+          return
+        }
+        const pick: AutoPickInput = {
+          slot: row.slot.key,
+          nth: row.slot.nth,
+          same: row.slot.same,
+          heading: row.slot.heading,
+          src: drawn.src,
+          alt: cleanPhotoAlt(drawn.alt),
+          pageUrl: drawn.source,
+          auto: true,
+          origin: 'osm-map',
+          mapId: drawn.id,
+          mapVariant: drawn.variant,
+          caption: drawn.caption,
+          credit: MAP_CREDIT,
+        }
+        Object.assign(row, { state: 'filled', pick })
+        out.push(pick)
+      }
       for (const row of rows) {
         const screen = screenOfRow.get(row)
         if (row.state !== 'screen' || !screen) continue
+        const asMap = Boolean(mapsIn) && screen.kind === 'map'
+        if (!asMap && !screens) continue
         if (left <= 0) {
           row.state = 'full'
           continue
         }
+        if (asMap) {
+          mapRow(row, mapsIn!)
+          continue
+        }
+        if (!screens) continue
         let choice: ScreenVariantChoice
         let placeReview = false
         if (screen.placePages) {
@@ -1826,6 +1989,7 @@ export function autoPickPhotos(input: {
     usableTour,
     sceneWanted,
     screenWanted: [...screenWanted.values()],
+    mapWanted: [...mapWanted.values()],
     ...(regionPool ? { region: { rows: regionWants.length, pool: regionPool.length, matched: regionMatched.size, wanted: regionWanted.size } } : {}),
   }
 }

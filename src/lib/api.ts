@@ -9,6 +9,7 @@ import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './ext
 import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { AnswerEvidence } from './answerEvidence'
 import { validScene, type PhotoScene } from './photoScenes'
+import { parseMapAppSrc } from './mapImage'
 import { parseScreenAppSrc, type ScreenKind, type ScreenShotView } from './screenCapture'
 import type { ConditionChange } from './comparability'
 import type {
@@ -1881,11 +1882,12 @@ export async function captureScreen(tenantId: string, screenId: string, variantI
 }
 
 /**
- * 찍어 둔 자사 화면 파일(앱 주소 /api/screens/<tenant>/<id>.png) — 내보낼 때 그림을 문서 안에 넣는다(src/lib/screenExport.ts). 앱 주소
- * 모양이 아니면 받지 않는다(다른 주소를 부르지 않게). 실패하거나 PNG가 아니면 throw.
+ * 찍어 둔 자사 화면 파일(앱 주소 /api/screens/<tenant>/<id>.png) · 앱이 그린 지도 파일(/api/maps/<tenant>/<id>.png — src/lib/mapImage.ts) —
+ * 내보낼 때 그림을 문서 안에 넣는다(src/lib/screenExport.ts). 앱 주소 모양이 아니면 받지 않는다(다른 주소를 부르지 않게). 실패하거나 PNG가
+ * 아니면 throw.
  */
 export async function fetchScreenFile(src: string): Promise<Blob> {
-  if (!parseScreenAppSrc(src)) throw new Error('자사 화면 주소가 아니에요.')
+  if (!parseScreenAppSrc(src) && !parseMapAppSrc(src)) throw new Error('자사 화면 · 지도 주소가 아니에요.')
   const res = await fetch(src)
   if (!res.ok) throw new Error(`화면 그림을 받지 못했어요 (HTTP ${res.status})`)
   const blob = await res.blob()

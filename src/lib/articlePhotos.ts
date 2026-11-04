@@ -8,6 +8,7 @@
  * 서버(server/contentDraft.ts · server/index.ts)도 같은 검사를 쓰므로 DOM을 쓰는 모듈은 import하지 않는다 — 서버 타입 검사는 DOM이 없다
  * (src/lib/screenCapture.ts는 DOM 없이 자사 화면의 앱 주소만 본다).
  */
+import { MAP_CREDIT, mapCaptionLine, mapPickExportable } from './mapImage.js'
 import { screenExportable } from './screenCapture.js'
 
 /** 사람이 고른 사진 하나 — 초안별로 저장한다(server/contentDraft.ts StoredDraft.photos). */
@@ -39,6 +40,8 @@ export interface PhotoPick {
    * 주소지만 브랜드 자사 사이트(ownedDomains)의 사진이라고 서버가 고를 때 확인한 홈페이지 사진(자사 사이트가 visitkorea.or.kr · go.kr인
    * 브랜드) — 화면이 보낸 'site'는 믿지 않고 서버만 단다. 'screen'은 운영자 PC에 찍어 둔 자사 사이트 화면(src/lib/screenCapture.ts) —
    * 서버가 screens.json에서 찾아 src · pageUrl · alt · screenId · variantId · capturedAt을 단다(화면이 보낸 주소는 믿지 않는다).
+   * 'osm-map'은 앱이 OSM 데이터로 그린 군산 지도(src/lib/mapImage.ts) — 서버가 maps.json에서 찾아 src(앱 주소 /api/maps/<tenant>/<id>.png) ·
+   * pageUrl(장소 목록 출처) · alt(「군산 지도 — … 위치」) · caption · credit · mapId · mapVariant를 단다.
    */
   origin?: PhotoOrigin
   /** 자사 화면의 화면 id(src/lib/screenCapture.ts 프로필 표). origin 'screen'에만. */
@@ -47,9 +50,18 @@ export interface PhotoPick {
   variantId?: string
   /** 자사 화면을 찍은 때(screens.json capturedAt). origin 'screen'에만. */
   capturedAt?: string
+  /** 앱이 그린 지도의 id(maps.json — 그림 이름). origin 'osm-map'에만. */
+  mapId?: string
+  /** 앱이 그린 지도의 장소 묶음(src/lib/mapImage.ts mapVariantKey) — 반복 상한의 열쇠. origin 'osm-map'에만. */
+  mapVariant?: string
+  /**
+   * 앱이 그린 지도의 설명 문장(「A · B 위치를 지도에 표시했습니다.」) — 넣을 때 사진 자리 바로 아랫줄 설명(사이트 기능 문장)을 이 문장 +
+   * 출처 줄로 바꾼다(글의 자리 글자는 고치지 않는다). origin 'osm-map'에만.
+   */
+  caption?: string
   /** 공공 사진의 이용 허락 — 공공누리 제1유형만 받는다(PHOTO_LICENSES). */
   license?: PhotoLicense
-  /** 공공 사진의 출처(저작권자) — 사이트 구조화 데이터의 creditText(예: 「한국관광공사」). */
+  /** 공공 사진의 출처(저작권자) — 사이트 구조화 데이터의 creditText(예: 「한국관광공사」). 앱이 그린 지도는 OSM 출처 줄(MAP_CREDIT). */
   credit?: string
   /** 공공 사진의 이용 허락 페이지 — PHOTO_LICENSES[license].url과 같아야 한다. */
   creditUrl?: string
@@ -75,7 +87,7 @@ export function clearedMatches(c: PhotoPlace, place: PhotoPlace): boolean {
   return c.slot === place.slot && (c.heading === place.heading || c.nth === place.nth)
 }
 
-export type PhotoOrigin = 'site' | 'public' | 'screen'
+export type PhotoOrigin = 'site' | 'public' | 'screen' | 'osm-map'
 
 /**
  * 받는 공공 사진의 이용 허락 — 공공누리 제1유형(출처 표시 · 상업 이용 · 변경 가능)만. 제2유형(상업 이용 금지) · 제3유형(변경 금지) ·
@@ -167,6 +179,8 @@ export function needsPhotoCredit(src: string, ownedDomains?: readonly string[]):
  */
 export function photoCreditState(p: Pick<PhotoPick, 'src' | 'origin' | 'license' | 'credit' | 'creditUrl'>): 'site' | 'public' | 'missing' {
   if (p.origin === 'public') return typeof publicPhotoFields(p) === 'object' ? 'public' : 'missing'
+  // 앱이 그린 지도(origin osm-map)는 OSM 출처 줄이 이용 조건이다 — 출처 줄이 맞을 때만 내보낸다(넣을 때 그림 바로 아래에 붙는다).
+  if (p.origin === 'osm-map') return p.credit === MAP_CREDIT ? 'site' : 'missing'
   // 자사 화면(origin screen — 운영자 PC에 찍어 둔 자사 사이트 화면)은 출처 표시가 필요 없다 — 홈페이지 사진과 같다.
   if (p.origin === 'site' || p.origin === 'screen') return 'site'
   return needsPhotoCredit(p.src) ? 'missing' : 'site'
@@ -199,6 +213,11 @@ export interface AppliedPhoto {
    * src/lib/screenExport.ts가 그림을 문서 안(data:)에 넣고, JSON-LD image · og:image에는 넣지 않는다(공개된 절대 주소가 아니다).
    */
   screen?: Required<Pick<PhotoPick, 'screenId' | 'variantId'>> & Pick<PhotoPick, 'capturedAt'>
+  /**
+   * 앱이 그린 지도(origin osm-map) — src는 앱 주소(/api/maps/<tenant>/<id>.png)라 자사 화면처럼 내보낼 때 문서 안에 넣고 JSON-LD image ·
+   * og:image에는 넣지 않는다. credit은 그림 바로 아래 설명 줄에 붙은 OSM 출처 줄(「사진 출처」 파일에도 적는다).
+   */
+  map?: { mapId: string; variant: string; credit: string }
 }
 
 export const PHOTO_LIMITS = { picks: 3, alt: 160, src: 2048 } as const
@@ -252,9 +271,11 @@ export function canonicalPhotoSrc(raw: string): string | null {
  * 고른 사진을 글에 넣을 주소 — 사진은 https(canonicalPhotoSrc). 자사 화면(origin screen)은 앱 주소(/api/screens/<tenant>/<id>.png) 그대로 —
  * 모양이 맞고 글에 넣는 종류의 화면일 때만(src/lib/screenCapture.ts screenExportable — 지도 화면은 넣지 않는다). 아니면 null(넣지 않는다).
  * canonicalPhotoSrc는 https만 받는 그대로 둔다 — 서버가 화면이 보낸 사진 주소를 거르는 데 쓴다(앱 주소는 서버가 screens.json에서 단다).
+ * 앱이 그린 지도(origin osm-map)도 앱 주소 그대로 — 주소 · 지도 id · 변형 열쇠가 맞을 때만(src/lib/mapImage.ts mapPickExportable).
  */
-export function photoPickSrc(p: Pick<PhotoPick, 'src' | 'origin' | 'screenId' | 'variantId'>): string | null {
+export function photoPickSrc(p: Pick<PhotoPick, 'src' | 'origin' | 'screenId' | 'variantId' | 'mapId' | 'mapVariant'>): string | null {
   if (p.origin === 'screen') return screenExportable(p) ? p.src : null
+  if (p.origin === 'osm-map') return mapPickExportable(p) ? p.src : null
   return canonicalPhotoSrc(p.src)
 }
 
@@ -409,7 +430,9 @@ function mapSlots(sourceCaptions: readonly string[], targets: readonly PhotoSlot
  * [공공누리 제1유형](주소))*`), 설명 줄이 없으면 출처 줄을 한 줄 끼운다 — 줄 번호가 밀리지 않게 뒤 자리부터 바꾼다. 출처가 맞지
  * 않는 공공 사진(photoCreditState missing)은 넣지 않는다. 넣은 사진이 없으면 원고를 그대로(바이트까지 같게) 돌려준다.
  * 자사 화면은 `![화면 이름](앱 주소)`로 넣는다(photoPickSrc) — 앱 안 미리보기는 같은 출처라 바로 보이고, 앱 밖으로 내보낼 때는
- * src/lib/screenExport.ts가 그림을 문서 안에 넣거나 「[화면: …]」 글자로 바꾼다.
+ * src/lib/screenExport.ts가 그림을 문서 안에 넣거나 「[화면: …]」 글자로 바꾼다. 앱이 그린 지도도 `![군산 지도 — … 위치](앱 주소)`로 넣고,
+ * 바로 아랫줄 설명(사이트 기능 문장)은 지도의 위치 문장 + OSM 출처 줄로 바꾼다(설명 줄이 없으면 한 줄 끼운다) — 출처 줄이 그림 바로 아래에
+ * 붙어 모든 내보내기(서식째 복사 · .html · 작성자 묶음 · 글자)에 따라간다.
  */
 function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot: PhotoSlot }[]): { markdown: string; applied: AppliedPhoto[] } {
   if (!applied.length) return { markdown, applied: [] }
@@ -424,11 +447,14 @@ function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot
     const cr = lines[slot.line]!.endsWith('\r') ? '\r' : ''
     lines[slot.line] = `![${alt}](${src})${cr}`
     const credit = state === 'public' ? (publicPhotoFields(pick) as PublicPhotoFields) : undefined
-    if (credit) {
-      const line = photoCreditLine(credit)
+    const isMap = pick.origin === 'osm-map'
+    if (credit || isMap) {
+      const line = credit ? photoCreditLine(credit) : mapCaptionLine(pick.caption)
       const next = lines[slot.line + 1]
       const caption = next === undefined ? null : /^(\s*)\*(?!\*)(.+?)\*(\s*)$/.exec(next.replace(/\r$/, ''))
-      if (caption && next !== undefined) lines[slot.line + 1] = `${caption[1]}*${caption[2]} (${line})*${caption[3]}${next.endsWith('\r') ? '\r' : ''}`
+      // 공공 사진은 설명 뒤에 출처를 붙이고, 지도는 설명(사이트 기능 문장)을 위치 문장 + 출처 줄로 바꾼다.
+      const text = (old: string) => (isMap ? line : `${old} (${line})`)
+      if (caption && next !== undefined) lines[slot.line + 1] = `${caption[1]}*${text(caption[2]!)}*${caption[3]}${next.endsWith('\r') ? '\r' : ''}`
       else if (cr || !crlf) lines.splice(slot.line + 1, 0, `*${line}*${cr}`)
       else {
         // CRLF 원고의 마지막 줄 — 사진 줄에 줄 끝을 달고 출처 줄이 마지막 줄이 된다.
@@ -448,6 +474,7 @@ function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot
       ...(pick.origin === 'screen' && pick.screenId && pick.variantId
         ? { screen: { screenId: pick.screenId, variantId: pick.variantId, ...(pick.capturedAt ? { capturedAt: pick.capturedAt } : {}) } }
         : {}),
+      ...(isMap && pick.mapId && pick.mapVariant ? { map: { mapId: pick.mapId, variant: pick.mapVariant, credit: MAP_CREDIT } } : {}),
     })
   }
   out.reverse()

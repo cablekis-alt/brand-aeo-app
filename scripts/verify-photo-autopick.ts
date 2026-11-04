@@ -32,8 +32,10 @@ import {
   scoreSlot,
   type AutoArticle,
   type AutoCandidate,
+  type AutoMapDrawn,
   type AutoScreenShot,
 } from '../src/lib/photoAutoPick'
+import { MAP_CREDIT, mapAppSrc, mapVariantKey } from '../src/lib/mapImage'
 import { screenAppSrc } from '../src/lib/screenCapture'
 
 const checks: [string, boolean][] = []
@@ -1005,6 +1007,131 @@ ok(
   '「어린이 친구들」 소제목 아래 코스 자리는 아이와(브랜드에서 많이 썼어도 연인·친구를 넣지 않는다) · 「혼자 하는 여행」은 혼자',
   kidsFriends.state === 'filled' && kidsFriends.pick?.variantId === 'kids' && kidsFriends.screenPick?.by === 'prefer' && !kidsFriends.review &&
     soloTrip.state === 'filled' && soloTrip.pick?.variantId === 'solo' && soloTrip.screenPick?.by === 'prefer' && !soloTrip.review,
+)
+// 18) 군산 지도 그림(OSM — src/lib/mapImage.ts) — 장소 목록 출처가 있는 프로필의 지도 자리는 카카오 지도 미리보기 대신 앱이 그린 지도로
+//     채운다(maps를 줄 때). 늘 「확인 필요」, 같은 장소 묶음(변형 열쇠)은 글 하나 · 작성자 한 사람에게 한 번(브랜드 상한 없음), 아직 그리지
+//     않았으면 undrawn + mapWanted. 장소 · 좌표는 가짜.
+const MP = (id: string, name: string, kind: 'attraction' | 'food' | 'stay', lng: number, lat: number, region = '원도심') => ({ id, name, kind, lng, lat, region })
+const MAP_POINTS = [
+  MP('m1', '가상역사관', 'attraction', 126.7121, 35.9908),
+  MP('m2', '가상바다공원', 'attraction', 126.7175, 35.9893),
+  MP('m3', '가상곰전시관', 'attraction', 126.7146, 35.9897),
+  MP('m4', '가상동산', 'attraction', 126.7035, 35.9904),
+  MP('m5', '가상빵집', 'food', 126.7112, 35.987),
+  MP('m6', '가상국숫집', 'food', 126.7096, 35.9853),
+  MP('m7', '기지옆골프장', 'attraction', 126.64, 35.92, '은파'),
+]
+const MAP_VERSION = 'v-points-1'
+const MSLOT = `${SB} 웹사이트의 지도에서 찾기 화면에 가상역사관·가상바다공원 위치가 표시된 모습`
+const mdMap = (slot = MSLOT) => ['## 1. 지도', '', `![${slot}](#image-slot)`, '*지도에서 찾기로 위치를 확인할 수 있습니다.*']
+const drawnOf = (ids: string[], n: number, over: Partial<AutoMapDrawn> = {}): AutoMapDrawn => {
+  const id = (0xa00 + n).toString(16).padStart(16, '0')
+  const markers = ids.map((x) => MAP_POINTS.find((p) => p.id === x)!).map((p) => ({ id: p.id, label: p.name, kind: p.kind }))
+  return {
+    id,
+    src: mapAppSrc('fake-gunsan', id),
+    variant: mapVariantKey(ids),
+    pointsVersion: MAP_VERSION,
+    alt: `군산 지도 — ${markers.map((x) => x.label).join(' · ')} 위치`,
+    caption: `${markers.map((x) => x.label).join(' · ')} 위치를 지도에 표시했습니다.`,
+    source: 'https://gunsan.webforai.kr/map/',
+    drawnAt: '2026-11-05T01:00:00.000Z',
+    markers,
+    ...over,
+  }
+}
+const mapRun = (articles: AutoArticle[], maps: { available: boolean; drawn: AutoMapDrawn[]; points?: typeof MAP_POINTS } | undefined, over: Partial<Parameters<typeof autoPickPhotos>[0]> = {}) =>
+  screenRun(articles, { available: true, shots: ALL_SHOTS }, { ...(maps ? { maps: { available: maps.available, points: maps.points ?? MAP_POINTS, pointsVersion: MAP_VERSION, drawn: maps.drawn } } : {}), ...over })
+const undrawn = mapRun([article('mp1', mdMap(), { group: 'w1' })], { available: true, drawn: [] })
+const uRow = undrawn.articles[0]!.rows[0]!
+ok(
+  '지도 자리 — 아직 그리지 않았으면 undrawn · 고른 표지(이름이 나온 장소) · 늘 확인 필요 · mapWanted로 청한다(카카오 지도는 찍지 않는다)',
+  uRow.state === 'undrawn' && uRow.screenSlot === 'map' && uRow.review === true && !uRow.pick && !uRow.screenPick &&
+    uRow.mapPick?.key === mapVariantKey(['m1', 'm2']) && uRow.mapPick.by === 'named' && uRow.mapPick.alt === '군산 지도 — 가상역사관 · 가상바다공원 위치' &&
+    JSON.stringify(undrawn.mapWanted) === JSON.stringify([{ key: mapVariantKey(['m1', 'm2']), ids: ['m1', 'm2'] }]) &&
+    undrawn.screenWanted.every((w) => w.screenId !== 'map') && undrawn.articles[0]!.picks.length === 0,
+)
+const D12 = drawnOf(['m1', 'm2'], 1)
+const filledMap = mapRun([article('mp1', mdMap(), { group: 'w1' })], { available: true, drawn: [D12] })
+const fRow = filledMap.articles[0]!.rows[0]!
+ok(
+  '그려 둔 지도가 있으면 채운다 — origin osm-map · 앱 주소 · 지도 대체 텍스트 · 위치 문장 · 출처 줄 · 지도 id · 변형 열쇠 · 확인 필요',
+  fRow.state === 'filled' && fRow.review === true && fRow.pick?.origin === 'osm-map' && fRow.pick.src === D12.src && fRow.pick.alt === D12.alt &&
+    fRow.pick.caption === D12.caption && fRow.pick.credit === MAP_CREDIT && fRow.pick.mapId === D12.id && fRow.pick.mapVariant === D12.variant &&
+    fRow.pick.pageUrl === D12.source && fRow.pick.auto === true && filledMap.articles[0]!.picks.length === 1 && filledMap.mapWanted.length === 0,
+)
+ok(
+  '자리의 장면 글자 · 설명 줄은 고치지 않는다(사진 기록에만 위치 문장)',
+  fRow.pick?.slot === MSLOT && fRow.caption === '지도에서 찾기로 위치를 확인할 수 있습니다.',
+)
+const staleVer = mapRun([article('mp1', mdMap())], { available: true, drawn: [drawnOf(['m1', 'm2'], 2, { pointsVersion: 'old' })] })
+ok('장소 목록 판이 다른 지도는 쓰지 않는다(다시 그린다)', staleVer.articles[0]!.rows[0]!.state === 'undrawn' && staleVer.mapWanted.length === 1)
+const cantDraw = mapRun([article('mp1', mdMap())], { available: false, drawn: [] })
+ok('그릴 수 없는 실행(웹 · dev) — undrawn이지만 청하지 않는다', cantDraw.articles[0]!.rows[0]!.state === 'undrawn' && cantDraw.mapWanted.length === 0)
+const twoSame = mapRun(
+  [article('mw1', mdMap(), { group: 'w1' }), article('mw2', mdMap(), { group: 'w1' }), article('mw3', mdMap(), { group: 'w1' })],
+  { available: true, drawn: [D12] },
+)
+const tier1 = twoSame.articles[1]!.rows[0]!
+ok(
+  '같은 작성자의 두 번째 같은 자리 — 넓힌 묶음(tier 1, 다른 열쇠)으로, 세 번째는 used',
+  twoSame.articles[0]!.rows[0]!.state === 'filled' && tier1.state === 'undrawn' && tier1.mapPick?.tier === 1 && tier1.mapPick.key !== D12.variant &&
+    tier1.mapPick.ids.includes('m1') && tier1.mapPick.ids.includes('m2') && twoSame.articles[2]!.rows[0]!.state === 'used',
+)
+const fourWriters = mapRun(
+  ['w1', 'w2', 'w3', 'w4'].map((g, i) => article(`mx${i}`, mdMap(), { group: g })),
+  { available: true, drawn: [D12] },
+)
+ok('작성자가 다르면 같은 지도를 다시 쓴다(브랜드 상한 없음)', fourWriters.articles.every((a) => a.rows[0]!.state === 'filled' && a.picks[0]?.mapId === D12.id))
+const inOne = mapRun([article('mi', [...mdMap(), '', '## 2. 또 지도', '', `![${MSLOT}](#image-slot)`])], { available: true, drawn: [D12] }).articles[0]!
+ok('한 글의 두 자리에 같은 묶음이면 두 번째는 넓힌 묶음', inOne.rows[0]!.state === 'filled' && inOne.rows[1]!.mapPick?.tier === 1)
+const avoidSlot = mapRun([article('ma', mdMap(`${SB} 웹사이트의 지도에서 찾기 화면에 기지옆골프장 위치가 표시된 모습`))], { available: true, drawn: [] }).articles[0]!.rows[0]!
+ok('공군기지 상자 안 장소만 말한 자리 — 표지가 없어 비워 둔다(screen · mapMiss no-markers)', avoidSlot.state === 'screen' && avoidSlot.mapMiss === 'no-markers' && !avoidSlot.mapPick && !avoidSlot.pick)
+const anchorRow = mapRun(
+  [article('mn', ['## 1. 동선', '', '가상곰전시관을 먼저 본 뒤 식사합니다.', '', `![${SB} 웹사이트의 지도에서 찾기 화면에 식당과 주변 관광지가 함께 표시된 모습](#image-slot)`, '*지도에서 찾기로 식당 주변을 봅니다.*'])],
+  { available: true, drawn: [] },
+).articles[0]!.rows[0]!
+ok(
+  '이름 없는 「식당 … 관광지」 자리 — 절 글자의 장소를 기준점으로 음식점 · 관광지',
+  anchorRow.state === 'undrawn' && anchorRow.mapPick?.by === 'anchor' && anchorRow.mapPick.markers[0]?.label === '가상곰전시관' &&
+    anchorRow.mapPick.markers.some((x) => x.kind === 'food') && /절 글자/.test(anchorRow.mapPick.why),
+)
+const fullMap = mapRun([article('mf', mdMap(), { picks: [lost(1), lost(2), lost(3)] })], { available: true, drawn: [D12] }).articles[0]!.rows
+ok('사진 3장이 다 찬 글의 지도 자리는 full', fullMap[0]!.state === 'full' && !fullMap[0]!.pick)
+const clearedMap = mapRun(
+  [article('mc', mdMap(), { group: 'w1', cleared: [{ slot: MSLOT, nth: 1, heading: '지도', removed: [`osm-map:${D12.variant}`] }] })],
+  { available: true, drawn: [D12] },
+  { refillCleared: true },
+).articles[0]!.rows[0]!
+ok('사람이 그 자리에서 뺀 지도(osm-map 열쇠)는 다시 고르지 않는다 — 넓힌 묶음으로', clearedMap.refill === true && clearedMap.mapPick?.tier === 1 && clearedMap.mapPick.key !== D12.variant)
+ok(
+  '다른 글의 지도는 「osm-map:변형」으로 센다(otherPhotoUses)',
+  JSON.stringify(otherPhotoUses({ x: { photos: [{ ...illustration, src: D12.src, origin: 'osm-map', mapId: D12.id, mapVariant: D12.variant, credit: MAP_CREDIT }] } }, new Set(), () => 'w1')) ===
+    JSON.stringify([{ src: `osm-map:${D12.variant}`, group: 'w1' }]),
+)
+const othersMap = mapRun([article('mo', mdMap(), { group: 'w1' })], { available: true, drawn: [D12] }, { others: [{ src: `osm-map:${D12.variant}`, group: 'w1' }] }).articles[0]!.rows[0]!
+ok('같은 작성자의 다른 글에 이미 들어간 지도 묶음이면 넓힌 묶음', othersMap.mapPick?.tier === 1)
+const noMapsInput = mapRun([article('mk', mdMap())], undefined).articles[0]!.rows[0]!
+ok('maps를 주지 않으면 지금처럼 카카오 지도 미리보기(preview)', noMapsInput.state === 'preview' && noMapsInput.screenPick?.screenId === 'map' && !noMapsInput.mapPick)
+const otherBrand = autoPickPhotos({
+  articles: [article('ob', mdMap())],
+  candidates: [],
+  brandName: SB,
+  ownedDomains: ['stay.example'],
+  screens: { available: true, shots: ALL_SHOTS },
+  maps: { available: true, points: MAP_POINTS, pointsVersion: MAP_VERSION, drawn: [D12] },
+}).articles[0]!.rows[0]!
+ok('장소 목록 출처가 없는 브랜드(프로필 없음)는 그대로 — 지도 자리를 비워 둔다', otherBrand.state === 'screen' && otherBrand.screenSlot === 'none' && !otherBrand.mapPick && !otherBrand.pick)
+const noPoints = mapRun([article('np', mdMap())], { available: true, drawn: [], points: [] }).articles[0]!.rows[0]!
+ok('장소 목록이 비면 비워 둔다(mapMiss no-points)', noPoints.state === 'screen' && noPoints.mapMiss === 'no-points' && !noPoints.pick)
+ok('미리보기 셈 — 채운 지도는 채울 자리 · 확인 필요에 센다', (() => {
+  const c = autoPreviewCounts(filledMap.articles[0]!.rows)
+  return c.filled.all === 1 && c.filled.review === 1
+})())
+ok(
+  '같은 입력이면 같은 결과(그려 둔 지도 순서와 무관)',
+  JSON.stringify(mapRun([article('mp1', mdMap(), { group: 'w1' })], { available: true, drawn: [drawnOf(['m3'], 9), D12] }).articles) ===
+    JSON.stringify(mapRun([article('mp1', mdMap(), { group: 'w1' })], { available: true, drawn: [D12, drawnOf(['m3'], 9)] }).articles),
 )
 ok(
   '장소 사전을 주어도 코스 · 지도 · 목록에 없는 화면 자리의 결과는 같다',

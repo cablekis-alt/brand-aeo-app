@@ -96,7 +96,8 @@ export function writerBundle(input: WriterBundleInput): WriterBundle {
       files.push({ kind: 'photo', prefix, k: j + 1, photo, actionId: stored.actionId, generatedAt: stored.generatedAt })
     })
   })
-  const credited = files.filter((f): f is Extract<WriterBundleFile, { kind: 'photo' }> => f.kind === 'photo' && Boolean(f.photo.credit))
+  // 공공 사진과 앱이 그린 지도(OSM 출처 줄) — 사진 파일을 직접 올리면 설명 줄의 출처가 따라가지 않을 수 있어 출처 파일에 적는다.
+  const credited = files.filter((f): f is Extract<WriterBundleFile, { kind: 'photo' }> => f.kind === 'photo' && Boolean(f.photo.credit || f.photo.map))
   if (credited.length) files.push({ kind: 'credits', name: PHOTO_CREDITS_FILE, photos: credited, today: input.today })
   return { folder, files, articles, photos, missing, withGaps }
 }
@@ -213,7 +214,7 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
         const { name, blob } = await contentOf(file)
         names.set(file, `${bundle.folder}-${name}`)
         downloadBlob(`${bundle.folder}-${name}`, blob)
-        if (file.kind === 'photo' && file.photo.credit) creditedSaved = true
+        if (file.kind === 'photo' && (file.photo.credit || file.photo.map)) creditedSaved = true
       }
     } catch (err) {
       if (creditedSaved) await saveCredits()

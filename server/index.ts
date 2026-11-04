@@ -93,6 +93,21 @@ import {
   screenFileForPick,
   screenShotView,
 } from './screens.js';
+import { MAP_CREDIT, isMapImageId, mapAppSrc } from '../src/lib/mapImage.js';
+import { loadMapPoints, MapPointsError, readMapPoints } from './mapPoints.js';
+import {
+  drawMapVariant,
+  MAP_UNAVAILABLE_MESSAGE,
+  mapErrorStatus,
+  mapFileForPick,
+  mapImageView,
+  MapRenderError,
+  mapRenderAvailable,
+  mapTextOf,
+  readMapFile,
+  readMapImages,
+  type MapImageRecord,
+} from './maps.js';
 import { findRegionTourPhotos, findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
 import { describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
@@ -225,6 +240,8 @@ app.get('/api/health', (_req, res) => {
     // 자사 화면을 찍을 수 있는가 — 설치한 데스크톱 앱(서버가 utilityProcess)에서만 true(server/screens.ts). 웹 · dev에는 없거나 false라
     // 화면이 「화면 찍기」를 숨긴다. 찍어 둔 화면은 그래도 쓴다.
     screens: screenCaptureAvailable(),
+    // 군산 지도를 그릴 수 있는가 — 설치한 데스크톱 앱(서버가 utilityProcess)에서만 true(server/maps.ts). 웹 · dev에는 없거나 false.
+    maps: mapRenderAvailable(),
   });
 });
 
@@ -886,6 +903,8 @@ app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
 // 자사 화면(origin screen — { slot, nth, same, heading, origin: 'screen', screenId, variantId, shotId })은 이 PC에 찍어 둔 화면 목록에서
 // 서버가 찾아 저장한다(앱 주소 · 찍은 주소 · 찍은 때 · 화면 이름 대체 텍스트). 지도 화면은 넣지 않는다(SCREEN_AUTO_SAVE_KINDS). 자동
 // 채우기의 같은 화면 상한은 「화면 + 변형」 단위로 글 하나에 한 번 · 작성자에게 한 번, 브랜드 상한은 받지 않는다(saveAutoPhotoPicks).
+// 앱이 그린 군산 지도(origin osm-map — { slot, nth, same, heading, origin: 'osm-map', mapId })도 같다 — 서버가 maps.json에서 찾아 앱 주소 ·
+// 대체 텍스트 · 위치 문장 · OSM 출처 줄 · 장소 묶음을 단다. 반복 상한은 「장소 묶음」 단위(브랜드 상한 없음).
 app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -933,8 +952,23 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       },
     };
   };
+  // 앱이 그린 군산 지도(origin osm-map — src/lib/mapImage.ts · server/maps.ts) — 화면이 보낸 src · pageUrl · alt · caption · credit은 쓰지
+  // 않는다. 지도 id(mapId)로 이 PC의 maps.json에서 찾아 서버가 앱 주소 · 장소 목록 출처 · 대체 텍스트(「군산 지도 — … 위치」) · 위치 문장 ·
+  // OSM 출처 줄 · 장소 묶음을 단다. 장소 목록 출처가 있는 프로필(군산각)만. 목록은 넣기 · 자동 채우기 앞에서 읽는다(mapRecords).
+  let mapRecords: MapImageRecord[] = [];
+  const mapPickOf = (raw: Record<string, unknown>) => {
+    const rec = screenProfile?.mapPoints && isMapImageId(raw.mapId) ? mapRecords.find((r) => r.id === raw.mapId) : undefined;
+    if (!rec) return null;
+    const text = mapTextOf(rec);
+    return {
+      src: mapAppSrc(tenant.tenantId, rec.id),
+      pageUrl: rec.source,
+      alt: cleanPhotoAlt(text.alt),
+      map: { fields: { origin: 'osm-map' as const, mapId: rec.id, mapVariant: rec.variant, caption: text.caption, credit: MAP_CREDIT } },
+    };
+  };
   // 고른 사진 하나 — 자리 · https 사진 주소 · 페이지 주소가 맞지 않으면 null. 설명은 사실 가드를 거친다(걸리면 '' — siteAlt로 알린다).
-  // 자사 화면이면 screenPickOf로 찾고(못 찾으면 null), screen에 저장할 표시를 싣는다.
+  // 자사 화면이면 screenPickOf로, 앱이 그린 지도면 mapPickOf로 찾고(못 찾으면 null), screen · map에 저장할 표시를 싣는다.
   const pickOf = (v: unknown) => {
     const raw = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
     const place = placeOf(raw);
@@ -942,14 +976,18 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     if (!place || !same || same < place.nth) return null;
     if (raw.origin === 'screen') {
       const found = screenPickOf(raw);
-      return found ? { place, same, siteAlt: '', pub: null, ...found } : null;
+      return found ? { place, same, siteAlt: '', pub: null, map: null, ...found } : null;
+    }
+    if (raw.origin === 'osm-map') {
+      const found = mapPickOf(raw);
+      return found ? { place, same, siteAlt: '', pub: null, screen: null, ...found } : null;
     }
     const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
     const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
     if (!src || !pageUrl) return null;
     const siteAlt = cleanPhotoAlt(typeof raw.alt === 'string' ? raw.alt : '');
     const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
-    return { place, same, src, pageUrl, siteAlt, alt, pub: publicOf(raw), screen: null };
+    return { place, same, src, pageUrl, siteAlt, alt, pub: publicOf(raw), screen: null, map: null };
   };
   // 공공 사진 표시 — 홈페이지 사진이면 null, 맞지 않으면 이유(글자). 출처 글자도 사실 가드를 거친다(브랜드 사실에 없는 숫자).
   function publicOf(raw: Record<string, unknown>): PublicPhotoFields | string | null {
@@ -1012,6 +1050,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     const publicAt = settings.photoRights.publicAt;
     const PUBLIC_NEEDED = '먼저 이 브랜드의 공공 사진(공공누리) 사용 확인을 해 주세요 — 글의 「홈페이지 사진」 칸에 있습니다.';
     if (screenProfile && (op === 'pick' || op === 'auto')) screenShots = await readScreenShots(tenant.tenantId);
+    if (screenProfile?.mapPoints && (op === 'pick' || op === 'auto')) mapRecords = await readMapImages(tenant.tenantId);
     if (op === 'credit') {
       const patch = creditOf(b);
       if (typeof patch === 'string') {
@@ -1056,6 +1095,8 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
           }
           return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.screen.fields };
         }
+        // 앱이 그린 지도 — 사진 후보 검사는 보지 않는다(서버가 그린 그림이고 대체 텍스트 · 위치 문장 · 출처 줄은 서버가 단다).
+        if (p?.map) return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.map.fields };
         const pub = p?.pub && typeof p.pub === 'object' ? p.pub : null;
         if (pub && !publicAt) {
           needPublic = true;
@@ -1153,11 +1194,14 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     }
     const p = pickOf(b.pick);
     if (!p) {
-      const screenAsked = Boolean(b.pick && typeof b.pick === 'object' && (b.pick as Record<string, unknown>).origin === 'screen');
+      const asked = b.pick && typeof b.pick === 'object' ? (b.pick as Record<string, unknown>).origin : undefined;
       res.status(400).json({
-        error: screenAsked
-          ? '화면 자리(slot · nth · same · heading)와 이 PC에 찍어 둔 자사 화면(screenId · variantId · shotId)이 필요합니다.'
-          : '사진 자리(slot · nth · same · heading)와 https 사진 주소 · http(s) 페이지 주소가 필요합니다.',
+        error:
+          asked === 'screen'
+            ? '화면 자리(slot · nth · same · heading)와 이 PC에 찍어 둔 자사 화면(screenId · variantId · shotId)이 필요합니다.'
+            : asked === 'osm-map'
+              ? '지도 자리(slot · nth · same · heading)와 이 PC에 그려 둔 지도(mapId)가 필요합니다.'
+              : '사진 자리(slot · nth · same · heading)와 https 사진 주소 · http(s) 페이지 주소가 필요합니다.',
       });
       return;
     }
@@ -1183,7 +1227,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       return;
     }
     const replaces = placeOf(b.replaces);
-    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(p.screen?.fields ?? pub ?? ownSite(src)) };
+    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(p.screen?.fields ?? p.map?.fields ?? pub ?? ownSite(src)) };
     const stored = await savePhotoPicks(
       tenant.tenantId,
       actionId,
@@ -1368,6 +1412,26 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
     }
     return;
   }
+  // 앱이 그린 지도 — 이 PC에 그려 둔 파일을 그대로 보낸다(출처 줄은 함께 받는 「사진 출처」 파일 · 글의 설명 줄에 있다).
+  if (pick.origin === 'osm-map') {
+    try {
+      const png = await mapFileForPick(tenant.tenantId, pick);
+      if (png === 'gone') {
+        res.status(404).json({ error: '그 지도 파일이 이 PC에 없어요 — 지도를 다시 그려 넣어 주세요.' });
+        return;
+      }
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', 'attachment; filename="photo.png"');
+      res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Cache-Control', 'no-store');
+      res.send(png);
+    } catch (err) {
+      console.warn(`[photo-file] ${tenant.tenantId} 지도 ${pick.src} 읽기 실패:`, err);
+      res.status(500).json({ error: '지도 파일을 읽지 못했어요.' });
+    }
+    return;
+  }
   try {
     const file = await fetchSitePhoto(pick.src);
     res.setHeader('Content-Type', file.type);
@@ -1474,6 +1538,142 @@ app.get('/api/screens/:tenantId/:file', async (req, res) => {
   } catch (err) {
     console.warn(`[screens] ${tenant.tenantId} 화면 파일 ${m[1]} 읽기 실패:`, err);
     res.status(500).json({ error: '화면 파일을 읽지 못했어요.' });
+  }
+});
+
+// 군산 지도 그림(src/lib/mapImage.ts · server/maps.ts · server/mapPoints.ts) — 카카오 · 네이버 지도 대신 앱이 동봉한 OSM 데이터로 그린 지도.
+// 장소 목록 출처가 있는 프로필(군산각 — ScreenProfile.mapPoints)만. 그리기는 설치한 데스크톱 앱(서버가 utilityProcess)에서만 — 웹 · dev는
+// 그려 둔 지도만 쓴다(그리기 요청은 503). Express 전용(Vercel 함수 12/12 — 웹에는 이 라우트가 없다).
+const mapProfileOf = (tenant: TenantConfig) => {
+  const profile = screenProfileFor(tenant.ownedDomains);
+  return profile?.mapPoints ? profile : null;
+};
+
+// 지도 목록 — 그릴 수 있는지(available — /api/health maps와 같다), 장소 목록 출처가 있는지(source), 저장한 장소 목록의 판 · 받은 때(없으면 null —
+// 받지 않는다), 이 PC에 그려 둔 지도(늦게 그린 것부터 — 앱 주소 · 대체 텍스트 · 위치 문장).
+app.get('/api/maps/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const profile = mapProfileOf(tenant);
+  const saved = profile ? await readMapPoints(tenant.tenantId) : null;
+  const records = profile ? (await readMapImages(tenant.tenantId)).sort((a, b) => Date.parse(b.drawnAt) - Date.parse(a.drawnAt)) : [];
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    available: mapRenderAvailable(),
+    source: Boolean(profile),
+    points: saved ? { fetchedAt: saved.fetchedAt, source: saved.source, version: saved.version, count: saved.points.length } : null,
+    maps: records.map((r) => mapImageView(tenant.tenantId, r)),
+  });
+});
+
+// 지도 장소 목록 — 저장한 목록이 기한 안이면 그것, 아니면 자사 사이트 /map/을 GET으로 받아 점만 저장한다(server/mapPoints.ts — 페이지 HTML은
+// 저장하지 않는다). 받지 못하면 저장한 목록(stale · warning), 그것도 없으면 502.
+app.get('/api/maps/:tenantId/points', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const profile = mapProfileOf(tenant);
+  if (!profile) {
+    res.status(404).json({ error: '이 브랜드에는 지도 장소 목록 출처가 없어요.' });
+    return;
+  }
+  try {
+    const got = await loadMapPoints(tenant.tenantId, profile);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ ...got.file, fetched: got.fetched, stale: got.stale, ...(got.warning ? { warning: got.warning } : {}) });
+  } catch (err) {
+    if (err instanceof MapPointsError) {
+      res.status(err.code === 'no-source' ? 404 : 502).json({ error: err.message, code: err.code });
+      return;
+    }
+    console.warn(`[maps] ${tenant.tenantId} 장소 목록 실패:`, err);
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 지도 그리기 — { maps: [{ ids: [장소 id …] }] }(한 번에 8장까지, 장소 1~12곳). 좌표 · 이름은 서버의 장소 목록에서만 찾고, 틀은 서버가 정해
+// (공군기지 상자를 피한다) 메인 프로세스가 그린다. 같은 장소 묶음 · 같은 판으로 그려 둔 것은 다시 그리지 않는다(reused — 그릴 수 없어도 준다).
+// 결과는 장마다(ok · map 또는 code · message). 그릴 수 없는 실행에서 아무것도 주지 못하면 503(설치한 데스크톱 앱에서만 그린다).
+app.post('/api/maps/:tenantId/render', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const profile = mapProfileOf(tenant);
+  if (!profile) {
+    res.status(404).json({ error: '이 브랜드에는 지도 장소 목록 출처가 없어요.' });
+    return;
+  }
+  const MAX_MAPS = 8;
+  const list = (req.body ?? {}) as { maps?: unknown };
+  const wanted = Array.isArray(list.maps) ? list.maps.map((m) => (m && typeof m === 'object' ? (m as { ids?: unknown }).ids : null)) : null;
+  if (!wanted || !wanted.length || wanted.length > MAX_MAPS || !wanted.every((ids) => Array.isArray(ids) && ids.length > 0 && ids.every((id) => typeof id === 'string'))) {
+    res.status(400).json({ error: `maps(지도 1~${MAX_MAPS}장, 장마다 장소 id 목록 ids)가 필요합니다.` });
+    return;
+  }
+  let points: Awaited<ReturnType<typeof loadMapPoints>>;
+  try {
+    points = await loadMapPoints(tenant.tenantId, profile);
+  } catch (err) {
+    if (err instanceof MapPointsError) {
+      res.status(err.code === 'no-source' ? 404 : 502).json({ error: err.message, code: err.code });
+      return;
+    }
+    console.warn(`[maps] ${tenant.tenantId} 장소 목록 실패:`, err);
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  const results: Record<string, unknown>[] = [];
+  for (const ids of wanted as string[][]) {
+    try {
+      const { record, reused } = await drawMapVariant(tenant.tenantId, profile, points.file, ids);
+      results.push({ ids, ok: true, reused, map: mapImageView(tenant.tenantId, record) });
+    } catch (err) {
+      if (err instanceof MapRenderError) {
+        if (err.code !== 'unavailable') console.warn(`[maps] ${tenant.tenantId} 지도 그리기 실패(${err.code}): ${err.message}`);
+        results.push({ ids, ok: false, code: err.code, status: mapErrorStatus(err.code), message: err.message });
+        continue;
+      }
+      console.warn(`[maps] ${tenant.tenantId} 지도 저장 실패:`, err);
+      results.push({ ids, ok: false, code: 'failed', status: 500, message: err instanceof Error ? err.message : String(err) });
+    }
+  }
+  if (results.every((r) => r.code === 'unavailable')) {
+    res.status(503).json({ error: MAP_UNAVAILABLE_MESSAGE, code: 'unavailable', results });
+    return;
+  }
+  res.json({ available: mapRenderAvailable(), results, points: { version: points.file.version, fetchedAt: points.file.fetchedAt, ...(points.warning ? { warning: points.warning } : {}) } });
+});
+
+// 그린 지도 파일 — /api/maps/<tenant>/<id>.png(글의 사진 기록에 적는 앱 주소). id는 그림 이름(sha256 앞 16자)이고 그 브랜드의 목록(maps.json)에
+// 있는 것만 준다 — 다른 경로 글자는 받지 않는다. 같은 이름이면 같은 그림이다(오래 캐시).
+app.get('/api/maps/:tenantId/:file', async (req, res) => {
+  const m = /^([0-9a-f]{16})\.png$/.exec(req.params.file);
+  const tenant = m ? await findTenant(req.params.tenantId) : undefined;
+  if (!m || !tenant) {
+    res.status(404).json({ error: '그 지도 파일이 없어요.' });
+    return;
+  }
+  try {
+    const png = await readMapFile(tenant.tenantId, m[1]!);
+    if (!png) {
+      res.status(404).json({ error: '그 지도 파일이 없어요.' });
+      return;
+    }
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    res.send(png);
+  } catch (err) {
+    console.warn(`[maps] ${tenant.tenantId} 지도 파일 ${m[1]} 읽기 실패:`, err);
+    res.status(500).json({ error: '지도 파일을 읽지 못했어요.' });
   }
 });
 

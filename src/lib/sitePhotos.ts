@@ -13,6 +13,7 @@ import {
 } from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
 import { downloadBlob, safeFileName } from './markdownFile'
+import { MAP_CREDIT } from './mapImage'
 import { fetchPage } from './aeo/fetchPage'
 import { findPlace, placeKey, placeNameOfPath, publicCandidateFields, type AutoCandidate, type AutoPickResult } from './photoAutoPick'
 import { REGION_SCENE_LIMITS, REGION_SCENE_PLACE, scenesToRead, type PhotoScene, type SceneWant } from './photoScenes'
@@ -962,20 +963,35 @@ export interface PhotoCreditRow {
  */
 export function photoCreditsTable(rows: readonly PhotoCreditRow[], today: string): string {
   const credited = rows.filter((r) => r.photo.credit)
-  const withArticle = credited.some((r) => r.article !== undefined)
+  // 앱이 그린 지도(src/lib/mapImage.ts) — OSM 출처 줄이 이용 조건이다. 지도 파일을 직접 올리면 설명 줄의 출처가 따라가지 않을 수 있어 함께 적는다.
+  const mapped = rows.filter((r) => r.photo.map)
+  const withArticle = [...credited, ...mapped].some((r) => r.article !== undefined)
   const cells = (article: string, rest: string[]) => (withArticle ? [article, ...rest] : rest).join('\t')
   const first = credited[0]?.photo.credit
-  const lines = [
-    '사진 출처 — 아래 사진은 공공누리 제1유형 공공 사진입니다. 블로그에 올릴 때 사진 바로 아래에 출처와 이용 허락 링크를 적어 주세요.',
-    ...(first ? [`예: 사진: ${first.credit}, ${PHOTO_LICENSES[first.license].name} (${first.creditUrl})`] : []),
-    '「제공」 · 「협찬」 · 「공식」처럼 공공기관과 특별한 관계로 보이는 말은 쓰지 않습니다. 사진 속 인물의 초상권은 이 이용 허락에 들어 있지 않습니다.',
-    '',
-    cells('글 번호', ['사진 파일 이름', '출처', '유형', '원 주소', '받은 날']),
-    ...credited.map(({ article, name, photo }) => {
-      const c = photo.credit!
-      return cells(article ?? '', [name, c.credit, `${PHOTO_LICENSES[c.license].name} (${c.creditUrl})`, photo.src, today])
-    }),
-  ]
+  const lines =
+    credited.length || !mapped.length
+      ? [
+          '사진 출처 — 아래 사진은 공공누리 제1유형 공공 사진입니다. 블로그에 올릴 때 사진 바로 아래에 출처와 이용 허락 링크를 적어 주세요.',
+          ...(first ? [`예: 사진: ${first.credit}, ${PHOTO_LICENSES[first.license].name} (${first.creditUrl})`] : []),
+          '「제공」 · 「협찬」 · 「공식」처럼 공공기관과 특별한 관계로 보이는 말은 쓰지 않습니다. 사진 속 인물의 초상권은 이 이용 허락에 들어 있지 않습니다.',
+          '',
+          cells('글 번호', ['사진 파일 이름', '출처', '유형', '원 주소', '받은 날']),
+          ...credited.map(({ article, name, photo }) => {
+            const c = photo.credit!
+            return cells(article ?? '', [name, c.credit, `${PHOTO_LICENSES[c.license].name} (${c.creditUrl})`, photo.src, today])
+          }),
+        ]
+      : []
+  if (mapped.length) {
+    lines.push(
+      ...(lines.length ? [''] : []),
+      '지도 출처 — 아래 지도는 앱이 OpenStreetMap 데이터로 그린 그림입니다. 블로그에 올릴 때 지도 바로 아래에 이 출처 줄을 그대로 적어 주세요.',
+      MAP_CREDIT,
+      '',
+      cells('글 번호', ['지도 파일 이름', '출처', '받은 날']),
+      ...mapped.map(({ article, name, photo }) => cells(article ?? '', [name, photo.map!.credit, today])),
+    )
+  }
   return `${lines.join('\r\n')}\r\n`
 }
 
@@ -987,7 +1003,7 @@ export function photoCreditsTable(rows: readonly PhotoCreditRow[], today: string
 export async function downloadArticlePhotos(tenantId: string, stored: StoredDraft, photos: AppliedPhoto[]): Promise<void> {
   const rows: PhotoCreditRow[] = []
   const saveCredits = () => {
-    if (!rows.some((r) => r.photo.credit)) return
+    if (!rows.some((r) => r.photo.credit || r.photo.map)) return
     downloadBlob(ARTICLE_CREDITS_FILE, new Blob([photoCreditsTable(rows, todayKst())], { type: 'text/plain;charset=utf-8' }))
   }
   try {

@@ -15,13 +15,13 @@
 /** 앱 주소의 화면 그림을 받는다 — 앱에서는 src/lib/api.ts fetchScreenFile. 실패하면 throw. */
 export type ScreenFetcher = (src: string) => Promise<Blob>
 
-/** 앱 밖으로 나간 글에 남으면 안 되는 앱 주소. */
-const APP_PATH = /\/api\/screens\//
-/** 본문 HTML(src/lib/htmlFile.ts markdownToHtml)의 화면 그림 — 그림 줄(figure)은 img가 figure 바로 안에 있다. */
-const FIGURE_IMG = /<figure><img src="(\/api\/screens\/[^"]*)" alt="([^"]*)"[^>]*>/g
-const ANY_IMG = /<img src="(\/api\/screens\/[^"]*)" alt="([^"]*)"([^>]*)>/g
-/** 마크다운의 화면 그림 — `![이름](앱 주소)`. */
-const MD_IMG = /!\[([^\]]*)\]\((\/api\/screens\/[^)\s]*)\)/g
+/** 앱 밖으로 나간 글에 남으면 안 되는 앱 주소 — 자사 화면(/api/screens/)과 앱이 그린 지도(/api/maps/ — src/lib/mapImage.ts). */
+const APP_PATH = /\/api\/(?:screens|maps)\//
+/** 본문 HTML(src/lib/htmlFile.ts markdownToHtml)의 화면 · 지도 그림 — 그림 줄(figure)은 img가 figure 바로 안에 있다. */
+const FIGURE_IMG = /<figure><img src="(\/api\/(?:screens|maps)\/[^"]*)" alt="([^"]*)"[^>]*>/g
+const ANY_IMG = /<img src="(\/api\/(?:screens|maps)\/[^"]*)" alt="([^"]*)"([^>]*)>/g
+/** 마크다운의 화면 · 지도 그림 — `![이름](앱 주소)`. */
+const MD_IMG = /!\[([^\]]*)\]\((\/api\/(?:screens|maps)\/[^)\s]*)\)/g
 const PNG_SIG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 /** 한 장의 최대 크기 — 서버 저장 상한(server/screens.ts MAX_SCREEN_PNG_BYTES)과 같다. */
 const MAX_SCREEN_BYTES = 8 * 1024 * 1024
@@ -40,9 +40,17 @@ export function screenPlaceholder(alt: string): string {
   return `[화면: ${screenNameOfAlt(alt)}]`
 }
 
-/** 서식째 복사의 글자 쪽(마크다운) — 화면 그림을 「[화면: 이름]」으로. 화면이 없으면 그대로(바이트까지 같게). */
+/**
+ * 앱 주소 그림의 자리 글자 — 앱이 그린 지도면 「[지도: 군산 지도 — … 위치]」(대체 텍스트 그대로 — 지도의 출처 줄은 바로 아랫줄 설명에 그대로
+ * 남는다), 자사 화면이면 「[화면: 이름]」.
+ */
+function appImagePlaceholder(src: string, alt: string): string {
+  return /^\/api\/maps\//.test(src) ? `[지도: ${alt.trim() || '지도'}]` : screenPlaceholder(alt)
+}
+
+/** 서식째 복사의 글자 쪽(마크다운) — 화면 · 지도 그림을 「[화면: 이름]」 · 「[지도: …]」로. 없으면 그대로(바이트까지 같게). */
 export function screenPlainText(markdown: string): string {
-  return markdown.replace(MD_IMG, (_whole, alt: string) => screenPlaceholder(alt))
+  return markdown.replace(MD_IMG, (_whole, alt: string, src: string) => appImagePlaceholder(src, alt))
 }
 
 function base64Of(bytes: Uint8Array): string {
@@ -101,7 +109,7 @@ export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promi
       // HTML 속성 안의 주소라 &amp;가 있을 수 있다(앱 주소에는 없지만 되돌려 받는다).
       data.set(src, await dataUrlOf(await fetcher(src.replace(/&amp;/g, '&'))))
     } catch (err) {
-      console.warn(`[screenExport] 화면 그림 ${src}을 받지 못해 「[화면: …]」 글자로 둡니다`, err)
+      console.warn(`[screenExport] 그림 ${src}을 받지 못해 「[화면: …]」 · 「[지도: …]」 글자로 둡니다`, err)
       data.set(src, null)
     }
   }
@@ -121,7 +129,7 @@ function replaceScreens(html: string, data: ReadonlyMap<string, { url: string; w
     .replace(FIGURE_IMG, (whole, src: string, alt: string) => {
       if (data.get(src)) return whole
       dropped += 1
-      return `<figure class="image-slot"><p>${screenPlaceholder(alt)}</p>`
+      return `<figure class="image-slot"><p>${appImagePlaceholder(src, alt)}</p>`
     })
     .replace(ANY_IMG, (_whole, src: string, alt: string, rest: string) => {
       const got = data.get(src)
@@ -130,7 +138,7 @@ function replaceScreens(html: string, data: ReadonlyMap<string, { url: string; w
         return `<img src="${got.url}" alt="${alt}"${notWider(rest, got.width)}>`
       }
       dropped += 1
-      return screenPlaceholder(alt)
+      return appImagePlaceholder(src, alt)
     })
   return { html: out, inlined, dropped }
 }
@@ -168,5 +176,5 @@ export function screensDroppedText(dropped: number): string {
  * 검증 스크립트가 내보낸 결과를 이것으로 확인한다.
  */
 export function exportLeaks(text: string): string[] {
-  return [...new Set(text.match(/\/api\/screens\/|127\.0\.0\.1|localhost/gi) ?? [])]
+  return [...new Set(text.match(/\/api\/(?:screens|maps)\/|127\.0\.0\.1|localhost/gi) ?? [])]
 }
