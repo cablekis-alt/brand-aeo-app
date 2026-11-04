@@ -1,11 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
+  captureScreen,
   loadPhotoScenesStatus,
   loadPublishSettings,
   loadRegionTourPhotos,
+  loadScreenCaptureStatus,
+  loadScreens,
   loadTourApiStatus,
   saveDraftPhotosAuto,
   type AutoPhotoSaveResult,
+  type ScreenList,
   type StoredDraft,
   type TenantSummary,
 } from '../lib/api'
@@ -27,11 +31,15 @@ import {
   type AutoArticle,
   type AutoCandidate,
   type AutoPickResult,
+  type AutoScreenPick,
+  type AutoScreenShot,
+  type AutoScreenWant,
   type AutoSlotRow,
   type AutoSlotState,
   type SceneSkip,
 } from '../lib/photoAutoPick'
 import { REGION_SCENE_LIMITS, SCENE_SETTING_TEXT, sceneMeta, type PhotoScene, type SceneWant } from '../lib/photoScenes'
+import { MAP_PREVIEW_ONLY_TEXT, SCREEN_SLOT_KIND_TEXT, screenCaptureOrder, screenProfileFor, screenShotMeta } from '../lib/screenCapture'
 import {
   loadPlaceDirectory,
   loadPublicPhotos,
@@ -79,11 +87,21 @@ import { TOUR_PLACE_LIMIT, TOUR_SOURCES, tourRegionOf, tourSourceOf, type TourSo
  * 장소 사전(sitemap)을 읽지 못했으면 장소 없는 자리를 알 수 없어 하지 않고, 브랜드 자기 시설(브랜드 이름 · 객실 · 독채 · 매장 · 메뉴)이나
  * 고유한 장소 이름이 나온 자리에는 넣지 않는다(다른 곳의 사진은 틀린 사진이다).
  *
+ * 자사 화면 — 브랜드 자사 사이트에 화면 프로필(src/lib/screenCapture.ts)이 있으면 사진을 다 고른 뒤 코스 · 지도 화면 자리를 이 PC에
+ * 찍어 둔 자사 화면으로 맞춘다(GET /api/screens). 설치한 데스크톱 앱에서 찍을 수 있으면(/api/health screens) 아직 찍지 않은 화면을
+ * 한 번 누를 때 SCREEN_CAPTURES_PER_RUN장까지 찍고(코스 먼저 — 「자사 화면 찍는 중 n/m」) 다시 고른다 — 남은 화면은 다시 누르면 이어서
+ * 찍는다. 찍을 수 없으면(웹 · 개발 서버) 찍어 둔 화면만 쓰고 그렇다고 알린다. 지도 화면은 카카오 지도 이용 조건을 확인하기 전이라
+ * 미리보기만 하고 저장하지 않는다(결정 4 — 저장 수에 세지 않는다). 코스 화면은 사진과 같이 op auto로 저장한다(서버가 다시 본다).
+ *
  * 미리보기는 계산한 때의 초안으로 고른다 — 그사이 다른 미리보기 · 사람이 고른 사진이 저장되거나 글이 바뀌면(photoStateKey) 그
  * 미리보기로는 저장하지 않고 다시 맞추게 한다(작성자 · 브랜드 반복 상한이 달라진다). 서버도 쓰기 안에서 상한을 다시 본다.
  *
  * 글 하나(SitePhotoPanel), 작성자 한 명 · 브랜드 전부(GapActions WriterRuns), 작성자 배정이 없는 브랜드의 「① 글 확인」에서 쓴다.
  */
+
+/** 한 번 누를 때 새로 찍는 자사 화면 수 — 한 장에 몇 초(지도는 4초 안팎, 늦으면 45초)라 나머지는 다시 눌러 이어서 찍는다. */
+const SCREEN_CAPTURES_PER_RUN = 3
+
 export default function PhotoAutoFill({
   tenantId,
   brand,
@@ -130,15 +148,20 @@ export default function PhotoAutoFill({
     sceneNote: string | null
     /** 「사람이 뺀 자리도 다시 채우기」로 계산했다 — 저장도 같은 뜻으로. */
     refill: boolean
+    /** 자사 화면 — 찍은 수 · 남은 화면 · 찍지 못한 화면 · 지도 미리보기. warn이면 찍지 못한 화면이 있다. */
+    screenNote: { text: string; warn: boolean } | null
   } | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  /** 이 화면에서 찍다가 실패한 자사 화면(「화면id:변형id」) — 다음에 누를 때 뒤로 보낸다(같은 화면이 남은 화면을 막지 않게). */
+  const captureFailed = useRef<Set<string>>(new Set())
   const titleOf = new Map(articles.map((a) => [a.stored.actionId, a.title]))
   const previewIds = useMemo(() => new Set(preview?.result.articles.map((a) => a.actionId) ?? []), [preview])
   const stale = useMemo(() => preview !== null && photoStateKey(drafts, previewIds) !== preview.key, [preview, drafts, previewIds])
   const hasCleared = articles.some((a) => (a.stored.photoCleared?.length ?? 0) > 0)
-  const hasAuto = articles.some((a) => a.stored.photos?.some((p) => p.auto))
+  // 장면으로 다시 볼 자동 사진 — 자사 화면은 장면을 읽지 않는다(photoAutoPick.ts recheckAuto).
+  const hasAuto = articles.some((a) => a.stored.photos?.some((p) => p.auto && p.origin !== 'screen'))
 
   const run = async () => {
     const refillOn = refill && hasCleared
@@ -213,6 +236,25 @@ export default function PhotoAutoFill({
       // 장소 없는 자리의 지역 사진 — 지역형 브랜드(도시가 정해진 지역) · 공공 사진 사용 확인 · 장면을 읽을 수 있을 때만.
       const cityOf = brand.marketScope === 'national' || brand.marketScope === 'b2b' ? null : (tourRegionOf(brand.region)?.city ?? null)
       const regionCity = publicOk && scenes ? cityOf : null
+      // 자사 화면 — 자사 사이트에 화면 프로필이 있는 브랜드만 이 PC에 찍어 둔 화면 목록을 받는다(웹은 목록이 없어 null — 화면 자리는
+      // 비워 둔다). 찍기는 설치한 데스크톱 앱에서만(/api/health screens) — 아니면 찍어 둔 화면만 쓴다.
+      const screenProfile = screenProfileFor(brand.ownedDomains)
+      const screenNotes: string[] = []
+      let screenWarn = false
+      let screenList: ScreenList | null = null
+      let screenListFailed = false
+      if (screenProfile) {
+        try {
+          screenList = await loadScreens(tenantId)
+        } catch (e) {
+          console.warn('[PhotoAutoFill] 자사 화면 목록을 읽지 못했습니다(화면 자리는 비워 둡니다)', e)
+          screenListFailed = true
+          screenWarn = true
+          screenNotes.push(`자사 화면 목록을 읽지 못해 화면 자리는 비워 뒀어요 — ${e instanceof Error ? e.message : String(e)}`)
+        }
+      }
+      const canCapture = screenList !== null && screenList.available && (await loadScreenCaptureStatus())
+      let screenShots: AutoScreenShot[] = screenList?.shots ?? []
       const pick = () =>
         autoPickPhotos({
           articles: autoArticles,
@@ -227,6 +269,7 @@ export default function PhotoAutoFill({
           brandName: brand.brandName,
           ownedDomains: brand.ownedDomains,
           ...(scenes ? { scenes, sceneFailed: sceneSum.failed } : { knownScenes: sceneMap }),
+          ...(screenList ? { screens: { available: canCapture, shots: screenShots } } : {}),
           refillCleared: refillOn,
           recheckAuto: recheckOn,
         })
@@ -272,6 +315,60 @@ export default function PhotoAutoFill({
         }
       }
       if (morePhotos) result = await pickScenes()
+      // 자사 화면 찍기 — 찍으면 화면 자리에 쓰일 화면 · 변형(screenWanted)을 한 번에 SCREEN_CAPTURES_PER_RUN장까지(글에 넣는 코스 화면
+      // 먼저, 이 화면에서 실패한 화면은 뒤로). 서버가 메인 프로세스에 청해 숨긴 창으로 찍고 이 PC에 저장한다. 찍은 뒤 다시 고른다 — 변형은
+      // 찍었는지와 상관없이 골랐으므로 같은 자리에 같은 변형이 간다. 남은 화면은 다시 누르면 이어서 찍는다.
+      let capturedNow = 0
+      if (canCapture && screenList && result.screenWanted.length) {
+        const list = screenList
+        const nameOf = (w: AutoScreenWant) => {
+          const s = list.screens.find((x) => x.id === w.screenId)
+          return `${s?.label ?? w.screenId} · ${s?.variants.find((v) => v.id === w.variantId)?.label ?? w.variantId}`
+        }
+        const saveAllowedOf = (id: string) => list.screens.find((s) => s.id === id)?.saveAllowed === true
+        const batch = screenCaptureOrder(result.screenWanted, saveAllowedOf, captureFailed.current).slice(0, SCREEN_CAPTURES_PER_RUN)
+        const failedNow: string[] = []
+        for (const [i, w] of batch.entries()) {
+          const key = `${w.screenId}:${w.variantId}`
+          setProgress(`자사 화면 찍는 중 ${i + 1}/${batch.length} — ${nameOf(w)}`)
+          try {
+            const got = await captureScreen(tenantId, w.screenId, w.variantId)
+            screenShots = [got.shot, ...screenShots.filter((s) => s.id !== got.shot.id)]
+            captureFailed.current.delete(key)
+            capturedNow += 1
+          } catch (e) {
+            console.warn(`[PhotoAutoFill] 자사 화면 ${key}를 찍지 못했습니다`, e)
+            captureFailed.current.add(key)
+            failedNow.push(`${nameOf(w)}(${e instanceof Error ? e.message : String(e)})`)
+            // 찍기 자체를 쓸 수 없거나(앱 종료 중) 줄이 찼으면 남은 화면도 찍지 못한다.
+            const code = (e as { code?: unknown }).code
+            if (code === 'unavailable' || code === 'disposed' || code === 'busy') break
+          }
+        }
+        if (capturedNow) {
+          setProgress('찍은 화면으로 다시 맞추는 중…')
+          result = await pickScenes()
+          screenNotes.push(`자사 화면 ${capturedNow}장을 찍어 이 PC에 저장했어요.`)
+        }
+        if (failedNow.length) {
+          screenWarn = true
+          screenNotes.push(`찍지 못한 화면 ${failedNow.length}장 — ${failedNow.join(' · ')}`)
+        }
+      }
+      const screenRows = result.articles.flatMap((a) => a.rows).filter((r) => r.screenSlot === 'course' || r.screenSlot === 'map')
+      const screenWaiting = screenRows.filter((r) => r.state === 'uncaptured').length
+      const screenPreviews = screenRows.filter((r) => r.state === 'preview').length
+      if (screenWaiting) {
+        screenNotes.push(
+          canCapture
+            ? `아직 찍지 않은 화면이 들어갈 자리 ${screenWaiting}곳(화면 ${result.screenWanted.length}장) — 다시 눌러 나머지를 찍어요(한 번에 ${SCREEN_CAPTURES_PER_RUN}장까지).`
+            : `아직 찍지 않은 화면이 들어갈 자리 ${screenWaiting}곳 — 화면 찍기는 설치한 데스크톱 앱에서만 돼요. 여기서는 이 PC에 찍어 둔 화면만 써요.`,
+        )
+      }
+      if (screenProfile && !screenList && !screenListFailed && screenRows.length) {
+        screenNotes.push(`코스 · 지도 화면 자리 ${screenRows.length}곳 — 자사 화면은 설치한 데스크톱 앱에서만 찍고 넣을 수 있어요.`)
+      }
+      if (screenPreviews) screenNotes.push(`지도 화면 자리 ${screenPreviews}곳 — 카카오 지도 이용 조건 확인 전이라 미리보기만 하고 저장하지 않아요.`)
       if (result.region) {
         const r = result.region
         tourNotes.push(
@@ -306,7 +403,15 @@ export default function PhotoAutoFill({
               : []),
             ...(recheckOn ? ['이 PC에 Claude 키가 없어 이미 넣은 자동 사진은 장면으로 다시 보지 않았어요.'] : []),
           ].join(' ') || null
-      setPreview({ result, pageUrl, key: photoStateKey(drafts, ids), publicNote, sceneNote, refill: refillOn })
+      setPreview({
+        result,
+        pageUrl,
+        key: photoStateKey(drafts, ids),
+        publicNote,
+        sceneNote,
+        refill: refillOn,
+        screenNote: screenNotes.length ? { text: screenNotes.join(' '), warn: screenWarn } : null,
+      })
       setShowAll(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -425,8 +530,12 @@ export default function PhotoAutoFill({
     ...(counts.kept.fit ? [`장면 맞음(그대로) ${counts.kept.fit}`] : []),
     ...(counts.kept.unknown ? [`장면 모름(그대로) ${counts.kept.unknown}`] : []),
   ]
+  // 지도 화면 미리보기(preview)는 저장하지 않으므로 채울 자리 · 저장 수에 세지 않는다(state가 filled가 아니다).
   const changes = filled + replaced + removed
-  const isShown = (row: AutoSlotRow) => row.state === 'filled' || row.state === 'replace' || row.state === 'remove' || row.recheck === 'similar'
+  const filledScreens = rows.filter((r) => r.row.state === 'filled' && r.row.pick?.origin === 'screen').length
+  const hasScreenRows = rows.some((r) => r.row.screenPick)
+  const isShown = (row: AutoSlotRow) =>
+    row.state === 'filled' || row.state === 'replace' || row.state === 'remove' || row.state === 'preview' || row.recheck === 'similar'
   const shownCount = rows.filter((r) => isShown(r.row)).length
   const shown = showAll ? rows : rows.filter((r) => isShown(r.row))
   const skippedByReason = preview
@@ -434,7 +543,7 @@ export default function PhotoAutoFill({
         preview.result.skipped.reduce<Record<string, number>>((m, s) => ({ ...m, [s.reason]: (m[s.reason] ?? 0) + 1 }), {}),
       ).map(([reason, n]) => `${AUTO_CANDIDATE_SKIP_TEXT[reason as keyof typeof AUTO_CANDIDATE_SKIP_TEXT]} ${n}`)
     : []
-  const others = (['kept', 'cleared', 'screen', 'nomatch', 'scene', 'unread', 'used', 'full', 'license'] as const)
+  const others = (['kept', 'cleared', 'screen', 'preview', 'uncaptured', 'nomatch', 'scene', 'unread', 'used', 'full', 'license'] as const)
     .map((s) => [s, s === 'kept' ? rows.filter((r) => r.row.state === 'kept' && !r.row.recheck).length : count(s)] as const)
     .filter(([, n]) => n > 0)
     .map(([s, n]) => `${AUTO_SLOT_STATE_TEXT[s]} ${n}`)
@@ -447,7 +556,7 @@ export default function PhotoAutoFill({
           className="ghost"
           disabled={locked || loading || saving}
           onClick={() => void run()}
-          title="사진 설명 · 장소와 사진 자리 글자를 맞춰 빈 자리에 넣을 사진을 고릅니다. 이 PC에 Claude 키가 있으면 후보 사진의 장면을 읽어(사진 한 장에 한 번 — 읽은 장면은 저장해 다시 읽지 않아요) 장면이 맞는 사진만 고릅니다. 저장 전에 미리보기 표를 보여 줍니다."
+          title={`사진 설명 · 장소와 사진 자리 글자를 맞춰 빈 자리에 넣을 사진을 고릅니다. 이 PC에 Claude 키가 있으면 후보 사진의 장면을 읽어(사진 한 장에 한 번 — 읽은 장면은 저장해 다시 읽지 않아요) 장면이 맞는 사진만 고릅니다. 자사 웹사이트 화면 자리는 이 PC에 찍어 둔 화면으로 맞추고, 데스크톱 앱에서는 아직 찍지 않은 화면을 한 번에 ${SCREEN_CAPTURES_PER_RUN}장까지 찍어요. 저장 전에 미리보기 표를 보여 줍니다.`}
         >
           {loading ? (progress ?? '사진 맞추는 중…') : label}
         </button>
@@ -488,6 +597,7 @@ export default function PhotoAutoFill({
             사진 자리 {rows.length}곳 · 채울 자리 <b>{filled}</b>
             {counts.filled.public > 0 && ` (공공 사진 ${counts.filled.public})`}
             {counts.filled.tour > 0 && ` (관광공사 사진 ${counts.filled.tour})`}
+            {filledScreens > 0 && ` (자사 화면 ${filledScreens})`}
             {counts.filled.review > 0 && ` (확인 필요 ${counts.filled.review})`}
             {counts.filled.similar > 0 && ` (비슷한 사진 ${counts.filled.similar})`}
             {counts.filled.placeless > 0 && ` (장소 없는 자리 — 비슷한 장면 ${counts.filled.placeless})`}
@@ -506,6 +616,11 @@ export default function PhotoAutoFill({
               {preview.sceneNote}
             </p>
           )}
+          {preview.screenNote && (
+            <p className={preview.screenNote.warn ? 'hint warn' : 'doc-meta'} style={{ margin: 0 }}>
+              {preview.screenNote.text}
+            </p>
+          )}
           <p className="hint" style={{ margin: 0 }}>
             틀린 사진보다 빈자리가 낫다는 기준으로, 설명이 충분히 맞는 사진만 고릅니다. 공공 사진 · 관광공사 사진은 자리 글자에 나온 장소의
             사진이에요 — 사진 장면을 읽었으면 장면이 자리와 어긋난 사진(외관 자리에 실내 사진 · 사람을 알아볼 수 있는 사진 등)은 빼고 장면이 맞는
@@ -514,6 +629,8 @@ export default function PhotoAutoFill({
             공공 사진은 내보낼 때 사진 아래에
             출처(공공누리 제1유형 링크)가 붙습니다. 사람이 나오는 장면 자리는 「확인 필요」 — 저장한 뒤 글의 「홈페이지 사진」 칸에서 바꾸거나 빼
             주세요. 사람이 고른 자리는 덮지 않고, 사람이 뺀 자리는 「사람이 뺀 자리도 다시 채우기」를 켰을 때만 다시 채웁니다.
+            {hasScreenRows &&
+              ' 자사 화면은 브랜드 웹사이트 화면을 이 PC에서 찍은 그림이에요 — 글에는 이 PC의 화면 주소만 적고, 복사 · 홈페이지용 .html로 내보낼 때 그림을 넣어요. 붙여 넣은 글에서 화면이 안 보이면 「사진 N장 받기」로 받은 파일을 그 자리에 올려 주세요.'}
           </p>
           {shown.length > 0 && (
             <div className="table-wrap">
@@ -529,7 +646,12 @@ export default function PhotoAutoFill({
                 </thead>
                 <tbody>
                   {shown.map(({ actionId, row }) => (
-                    <PreviewRow key={`${actionId}|${row.slot.line}`} title={single ? null : (titleOf.get(actionId) ?? actionId)} row={row} />
+                    <PreviewRow
+                      key={`${actionId}|${row.slot.line}`}
+                      title={single ? null : (titleOf.get(actionId) ?? actionId)}
+                      row={row}
+                      brandName={brand.brandName}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -632,6 +754,48 @@ function OldBrief({ row }: { row: AutoSlotRow }) {
   )
 }
 
+/**
+ * 화면 자리에 고른 자사 화면 — 썸네일(찍었으면) · 「자사 화면」 칩 · 화면 · 변형 이름 · 설명 줄(「군산각 웹사이트 화면 · 주소 · 11-04
+ * 캡처」). 지도 화면은 저장하지 않는다는 안내를 붙인다(결정 4).
+ */
+function ScreenBrief({ brandName, pick }: { brandName: string; pick: AutoScreenPick }) {
+  const shot = pick.shot
+  return (
+    <span className="photo-auto-pick is-screen">
+      {shot && <img src={shot.src} alt="" loading="lazy" />}
+      <span>
+        <span className="status-pill st-info no-glyph">자사 화면</span> {pick.label} · {pick.variantLabel}
+        <span className="doc-meta" style={{ display: 'block' }}>
+          {shot ? screenShotMeta(brandName, shot.url, shot.capturedAt) : `${screenShotMeta(brandName, pick.url)} · 아직 찍지 않음`}
+        </span>
+        {!pick.saveAllowed && (
+          <span className="doc-meta" style={{ display: 'block' }}>
+            {MAP_PREVIEW_ONLY_TEXT}
+          </span>
+        )}
+      </span>
+    </span>
+  )
+}
+
+/** 화면 자리의 까닭 — 자리 종류(코스 · 지도 · 찍지 않는 화면)와 변형을 고른 까닭. */
+function screenWhy(row: AutoSlotRow): string {
+  const kind = row.screenSlot!
+  const sp = row.screenPick
+  if (!sp) return kind === 'course' || kind === 'map' ? SCREEN_SLOT_KIND_TEXT[kind] : `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요)`
+  const by =
+    sp.by === 'region'
+      ? `자리 글자의 권역 — ${sp.variantLabel}`
+      : sp.by === 'named'
+        ? '자리의 장소가 한 권역으로 정해지지 않아 전체 지도'
+        : sp.by === 'prefer'
+          ? sp.kind === 'course' && row.review
+            ? '자리 글자가 말한 조건의 화면은 이 글 · 작성자에게 이미 써서 다른 변형'
+            : `자리 글자가 말한 조건 — ${sp.variantLabel}`
+          : '브랜드에서 덜 쓴 변형'
+  return `${SCREEN_SLOT_KIND_TEXT[kind]} · ${by}`
+}
+
 /** 다시 본 자동 사진의 상태 글자 — 「장면 안 맞음 → 바꿈」 · 「비슷한 사진으로 둠」 · 「장면 맞음 · 그대로」. */
 const RECHECK_TEXT: Record<NonNullable<AutoSlotRow['recheck']>, string> = {
   replace: AUTO_SLOT_STATE_TEXT.replace,
@@ -641,7 +805,7 @@ const RECHECK_TEXT: Record<NonNullable<AutoSlotRow['recheck']>, string> = {
   unknown: '장면 모름 · 그대로',
 }
 
-function PreviewRow({ title, row }: { title: string | null; row: AutoSlotRow }) {
+function PreviewRow({ title, row, brandName }: { title: string | null; row: AutoSlotRow; brandName: string }) {
   const c = row.candidate
   const why = sceneWhy(row)
   /** 장면을 아직 읽지 않은 후보 수 — 있으면 비슷한 사진을 넣지 않는다(맞는 사진이 있는지 모른다). */
@@ -657,8 +821,10 @@ function PreviewRow({ title, row }: { title: string | null; row: AutoSlotRow }) 
       {...(row.scene && row.state !== 'kept' ? { scene: row.scene } : {})}
     />
   ) : null
+  const screen = row.screenPick ? <ScreenBrief brandName={brandName} pick={row.screenPick} /> : null
   const warn = row.state === 'replace' || row.state === 'remove' || row.recheck === 'similar' || (row.state === 'filled' && row.review)
   const status = row.recheck ? RECHECK_TEXT[row.recheck] : row.state === 'filled' && row.review ? '확인 필요' : AUTO_SLOT_STATE_TEXT[row.state]
+  const pill = warn ? 'st-warn' : row.state === 'filled' ? 'st-good' : row.state === 'preview' || row.state === 'uncaptured' ? 'st-info' : 'st-ok'
   return (
     <tr>
       {title !== null && <td className="cell-text">{title}</td>}
@@ -678,11 +844,13 @@ function PreviewRow({ title, row }: { title: string | null; row: AutoSlotRow }) 
         ) : row.old ? (
           <OldBrief row={row} />
         ) : (
-          (fresh ?? <span className="muted">—</span>)
+          (screen ?? fresh ?? <span className="muted">—</span>)
         )}
       </td>
       <td className="cell-text">
-        {row.placeless && c ? (
+        {row.screenSlot ? (
+          <span className={row.screenPick ? undefined : 'muted'}>{screenWhy(row)}</span>
+        ) : row.placeless && c ? (
           <>
             장소 없는 자리 — 비슷한 장면: 「{c.alt}」{c.location ? ` · ${c.location}` : ''}
             {c.place && <span className="doc-meta"> (관광공사 사진의 장소: {c.place})</span>}
@@ -722,8 +890,8 @@ function PreviewRow({ title, row }: { title: string | null; row: AutoSlotRow }) 
         )}
       </td>
       <td className="cell-text">
-        <span className={`status-pill ${warn ? 'st-warn' : row.state === 'filled' ? 'st-good' : 'st-ok'}`}>{status}</span>
-        {row.review && row.state !== 'filled' && <span className="doc-meta"> 확인 필요</span>}
+        <span className={`status-pill ${pill}`}>{status}</span>
+        {row.review && row.state !== 'filled' && row.state !== 'preview' && <span className="doc-meta"> 확인 필요</span>}
         {row.refill && <span className="doc-meta"> 사람이 뺀 자리</span>}
       </td>
     </tr>

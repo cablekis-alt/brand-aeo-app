@@ -154,6 +154,9 @@ export function screenSaveAllowed(kind: ScreenKind): boolean {
   return SCREEN_AUTO_SAVE_KINDS.includes(kind)
 }
 
+/** 글에 넣지 않는 지도 화면의 안내 — 자동 채우기 미리보기 · 「화면 고르기」(결정 4). */
+export const MAP_PREVIEW_ONLY_TEXT = '지도 화면 — 카카오 지도 이용 조건 확인 전이라 미리보기만(저장 안 함)'
+
 /** 찍은 화면 id(= PNG sha256 앞 16자)의 모양. */
 export const SCREEN_SHOT_ID = /^[0-9a-f]{16}$/
 
@@ -237,6 +240,56 @@ export function screenUrl(profile: ScreenProfile, variant: ScreenVariant): strin
  */
 export function screenAlt(brandName: string, screen: Pick<ScreenDef, 'label'>): string {
   return `${brandName} 웹사이트 '${screen.label}' 화면`
+}
+
+/** 찍은 때의 한국 날짜 「11-04」 — 읽지 못하면 null. */
+export function screenShotDay(capturedAt: string | undefined): string | null {
+  const t = capturedAt ? Date.parse(capturedAt) : Number.NaN
+  return Number.isNaN(t) ? null : new Date(t + 9 * 3600_000).toISOString().slice(5, 10)
+}
+
+/** 주소의 #조각을 사람이 읽는 글자로(「#r-%EC%9B%90…」 → 「#r-원도심」). 풀 수 없으면 그대로. */
+function readableHash(hash: string): string {
+  try {
+    return decodeURIComponent(hash)
+  } catch {
+    return hash
+  }
+}
+
+/**
+ * 찍은 화면의 설명 줄 — 「군산각 웹사이트 화면 · gunsan.webforai.kr/map/ · 11-04 캡처」(미리보기 · 사진 칸). 주소는 호스트 · 경로 ·
+ * #조각만 보인다(코스 조건 쿼리는 변형 이름이 말한다). 찍은 때를 모르면(아직 찍지 않음) 날짜를 뺀다.
+ */
+export function screenShotMeta(brandName: string, url: string, capturedAt?: string): string {
+  const m = /^https?:\/\/([^/?#]+)([^?#]*)(?:\?[^#]*)?(#.*)?$/i.exec(url.trim())
+  const page = m ? `${m[1]}${m[2] || '/'}${m[3] ? readableHash(m[3]) : ''}` : url.trim()
+  const day = screenShotDay(capturedAt)
+  return [`${brandName ? `${brandName} ` : ''}웹사이트 화면`, page, ...(day ? [`${day} 캡처`] : [])].join(' · ')
+}
+
+/**
+ * 한 번에 찍을 화면 순서 — 글에 넣는 종류(SCREEN_AUTO_SAVE_KINDS — 코스)를 먼저, 미리보기만 하는 화면(지도)을 뒤에. 이번 화면에서 찍다가
+ * 실패한 화면(failed — 「화면id:변형id」)은 맨 뒤로 보낸다(같은 화면이 계속 실패해 남은 화면을 막지 않게). 같은 무리 안은 받은 순서.
+ */
+export function screenCaptureOrder<T extends { screenId: string; variantId: string }>(
+  wanted: readonly T[],
+  saveAllowedOf: (screenId: string) => boolean,
+  failed: ReadonlySet<string> = new Set(),
+): T[] {
+  const rank = (w: T) => (failed.has(`${w.screenId}:${w.variantId}`) ? 2 : saveAllowedOf(w.screenId) ? 0 : 1)
+  return wanted.map((w, i) => ({ w, i })).sort((a, b) => rank(a.w) - rank(b.w) || a.i - b.i).map(({ w }) => w)
+}
+
+/** 화면 · 변형마다 가장 늦게 찍은 화면(「화면id:변형id」 → 그 화면). */
+export function latestScreenShots<T extends Pick<ScreenShot, 'screenId' | 'variantId' | 'capturedAt'>>(shots: readonly T[]): Map<string, T> {
+  const out = new Map<string, T>()
+  for (const s of shots) {
+    const k = `${s.screenId}:${s.variantId}`
+    const had = out.get(k)
+    if (!had || Date.parse(s.capturedAt) > Date.parse(had.capturedAt)) out.set(k, s)
+  }
+  return out
 }
 
 /**

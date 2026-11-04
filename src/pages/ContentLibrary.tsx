@@ -5,6 +5,7 @@ import { useTenant } from '../context/useTenant'
 import { copyRich } from '../lib/clipboard'
 import { buildPublishHtml, markdownToHtml } from '../lib/htmlFile'
 import {
+  fetchScreenFile,
   loadActionStates,
   loadContentDrafts,
   loadFactGraph,
@@ -25,6 +26,7 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { effectiveDraft, workMarkdownOf } from '../lib/draftGaps'
 import { publishArticleOf } from '../lib/publishArticle'
 import { countGapNotes, downloadHtml, draftTitle, gapNoteLines, safeFileName } from '../lib/markdownFile'
+import { inlineScreens, richCopyWithScreens, screensDroppedText } from '../lib/screenExport'
 
 /**
  * 만든 글이 모이는 곳.
@@ -93,11 +95,20 @@ export default function ContentLibrary() {
     if (!tenant) return
     setCopyError(null)
     // 올리기 목록의 자사 줄과 같은 발행본(본문 + 사진 + 글 끝)을 서식째 넣는다 — 블로그 편집기에 붙이면 제목 · 굵은 글씨가 남는다.
+    // 자사 화면은 복사 바로 앞에서 그림을 문서 안(data:)에 넣고, 글자 쪽에는 「[화면: 이름]」을 둔다(앱 주소를 내보내지 않는다).
     const markdown = publishArticleOf(d, { brand: tenant, settings })
-    if (!(await copyRich(markdown, markdownToHtml(markdown)))) {
+    let out: Awaited<ReturnType<typeof richCopyWithScreens>>
+    try {
+      out = await richCopyWithScreens(markdown, markdownToHtml(markdown), fetchScreenFile)
+    } catch (e) {
+      setCopyError(e instanceof Error ? e.message : String(e))
+      return
+    }
+    if (!(await copyRich(out.markdown, out.html))) {
       setCopyError('클립보드에 복사하지 못했습니다. 「본문 보기」를 열어 글을 골라 복사하세요 — 서식이 함께 복사됩니다.')
       return
     }
+    if (out.dropped) setCopyError(screensDroppedText(out.dropped))
     setCopied(d.actionId)
     window.setTimeout(() => setCopied((k) => (k === d.actionId ? null : k)), 1800)
   }
@@ -339,15 +350,17 @@ export default function ContentLibrary() {
                       title="홈페이지 · CMS에 올리는 완성 문서입니다. <head>에 JSON-LD(Article · Organization)를 심고, 브라우저로 열어 미리 볼 수 있습니다."
                       disabled={!settingsReady}
                       onClick={() => {
+                        setCopyError(null)
+                        // 자사 화면은 그림을 문서 안(data:)에 넣는다 — 받지 못하면 「[화면: 이름]」 글자, 앱 주소가 남으면 내려받지 않는다.
                         void loadFactGraph(tenant.tenantId)
                           .then((fg) => fg?.factGraph ?? [])
                           .catch(() => [] as FactNode[])
-                          .then((facts) =>
-                            downloadHtml(
-                              `홈페이지용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.html`,
-                              buildPublishHtml({ stored: d, brand: tenant, facts, settings }),
-                            ),
-                          )
+                          .then((facts) => inlineScreens(buildPublishHtml({ stored: d, brand: tenant, facts, settings }), fetchScreenFile))
+                          .then((out) => {
+                            downloadHtml(`홈페이지용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.html`, out.html)
+                            if (out.dropped) setCopyError(screensDroppedText(out.dropped))
+                          })
+                          .catch((e: unknown) => setCopyError(e instanceof Error ? e.message : String(e)))
                       }}
                     >
                       홈페이지용 .html

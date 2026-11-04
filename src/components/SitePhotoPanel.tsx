@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  captureScreen,
   loadPhotoScenes,
   loadPhotoScenesStatus,
   loadPublishSettings,
+  loadScreenCaptureStatus,
+  loadScreens,
   loadTourApiStatus,
   saveDraftPhoto,
   savePhotoRights,
   type PhotoPlace,
+  type ScreenList,
   type StoredDraft,
   type TenantSummary,
 } from '../lib/api'
@@ -26,8 +30,22 @@ import {
 } from '../lib/articlePhotos'
 import { publishMarkdownOf } from '../lib/draftGaps'
 import type { PublishSettings } from '../lib/publishSettings'
-import { findPlace, findPlaces, isPeopleScene, publicCandidateFields } from '../lib/photoAutoPick'
+import { findPlace, findPlaces, isPeopleScene, isScreenSlot, publicCandidateFields } from '../lib/photoAutoPick'
 import { sceneMeta, type PhotoScene } from '../lib/photoScenes'
+import { kstDate, todayKst } from '../lib/publishedUrl'
+import {
+  latestScreenShots,
+  MAP_PREVIEW_ONLY_TEXT,
+  parseScreenAppSrc,
+  photoRepeatKey,
+  screenAlt,
+  screenKindOf,
+  screenProfileFor,
+  screenShotDay,
+  screenShotMeta,
+  type ScreenKind,
+  type ScreenShotView,
+} from '../lib/screenCapture'
 import {
   findPublicCredit,
   loadPlaceDirectory,
@@ -63,7 +81,25 @@ import PhotoAutoFill from './PhotoAutoFill'
  *
  * 사진 장면 — 이 PC에 Claude 키가 있으면(/api/health photoScenes) 고를 사진 아래에 읽어 둔 장면(자동 채우기가 읽은 것 — 여기서는 새로
  * 읽지 않는다)을 함께 보인다.
+ *
+ * 자사 화면 — 자사 사이트에 화면 프로필(src/lib/screenCapture.ts)이 있는 브랜드는 웹사이트 화면 자리에 「화면 고르기」로 이 PC에 찍어 둔
+ * 화면(썸네일 · 변형 · 찍은 날)을 고른다(열 때마다 GET /api/screens로 다시 읽는다). 설치한 데스크톱 앱에서 찍을 수 있으면(/api/health
+ * screens) 아직 찍지 않았거나 오늘 찍지 않은 화면에 「찍기」 · 「다시 찍기」를 둔다(서버가 숨긴 창으로 찍는다). 지도 화면은 카카오 지도
+ * 이용 조건을 확인하기 전이라 크게 보기만 하고 넣는 단추를 두지 않는다(결정 4 — 서버도 거절한다). 빼기 · 바꾸기는 사진과 같다.
  */
+
+/** 「화면 고르기」의 화면 · 변형 하나와 가장 늦게 찍은 화면. */
+interface ScreenOption {
+  /** 「화면id:변형id」. */
+  key: string
+  screenId: string
+  variantId: string
+  kind: ScreenKind
+  label: string
+  variantLabel: string
+  saveAllowed: boolean
+  shot?: ScreenShotView
+}
 
 /** 고를 수 있는 사진 하나 — 홈페이지 사진 또는 공공 사진(pub: 출처 · 이용 허락, place: 장소). */
 interface PhotoOption {
@@ -130,6 +166,22 @@ export default function SitePhotoPanel({
   /** 이 PC에서 사진 장면을 읽을 수 있는가 · 고를 사진의 읽어 둔 장면(사진 주소 → 장면). */
   const [scenesOn, setScenesOn] = useState(false)
   const [sceneOf, setSceneOf] = useState<Readonly<Record<string, PhotoScene>>>({})
+  /** 고르는 칸 — 홈페이지 · 공공 사진(photo) 또는 자사 화면(screen). */
+  const [openMode, setOpenMode] = useState<'photo' | 'screen'>('photo')
+  /**
+   * 자사 화면 목록(「화면 고르기」를 열 때마다 다시 읽는다) — list null은 이 환경에 화면 기능이 없다(웹). canCapture는 이 실행에서 찍을 수
+   * 있는가(설치한 데스크톱 앱). key는 브랜드.
+   */
+  const [screenState, setScreenState] = useState<{
+    key: string
+    loading: boolean
+    list: ScreenList | null
+    canCapture: boolean
+    error: string | null
+  } | null>(null)
+  /** 찍는 중인 화면 · 변형(「화면id:변형id」). */
+  const [capturing, setCapturing] = useState<string | null>(null)
+  const screenProfile = useMemo(() => screenProfileFor(brand.ownedDomains), [brand.ownedDomains])
 
   useEffect(() => {
     let alive = true
@@ -232,9 +284,66 @@ export default function SitePhotoPanel({
   }
   const pickAt = (slot: PhotoSlot) => match.applied.find((a) => a.slot.line === slot.line)?.pick
   const slotId = (slot: PhotoSlot) => `${slot.key}|${slot.nth}|${slot.heading}`
-  const openFor = (id: string | null) => {
+  /** 자사 화면 목록과 찍을 수 있는지를 다시 읽는다 — 자동 채우기가 그사이 찍은 화면도 보이게 열 때마다. */
+  const loadScreenState = async () => {
+    const key = tenantId
+    setScreenState((cur) => ({
+      key,
+      loading: true,
+      list: cur?.key === key ? cur.list : null,
+      canCapture: cur?.key === key ? cur.canCapture : false,
+      error: null,
+    }))
+    try {
+      const [list, on] = await Promise.all([loadScreens(tenantId), loadScreenCaptureStatus()])
+      setScreenState({ key, loading: false, list, canCapture: Boolean(list?.available) && on, error: null })
+    } catch (e) {
+      console.warn('[SitePhotoPanel] 자사 화면 목록을 읽지 못했습니다', e)
+      setScreenState({ key, loading: false, list: null, canCapture: false, error: `자사 화면 목록을 읽지 못했어요 — ${e instanceof Error ? e.message : String(e)}` })
+    }
+  }
+  const openFor = (id: string | null, mode: 'photo' | 'screen' = 'photo') => {
     setOpenSlot(id)
+    setOpenMode(mode)
     setChoice(null)
+    if (id && mode === 'screen') void loadScreenState()
+  }
+  const screens = screenState?.key === tenantId ? screenState : null
+  /** 화면을 고를 수 있는 자리 — 사진 사용 확인 뒤, 자사 사이트에 화면 프로필이 있고 웹사이트 화면 자리이거나 이미 화면이 들어간 자리. */
+  const screenable = (slot: PhotoSlot, picked?: PhotoPick) => allowed && screenProfile !== null && (isScreenSlot(slot.key) || picked?.origin === 'screen')
+  /** 그 자리의 화면 · 변형 — 자리 글자가 말한 화면(screenKindOf)을 앞에. */
+  const screenOptionsFor = (slot: PhotoSlot): ScreenOption[] => {
+    const list = screens?.list
+    if (!list) return []
+    const latest = latestScreenShots(list.shots)
+    const all = list.screens.flatMap((s) =>
+      s.variants.map((v): ScreenOption => {
+        const key = `${s.id}:${v.id}`
+        const shot = latest.get(key)
+        return { key, screenId: s.id, variantId: v.id, kind: s.kind, label: s.label, variantLabel: v.label, saveAllowed: s.saveAllowed, ...(shot ? { shot } : {}) }
+      }),
+    )
+    const first = screenKindOf(slot.key, screenProfile).screen?.id
+    return first ? [...all.filter((o) => o.screenId === first), ...all.filter((o) => o.screenId !== first)] : all
+  }
+
+  /** 화면 한 장 찍기(서버가 메인 프로세스에 청해 숨긴 창으로 찍고 이 PC에 저장한다) — 찍은 화면을 골라 둔다. */
+  const capture = async (o: ScreenOption) => {
+    setCapturing(o.key)
+    setError(null)
+    setNote(null)
+    try {
+      const got = await captureScreen(tenantId, o.screenId, o.variantId)
+      setScreenState((cur) =>
+        cur?.key === tenantId && cur.list ? { ...cur, list: { ...cur.list, shots: [got.shot, ...cur.list.shots.filter((s) => s.id !== got.shot.id)] } } : cur,
+      )
+      setChoice(o.key)
+      setNote(got.reused ? `오늘 찍어 둔 「${o.label} · ${o.variantLabel}」 화면을 다시 썼어요.` : `「${o.label} · ${o.variantLabel}」 화면을 찍어 이 PC에 저장했어요.`)
+    } catch (e) {
+      setError(`「${o.label} · ${o.variantLabel}」 화면을 찍지 못했어요 — ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setCapturing(null)
+    }
   }
 
   const confirmRights = async () => {
@@ -390,13 +499,140 @@ export default function SitePhotoPanel({
       pick: { slot: slot.key, nth: slot.nth, same: slot.same, heading: slot.heading, src, alt, pageUrl: page, ...(pub ?? {}) },
       ...(replaces ? { replaces: placeOf(replaces) } : {}),
     })
+  /**
+   * 자사 화면 넣기 — 화면 id · 변형 id · 찍은 화면 id만 믿고 서버가 이 PC의 목록에서 앱 주소 · 찍은 주소 · 대체 텍스트를 단다(보내는 src ·
+   * alt · pageUrl은 쓰지 않는다). 지도 화면은 서버가 거절한다 — 화면도 넣는 단추를 두지 않는다.
+   */
+  const putScreen = (
+    slot: PhotoSlot,
+    ref: { screenId: string; variantId: string; shotId: string; src: string; url: string; alt: string },
+    replaces?: PhotoPick,
+  ) =>
+    save({
+      actionId: stored.actionId,
+      generatedAt: stored.generatedAt,
+      op: 'pick',
+      pick: {
+        slot: slot.key,
+        nth: slot.nth,
+        same: slot.same,
+        heading: slot.heading,
+        src: ref.src,
+        alt: ref.alt,
+        pageUrl: ref.url,
+        origin: 'screen',
+        screenId: ref.screenId,
+        variantId: ref.variantId,
+        shotId: ref.shotId,
+      },
+      ...(replaces ? { replaces: placeOf(replaces) } : {}),
+    })
   /** 옮기기 — 고른 사진의 출처 표시를 그대로 가져간다(출처 없는 공공 사진은 서버가 거절한다). */
   const pubOf = (p: PhotoPick) => {
     const f = publicPhotoFields(p)
     return f && typeof f === 'object' ? f : undefined
   }
+  /** 찾지 못한 자리의 사진을 이 자리로 옮긴다 — 자사 화면은 화면 · 변형 · 찍은 화면 id로(서버가 목록에서 다시 찾는다). */
+  const movePick = (slot: PhotoSlot, pick: PhotoPick) => {
+    const shotId = pick.origin === 'screen' ? parseScreenAppSrc(pick.src)?.shotId : undefined
+    if (pick.origin === 'screen' && pick.screenId && pick.variantId && shotId) {
+      return putScreen(slot, { screenId: pick.screenId, variantId: pick.variantId, shotId, src: pick.src, url: pick.pageUrl, alt: pick.alt }, pick)
+    }
+    return putPhoto(slot, pick.src, pick.alt, pick.pageUrl, pick, pubOf(pick))
+  }
   const remove = (p: PhotoPick) => save({ actionId: stored.actionId, generatedAt: stored.generatedAt, op: 'remove', place: placeOf(p) })
   const off = disabled || busy
+
+  /** 한 자리의 「화면 고르기」 — 화면 · 변형마다 썸네일 · 찍은 날, 고르면 크게 보이고 코스 화면만 넣는다(지도는 미리보기만). */
+  const screenChooser = (slot: PhotoSlot, picked: PhotoPick | undefined) => {
+    if (!screens || (screens.loading && !screens.list && !screens.error)) return <p className="hint">자사 화면 불러오는 중…</p>
+    if (screens.error) {
+      return (
+        <p className="error" role="alert">
+          {screens.error}
+        </p>
+      )
+    }
+    if (!screens.list) return <p className="hint">이 환경에서는 자사 화면을 쓸 수 없어요 — 설치한 데스크톱 앱에서 찍고 고를 수 있어요.</p>
+    const opts = screenOptionsFor(slot)
+    if (!opts.length) return <p className="hint">이 브랜드에는 찍을 자사 화면이 없어요.</p>
+    const chosen = opts.find((o) => o.key === choice)
+    const today = todayKst()
+    // 이 글의 다른 자리에 이미 넣은 화면 · 변형(같은 화면은 글 하나에 한 번이 자동 채우기의 기준이다).
+    const usedHere = new Set((stored.photos ?? []).filter((x) => x !== picked && x.origin === 'screen').map(photoRepeatKey))
+    return (
+      <fieldset className="photo-choose" disabled={off || capturing !== null}>
+        <legend className="sr-only">「{slot.alt}」 자리에 넣을 자사 화면</legend>
+        <ul className="photo-grid">
+          {opts.map((o) => {
+            const day = screenShotDay(o.shot?.capturedAt)
+            // 서버는 같은 날 찍은 화면을 다시 쓴다 — 오늘 찍은 화면에는 「다시 찍기」를 두지 않는다.
+            const canShoot = screens.canCapture && (!o.shot || kstDate(o.shot.capturedAt) !== today)
+            return (
+              <li key={o.key}>
+                <label className={`photo-option is-screen${choice === o.key ? ' is-chosen' : ''}`}>
+                  <input
+                    type="radio"
+                    name={`screen-${stored.actionId}-${slot.line}`}
+                    checked={choice === o.key}
+                    disabled={!o.shot}
+                    onChange={() => setChoice(o.key)}
+                  />
+                  {o.shot ? <img src={o.shot.src} alt="" loading="lazy" /> : <span className="photo-option-empty">아직 찍지 않음</span>}
+                  <span>
+                    {o.label} · {o.variantLabel}
+                  </span>
+                  {(day || !o.saveAllowed) && (
+                    <span className="doc-meta">{[...(day ? [`${day} 캡처`] : []), ...(o.saveAllowed ? [] : ['미리보기만'])].join(' · ')}</span>
+                  )}
+                  {usedHere.has(`screen:${o.screenId}:${o.variantId}`) && <span className="doc-meta">다른 자리에 씀</span>}
+                </label>
+                {canShoot && (
+                  <button type="button" className="link-btn" onClick={() => void capture(o)}>
+                    {capturing === o.key ? '찍는 중…' : o.shot ? '다시 찍기' : '찍기'}
+                  </button>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+        {chosen?.shot && (
+          <figure className="screen-preview">
+            <img src={chosen.shot.src} alt={screenAlt(brand.brandName, chosen)} />
+            <figcaption className="doc-meta">{screenShotMeta(brand.brandName, chosen.shot.url, chosen.shot.capturedAt)}</figcaption>
+          </figure>
+        )}
+        {chosen && !chosen.saveAllowed && (
+          <p className="hint warn" style={{ margin: 0 }}>
+            {MAP_PREVIEW_ONLY_TEXT}
+          </p>
+        )}
+        {!screens.canCapture && (
+          <p className="hint" style={{ margin: 0 }}>
+            화면 찍기는 설치한 데스크톱 앱에서만 돼요 — 여기서는 이 PC에 찍어 둔 화면만 고를 수 있어요.
+          </p>
+        )}
+        {chosen?.shot && chosen.saveAllowed && (
+          <div className="brief-bar">
+            <button
+              type="button"
+              onClick={() => {
+                const shot = chosen.shot!
+                // 이 자리에 이미 들어간 사진 · 화면이 있으면 바꾼다(소제목을 고쳐 자리 열쇠가 달라졌어도 옛 사진이 남지 않게).
+                void putScreen(
+                  slot,
+                  { screenId: chosen.screenId, variantId: chosen.variantId, shotId: shot.id, src: shot.src, url: shot.url, alt: screenAlt(brand.brandName, chosen) },
+                  picked,
+                )
+              }}
+            >
+              이 화면 넣기
+            </button>
+          </div>
+        )}
+      </fieldset>
+    )
+  }
 
   return (
     <section className="evidence-panel photo-panel">
@@ -529,6 +765,8 @@ export default function SitePhotoPanel({
         const picked = pickAt(slot)
         const id = slotId(slot)
         const open = openSlot === id
+        const isScreen = picked?.origin === 'screen'
+        const canScreen = screenable(slot, picked)
         return (
           <div key={slot.line} className="photo-slot">
             <p className="doc-meta" style={{ margin: 0 }}>
@@ -536,18 +774,20 @@ export default function SitePhotoPanel({
               {slot.heading && ' · '}사진 자리: {slot.alt}
             </p>
             {picked ? (
-              <div className="photo-picked">
+              <div className={`photo-picked${isScreen ? ' is-screen' : ''}`}>
                 <img src={picked.src} alt={picked.alt || slot.alt} referrerPolicy="no-referrer" loading="lazy" />
                 <span>
                   {picked.auto && <span className="status-pill st-info no-glyph">자동</span>}
+                  {isScreen && <span className="status-pill st-info no-glyph">자사 화면</span>}
                   {photoCreditState(picked) === 'public' && (
                     <span className="status-pill st-info no-glyph">{isTourSourcePage(picked.pageUrl) ? '관광공사 사진' : '공공 사진'}</span>
                   )}
                   {photoCreditState(picked) === 'missing' && <span className="status-pill st-warn">출처 없음</span>}
-                  {picked.auto && (isPeopleScene(slot.key, findPlaces(slot.key, places ?? [])) || photoCreditState(picked) === 'public') && (
+                  {/* 사람 장면 규칙은 자사 화면에 쓰지 않는다(화면이다). */}
+                  {picked.auto && !isScreen && (isPeopleScene(slot.key, findPlaces(slot.key, places ?? [])) || photoCreditState(picked) === 'public') && (
                     <span className="status-pill st-warn">확인 필요</span>
                   )}
-                  {(picked.auto || photoCreditState(picked) !== 'site') && ' '}
+                  {(picked.auto || isScreen || photoCreditState(picked) !== 'site') && ' '}
                   {picked.alt || <span className="muted">(설명은 사진 자리 글자로)</span>}
                   {photoCreditState(picked) === 'public' && picked.license && (
                     <span className="doc-meta">
@@ -570,15 +810,23 @@ export default function SitePhotoPanel({
                     </span>
                   )}
                   <span className="doc-meta">
-                    {picked.pageUrl} ·{' '}
+                    {isScreen ? screenShotMeta(brand.brandName, picked.pageUrl, picked.capturedAt) : picked.pageUrl} ·{' '}
                     <button type="button" className="link-btn" disabled={off} onClick={() => void remove(picked)}>
                       빼기
                     </button>
                     {allowed && options.length > 0 && (
                       <>
                         {' · '}
-                        <button type="button" className="link-btn" disabled={off} onClick={() => openFor(open ? null : id)}>
+                        <button type="button" className="link-btn" disabled={off} onClick={() => openFor(open && openMode === 'photo' ? null : id)}>
                           바꾸기
+                        </button>
+                      </>
+                    )}
+                    {canScreen && (
+                      <>
+                        {' · '}
+                        <button type="button" className="link-btn" disabled={off} onClick={() => openFor(open && openMode === 'screen' ? null : id, 'screen')}>
+                          {isScreen ? '화면 바꾸기' : '화면 고르기'}
                         </button>
                       </>
                     )}
@@ -587,13 +835,36 @@ export default function SitePhotoPanel({
               </div>
             ) : (
               allowed &&
-              options.length > 0 && (
-                <button type="button" className="ghost" disabled={off} aria-expanded={open} onClick={() => openFor(open ? null : id)}>
-                  {open ? '닫기' : '사진 고르기'}
-                </button>
+              (options.length > 0 || canScreen) && (
+                <div className="brief-bar" style={{ margin: 0 }}>
+                  {options.length > 0 && (
+                    <button
+                      type="button"
+                      className="ghost"
+                      disabled={off}
+                      aria-expanded={open && openMode === 'photo'}
+                      onClick={() => openFor(open && openMode === 'photo' ? null : id)}
+                    >
+                      {open && openMode === 'photo' ? '닫기' : '사진 고르기'}
+                    </button>
+                  )}
+                  {canScreen && (
+                    <button
+                      type="button"
+                      className="ghost"
+                      disabled={off}
+                      aria-expanded={open && openMode === 'screen'}
+                      title="이 PC에 찍어 둔 자사 웹사이트 화면을 고릅니다 — 데스크톱 앱에서는 여기서 찍을 수도 있어요."
+                      onClick={() => openFor(open && openMode === 'screen' ? null : id, 'screen')}
+                    >
+                      {open && openMode === 'screen' ? '닫기' : '화면 고르기'}
+                    </button>
+                  )}
+                </div>
               )
             )}
-            {open && options.length > 0 && (
+            {open && openMode === 'screen' && screenChooser(slot, picked)}
+            {open && openMode === 'photo' && options.length > 0 && (
               <fieldset className="photo-choose" disabled={off}>
                 <legend className="sr-only">「{slot.alt}」 자리에 넣을 사진</legend>
                 <ul className="photo-grid">
@@ -662,7 +933,7 @@ export default function SitePhotoPanel({
                 )}
               </>
             ) : (
-              <button type="button" className="link-btn" disabled={off} onClick={() => void putPhoto(slot, pick.src, pick.alt, pick.pageUrl, pick, pubOf(pick))}>
+              <button type="button" className="link-btn" disabled={off} onClick={() => void movePick(slot, pick)}>
                 이 자리로 옮기기
               </button>
             )}{' '}

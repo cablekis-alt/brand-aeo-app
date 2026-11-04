@@ -5719,6 +5719,37 @@ section.dash-card {
   border-radius: calc(var(--r-ctl) - 2px);
   flex: none;
 }
+/* 자사 화면(1280×800 캡처) — 잘리지 않게 16:10 그대로 보인다(SitePhotoPanel.tsx · PhotoAutoFill.tsx). */
+.photo-picked.is-screen img,
+.photo-option.is-screen img,
+.photo-auto-pick.is-screen img {
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
+  border: 1px solid var(--line);
+}
+.photo-auto-pick.is-screen img {
+  width: 96px;
+}
+.photo-option-empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  border: 1px dashed var(--line);
+  border-radius: calc(var(--r-ctl) - 2px);
+  color: var(--muted);
+}
+.screen-preview {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+}
+.screen-preview img {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
 /* 초안 쓰기 전 승인 시트 — 브랜드 페이지에서 찾은 사실을 사람이 고른다(FactApprovalSheet.tsx). */
 .fact-sheet {
   display: grid;

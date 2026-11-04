@@ -232,6 +232,37 @@ try {
       !screenExportable({ ...exportPick, src: 'https://gunsan.webforai.kr/a.png' }) && !screenExportable({ src: appSrc, screenId: 'course', variantId: 'kids' }),
   )
 
+  // ── 3b) 화면(UI)이 쓰는 도움 함수 — 설명 줄 · 찍은 날 · 찍는 순서 · 변형마다 가장 늦게 찍은 화면 ───────
+  const { screenShotMeta, screenShotDay, screenCaptureOrder, latestScreenShots, MAP_PREVIEW_ONLY_TEXT } = lib
+  ok(
+    '설명 줄 — 「가상각 웹사이트 화면 · 호스트/경로 · 한국 날짜 캡처」(쿼리는 빼고 #권역은 읽는 글자로)',
+    screenShotMeta('가상각', 'https://gunsan.webforai.kr/map/', '2026-11-03T16:30:00.000Z') === '가상각 웹사이트 화면 · gunsan.webforai.kr/map/ · 11-04 캡처' &&
+      screenShotMeta('가상각', screenUrl(profile!, wondosim.variant), '2026-11-04T05:00:00.000Z') === '가상각 웹사이트 화면 · gunsan.webforai.kr/map/#r-원도심 · 11-04 캡처' &&
+      screenShotMeta('가상각', 'https://gunsan.webforai.kr/plan/?with=kids&kids=7') === '가상각 웹사이트 화면 · gunsan.webforai.kr/plan/',
+  )
+  ok(
+    '찍은 날은 한국 날짜(UTC 15시 이후는 다음 날) · 읽지 못하면 null',
+    screenShotDay('2026-11-03T14:59:00.000Z') === '11-03' && screenShotDay('2026-11-03T15:00:00.000Z') === '11-04' && screenShotDay('nope') === null && screenShotDay(undefined) === null,
+  )
+  const wants = [
+    { screenId: 'map', variantId: 'default' },
+    { screenId: 'course', variantId: 'kids' },
+    { screenId: 'map', variantId: 'r-원도심' },
+    { screenId: 'course', variantId: 'default' },
+  ]
+  const order = (failed?: Set<string>) => screenCaptureOrder(wants, (id) => id === 'course', failed).map((w) => `${w.screenId}:${w.variantId}`).join(',')
+  ok(
+    '찍는 순서 — 글에 넣는 코스 화면 먼저, 이번 화면에서 실패한 화면은 맨 뒤(같은 무리는 받은 순서)',
+    order() === 'course:kids,course:default,map:default,map:r-원도심' && order(new Set(['course:kids'])) === 'course:default,map:default,map:r-원도심,course:kids',
+  )
+  const latest = latestScreenShots([
+    { screenId: 'course', variantId: 'kids', capturedAt: '2026-11-01T00:00:00.000Z', id: 'old' },
+    { screenId: 'course', variantId: 'kids', capturedAt: '2026-11-04T00:00:00.000Z', id: 'new' },
+    { screenId: 'map', variantId: 'default', capturedAt: '2026-11-02T00:00:00.000Z', id: 'map' },
+  ])
+  ok('변형마다 가장 늦게 찍은 화면', latest.size === 2 && latest.get('course:kids')?.id === 'new' && latest.get('map:default')?.id === 'map')
+  ok('지도 미리보기 안내는 저장하지 않는다고 말한다', MAP_PREVIEW_ONLY_TEXT.includes('카카오 지도') && MAP_PREVIEW_ONLY_TEXT.includes('저장 안 함'))
+
   // ── 4) PNG 크기 ────────────────────────────────────────────────────────
   const pngA = fakePng(1)
   const size = pngSize(pngA)

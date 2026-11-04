@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  fetchScreenFile,
   findFactsForGaps,
   generateContentDraft,
   loadContentBriefs,
@@ -19,6 +20,7 @@ import type { GapAction } from '../lib/gapActions'
 import { copyRich } from '../lib/clipboard'
 import { buildPublishHtml, markdownToHtml } from '../lib/htmlFile'
 import { publishArticleOf } from '../lib/publishArticle'
+import { inlineScreens, richCopyWithScreens, screensDroppedText } from '../lib/screenExport'
 import EvidencePanel from './EvidencePanel'
 import SitePhotoPanel from './SitePhotoPanel'
 import { matchPhotos, normSlotAlt } from '../lib/articlePhotos'
@@ -566,16 +568,19 @@ export default function DraftPanel({
                   if (!tenant) return
                   setError(null)
                   // 올리기 목록 자사 줄 · 보관함과 같은 발행본(본문 + 사진 + 글 끝). 설정은 누를 때 읽는다 — 사진 확인이 막 바뀌었을 수 있다.
+                  // 자사 화면은 복사 바로 앞에서 그림을 문서 안(data:)에 넣고, 글자 쪽에는 「[화면: 이름]」을 둔다(앱 주소를 내보내지 않는다).
                   void loadPublishSettings(tenantId)
                     .then((settings) => {
                       const markdown = publishArticleOf(stored, { brand: tenant, settings })
-                      return copyRich(markdown, markdownToHtml(markdown))
+                      return richCopyWithScreens(markdown, markdownToHtml(markdown), fetchScreenFile)
                     })
-                    .then((ok) => {
+                    .then(async (out) => ({ ok: await copyRich(out.markdown, out.html), dropped: out.dropped }))
+                    .then(({ ok, dropped }) => {
                       if (!ok) {
                         setError('클립보드에 복사하지 못했습니다. 「홈페이지용 .html」을 브라우저로 열어 글을 골라 복사하세요 — 서식이 함께 복사됩니다.')
                         return
                       }
+                      if (dropped) setError(screensDroppedText(dropped))
                       setArticleCopied(true)
                       window.setTimeout(() => setArticleCopied(false), 1800)
                     })
@@ -596,12 +601,15 @@ export default function DraftPanel({
                       console.error('[DraftPanel] 브랜드 사실을 읽지 못해 Organization 없이 만듭니다', e)
                       return [] as FactNode[]
                     })
-                  void Promise.all([facts, loadPublishSettings(tenantId)]).then(([factList, settings]) =>
-                    downloadHtml(
-                      `홈페이지용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`,
-                      buildPublishHtml({ stored, brand: tenant, facts: factList, settings }),
-                    ),
-                  )
+                  setError(null)
+                  // 자사 화면은 그림을 문서 안(data:)에 넣는다 — 받지 못하면 「[화면: 이름]」 글자, 앱 주소가 남으면 내려받지 않는다.
+                  void Promise.all([facts, loadPublishSettings(tenantId)])
+                    .then(([factList, settings]) => inlineScreens(buildPublishHtml({ stored, brand: tenant, facts: factList, settings }), fetchScreenFile))
+                    .then((out) => {
+                      downloadHtml(`홈페이지용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`, out.html)
+                      if (out.dropped) setError(screensDroppedText(out.dropped))
+                    })
+                    .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
                 }}
               >
                 홈페이지용 .html

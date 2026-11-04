@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { adaptForChannel, type ChannelAdaptation, type ChannelAdaptationMap } from '../lib/api'
+import { adaptForChannel, fetchScreenFile, type ChannelAdaptation, type ChannelAdaptationMap } from '../lib/api'
 import { copyRich } from '../lib/clipboard'
 import { effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
 import { countImageSlots, draftTitle } from '../lib/markdownFile'
@@ -12,6 +12,7 @@ import { useTenant } from '../context/useTenant'
 import { channelStyleOf, sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
 import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos, uniquePhotoFiles } from '../lib/sitePhotos'
 import type { AppliedPhoto } from '../lib/articlePhotos'
+import { richCopyWithScreens, screensDroppedText } from '../lib/screenExport'
 
 /**
  * ② 올리기 목록 — 한 줄이 한 번 올리기다(상용화 UI 8차 시안). 줄 계산은 lib/publishPlan.ts.
@@ -143,13 +144,30 @@ export default function PublishList({
     return h1(markdown) || h1(sourceOf(row)) || (row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title)
   }
 
+  /**
+   * 이 줄의 글을 서식째 복사한다 — 자사 화면은 복사 바로 앞에서 그림을 문서 안(data:)에 넣고 글자 쪽에는 「[화면: 이름]」을 둔다(앱 주소를
+   * 내보내지 않는다). 그림을 받지 못한 화면은 알린다. 복사했으면 true.
+   */
+  const copyBody = async (row: PublishRow, t: { markdown: string; html: string }): Promise<boolean> => {
+    let out: Awaited<ReturnType<typeof richCopyWithScreens>>
+    try {
+      out = await richCopyWithScreens(t.markdown, t.html, fetchScreenFile)
+    } catch (e) {
+      setError(`${row.name} — ${e instanceof Error ? e.message : String(e)}`)
+      return false
+    }
+    if (!(await copyRich(out.markdown, out.html))) {
+      setError('클립보드에 복사하지 못했습니다.')
+      return false
+    }
+    if (out.dropped) setError(`${row.name} — ${screensDroppedText(out.dropped)}`)
+    return true
+  }
+
   const run = async (row: PublishRow) => {
     const t = textOf(row)
     if (!t) return
-    if (!(await copyRich(t.markdown, t.html))) {
-      setError('클립보드에 복사하지 못했습니다.')
-      return
-    }
+    if (!(await copyBody(row, t))) return
     setCopied(row.key)
     window.setTimeout(() => setCopied((k) => (k === row.key ? null : k)), 1800)
     if (row.openUrl) window.open(row.openUrl, '_blank', 'noopener')
@@ -188,10 +206,7 @@ export default function PublishList({
   const recopy = async (row: PublishRow) => {
     const t = textOf(row)
     if (!t) return
-    if (!(await copyRich(t.markdown, t.html))) {
-      setError('클립보드에 복사하지 못했습니다.')
-      return
-    }
+    if (!(await copyBody(row, t))) return
     setCopied(`body:${row.key}`)
     window.setTimeout(() => setCopied((k) => (k === `body:${row.key}` ? null : k)), 1800)
     setRecopied((s) => new Set(s).add(row.key))
@@ -370,6 +385,8 @@ export default function PublishList({
                   자리에 올리세요({photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}).
                   {photos.some((p) => p.credit) &&
                     ` 공공 사진 ${photos.filter((p) => p.credit).length}장은 출처 표시가 이용 조건이에요 — 사진 파일을 직접 올렸다면 함께 받은 「${ARTICLE_CREDITS_FILE}」대로 사진 바로 아래에 출처(공공누리 제1유형 링크)를 적어 주세요.`}
+                  {photos.some((p) => p.screen) &&
+                    ` 자사 화면 ${photos.filter((p) => p.screen).length}장은 그림을 글 안에 넣어 복사해요 — 블로그 편집기가 이 그림을 받는지는 아직 확인 전이에요.`}
                 </p>
               )}
               {stale && (

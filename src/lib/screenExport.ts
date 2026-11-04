@@ -118,6 +118,14 @@ export async function richCopyWithScreens(markdown: string, html: string, fetche
 }
 
 /**
+ * 화면 그림을 넣지 못한 내보내기의 알림 — 서식째 복사 · 홈페이지용 .html(DraftPanel · ContentLibrary · PublishList). 그 자리에는
+ * 「[화면: 이름]」 글자가 들어갔다.
+ */
+export function screensDroppedText(dropped: number): string {
+  return `자사 화면 ${dropped}장은 그림을 받지 못해 「[화면: 이름]」 글자로 두었어요 — 그 자리에 「사진 N장 받기」로 받은 화면 파일을 올려 주세요.`
+}
+
+/**
  * 내보낸 글에 남으면 안 되는 주소 — 앱 주소(/api/screens/) · 이 PC의 주소(127.0.0.1 · localhost). 찾은 것(중복 없이)을 돌려준다.
  * 검증 스크립트가 내보낸 결과를 이것으로 확인한다.
  */
