@@ -524,6 +524,24 @@ const REGION_SCENE_WORDS = [
   '꽃', '숲', '섬', '벚꽃', '거리', '골목', '산책로', '산책길', '둘레길', '바닷가', '해변', '해안', '바다', '호수', '강변', '난간', '야경', '노을', '일몰',
   '조명', '철길', '시장', '항구', '포구', '등대', '다리', '공원', '정원', '광장', '구도심', '원도심', '갈대', '갯벌', '방파제', '선착장',
 ]
+/**
+ * 장소 없는 자리 낱말에 더해 지역 사진에서 같이 찾는 낱말 — 한 방향만(「골목」 자리는 「거리」 사진도, 「거리」 자리는 「골목」을 찾지 않는다).
+ * 2026-11-04 요청 — 관광사진 제목 · 검색 낱말에 「골목」이 드물다(군산 지역 사진 500장에 0장, 「근대문화유산거리」 · 「이색거리」는 있다).
+ * 더한 낱말만 맞는 사진은 자리 낱말이 맞는 사진 뒤에 읽고, 자리 낱말이 장면 · 제목에 하나도 맞지 않을 때만 쓰며 장면 점수에 더하지 않는다.
+ */
+const REGION_TERM_ALSO: ReadonlyMap<string, readonly string[]> = new Map([['골목', ['거리']]])
+/** 더한 낱말로 끝나도 그 장면이 아닌 낱말 — 「먹거리」 · 「볼거리」 · 「즐길거리」는 거리가 아니다(2026-11-04 검토). */
+const REGION_ALSO_NOT: Readonly<Record<string, RegExp>> = {
+  거리: /(먹|볼|놀|살|할|즐길|구경|이야깃|이야기|얘깃|읽을|체험|웃음|화젯|간식|반찬|안줏|군것질|걱정|고민)거리$/,
+}
+
+/**
+ * 더한 낱말(REGION_TERM_ALSO) 가운데 낱말 목록에 맞는 것 — 낱말이 같거나 그 낱말로 끝날 때만(「이색거리」 · 「근대문화유산거리」 · 「길거리」),
+ * REGION_ALSO_NOT 낱말(「먹거리」 · 「볼거리」)은 빼고. 글자 안에서는 찾지 않는다(「거리두기」 · 「길거리음식」).
+ */
+function alsoHits(also: readonly string[], words: readonly string[]): string[] {
+  return also.filter((t) => words.some((w) => w.endsWith(t) && !REGION_ALSO_NOT[t]?.test(w)))
+}
 
 /**
  * 자리 글자가 브랜드 자기 시설(숙소 · 객실 · 매장 · 메뉴)을 가리키는 낱말 — 장소 이름이 없어도 다른 곳의 지역 사진은 분명히 틀린 사진이다
@@ -1318,10 +1336,11 @@ export function autoPickPhotos(input: {
       }
 
       // ③b 장소 없는 자리 — 장소 사전을 읽었고 브랜드 자기 시설 · 고유한 장소 이름이 나온 자리가 아니며 글에 사진 자리가 남은 자리(regionSlot)만.
-      // 지역 사진 가운데 자리 낱말(내용어 · 꽃 · 골목 · 바닷가 …, 사람 낱말 · 브랜드 도시 제외, 밤 · 해 질 무렵 자리면 야경 · 노을)이 제목 ·
-      // 검색 낱말에 맞는 사진을 낱말이 많이 맞는 순서로 자리마다 REGION_SCENE_LIMITS.perSlot장만 장면을 읽고(sceneWanted region), 장면이
-      // 맞고(sceneFit — 종류 · 사람 · 화면은 그대로 뺀다) 자리 낱말이 장면 · 사진 제목에 하나 이상 맞는 사진을 장면 점수 순서로 넣는다(장소로
-      // 묶어 둘 이름이 없어서). 늘 「확인 필요」, 시간만 다르면 ④ 비슷한 사진.
+      // 지역 사진 가운데 자리 낱말(내용어 · 꽃 · 골목 · 바닷가 …, 사람 낱말 · 브랜드 도시 제외, 밤 · 해 질 무렵 자리면 야경 · 노을, 골목
+      // 자리면 거리 — REGION_TERM_ALSO)이 제목 · 검색 낱말에 맞는 사진을 낱말이 많이 맞는 순서로(같으면 더한 낱말이 많이 맞는 순서 —
+      // 골목 사진이 거리만 맞는 사진보다 먼저) 자리마다 REGION_SCENE_LIMITS.perSlot장만 장면을 읽고(sceneWanted region), 장면이
+      // 맞고(sceneFit — 종류 · 사람 · 화면은 그대로 뺀다) 자리 낱말이 장면 · 사진 제목에 하나 이상 맞는(하나도 없으면 더한 낱말 — alsoHits,
+      // 장면 점수에는 더하지 않는다) 사진을 장면 점수 순서로 넣는다(장소로 묶어 둘 이름이 없어서). 늘 「확인 필요」, 시간만 다르면 ④ 비슷한 사진.
       const regionRows: AutoSlotRow[] = []
       for (const row of rows) {
         if (row.state !== 'nomatch' || row.places?.length || input.placesUnknown || !regionSlotOk(row)) continue
@@ -1334,17 +1353,23 @@ export function autoPickPhotos(input: {
       }
       for (const row of regionRows) {
         const w = wantsOf(row)
-        const terms = [
+        const own = [
           ...new Set([
             ...regionTerms(`${row.slot.key} ${row.caption}`, regionStop).filter((t) => !PEOPLE_SCENE.test(t)),
             ...(w.times?.[0] === 'night' ? ['야경'] : w.times?.[0] === 'dusk' ? ['노을'] : []),
           ]),
         ]
+        const also = [...new Set(own.flatMap((t) => REGION_TERM_ALSO.get(t) ?? []))].filter((t) => !own.includes(t))
         const ranked = regionPool!
-          .map((candidate, i) => ({ candidate, i, n: termHits(terms, termsOfCandidate(candidate)).length }))
-          .filter((x) => x.n > 0)
+          .map((candidate, i) => ({
+            candidate,
+            i,
+            n: termHits(own, termsOfCandidate(candidate)).length,
+            alsoN: also.length ? alsoHits(also, contentWords(`${candidate.alt} ${candidate.keywords ?? ''}`, regionStop)).length : 0,
+          }))
+          .filter((x) => x.n + x.alsoN > 0)
         for (const x of ranked) regionMatched.add(x.candidate.src)
-        const top = ranked.sort((a, b) => b.n - a.n || a.i - b.i).slice(0, REGION_SCENE_LIMITS.perSlot).map((x) => x.candidate)
+        const top = ranked.sort((a, b) => b.n - a.n || b.alsoN - a.alsoN || a.i - b.i).slice(0, REGION_SCENE_LIMITS.perSlot).map((x) => x.candidate)
         row.regionTried = top.length
         regionWants.push(top)
         const opts: Options = { fit: [], soft: [] }
@@ -1361,13 +1386,14 @@ export function autoPickPhotos(input: {
             return
           }
           const seenTerms = [...scene.tags.map((t) => t.toLowerCase()), ...regionTerms(scene.text.replace(NO_PEOPLE_TEXT, ' '), new Set()), ...regionTerms(candidate.alt, regionStop)]
-          const anchors = termHits(terms, seenTerms)
+          const ownAnchors = termHits(own, seenTerms)
+          const anchors = ownAnchors.length || !also.length ? ownAnchors : alsoHits(also, contentWords(`${scene.tags.join(' ')} ${scene.text.replace(NO_PEOPLE_TEXT, ' ')} ${candidate.alt}`, regionStop))
           if (!anchors.length) {
             skipScene(row, 'words')
             return
           }
           if (!fit.ok) skipScene(row, fit.miss!)
-          opts[fit.ok ? 'fit' : 'soft'].push({ candidate, order, scene, fit: { ...fit, score: fit.score + anchors.length, words: [...new Set([...fit.words, ...anchors])] } })
+          opts[fit.ok ? 'fit' : 'soft'].push({ candidate, order, scene, fit: { ...fit, score: fit.score + ownAnchors.length, words: [...new Set([...fit.words, ...anchors])] } })
         })
         regionOpts.set(row, opts)
       }
