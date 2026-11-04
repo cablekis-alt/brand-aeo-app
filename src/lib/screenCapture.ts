@@ -35,7 +35,7 @@ export interface ScreenVariant {
    * 자리에는 #r-원도심만 — screenVariantChoice). 띄어쓰기 · 문장부호는 무시하고 맞춘다.
    */
   places?: readonly string[]
-  /** 자리 글자가 이 조건을 말하면(「아이」 · 「부모님」) 이 변형을 먼저 쓴다(코스 조건 변형 — screenVariantChoice). */
+  /** 자리 글자가 이 조건을 말하면(「아이」 · 「부모님」 · 「혼자」 · 「연인」) 이 변형을 먼저 쓴다(코스 조건 변형 — screenVariantChoice). */
   prefer?: RegExp
 }
 
@@ -50,11 +50,6 @@ export interface ScreenDef {
   map?: true
   /** 이 화면에서 더 숨길 것(챗봇 단추 · 캐러셀 · 동의 배너는 캡처 모듈이 늘 숨긴다). */
   hide?: readonly string[]
-  /**
-   * 조건 변형(prefer)이 없는 다른 조건(코스 화면의 「혼자」 · 「연인·친구」) — 자리(장면 글자 · 소제목 · 설명 줄)가 이것을 말하면 조건 변형을
-   * 쓰지 않고 기본 변형만 쓴다(screenVariantChoice). 「연인·혼자」 소제목 아래 부모님 조건 화면이 나가지 않게.
-   */
-  otherCondition?: RegExp
   variants: readonly ScreenVariant[]
 }
 
@@ -85,8 +80,19 @@ export interface ScreenShotView extends ScreenShot {
   src: string
 }
 
-/** 군산각 코스 화면의 조건 고르기 단계(동행) — 아이와 · 부모님 변형은 여기가 맨 위에 오게 찍는다. */
+/** 군산각 코스 화면의 조건 고르기 단계(동행) — 아이와 · 부모님 · 혼자 · 연인·친구 변형은 여기가 맨 위에 오게 찍는다. */
 const GUNSAN_COURSE_STEP = 'fieldset:has(input[name="with"])'
+/**
+ * 「누구와 가세요?」의 혼자 칸을 말하는 낱말. 「혼자서도 · 혼자서는 · 혼자 짜기 · 혼자 고민」은 「스스로」라 동행이 아니고(「AI 코스 만들기는
+ * 혼자서도 쉽게」), 「홀로그램」 · 「1인 1메뉴」 · 「1인당」도 아니다.
+ */
+const GUNSAN_SOLO = /혼자(?!서[도는]|\s?(?:하[기는지고면]|해[도서야요]|고민|정하|찾|짜[기는지]|알아보))|홀로(?!그램)|혼행|1인\s?(?:여행|코스|일정)|솔로\s?(?:여행|트립)/
+/**
+ * 연인·친구 칸을 말하는 낱말 — 사이트의 칸 이름과 글에 흔한 말(커플 · 데이트 · 둘이서 · 부부). 「친구 같은 · 친구처럼 · 친구 추가 ·
+ * 플러스친구」, 「업데이트」, 「여부부터 · 공부부터」(…부 + 부터), 「연인원」은 아니다.
+ */
+const GUNSAN_COUPLE =
+  /연인(?!원)|커플|(?<!업)데이트|신혼|부부(?!터)|(?<!플러스\s?)친구(?!\s?(?:같|처럼|추가|맺|신청|등록))|둘이서|둘만|둘이\s?(?:걷|걸|가|간|갈|떠나|여행|나란히|함께)|두\s?사람이?\s?(?:함께|나란히|걷|걸)|우정\s?여행/
 /** 군산각 날씨 카드 — 실시간 날씨 · 점수 · 밤에는 달이 그려져 오래 남는 블로그 그림에 맞지 않는다. */
 const GUNSAN_WEATHER = '[data-wx]'
 
@@ -111,8 +117,9 @@ const GUNSAN_REGION_PLACES = {
 } as const satisfies Record<string, readonly string[]>
 
 /**
- * 자사 화면 프로필 표. 1차는 군산각의 코스 화면 3장(기본 · 아이와 · 부모님 조건)과 지도 화면 6장(전체 + 권역 5)이다. 주소의 쿼리 이름 ·
- * 권역 조각은 사이트(plan.js fromAddress · /map/의 권역 탭)에서 확인한 것이다(2026-11-04). 프로필이 없는 브랜드는 찍을 화면이 없다.
+ * 자사 화면 프로필 표. 군산각의 코스 화면 5장(기본 · 「누구와 가세요?」의 네 칸 아이와 · 부모님 · 혼자 · 연인·친구)과 지도 화면 6장(전체 +
+ * 권역 5)이다. 주소의 쿼리 이름(with=solo|couple|kids|parents · adults · seniors · kids 나이) · 권역 조각은 사이트(plan.js fromAddress ·
+ * /map/의 권역 탭)에서 확인한 것이다(2026-11-04). 프로필이 없는 브랜드는 찍을 화면이 없다.
  */
 export const SCREEN_PROFILES: readonly ScreenProfile[] = [
   {
@@ -123,12 +130,12 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
         kind: 'course',
         label: 'AI 코스 만들기',
         hide: ['.trp-handed-w', GUNSAN_WEATHER],
-        // 「누구와 가세요?」의 나머지 두 칸(혼자 · 연인·친구) — 사이트의 칸 이름과 글에 흔한 말(커플 · 데이트 · 나홀로).
-        otherCondition: /혼자|홀로|연인|커플|친구|데이트/,
         variants: [
           { id: 'default', label: '기본', path: '/plan/', scrollTo: '#trp-form' },
           { id: 'kids', label: '아이와', path: '/plan/?with=kids&kids=7', scrollTo: GUNSAN_COURSE_STEP, prefer: /아이(?!보리|콘|디어|스|폰|템)|어린이|자녀/ },
           { id: 'parents', label: '부모님', path: '/plan/?with=parents&adults=3&seniors=2', scrollTo: GUNSAN_COURSE_STEP, prefer: /부모님|어르신|효도/ },
+          { id: 'solo', label: '혼자', path: '/plan/?with=solo&adults=1', scrollTo: GUNSAN_COURSE_STEP, prefer: GUNSAN_SOLO },
+          { id: 'couple', label: '연인·친구', path: '/plan/?with=couple&adults=2', scrollTo: GUNSAN_COURSE_STEP, prefer: GUNSAN_COUPLE },
         ],
       },
       {
@@ -388,15 +395,15 @@ export function screenKindOf(text: string, profile: ScreenProfile | null): { kin
  *   (by named — 그 장소가 안 보이는 권역 지도를 넣지 않게).
  * - 조건 변형이 있는 화면(코스): 조건은 장면 글자와 함께 소제목 · 설명 줄(context)도 본다 — 장면 글자는 대개 「조건을 고르는 모습」뿐이고
  *   조건은 소제목이 말한다.
- *   - 「아이」 · 「부모님」을 말하면 그 변형 다음 기본 변형(by prefer — 다른 조건 변형은 쓰지 않는다).
- *   - 다른 조건(otherCondition — 「혼자」 · 「연인」)을 말하면 기본 변형만(by other).
+ *   - 동행(「아이」 · 「부모님」 · 「혼자」 · 「연인」)을 말하면 그 변형(둘 이상 말하면 그것들) 다음 기본 변형(by prefer — 말하지 않은
+ *     동행의 변형은 쓰지 않는다. 「연인·혼자」 소제목 아래 부모님 조건 화면이 나가지 않게).
  *   - 조건을 말하지 않으면 기본 변형 다음 조건 변형(by general) — 기본을 이 글 · 작성자에게 이미 썼을 때만 조건 변형을 쓰고, 그때는 두 번째
  *     묶음이라 「확인 필요」가 붙는다(photoAutoPick.ts).
  * - 그 밖에는 모든 변형.
  */
 export interface ScreenVariantChoice {
   tiers: ScreenVariant[][]
-  by?: 'region' | 'named' | 'prefer' | 'other' | 'general'
+  by?: 'region' | 'named' | 'prefer' | 'general'
 }
 
 export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces: readonly string[] = [], context = ''): ScreenVariantChoice {
@@ -415,6 +422,5 @@ export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces
   const said = `${text}\n${context}`.normalize('NFC')
   const preferred = conditional.filter((v) => v.prefer!.test(said))
   if (preferred.length) return { tiers: [preferred, base.filter((v) => !preferred.includes(v))].filter((tier) => tier.length > 0), by: 'prefer' }
-  if (screen.otherCondition?.test(said)) return { tiers: [base], by: 'other' }
   return { tiers: [base, conditional.filter((v) => !base.includes(v))].filter((tier) => tier.length > 0), by: 'general' }
 }

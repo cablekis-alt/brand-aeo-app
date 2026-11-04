@@ -174,15 +174,25 @@ try {
   const profile = screenProfileFor(['gunsan.webforai.kr', 'all-about-gunsan.vercel.app'])
   const course = profile?.screens.find((s) => s.id === 'course')
   const map = profile?.screens.find((s) => s.id === 'map')
-  ok('자사 사이트에 프로필 호스트가 있으면 그 프로필(코스 3 · 지도 6)', profile?.host === 'gunsan.webforai.kr' && course?.variants.length === 3 && map?.variants.length === 6)
+  ok('자사 사이트에 프로필 호스트가 있으면 그 프로필(코스 5 · 지도 6)', profile?.host === 'gunsan.webforai.kr' && course?.variants.length === 5 && map?.variants.length === 6)
   ok('ownedDomains의 https:// · www. · 끝 / 를 걷고 찾는다', screenProfileFor(['https://www.gunsan.webforai.kr/']) === profile)
   ok('상위 도메인 · 다른 사이트 · 없음이면 프로필이 없다', screenProfileFor(['webforai.kr']) === null && screenProfileFor(['stay.example']) === null && screenProfileFor(undefined) === null)
   const allUrls = SCREEN_PROFILES.flatMap((p) => p.screens.flatMap((s) => s.variants.map((v) => screenUrl(p, v))))
-  ok('모든 변형 주소는 https · 프로필 호스트', allUrls.length === 9 && allUrls.every((u) => new URL(u).protocol === 'https:' && new URL(u).host === 'gunsan.webforai.kr'))
+  ok('모든 변형 주소는 https · 프로필 호스트', allUrls.length === 11 && allUrls.every((u) => new URL(u).protocol === 'https:' && new URL(u).host === 'gunsan.webforai.kr'))
   ok(
     '코스 변형은 /plan/ 미리 채우기 쿼리만(보내는 값 없음)',
     (course?.variants ?? []).every((v) => v.path.startsWith('/plan/')) &&
       screenUrl(profile!, course!.variants.find((v) => v.id === 'kids')!) === 'https://gunsan.webforai.kr/plan/?with=kids&kids=7',
+  )
+  // 「누구와 가세요?」의 네 칸 — 혼자 · 연인·친구도 주소로 미리 채운다(plan.js fromAddress: with=solo|couple, adults=0..10). 아이와 · 부모님처럼
+  // 조건 단계가 맨 위에 오게 찍는다.
+  const courseVariant = (id: string) => course?.variants.find((v) => v.id === id)
+  ok(
+    '코스 변형 — 혼자(with=solo · 어른 1) · 연인·친구(with=couple · 어른 2)도 조건 단계로',
+    courseVariant('solo')?.label === '혼자' && screenUrl(profile!, courseVariant('solo')!) === 'https://gunsan.webforai.kr/plan/?with=solo&adults=1' &&
+      courseVariant('couple')?.label === '연인·친구' && screenUrl(profile!, courseVariant('couple')!) === 'https://gunsan.webforai.kr/plan/?with=couple&adults=2' &&
+      ['solo', 'couple', 'kids', 'parents'].every((id) => courseVariant(id)?.scrollTo === 'fieldset:has(input[name="with"])' && courseVariant(id)?.prefer instanceof RegExp) &&
+      courseVariant('default')?.prefer === undefined,
   )
   const ids = SCREEN_PROFILES.flatMap((p) => p.screens.map((s) => `${p.host}/${s.id}:${new Set(s.variants.map((v) => v.id)).size === s.variants.length}`))
   ok('화면 · 변형 id는 프로필 안에서 겹치지 않는다', ids.every((x) => x.endsWith(':true')) && new Set(ids).size === ids.length)
@@ -295,20 +305,60 @@ try {
   ok('장소 없는 지도 자리는 모든 변형', tiersOf(map!, '지도에서 찾기 화면에 관광지 위치가 표시된 모습') === 'default,r-원도심,r-은파,r-고군산,r-금강,r-새만금-비응')
   // 조건을 말하지 않는 코스 자리는 기본 다음 조건 변형(general) — 예전에는 세 변형을 한 묶음으로 두어 덜 쓴 조건 화면이 「확인 필요」 없이
   // 들어갔다(검토 2026-11-04: 「연인·혼자」 소제목 아래 부모님 조건 화면).
+  // 조건 변형은 표 순서(아이와 · 부모님 · 혼자 · 연인·친구) — 예전 기대값 'default | kids,parents'는 조건 변형이 둘뿐일 때다(3단계에서 혼자 ·
+  // 연인·친구를 더했다).
   ok(
     '아이 · 부모님 코스 자리는 그 조건 다음 기본 — 다른 조건은 쓰지 않는다(「아이콘」은 아이가 아니다) · 조건을 말하지 않으면 기본 다음 조건',
     tiersOf(course!, '아이와 함께 AI 코스 만들기 조건을 고르는 모습') === 'kids | default (prefer)' && tiersOf(course!, '부모님과 가는 여행의 AI 코스 만들기 화면') === 'parents | default (prefer)' &&
-      tiersOf(course!, 'AI 코스 만들기 화면에서 조건을 고르는 모습') === 'default | kids,parents (general)' &&
-      tiersOf(course!, '아이콘이 보이는 AI 코스 만들기 화면') === 'default | kids,parents (general)',
+      tiersOf(course!, 'AI 코스 만들기 화면에서 조건을 고르는 모습') === 'default | kids,parents,solo,couple (general)' &&
+      tiersOf(course!, '아이콘이 보이는 AI 코스 만들기 화면') === 'default | kids,parents,solo,couple (general)',
   )
-  ok('코스 자리에 장소가 나와도 권역으로 좁히지 않는다', tiersOf(course!, 'AI 코스 만들기 화면에 근대역사박물관을 넣는 모습', ['근대역사박물관']) === 'default | kids,parents (general)')
+  ok('코스 자리에 장소가 나와도 권역으로 좁히지 않는다', tiersOf(course!, 'AI 코스 만들기 화면에 근대역사박물관을 넣는 모습', ['근대역사박물관']) === 'default | kids,parents,solo,couple (general)')
   const COURSE_TEXT = '가상각 웹사이트의 AI 코스 만들기 화면에서 여행 조건을 고르는 모습'
+  // 예전 기대값은 혼자 · 연인 소제목이 'default (other)'(기본만)였다 — 그때는 혼자 · 연인·친구 변형이 없어 조건 화면을 쓰지 않았다. 이제 그
+  // 동행의 변형이 먼저고, 쓸 수 없으면 기본이다(다른 동행의 변형은 쓰지 않는다).
   ok(
-    '코스 조건은 소제목 · 설명 줄도 본다 — 「아이와 함께」 · 「부모님」은 그 조건, 「혼자 · 연인 · 친구 · 커플」은 기본만',
+    '코스 조건은 소제목 · 설명 줄도 본다 — 「아이와 함께」 · 「부모님」 · 「혼자」 · 「연인 · 친구 · 커플」은 그 조건 다음 기본',
     tiersOf(course!, COURSE_TEXT, [], "가상각 '아이와 함께' 안내로 시간표를 짜면 어떻게 되나요?") === 'kids | default (prefer)' &&
       tiersOf(course!, COURSE_TEXT, [], '1박 2일 일정\n부모님과 함께라면 어르신 인원을 넣어 보세요.') === 'parents | default (prefer)' &&
-      tiersOf(course!, COURSE_TEXT, [], '가상각으로 연인·혼자 코스는 어떻게 짜나요?') === 'default (other)' &&
-      tiersOf(course!, COURSE_TEXT, [], '혼자·친구·커플 조건으로 코스를 짜 보면\n조건을 고른 뒤 일정을 다듬습니다.') === 'default (other)',
+      tiersOf(course!, COURSE_TEXT, [], '가상각으로 계절별 혼자 코스 짜기') === 'solo | default (prefer)' &&
+      tiersOf(course!, COURSE_TEXT, [], '가상각으로 커플·무장애 동선 짜기') === 'couple | default (prefer)' &&
+      tiersOf(course!, COURSE_TEXT, [], '가상각으로 연인·혼자 코스는 어떻게 짜나요?') === 'solo,couple | default (prefer)' &&
+      tiersOf(course!, COURSE_TEXT, [], '혼자·친구·커플 조건으로 코스를 짜 보면\n조건을 고른 뒤 일정을 다듬습니다.') === 'solo,couple | default (prefer)',
+  )
+  const companionOf = (context: string) => tiersOf(course!, COURSE_TEXT, [], context)
+  ok(
+    '혼자 · 연인·친구 낱말 — 사이트 칸 이름과 글에 흔한 말',
+    ['나홀로 군산 여행', '홀로 걷는 원도심', '혼행 코스', '1인 여행자를 위한 코스', '솔로 여행 하루 일정', '혼자서 떠나는 하루'].every((t) => companionOf(t) === 'solo | default (prefer)') &&
+      [
+        '연인과 걷는 코스', '커플 사진 코스', '기념일 데이트 동선', '친구들끼리 군산에서 하루', '친구와 1박 2일', '둘이서 걷는 골목', '둘만의 야경 코스', '둘이 나란히 걷는 길',
+        '부부 여행 일정', '신혼여행 코스', '두 사람이 함께 걷는 산책로', '우정 여행 코스', '연인·친구 조건',
+      ].every((t) => companionOf(t) === 'couple | default (prefer)'),
+  )
+  // 동행이 아닌 말 — 이런 자리에 혼자 · 연인·친구 조건 화면이 「확인 필요」 없이 나가면 안 된다(조건을 말하지 않은 자리로 본다).
+  ok(
+    '동행이 아닌 말은 조건으로 보지 않는다(혼자서도 쉽게 · 친구 같은 사장님 · 업데이트 · 여부부터 · 공부부터 · 친구 추가 · 홀로그램 · 1인 1메뉴)',
+    [
+      'AI 코스 만들기는 혼자서도 쉽게 조건을 고를 수 있어요', '혼자서는 정하기 어려운 일정', '일정을 혼자 짜기 어렵다면', '혼자 고민하지 말고 조건만 고르세요',
+      '친구 같은 사장님이 반겨 주는 가게', '친구처럼 편한 안내', '카카오톡 친구 추가로 소식 받기', '플러스친구로 묻기', '최근 업데이트된 운영 시간',
+      '주차 가능 여부부터 확인하세요', '공부부터 하고 떠나는 여행', '홀로그램 전시', '1인 1메뉴 원칙', '1인당 입장료', '연인원 기준 방문객',
+    ].every((t) => companionOf(t) === 'default | kids,parents,solo,couple (general)'),
+  )
+  // 동행을 말한 자리는 그 동행의 변형과 기본만 — 다른 동행의 조건 화면은 어느 묶음에도 없다.
+  const companionCases: [string, string[]][] = [
+    ['아이와 함께 가는 코스', ['kids']],
+    ['부모님과 가는 코스', ['parents']],
+    ['혼자 가는 코스', ['solo']],
+    ['연인과 가는 코스', ['couple']],
+    ['혼자·친구 여행', ['solo', 'couple']],
+  ]
+  ok(
+    '동행을 말한 코스 자리에는 다른 동행의 변형이 없다',
+    companionCases.every(([context, named]) => {
+      const c = screenVariantChoice(course!, COURSE_TEXT, [], context)
+      const used = c.tiers.flat().map((v) => v.id)
+      return c.by === 'prefer' && used.every((id) => id === 'default' || named.includes(id)) && named.every((id) => c.tiers[0]!.some((v) => v.id === id))
+    }) && course!.variants.filter((v) => v.prefer).length === 4,
   )
   ok('지도 권역은 소제목 · 설명 줄을 보지 않는다(장면 글자만)', tiersOf(map!, '지도에서 찾기 화면에 관광지 위치가 표시된 모습', [], '선유도 가는 길') === 'default,r-원도심,r-은파,r-고군산,r-금강,r-새만금-비응')
   const exportPick = { src: appSrc, origin: 'screen' as const, screenId: 'course', variantId: 'kids' }

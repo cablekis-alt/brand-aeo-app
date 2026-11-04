@@ -642,6 +642,8 @@ const SHOTS = {
   cParents: shotOf('course', 'parents', 3, '/plan/?with=parents&adults=3&seniors=2'),
   mDefault: shotOf('map', 'default', 4, '/map/'),
   mOld: shotOf('map', 'r-원도심', 5, '/map/#r-원도심'),
+  cSolo: shotOf('course', 'solo', 6, '/plan/?with=solo&adults=1'),
+  cCouple: shotOf('course', 'couple', 7, '/plan/?with=couple&adults=2'),
 }
 const ALL_SHOTS = Object.values(SHOTS)
 const COURSE_SLOT = `${SB} 웹사이트의 AI 코스 만들기 화면에서 조건을 고르는 모습`
@@ -735,27 +737,50 @@ const condRows = screenRun(
   ],
   { available: true, shots: ALL_SHOTS },
 ).articles[0]!.rows
+// 예전 기대값은 첫 자리가 default(by other), 셋째 자리가 used였다 — 그때는 혼자 · 연인 자리에 기본 화면만 썼다. 이제 혼자 · 연인·친구
+// 변형이 있어 첫 자리(혼자·연인)는 그 둘 가운데 표 순서로 혼자, 셋째 자리(혼자 여행)는 이 글에 혼자를 이미 써서 기본(확인 필요)이다.
 ok(
-  '소제목이 다른 동행(혼자 · 연인)을 말하면 기본 화면만 — 이 글에 기본을 이미 썼으면 조건 화면을 넣지 않고 비워 둔다(used)',
-  condRows[0]!.state === 'filled' && condRows[0]!.pick?.variantId === 'default' && condRows[0]!.screenPick?.by === 'other' && !condRows[0]!.review &&
-    condRows[2]!.state === 'used' && !condRows[2]!.pick,
+  '소제목이 혼자 · 연인을 말하면 그 동행의 변형 — 이 글에 이미 썼으면 기본 화면(확인 필요), 다른 동행의 조건 화면은 쓰지 않는다',
+  condRows[0]!.state === 'filled' && condRows[0]!.pick?.variantId === 'solo' && condRows[0]!.screenPick?.by === 'prefer' && !condRows[0]!.review &&
+    condRows[2]!.state === 'filled' && condRows[2]!.pick?.variantId === 'default' && condRows[2]!.screenPick?.by === 'prefer' && condRows[2]!.review === true,
 )
 ok('「아이와 함께」 소제목 아래 코스 자리는 아이와 변형', condRows[1]!.state === 'filled' && condRows[1]!.pick?.variantId === 'kids' && condRows[1]!.screenPick?.by === 'prefer' && !condRows[1]!.review)
 const captionParents = screenRun([article('h2', ['## 1박 2일 일정', '', `![${COURSE_SLOT}](#image-slot)`, '*부모님과 함께라면 어르신 인원을 넣어 보세요.*'])], { available: true, shots: ALL_SHOTS }).articles[0]!.rows[0]!
 ok('설명 줄이 부모님을 말하면 부모님 변형', captionParents.state === 'filled' && captionParents.pick?.variantId === 'parents' && captionParents.screenPick?.by === 'prefer')
-const coupleUsed = screenRun([article('h3', ['## 연인과 걷는 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w6' })], { available: true, shots: ALL_SHOTS }, {
+// 예전 기대값은 used였다(연인 자리는 기본만 — 작성자가 기본을 이미 써서 비움). 이제 연인·친구 변형이 먼저다.
+const coupleRow = screenRun([article('h3', ['## 연인과 걷는 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w6' })], { available: true, shots: ALL_SHOTS }, {
   others: [{ src: 'screen:course:default', group: 'w6' }],
 }).articles[0]!.rows[0]!
-ok('「연인」 자리에서 이 작성자가 기본을 이미 썼으면 조건 화면을 넣지 않는다(used)', coupleUsed.state === 'used' && !coupleUsed.pick)
+ok(
+  '「연인」 자리는 연인·친구 변형 — 이 작성자가 기본을 이미 썼어도 넣고 「확인 필요」는 달지 않는다',
+  coupleRow.state === 'filled' && coupleRow.pick?.variantId === 'couple' && coupleRow.screenPick?.by === 'prefer' && !coupleRow.review,
+)
+const soloRow = screenRun([article('h4', [`## ${SB}으로 계절별 혼자 코스 짜기`, '', `![${COURSE_SLOT}](#image-slot)`, '*조건만 고르면 일정을 짜 드려요.*'])], { available: true, shots: ALL_SHOTS }).articles[0]!.rows[0]!
+ok('「혼자」 소제목 아래 코스 자리는 혼자 변형(찍은 주소 with=solo)', soloRow.state === 'filled' && soloRow.pick?.variantId === 'solo' && soloRow.pick.pageUrl === SHOTS.cSolo.url && !soloRow.review)
+// 동행을 말한 자리는 그 동행의 변형 · 기본을 이 작성자가 다 썼으면 비워 둔다 — 다른 동행(아이와 · 부모님)의 화면은 남아 있어도 쓰지 않는다.
+const companionFull = screenRun([article('h5', ['## 혼자·친구 여행에 가상각을 쓰는 법', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w3' })], { available: true, shots: ALL_SHOTS }, {
+  others: ['default', 'solo', 'couple'].map((v) => ({ src: `screen:course:${v}`, group: 'w3' })),
+}).articles[0]!.rows[0]!
+ok('「혼자·친구」 자리에서 혼자 · 연인·친구 · 기본을 이 작성자가 다 썼으면 used(아이와 · 부모님은 쓰지 않는다)', companionFull.state === 'used' && !companionFull.pick)
+const friendCaption = screenRun([article('h6', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`, '*친구 같은 사장님이 추천한 곳도 조건에 넣을 수 있어요.*'])], { available: true, shots: ALL_SHOTS }).articles[0]!.rows[0]!
+ok('설명 줄의 「친구 같은 사장님」은 동행이 아니다 — 기본 화면(조건을 말하지 않은 자리)', friendCaption.pick?.variantId === 'default' && friendCaption.screenPick?.by === 'general' && !friendCaption.review)
 
 // 상한 — 화면은 브랜드 상한을 받지 않고, 글 하나 · 작성자 한 사람에게 「화면 + 변형」 한 번.
 const busy = ['default', 'kids', 'parents'].flatMap((v) => [0, 1, 2, 3].map((i) => ({ src: `screen:course:${v}`, group: `o${i}` })))
 const exempt = screenRun([article('e1', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w1' })], { available: true, shots: ALL_SHOTS }, { others: busy }).articles[0]!.rows[0]!
 ok('브랜드에서 모든 변형을 네 번씩 썼어도 화면은 넣는다(브랜드 상한 3 면제)', exempt.state === 'filled' && exempt.pick?.variantId === 'default')
-const writerFull = screenRun([article('w1a', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w1' })], { available: true, shots: ALL_SHOTS }, {
-  others: ['default', 'kids', 'parents'].map((v) => ({ src: `screen:course:${v}`, group: 'w1' })),
-}).articles[0]!.rows[0]!
-ok('같은 작성자가 코스 화면 세 변형을 다 썼으면 used', writerFull.state === 'used' && !writerFull.pick)
+// 예전에는 세 변형(기본 · 아이와 · 부모님)을 다 쓰면 used였다 — 이제 코스 변형이 다섯이라 셋을 썼으면 혼자 변형(확인 필요), 다섯을 다 써야 used.
+const writerUsed = (variants: string[]) =>
+  screenRun([article('w1a', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w1' })], { available: true, shots: ALL_SHOTS }, {
+    others: variants.map((v) => ({ src: `screen:course:${v}`, group: 'w1' })),
+  }).articles[0]!.rows[0]!
+const writerThree = writerUsed(['default', 'kids', 'parents'])
+const writerFull = writerUsed(['default', 'kids', 'parents', 'solo', 'couple'])
+ok(
+  '조건을 말하지 않는 자리 — 이 작성자가 기본 · 아이와 · 부모님을 썼으면 혼자 변형(확인 필요), 다섯 변형을 다 썼으면 used',
+  writerThree.state === 'filled' && writerThree.pick?.variantId === 'solo' && writerThree.review === true && writerThree.screenPick?.by === 'general' &&
+    writerFull.state === 'used' && !writerFull.pick,
+)
 const twoInArticle = screenRun([article('t1', ['## 1', '', `![${COURSE_SLOT}](#image-slot)`, '', '## 2', '', `![${COURSE_SLOT}](#image-slot)`])], { available: true, shots: ALL_SHOTS })
 ok(
   '한 글의 두 코스 자리는 다른 변형',
