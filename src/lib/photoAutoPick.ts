@@ -353,8 +353,11 @@ const WANT_CLOSE = /음식|요리|메뉴|디저트|(^|\s)빵|커피|음료|접�
 const WANT_SIGN = /안내판|표지판|간판|팻말|요금표|안내문/
 /** 장면(낱말 · 설명)이 안내판 · 간판인가 — 바깥 안내판 자리가 받는 가까이 찍은 사진. */
 const SIGN_SCENE = /안내판|표지판|간판|팻말|요금표|안내문|현판|알림판|게시판/
-/** 장면이 실내 전시 · 진열인가 — 바깥 안내판 자리에 실내 전시 설명판 · 유물 근접이 들어가지 않게. */
-const INSIDE_SCENE = /전시|디오라마|모형|유물|진열|실내|내부|객실|로비/
+/**
+ * 안내판 사진이 실내 전시물 · 방 안의 것인가 — 바깥 안내판 자리에 실내 전시 설명판 · 유물 근접이 들어가지 않게. 「전시」만으로는 빼지
+ * 않는다 — 박물관 앞에 세운 「특별전시 안내 표지판」은 바깥 안내판이다(2026-11-04 결정).
+ */
+const SIGN_INSIDE = /전시실|전시물|전시품|디오라마|모형|유물|진열|실내|내부|객실|로비/
 const WANT_NIGHT = /야경|(^|\s)밤|야간|불빛|불\s?켜진|조명이\s?켜진/
 const WANT_DUSK = /해\s?질\s?(무렵|녘)|해질녘|노을|일몰|석양|황혼|어스름/
 /** 저녁 · 해가 진 뒤 — 해 질 무렵이나 밤. */
@@ -365,7 +368,7 @@ const NO_PEOPLE_TEXT = /(사람|인물|인적)\s?(없음|없이|없는|없다)/g
 
 /** 자리 하나가 바라는 장면(slotSceneWants). */
 export interface SceneWants {
-  /** 받는 장면 종류 — 앞이 바라는 종류. null이면 화면 · 그림만 아니면 된다(장소 사진은 맞은 낱말이 있어야 한다 — autoPickPhotos). */
+  /** 받는 장면 종류 — 앞이 바라는 종류. null이면 화면 · 그림만 아니면 된다(장소 사진은 장면 점수 순서로). */
   settings: readonly SceneSetting[] | null
   /**
    * 가까이 찍은 사진(closeup)은 안내판 · 간판 사진만 받는다 — 바깥 자리(입구 · 매표소)에 안내판 낱말이 있어 closeup을 받는 자리. 실내
@@ -383,17 +386,15 @@ export interface SceneWants {
 
 /**
  * 장면을 보고 뺀 이유 — kind 화면 · 그림, setting 장면 종류가 다름(외관 자리에 실내), time 시간이 다름, people 사람을 알아볼 수 있음,
- * words 자리 글자로 종류를 정하지 못했는데 장면과 맞은 낱말도 없음(장소 사진), unread 장면을 아직 읽지 않음, failed 장면을 읽지
- * 못함(받지 못함 · 형식 · 모델이 읽지 않음 — 다시 눌러도 한동안 읽지 않는다).
+ * unread 장면을 아직 읽지 않음, failed 장면을 읽지 못함(받지 못함 · 형식 · 모델이 읽지 않음 — 다시 눌러도 한동안 읽지 않는다).
  */
-export type SceneSkip = 'kind' | 'setting' | 'time' | 'people' | 'words' | 'unread' | 'failed'
+export type SceneSkip = 'kind' | 'setting' | 'time' | 'people' | 'unread' | 'failed'
 
 export const SCENE_SKIP_TEXT: Record<SceneSkip, string> = {
   kind: '화면 · 그림',
   setting: '장면 종류가 다름',
   time: '시간대가 다름',
   people: '사람을 알아볼 수 있음',
-  words: '장면과 맞는 낱말 없음',
   unread: '장면을 아직 읽지 않음',
   failed: '장면을 읽지 못함',
 }
@@ -401,7 +402,7 @@ export const SCENE_SKIP_TEXT: Record<SceneSkip, string> = {
 /** 사진 장면 하나가 자리와 맞는 정도. ok가 아니면 miss가 이유. */
 export interface SceneFit {
   ok: boolean
-  miss?: Exclude<SceneSkip, 'words' | 'unread' | 'failed'>
+  miss?: Exclude<SceneSkip, 'unread' | 'failed'>
   /** 맞은 낱말(장면 글자 2 · 설명 줄 1) + 바라는 종류 1 + 바라는 시간 1. */
   score: number
   /** 장면(낱말 · 설명)과 맞은 자리 낱말. */
@@ -465,10 +466,10 @@ export function slotSceneWants(slot: { key: string; caption: string }, places: r
   }
 }
 
-/** 장면이 바깥 안내판 자리에 넣을 안내판 · 간판 사진인가 — 안내판 낱말이 있고 실내 전시 · 진열 낱말은 없다. */
+/** 장면이 바깥 안내판 자리에 넣을 안내판 · 간판 사진인가 — 안내판 낱말이 있고 실내 전시물 · 진열 낱말은 없다(SIGN_INSIDE). */
 function signScene(scene: Pick<PhotoScene, 'text' | 'tags'>): boolean {
   const seen = [scene.text, ...scene.tags].join(' ')
-  return SIGN_SCENE.test(seen) && !INSIDE_SCENE.test(seen)
+  return SIGN_SCENE.test(seen) && !SIGN_INSIDE.test(seen)
 }
 
 /**
@@ -723,7 +724,7 @@ export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>, pages
  *
  * scenes를 주면(장면으로 고르기) — 장면을 읽은 후보는 자리와 장면이 어긋나면(sceneFit) 빼고, 장소 사진(②③)은 장면을 읽은 사진만 장면
  * 점수가 높은 것부터(같으면 ②는 페이지 순서, ③은 브랜드에서 덜 쓴 사진 · 받은 순서) 고른다. 자리 글자로 종류를 정하지 못한 자리(「근대역사
- * 박물관 건물」)의 장소 사진은 장면과 맞은 낱말이 있어야 한다(아무 실내 사진이나 들어가지 않게). 홈페이지 사진(①)은 설명 낱말이 이미
+ * 박물관 이야기」)는 화면 · 그림이 아닌 장소 사진을 장면 점수 순서로 받는다(2026-11-04 결정 — 빈자리보다 비슷한 사진). 홈페이지 사진(①)은 설명 낱말이 이미
  * 장면을 말하므로 장면을 읽지 않았어도 쓰고, 읽었으면 설명 점수에 장면 점수를 더한다. 같은 점수면 지금까지의 순서 그대로다. 장면을 읽지
  * 못한 사진(sceneFailed)은 「아직 읽지 않음」(unread — 다시 누르면 읽는다)이 아니라 장면이 맞지 않은 사진으로 센다(관광공사 사진을 찾는다).
  * 장면 없이 고를 때 「사람이 뺀 자리도 다시 채우기」는 뺀 사진을 아는 자리만 다시 채운다(refills).
@@ -952,14 +953,9 @@ export function autoPickPhotos(input: {
           skipScene(row, input.sceneFailed?.has(candidate.src) ? 'failed' : 'unread')
           return
         }
-        const wants = wantsOf(row)
-        const fit = sceneFit(wants, scene)
+        const fit = sceneFit(wantsOf(row), scene)
         if (!fit.ok) {
           skipScene(row, fit.miss!)
-          return
-        }
-        if (!wants.settings && !fit.words.length) {
-          skipScene(row, 'words')
           return
         }
         opts.push({ candidate, order, scene, fit })

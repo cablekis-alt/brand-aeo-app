@@ -228,6 +228,15 @@ const sp = tour('sp1', '근대역사박물관', '201301')
 const se = tour('se1', '근대역사박물관', '201411')
 const spRow = rowsOf(run([doc('s2', [`![${SIGN_SLOT}](#image-slot)`])], { candidates: [], tourCandidates: [sp, se], scenes: freshScenes([[sp, PANEL_INSIDE], [se, S({ tags: ['외관', '건물'] })]]) }), 's2')[0]!
 ok('안내판 자리 — 실내 설명판보다 외관 사진', spRow.state === 'filled' && spRow.pick?.src === se.src)
+// 2026-11-04 결정 — 「전시」만으로는 빼지 않는다: 박물관 앞에 세운 특별전시 안내 표지판은 바깥 안내판이다. 전시물 · 전시실 안의 안내판은 그대로 뺀다.
+const SPECIAL_SIGN = S({ setting: 'closeup', text: '박물관 앞마당에 세워진 특별전시 안내 표지판', tags: ['표지판', '특별전시', '안내'] })
+const EXHIBIT_PANEL = S({ setting: 'closeup', time: 'unknown', text: '전시물 옆에 놓인 설명 안내판 근접', tags: ['안내판', '전시물', '설명'] })
+ok('안내판 자리 두 곳 — 바깥 「특별전시 안내 표지판」 근접은 받는다', signWants.every((w) => sceneFit(w, SPECIAL_SIGN).ok))
+ok('안내판 자리 두 곳 — 전시물 설명 안내판 근접은 그대로 뺀다', signWants.every((w) => sceneFit(w, EXHIBIT_PANEL).miss === 'setting'))
+const ssp = tour('ssp1', '근대역사박물관', '202112')
+const signDocs = [SIGN_SLOT, TICKET_SLOT].map((slot, i) => doc(`s${i + 3}`, ['## 1. 관람', '', `![${slot}](#image-slot)`], { group: `sg${i}` }))
+const sspPick = run(signDocs, { candidates: [], tourCandidates: [sd, ssp], scenes: freshScenes([[sd, DIORAMA_CLOSE], [ssp, SPECIAL_SIGN]]) })
+ok('안내판 자리 두 곳 — 디오라마 근접은 빼고 특별전시 안내 표지판으로 채운다', signDocs.every((d) => rowsOf(sspPick, d.actionId)[0]!.state === 'filled' && rowsOf(sspPick, d.actionId)[0]!.pick?.src === ssp.src))
 
 // 사람 장면 — 장소 이름 속 「어린이 · 친구」는 사람이 아니다.
 const kids = slotSceneWants({ key: '새만금어린이랜드 입구와 놀이기구', caption: '' }, ['새만금어린이랜드'])
@@ -245,7 +254,12 @@ const vd = tour('vd1', '근대역사박물관', '201301')
 const ve = tour('ve1', '근대역사박물관', '201411')
 const vagueDoc = doc('v1', ['## 1. 건물', '', '![근대역사박물관 건물](#image-slot)'])
 const vagueOnly = rowsOf(run([vagueDoc], { candidates: [], tourCandidates: [vd], scenes: freshScenes([[vd, DIORAMA]]) }), 'v1')[0]!
-ok('종류를 정하지 못한 자리 — 맞는 낱말이 없는 장소 사진(실내 디오라마)은 넣지 않는다', vagueOnly.state === 'scene' && !vagueOnly.pick)
+// 2026-11-04 결정으로 기대가 바뀌었다(옛 확인: 「맞는 낱말이 없는 장소 사진(실내 디오라마)은 넣지 않는다」) — 빈자리보다 비슷한 사진.
+ok('종류를 정하지 못한 자리 — 화면 · 그림이 아니면 맞는 낱말이 없는 장소 사진(실내 디오라마)도 넣는다', vagueOnly.state === 'filled' && vagueOnly.pick?.src === vd.src)
+const vagueStory = rowsOf(run([doc('v2', ['## 1. 박물관', '', '![근대역사박물관 이야기](#image-slot)'])], { candidates: [], tourCandidates: [vd], scenes: freshScenes([[vd, DIORAMA]]) }), 'v2')[0]!
+ok('「근대역사박물관 이야기」 자리도 장면이 맞는 장소 사진으로 채운다', vagueStory.state === 'filled' && vagueStory.pick?.src === vd.src)
+const vagueScreen = rowsOf(run([vagueDoc], { candidates: [], tourCandidates: [vd], scenes: freshScenes([[vd, S({ setting: 'screen' })]]) }), 'v1')[0]!
+ok('종류를 정하지 못한 자리 — 화면 캡처 · 그림은 그래도 넣지 않는다', vagueScreen.state === 'scene' && vagueScreen.sceneSkips?.kind === 1)
 const vagueBoth = rowsOf(run([vagueDoc], { candidates: [], tourCandidates: [vd, ve], scenes: freshScenes([[vd, DIORAMA], [ve, S({})]]) }), 'v1')[0]!
 ok('종류를 정하지 못한 자리 — 낱말이 맞는 외관 사진', vagueBoth.state === 'filled' && vagueBoth.pick?.src === ve.src)
 
