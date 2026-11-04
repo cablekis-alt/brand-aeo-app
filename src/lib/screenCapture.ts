@@ -77,6 +77,11 @@ export interface ScreenDef {
    * 누르기 낱말이 먼저다(screenKindOf).
    */
   slotWords?: RegExp
+  /**
+   * 이름 · 안내 낱말이 흔하다(「장소 안내」 · 「아이와 함께 안내」 — 실물 안내판 · 다른 기관 사이트의 안내 화면과 겹친다). 이름만으로는 화면
+   * 자리로 보지 않고(isScreenSlotText), 자리 글자가 브랜드 이름이나 프로필 호스트를 말할 때만 이 화면 자리다(screenKindOf).
+   */
+  commonLabel?: true
   variants: readonly ScreenVariant[]
 }
 
@@ -116,15 +121,18 @@ export interface ScreenShotView extends ScreenShot {
 const GUNSAN_COURSE_STEP = 'fieldset:has(input[name="with"])'
 /**
  * 「누구와 가세요?」의 혼자 칸을 말하는 낱말. 「혼자서도 · 혼자서는 · 혼자 짜기 · 혼자 고민」은 「스스로」라 동행이 아니고(「AI 코스 만들기는
- * 혼자서도 쉽게」), 「홀로그램」 · 「1인 1메뉴」 · 「1인당」도 아니다.
+ * 혼자서도 쉽게」), 「홀로그램」 · 「1인 1메뉴」 · 「1인당」도 아니다. 「혼자 하는 · 하기 좋은 · 해도 좋은」은 뒤에 여행 · 코스 · 일정이 오면
+ * 혼자다(「혼자 하는 군산 여행」 — 「혼자 하기 어려운 일정 짜기」는 아니다).
  */
-const GUNSAN_SOLO = /혼자(?!서[도는]|\s?(?:하[기는지고면]|해[도서야요]|고민|정하|찾|짜[기는지]|알아보))|홀로(?!그램)|혼행|1인\s?(?:여행|코스|일정)|솔로\s?(?:여행|트립)/
+const GUNSAN_SOLO =
+  /혼자(?!서[도는]|\s?(?:하[기는지고면]|해[도서야요]|고민|정하|찾|짜[기는지]|알아보))|혼자\s?(?:하는|하기\s?(?:딱\s?)?좋은|해도\s?(?:좋은|괜찮은))[^.,!?\n]{0,12}?(?:여행|코스|일정|나들이|투어|여정|1박|당일)|홀로(?!그램)|혼행|1인\s?(?:여행|코스|일정)|솔로\s?(?:여행|트립)/
 /**
  * 연인·친구 칸을 말하는 낱말 — 사이트의 칸 이름과 글에 흔한 말(커플 · 데이트 · 둘이서 · 부부). 「친구 같은 · 친구처럼 · 친구 추가 ·
- * 플러스친구」, 「업데이트」, 「여부부터 · 공부부터」(…부 + 부터), 「연인원」은 아니다.
+ * 플러스친구」, 「업데이트」, 「여부부터 · 공부부터」(…부 + 부터), 「연인원」은 아니다. 아이 낱말 바로 뒤의 「친구」(어린이 친구들 · 아이 친구 ·
+ * 아이의 친구)도 아니다 — 아이와 칸이다.
  */
 const GUNSAN_COUPLE =
-  /연인(?!원)|커플|(?<!업)데이트|신혼|부부(?!터)|(?<!플러스\s?)친구(?!\s?(?:같|처럼|추가|맺|신청|등록))|둘이서|둘만|둘이\s?(?:걷|걸|가|간|갈|떠나|여행|나란히|함께)|두\s?사람이?\s?(?:함께|나란히|걷|걸)|우정\s?여행/
+  /연인(?!원)|커플|(?<!업)데이트|신혼|부부(?!터)|(?<!플러스\s?|(?:아이|어린이|자녀|아들|딸|꼬마|유아|초등학생)(?:의)?\s?)친구(?!\s?(?:같|처럼|추가|맺|신청|등록))|둘이서|둘만|둘이\s?(?:걷|걸|가|간|갈|떠나|여행|나란히|함께)|두\s?사람이?\s?(?:함께|나란히|걷|걸)|우정\s?여행/
 /** 군산각 날씨 카드 — 실시간 날씨 · 점수 · 밤에는 달이 그려져 오래 남는 블로그 그림에 맞지 않는다. */
 const GUNSAN_WEATHER = '[data-wx]'
 /**
@@ -203,6 +211,7 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
         placePages: true,
         ownHostOnly: true,
         slotWords: PLACE_INFO_WORDS,
+        commonLabel: true,
         hide: [GUNSAN_WEATHER],
         clip: {
           selectors: ['article.place .pl-head h1', 'article.place dl.kf.kf-hero'],
@@ -216,6 +225,7 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
         kind: 'guide',
         label: '아이와 함께 안내',
         ownHostOnly: true,
+        commonLabel: true,
         hide: [GUNSAN_WEATHER],
         clip: {
           selectors: ['header.gd-head h1', 'header.gd-head figure.art-camp'],
@@ -475,11 +485,16 @@ const OTHER_SCREEN = /네이버|카카오|구글|티맵|인스타그램|유튜�
  * 선택한」 · 「조건 선택 화면」)은 주소로 미리 채우는 코스 화면이라 아니다.
  */
 const ACTION_SCREEN = /눌러|누른|누르|클릭|터치|(?<!조건을?\s?)선택(해|한|하면)|결과\s?화면|결과가|결과를/
+/**
+ * 다른 기관 · 장소 자신의 사이트 — 흔한 이름의 화면(장소 안내 · 가이드, commonLabel) 자리가 브랜드를 말하지 않고 이것을 말하면 그 기관의
+ * 화면이다(「근대역사박물관 공식 홈페이지의 관람시간 안내 화면」 · 「한국관광공사 구석구석 사이트」 · 「군산시 문화관광 홈페이지」).
+ */
+const OTHER_SITE = /관광공사|구석구석|visitkorea|(?:시|군|구|도)청|문화\s?관광|공식\s?(?:홈\s?페이지|웹\s?사이트|사이트|누리집)|누리집/i
 
-/** 프로필 표의 화면 이름(「AI 코스 만들기」 · 「지도에서 찾기」) 가운데 글자에 나온 것. */
-function labelsIn(text: string, profiles: readonly ScreenProfile[]): ScreenDef[] {
+/** 프로필 표의 화면 이름(「AI 코스 만들기」 · 「지도에서 찾기」) 가운데 글자에 나온 것. common이 false면 흔한 이름(commonLabel)은 세지 않는다. */
+function labelsIn(text: string, profiles: readonly ScreenProfile[], common = true): ScreenDef[] {
   const t = textKey(text)
-  return profiles.flatMap((p) => p.screens.filter((s) => t.includes(textKey(s.label))))
+  return profiles.flatMap((p) => p.screens.filter((s) => (common || !s.commonLabel) && t.includes(textKey(s.label))))
 }
 
 /**
@@ -487,51 +502,61 @@ function labelsIn(text: string, profiles: readonly ScreenProfile[]): ScreenDef[]
  * 카페」는 사진 자리다). 「화면」과 함께 웹사이트 · 홈페이지 · 사이트 · 앱, 프로필 표의 화면 이름(「군산각 '지도에서 찾기' 화면」), 다른
  * 회사 · 기기 낱말(「네이버 플레이스 예약 화면」), 누르기 · 결과 낱말(「코스 결과 화면에서 한 장소를 눌러」)이 있을 때 — 뒤의 둘은 찍지 않고
  * 비워 둔다 — 그리고 검색 결과 · 캡처 · 스크린샷이면 화면 자리다. 「사이트」 · 「앱」 · 「스크린」만 있는 자리(「캠핑 사이트」 · 「스크린
- * 골프장」)는 사진 자리다.
+ * 골프장」)는 사진 자리다. 흔한 화면 이름(「장소 안내」 · 「아이와 함께 안내」 — commonLabel)만 있는 자리(「박물관 로비의 장소 안내 화면」)는
+ * 실물 안내판 사진 자리다.
  */
 export function isScreenSlotText(text: string): boolean {
   const t = text.normalize('NFC')
   if (SCREEN_ALWAYS.test(t)) return true
   if (!t.includes('화면')) return false
-  return SITE_WORD.test(t) || OTHER_SCREEN.test(t) || ACTION_SCREEN.test(t) || labelsIn(t, SCREEN_PROFILES).length > 0
+  return SITE_WORD.test(t) || OTHER_SCREEN.test(t) || ACTION_SCREEN.test(t) || labelsIn(t, SCREEN_PROFILES, false).length > 0
 }
 
 /**
  * 화면 자리의 종류 — course 코스 화면 · map 지도 화면 · guide 가이드 화면(프로필 표의 화면 이름이 장면 글자에 정확히 하나 있을 때),
  * place 장소 안내 화면(화면 이름은 없고 이용시간 · 휴관 · 입장료 같은 안내 낱말이 있을 때 — slotWords), 그 밖에는 찍지 않는다:
- * other 다른 회사 · 기기 화면, action 누르거나 결과를 받아야 보이는 화면, none 브랜드에 찍을 화면 목록(프로필)이 없음, ambiguous 화면
- * 이름이 둘 이상, unrelated 목록에 없는 화면(첫 화면 · 행사 안내 · 브랜드와 무관한 사이트).
+ * other 다른 회사 · 기관 · 기기 화면, action 누르거나 결과를 받아야 보이는 화면, none 브랜드에 찍을 화면 목록(프로필)이 없음, ambiguous 화면
+ * 이름이 둘 이상, unrelated 목록에 없는 화면(첫 화면 · 행사 안내 · 브랜드와 무관한 사이트), unowned 흔한 이름의 화면(장소 안내 · 가이드)인데
+ * 자리 글자가 브랜드를 말하지 않아 자사 사이트인지 모름.
  */
-export type ScreenSlotKind = ScreenKind | 'other' | 'action' | 'none' | 'ambiguous' | 'unrelated'
+export type ScreenSlotKind = ScreenKind | 'other' | 'action' | 'none' | 'ambiguous' | 'unrelated' | 'unowned'
 
 export const SCREEN_SLOT_KIND_TEXT: Record<ScreenSlotKind, string> = {
   course: '코스 화면',
   map: '지도 화면',
   place: '장소 안내 화면',
   guide: '가이드 화면',
-  other: '다른 회사 · 휴대폰 화면',
+  other: '다른 회사 · 기관 · 휴대폰 화면',
   action: '누르거나 결과를 받아야 보이는 화면',
   none: '이 브랜드는 찍을 화면이 없음',
   ambiguous: '화면 이름이 둘 이상',
   unrelated: '찍을 화면 목록에 없는 화면',
+  unowned: '브랜드 이름이 없어 자사 사이트 화면인지 모름',
 }
 
 /**
  * 화면 자리 하나(장면 글자)의 종류와 그 화면 — 설명 줄은 보지 않는다(「AI 코스 만들기」 자리의 설명이 「지도에서 찾기로 …」를 말하기도 한다).
- * profile은 브랜드의 화면 프로필(screenProfileFor) — 없으면 none.
+ * profile은 브랜드의 화면 프로필(screenProfileFor) — 없으면 none. 흔한 이름의 화면(commonLabel — 장소 안내 · 가이드)은 장면 글자가 브랜드
+ * 이름(brandName)이나 프로필 호스트를 말할 때만 그 화면이고, 아니면 다른 기관 사이트 낱말(OTHER_SITE)이 있으면 other, 없으면 unowned다.
  */
-export function screenKindOf(text: string, profile: ScreenProfile | null): { kind: ScreenSlotKind; screen?: ScreenDef } {
+export function screenKindOf(text: string, profile: ScreenProfile | null, brandName?: string): { kind: ScreenSlotKind; screen?: ScreenDef } {
   const t = text.normalize('NFC')
   if (OTHER_SCREEN.test(t)) return { kind: 'other' }
   if (ACTION_SCREEN.test(t)) return { kind: 'action' }
   if (!profile) return { kind: 'none' }
   const found = labelsIn(t, [profile])
   if (found.length > 1) return { kind: 'ambiguous' }
-  if (found[0]) return { kind: found[0].kind, screen: found[0] }
   // 화면 이름이 없으면 안내 낱말 — 「근대역사박물관의 이용시간과 휴관일, 입장료가 표시된 화면」은 장소 안내 화면이다.
-  const worded = profile.screens.filter((s) => s.slotWords?.test(t))
+  const worded = found.length ? found : profile.screens.filter((s) => s.slotWords?.test(t))
   if (worded.length > 1) return { kind: 'ambiguous' }
-  return worded[0] ? { kind: worded[0].kind, screen: worded[0] } : { kind: 'unrelated' }
+  const screen = worded[0]
+  if (!screen) return { kind: 'unrelated' }
+  if (screen.commonLabel) {
+    const brandKey = brandName ? textKey(brandName) : ''
+    const own = (brandKey !== '' && textKey(t).includes(brandKey)) || t.toLowerCase().includes(profile.host)
+    if (!own) return { kind: OTHER_SITE.test(t) ? 'other' : 'unowned' }
+  }
+  return { kind: screen.kind, screen }
 }
 
 /**
@@ -578,39 +603,134 @@ export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces
 /** 휴관을 말하는 낱말 — 자리 쪽(「휴관일」 · 「쉬는 날」 · 「휴무」 · 「문을 닫는」)과 찍은 쪽(같은 낱말 · 「연중무휴」도 쉬는 날 안내다). */
 const SAID_CLOSED = /휴관|쉬는\s?날|휴무|정기\s?휴일|문\s?(?:을\s?)?닫/
 const SHOWN_CLOSED = /휴관|쉬는\s?날|휴무|정기\s?휴일|연중\s?무휴/
+/** 쉬는 날이 있다고 말함(「휴관일이 있으니」 · 「휴관합니다」 · 「월요일 휴관」 · 「월요일에 쉽니다」) — 「휴관일이 보이는 화면」은 아니다. */
+const SAID_CLOSING_DAYS =
+  /(?:휴관일?|쉬는\s?날|휴무일?|정기\s?휴일)(?:이|은|도)?\s?있|휴관(?:합|해요|한다|하며|하고|하는|이고|이며|입니다)|[월화수목금토일]요일(?:과|이나|은|에는|에|마다|도)?\s?(?:\S+\s)?(?:휴관|휴무|쉽|쉬어|쉬는|쉰다|문을?\s?닫|닫)/
+/** 쉬는 날이 없다(「연중무휴」 · 「휴관일 없이」 · 「매일 엽니다」). */
+const NO_CLOSING = /연중\s?무휴|(?:휴관일?|쉬는\s?날|휴무일?)(?:이|은)?\s?없|매일\s?(?:엽|열|문을\s?열|운영)/
+/** 쉬는 날 안내의 구체 — 요일 · 명절 · 날짜(「연중무휴(설 · 추석 당일 휴관)」은 쉬는 날이 있다는 말과 어긋나지 않는다). */
+const CLOSING_DETAIL = /[월화수목금토일]요일|설날|설\s?당일|추석|명절|공휴일|\d{1,2}월\s?\d{1,2}일/
 const SAID_HOURS = /이용\s?시간|여는\s?시간|운영\s?시간|영업\s?시간|관람\s?시간/
 const SAID_FEE = /입장료|관람료|이용료|요금/
 
+/** 사실 확인의 항목 — 요금 · 주차 · 쉬는 날 · 이용시간. */
+type FactTopic = 'fee' | 'parking' | 'closed' | 'hours'
+/** 글 조각의 항목 — 「주차 요금」은 주차다(요금이 아니다). */
+function factTopicsOf(s: string): Set<FactTopic> {
+  const out = new Set<FactTopic>()
+  if (/주차/.test(s)) out.add('parking')
+  if (/입장료|관람료|이용료|요금|입장권|관람권|통합권|개별권/.test(s.replace(/주차\s?(?:요금|비|료)/g, ''))) out.add('fee')
+  if (/휴관|쉬는\s?날|휴무|정기\s?휴일|연중\s?무휴|쉽니다|쉬어요|문\s?(?:을\s?)?닫/.test(s)) out.add('closed')
+  if (/이용\s?시간|여는\s?시간|운영\s?시간|영업\s?시간|관람\s?시간|입장\s?마감|개방/.test(s)) out.add('hours')
+  return out
+}
+/** 찍은 글자의 항목 머리(안내 카드의 dt — 「이용시간」 · 「쉬는 날」 · 「요금」 · 「주차 요금」 · 「전화」) — 다음 머리까지의 줄이 그 항목이다. */
+const FACT_HEADER =
+  /^(?:이용\s?시간|운영\s?시간|관람\s?시간|여는\s?시간|영업\s?시간|쉬는\s?날|휴관일?|휴무일?|정기\s?휴일|요금|입장료|관람료|이용료|주차(?:\s?요금|\s?안내)?|전화|주소|문의|가는\s?길|교통|위치|홈\s?페이지)$/
+/** 글 조각으로 나누는 곳 — 줄 · 문장 끝 · 쉼표 · 가운뎃점 · 「…이고 · 이며 · 하고 · 으며」. */
+const CLAUSE_BREAK = /(?<=[.!?。])\s+|,\s+|;\s*|\s[·•]\s|(?<=이고|이며|하고|으며)\s+/
+
+interface FactSegment {
+  text: string
+  topics: Set<FactTopic>
+}
+
+/**
+ * 글을 조각으로 나누고 항목을 단다. headers면 찍은 글자처럼 항목 머리 줄이 다음 줄들의 항목을 정한다(머리 줄은 조각이 아니다) — 조각
+ * 자신의 항목 낱말이 먼저다.
+ */
+function factSegments(text: string, headers: boolean): FactSegment[] {
+  const out: FactSegment[] = []
+  let block = new Set<FactTopic>()
+  for (const raw of text.split('\n')) {
+    const line = raw.trim()
+    if (!line) continue
+    if (headers && FACT_HEADER.test(line)) {
+      block = factTopicsOf(line)
+      continue
+    }
+    for (const part of line.split(CLAUSE_BREAK)) {
+      const t = part.trim()
+      if (!t) continue
+      const own = factTopicsOf(t)
+      out.push({ text: t, topics: own.size ? own : block })
+    }
+  }
+  return out
+}
+
+type FactToken = { keys: string[]; text: string }
+/** 시각 — 「09:00」 · 「9:00」, 「오전 10시」 · 「오후 6시 30분」 · 「10시 반」(오전 · 오후가 없으면 12시간 뒤도 같은 시각으로 본다). */
+function factTimes(s: string): FactToken[] {
+  const out: FactToken[] = []
+  for (const m of s.matchAll(/(?<!\d)(\d{1,2}):(\d{2})(?!\d)/g)) out.push({ keys: [`${Number(m[1])}:${m[2]}`], text: m[0] })
+  for (const m of s.matchAll(/(?:(오전|오후|낮|밤|저녁|새벽|아침)\s?)?(?<![\d:.])(\d{1,2})\s?시(?![간대즌장청내민티각])(?:\s?(\d{1,2})\s?분|\s?(반))?/g)) {
+    const h = Number(m[2])
+    if (h > 24) continue
+    const mm = m[3] ? String(Number(m[3])).padStart(2, '0') : m[4] ? '30' : '00'
+    const pm = m[1] === '오후' || m[1] === '밤' || m[1] === '저녁'
+    const hours = m[1] ? [pm && h < 12 ? h + 12 : h] : h < 12 ? [h, h + 12] : [h]
+    out.push({ keys: hours.map((x) => `${x}:${mm}`), text: m[0].trim() })
+  }
+  return out
+}
+const factWons = (s: string): FactToken[] =>
+  [...s.matchAll(/(?<![\d,])(\d{1,3}(?:,\d{3})+|\d+)\s?원/g)].map((m) => ({ keys: [`${m[1]!.replace(/,/g, '')}원`], text: m[0] }))
+const factMonths = (s: string): FactToken[] =>
+  [...s.matchAll(/(?<!\d)(\d{1,2})\s?[~∼〜\-–—]\s?(\d{1,2})\s?월/g)].map((m) => ({ keys: [`${Number(m[1])}~${Number(m[2])}월`], text: m[0] }))
+const factDays = (s: string): FactToken[] => [...s.matchAll(/([월화수목금토일])요일/g)].map((m) => ({ keys: [m[0]], text: m[0] }))
+
 /**
  * 자리 글자(장면 글자 · 설명 줄)가 말한 사실 가운데 찍은 부분의 글자(screens.json text)에 없는 것 — 잘라 찍은 화면(장소 안내 · 가이드)을
- * 넣을 때 「확인 필요」를 붙이는 기준이다(막지는 않는다). 견주는 것:
- * - 값: 시각(09:00 = 9:00), 금액(2,000원 = 2000원), 달 범위(3~10월), 요일(월요일), 「무료」, 「입장 마감」 — 찍은 글자에 같은 값이 있어야 한다.
+ * 넣을 때 「확인 필요」를 붙이는 기준이다(막지는 않는다). 찍은 글자는 항목(이용시간 · 쉬는 날 · 요금 · 주차 — 안내 카드의 머리 줄과 글 조각의
+ * 낱말)과 글 조각으로 나눠 견준다:
+ * - 값: 시각(09:00 = 9:00 = 오전 9시), 금액(2,000원 = 2000원), 달 범위(3~10월), 요일(월요일), 「무료」, 「입장 마감」 — 찍은 글자에 같은 값이
+ *   있어야 한다. 금액 · 무료는 자리 조각이 말한 항목(입장료 · 주차)의 조각에 있어야 하고(주차 무료 ≠ 입장료 무료), 달 범위와 함께 말한
+ *   시각은 찍은 글자의 그 달 범위 조각에 있어야 한다(11~2월 18:00 ≠ 3~10월 18:00).
  * - 말만: 휴관(휴관일 · 쉬는 날 · 휴무 — 찍은 쪽의 「연중무휴」도 쉬는 날 안내로 본다), 이용시간(찍은 글자에 시각이 하나라도),
  *   요금 · 입장료(찍은 글자에 금액이나 「무료」가 하나라도).
- * 없는 것을 자리 글자에 적힌 모양 그대로(「09:00」 · 「성인 2,000원」의 「2,000원」 · 「휴관일」의 「휴관」) 돌려준다. 띄어쓰기 · 전각 글자는
- * 무시한다.
+ * - 어긋남: 쉬는 날이 있다는 말(「휴관일이 있으니」 · 「월요일에 쉽니다」)인데 찍은 글자가 「연중무휴」뿐이면, 「연중무휴」라는 말인데 찍은
+ *   글자가 쉬는 날을 적으면.
+ * 없는 것을 자리 글자에 적힌 모양 그대로(「09:00」 · 「성인 2,000원」의 「2,000원」 · 「휴관일」의 「휴관」 · 「오전 10시」) 돌려준다. 띄어쓰기
+ * · 전각 글자는 무시한다.
  */
 export function screenFactGaps(said: string, shown: string): string[] {
   const a = said.normalize('NFKC')
   const b = shown.normalize('NFKC')
-  type Token = { key: string; text: string }
-  const times = (s: string): Token[] => [...s.matchAll(/(?<!\d)(\d{1,2}):(\d{2})(?!\d)/g)].map((m) => ({ key: `${Number(m[1])}:${m[2]}`, text: m[0] }))
-  const wons = (s: string): Token[] => [...s.matchAll(/(?<![\d,])(\d{1,3}(?:,\d{3})+|\d+)\s?원/g)].map((m) => ({ key: `${m[1]!.replace(/,/g, '')}원`, text: m[0] }))
-  const months = (s: string): Token[] =>
-    [...s.matchAll(/(?<!\d)(\d{1,2})\s?[~∼〜\-–—]\s?(\d{1,2})\s?월/g)].map((m) => ({ key: `${Number(m[1])}~${Number(m[2])}월`, text: m[0] }))
-  const days = (s: string): Token[] => [...s.matchAll(/([월화수목금토일])요일/g)].map((m) => ({ key: m[0], text: m[0] }))
+  const saidSegs = factSegments(a, false)
+  const shownSegs = factSegments(b, true)
   const gaps: string[] = []
   const add = (text: string) => {
     if (!gaps.includes(text)) gaps.push(text)
   }
-  for (const pick of [times, wons, months, days]) {
-    const have = new Set(pick(b).map((t) => t.key))
-    for (const t of pick(a)) if (!have.has(t.key)) add(t.text)
+  const keysIn = (segs: readonly FactSegment[], pick: (s: string) => FactToken[]) => new Set(segs.flatMap((s) => pick(s.text).flatMap((t) => t.keys)))
+  const has = (segs: readonly FactSegment[], pick: (s: string) => FactToken[], t: FactToken) => {
+    const keys = keysIn(segs, pick)
+    return t.keys.some((k) => keys.has(k))
   }
-  if (/무료/.test(a) && !/무료/.test(b)) add('무료')
+  /** 자리 조각이 요금 · 주차를 말하면 찍은 글자에서 그 항목의 조각만(둘 다 말하면 둘 다에 있어야), 아니면 모든 조각. */
+  const topicScopes = (seg: FactSegment): FactSegment[][] => {
+    const wanted = (['fee', 'parking'] as const).filter((x) => seg.topics.has(x))
+    return wanted.length ? wanted.map((x) => shownSegs.filter((s) => s.topics.has(x))) : [shownSegs]
+  }
+  // 시각 — 달 범위와 함께 말했으면 찍은 글자의 그 달 범위 조각에서.
+  for (const seg of saidSegs) {
+    const monthSegs = factMonths(seg.text).flatMap((m) => shownSegs.filter((s) => has([s], factMonths, m)))
+    for (const t of factTimes(seg.text)) if (!has(monthSegs.length ? monthSegs : shownSegs, factTimes, t)) add(t.text)
+  }
+  for (const seg of saidSegs) for (const t of factWons(seg.text)) if (!topicScopes(seg).every((scope) => has(scope, factWons, t))) add(t.text)
+  for (const seg of saidSegs) for (const t of factMonths(seg.text)) if (!has(shownSegs, factMonths, t)) add(t.text)
+  for (const seg of saidSegs) for (const t of factDays(seg.text)) if (!has(shownSegs, factDays, t)) add(t.text)
+  for (const seg of saidSegs) if (/무료/.test(seg.text) && !topicScopes(seg).every((scope) => scope.some((s) => /무료/.test(s.text)))) add('무료')
   if (/입장\s?마감/.test(a) && !/입장\s?마감/.test(b)) add('입장 마감')
-  if (SAID_CLOSED.test(a) && !SHOWN_CLOSED.test(b)) add(SAID_CLOSED.exec(a)![0])
-  if (SAID_HOURS.test(a) && times(b).length === 0) add(SAID_HOURS.exec(a)![0])
-  if (SAID_FEE.test(a) && wons(b).length === 0 && !/무료/.test(b)) add(SAID_FEE.exec(a)![0])
+  const saysClosing = SAID_CLOSED.test(a) || SAID_CLOSING_DAYS.test(a)
+  const closedLabel = SAID_CLOSED.exec(a)?.[0] ?? '쉬는 날'
+  if (saysClosing && !NO_CLOSING.test(a) && !SHOWN_CLOSED.test(b)) add(closedLabel)
+  // 어긋남 — 쉬는 날이 있다는 말 ↔ 찍은 글자의 연중무휴(구체 없음), 연중무휴라는 말 ↔ 찍은 글자의 쉬는 날.
+  const shownClosed = shownSegs.filter((s) => s.topics.has('closed'))
+  if (SAID_CLOSING_DAYS.test(a) && !NO_CLOSING.test(a) && NO_CLOSING.test(b) && !shownClosed.some((s) => CLOSING_DETAIL.test(s.text))) add(closedLabel)
+  if (NO_CLOSING.test(a) && !NO_CLOSING.test(b) && shownClosed.some((s) => CLOSING_DETAIL.test(s.text))) add(/연중\s?무휴/.test(a) ? '연중무휴' : NO_CLOSING.exec(a)![0])
+  if (SAID_HOURS.test(a) && factTimes(b).length === 0) add(SAID_HOURS.exec(a)![0])
+  if (SAID_FEE.test(a) && factWons(b).length === 0 && !/무료/.test(b)) add(SAID_FEE.exec(a)![0])
   return gaps
 }

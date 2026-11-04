@@ -126,7 +126,22 @@ interface CaptureModule {
   ) => { rect: Rect | null; scrollY: number; problem: string | null }
   requestBlockReason: (details: { url: string; method?: string; resourceType?: string }, ctx: Record<string, unknown>) => Promise<string | null>
   countClosedShadowRoots: (node: unknown) => number
-  closedShadowHosts: (node: unknown) => { backendNodeId: number; nodeName: string }[]
+}
+
+/** 캡처 모듈을 새로 읽는다(모듈 캐시를 비우고) — 가짜 electron마다 모듈 상태(종료 여부 · 줄)가 따로다. */
+function requireCaptureFresh(fakeElectron: unknown): CaptureModule {
+  const req = createRequire(import.meta.url)
+  delete req.cache[req.resolve('../electron/capture.cjs')]
+  const loader = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown }
+  const realLoad = loader._load
+  loader._load = function (this: unknown, request: string, ...rest: unknown[]) {
+    return request === 'electron' ? fakeElectron : realLoad.call(this, request, ...rest)
+  }
+  try {
+    return req('../electron/capture.cjs') as CaptureModule
+  } finally {
+    loader._load = realLoad
+  }
 }
 
 /**
@@ -168,17 +183,156 @@ function loadCaptureModule(): CaptureModule & { windowsCreated: () => number } {
     clearStorageData: () => Promise.resolve(),
   }
   const fakeElectron = { app: { getAppMetrics: () => [] }, BrowserWindow: FakeWindow, nativeImage: {}, session: { fromPartition: () => fakeSession } }
-  const loader = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown }
-  const realLoad = loader._load
-  loader._load = function (this: unknown, request: string, ...rest: unknown[]) {
-    return request === 'electron' ? fakeElectron : realLoad.call(this, request, ...rest)
+  return { ...requireCaptureFresh(fakeElectron), windowsCreated: () => created }
+}
+
+/** 가짜 페이지(captureSteps 시험)가 기록하는 것 — 잘라 찍기 스크롤 · 그림 검사 · 찍기 시각(ms). */
+interface FakePageLog {
+  scrollAt: number | null
+  inspectAt: number[]
+  shotAt: number | null
+}
+
+/**
+ * 가짜 페이지로 캡처 한 장을 끝까지 돌린다(창 · 사이트 · 네트워크 없음) — 페이지 안 함수는 이름으로 알아보고 정해 둔 값을 돌려준다.
+ * 잘라 찍기면 요소가 문서 y 1300에 있어 한 번 스크롤한다. afterShot을 주면 찍은 뒤의 그림 검사가 그 값을 돌려준다(찍는 사이에 페이지가
+ * 바뀐 것). tree는 DOM.getDocument의 뿌리, DOM.getBoxModel은 늘 「상자 없음」으로 실패한다(display:contents host와 같다).
+ */
+async function runFakePage(opts: { clip: boolean; tree?: unknown; afterShot?: InspectResult }): Promise<{ code: string; log: FakePageLog }> {
+  const log: FakePageLog = { scrollAt: null, inspectAt: [], shotAt: null }
+  const clean: InspectResult = { images: 0, mapImages: 0, foreign: [], kogl: 0, frames: [] }
+  let scrollY = 0
+  const noop = () => undefined
+  const pageResult = (code: string): unknown => {
+    if (code.startsWith('document.fonts')) return 'loaded'
+    if (code.startsWith('(window.scrollTo(')) {
+      log.scrollAt = Date.now()
+      scrollY = Number(/top:\s*(\d+)/.exec(code)?.[1] ?? 0)
+      return true
+    }
+    const fn = /^\(function (\w+)\(/.exec(code)?.[1]
+    if (fn === 'pageScroll') return { found: true, y: scrollY }
+    if (fn === 'pageDecode') return { count: 0, failed: 0 }
+    if (fn === 'pageClipState') {
+      return {
+        missing: [], rects: [{ x: 100, y: 1300, w: 500, h: 300 }], text: '가상박물관\n이용시간', docWidth: 1280, docHeight: 3000,
+        viewWidth: 1280, viewHeight: 800, scrollX: 0, scrollY, cover: 0,
+      }
+    }
+    if (fn === 'pageClipCovers') return []
+    if (fn === 'pageInspect') {
+      log.inspectAt.push(Date.now())
+      return log.shotAt !== null && opts.afterShot ? opts.afterShot : clean
+    }
+    return true
   }
+  const command = (method: string, params: Record<string, unknown> = {}): Promise<unknown> => {
+    if (method === 'DOM.getDocument') return Promise.resolve({ root: opts.tree ?? { nodeName: '#document', children: [] } })
+    if (method === 'DOM.getBoxModel') return Promise.reject(new Error('Could not compute box model.'))
+    if (method === 'Page.captureScreenshot') {
+      log.shotAt = Date.now()
+      const clip = params.clip as { width: number; height: number } | undefined
+      return Promise.resolve({ data: Buffer.from(JSON.stringify({ width: clip?.width ?? 1280, height: clip?.height ?? 800 })).toString('base64') })
+    }
+    return Promise.resolve({})
+  }
+  class PageWindow {
+    destroyed = false
+    webContents = {
+      id: 91,
+      debugger: { isAttached: () => false, detach: noop, attach: noop, on: noop, sendCommand: command },
+      setFrameRate: noop,
+      setWindowOpenHandler: noop,
+      on: noop,
+      insertCSS: () => Promise.resolve(),
+      executeJavaScript: (code: string) => Promise.resolve(pageResult(code)),
+      getOSProcessId: () => 0,
+      getURL: () => 'https://gunsan.webforai.kr/places/x/',
+      loadURL: () => Promise.resolve(),
+    }
+    isDestroyed() {
+      return this.destroyed
+    }
+    destroy() {
+      this.destroyed = true
+    }
+  }
+  // 찍힌 그림 — 크기는 찍기 응답에 적은 값, 화소는 여러 색(빈 그림 검사를 지나게).
+  const nativeImage = {
+    createFromBuffer: (buf: Buffer) => {
+      const size = JSON.parse(buf.toString()) as { width: number; height: number }
+      return {
+        getSize: () => size,
+        toBitmap: () => {
+          const bm = Buffer.alloc(size.width * size.height * 4)
+          for (let i = 0; i < size.width * size.height; i += 1) {
+            bm[i * 4] = (i * 7) & 255
+            bm[i * 4 + 1] = (i * 13) & 255
+            bm[i * 4 + 2] = (i * 29) & 255
+          }
+          return bm
+        },
+      }
+    },
+  }
+  const fakeSession = {
+    setPermissionRequestHandler: noop,
+    setPermissionCheckHandler: noop,
+    setDevicePermissionHandler: noop,
+    setSpellCheckerEnabled: noop,
+    on: noop,
+    webRequest: { onBeforeRequest: noop },
+    clearStorageData: () => Promise.resolve(),
+  }
+  const capture = requireCaptureFresh({ app: { getAppMetrics: () => [] }, BrowserWindow: PageWindow, nativeImage, session: { fromPartition: () => fakeSession } })
+  const realLookup = dns.promises.lookup
+  dns.promises.lookup = (() => Promise.resolve([{ address: '93.184.216.34', family: 4 }])) as unknown as typeof dns.promises.lookup
   try {
-    const mod = createRequire(import.meta.url)('../electron/capture.cjs') as CaptureModule
-    return { ...mod, windowsCreated: () => created }
+    const options = { host: 'gunsan.webforai.kr', ...(opts.clip ? { clip: { selectors: ['h1'], padding: 16 } } : {}) }
+    const code = await codeOf(capture.captureScreen('https://gunsan.webforai.kr/places/x/', options))
+    capture.disposeCapture()
+    return { code, log }
   } finally {
-    loader._load = realLoad
+    dns.promises.lookup = realLookup
   }
+}
+
+/**
+ * jsdom은 ::before · ::after의 계산 스타일 · border-image 같은 속성 · checkVisibility를 모른다 — Chrome처럼 보이게 덧씌운다. 요소의
+ * data-cs(요소) · data-before · data-after(가상 요소) JSON이 계산 스타일 값을 정하고(없는 가상 요소는 그림이 없다), checkVisibility는 Chrome과
+ * 같이 display:none(조상 포함) · visibilityProperty면 visibility:hidden · opacityProperty면 opacity 0(조상 포함)을 안 보임으로 본다.
+ */
+function chromeLike<W extends { getComputedStyle: (el: Element, pseudo?: string | null) => CSSStyleDeclaration; Element: { prototype: object } }>(w: W): W {
+  const real = w.getComputedStyle.bind(w)
+  const NO_PSEUDO: Record<string, string> = {
+    backgroundImage: 'none', content: 'none', maskImage: 'none', borderImageSource: 'none', listStyleImage: 'none', visibility: 'visible', display: 'inline', position: 'static',
+  }
+  w.getComputedStyle = (el: Element, pseudo?: string | null) => {
+    const raw = el.getAttribute(pseudo ? `data-${pseudo.replace(/^:+/, '')}` : 'data-cs')
+    const over = raw ? (JSON.parse(raw) as Record<string, string>) : {}
+    if (pseudo && !raw) return { ...NO_PSEUDO, getPropertyValue: () => '' } as unknown as CSSStyleDeclaration
+    const base = pseudo ? ({ ...NO_PSEUDO, getPropertyValue: () => '' } as unknown as CSSStyleDeclaration) : real(el)
+    return new Proxy(base, {
+      get: (target, key) => {
+        if (typeof key === 'string' && key in over) return over[key]
+        const v = Reflect.get(target, key) as unknown
+        return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(target) : v
+      },
+    })
+  }
+  Object.assign(w.Element.prototype, {
+    checkVisibility(this: Element, o?: { opacityProperty?: boolean; visibilityProperty?: boolean }) {
+      const chain: Element[] = []
+      for (let n: Element | null = this.parentElement; n; n = n.parentElement) chain.push(n)
+      for (const n of [this, ...chain]) {
+        const cs = real(n)
+        if (cs.display === 'none') return false
+        if (o?.opacityProperty && cs.opacity === '0') return false
+      }
+      return !(o?.visibilityProperty && real(this).visibility === 'hidden')
+    },
+  })
+  return w
 }
 
 const lib = await import('../src/lib/screenCapture')
@@ -363,7 +517,29 @@ try {
       isScreenSlotText('네이버 플레이스 예약 화면의 달력') && isScreenSlotText('코스 결과 화면에서 한 장소를 눌러 요금이 보이는 모습'),
   )
   ok('검색 결과 · 캡처 · 스크린샷은 「화면」이 없어도 화면 자리', isScreenSlotText('앱 검색 결과') && isScreenSlotText('예약 페이지 캡처') && isScreenSlotText('홈페이지 스크린샷'))
-  const kindOf = (t: string) => screenKindOf(t, profile).kind
+  // 잘라 찍는 화면의 흔한 이름(「장소 안내」 · 「아이와 함께 안내」)은 실물 안내판 · 안내 화면과 겹친다 — 그 이름만으로는 화면 자리가 아니다(모든
+  // 브랜드). 웹사이트 · 사이트 · 홈페이지 · 앱 낱말이나 캡처가 함께 있어야 한다(검토 2026-11-04).
+  ok(
+    '「장소 안내」 · 「아이와 함께 안내」 이름만으로는 화면 자리가 아니다(실물 안내판 사진 자리) · 웹사이트 낱말 · 캡처가 있으면 화면 자리',
+    !isScreenSlotText('전시관 입구의 장소 안내 화면이 보이는 모습') && !isScreenSlotText('터미널 대합실의 장소 안내 화면') &&
+      !isScreenSlotText('키즈카페 입구의 아이와 함께 안내 화면') && !isScreenSlotText('박물관 로비 장소 안내 화면 앞에서 사진을 찍는 가족') &&
+      isScreenSlotText("가상각 웹사이트의 '아이와 함께' 안내 화면") && isScreenSlotText('가상각 장소 안내 캡처'),
+  )
+  // 흔한 이름 · 안내 낱말로만 정해지는 장소 안내 · 가이드 화면은 자리 글자가 브랜드(자사 사이트)를 말할 때만 찍는다 — 다른 기관 사이트(공식
+  // 홈페이지 · 관광공사 · 구석구석 · 시청 · 문화관광)를 말하면 other, 어느 사이트인지 말하지 않으면 unowned(검토 2026-11-04).
+  ok(
+    '장소 안내 · 가이드 화면은 브랜드를 말할 때만 — 다른 기관 사이트면 other, 사이트를 말하지 않으면 unowned',
+    screenKindOf('가상박물관 공식 홈페이지의 관람시간 안내 화면', profile, '가상각').kind === 'other' &&
+      screenKindOf('한국관광공사 대한민국 구석구석 사이트에서 가상박물관의 이용시간과 입장료가 표시된 화면', profile, '가상각').kind === 'other' &&
+      screenKindOf('가상시 문화관광 홈페이지에서 가상박물관 입장료가 표시된 화면', profile, '가상각').kind === 'other' &&
+      screenKindOf('관광정보 사이트에서 한 장소의 여는 시간, 요금, 가는 길이 함께 표시된 화면', profile, '가상각').kind === 'unowned' &&
+      screenKindOf("웹사이트의 '아이와 함께' 안내 화면", profile, '가상각').kind === 'unowned' &&
+      screenKindOf('가상각 공식 홈페이지에서 가상박물관 관람시간이 표시된 화면', profile, '가상각').kind === 'place' &&
+      screenKindOf('gunsan.webforai.kr에서 가상박물관 관람시간이 표시된 화면', profile, '가상각').kind === 'place' &&
+      screenKindOf('가상각 웹사이트에서 가상박물관의 이용시간이 표시된 화면', profile).kind === 'unowned',
+  )
+  // 예전에는 브랜드 이름 없이 불렀다 — 장소 안내 · 가이드 화면은 이제 브랜드 이름이 있어야 해서 시험 브랜드 이름(가상각)을 넘긴다.
+  const kindOf = (t: string) => screenKindOf(t, profile, '가상각').kind
   ok(
     '화면 이름이 하나면 그 화면(코스 · 지도) — 따옴표 · 띄어쓰기는 무시',
     kindOf('가상각 웹사이트의 AI 코스 만들기 화면에서 조건을 고르는 모습') === 'course' && kindOf("가상각 'AI코스 만들기' 화면") === 'course' &&
@@ -383,15 +559,15 @@ try {
     kindOf('가상각 웹사이트의 첫 화면') === 'unrelated' && kindOf("가상각 웹사이트의 '이번 주 행사' 안내 화면") === 'unrelated' &&
       screenKindOf('가상스테이 웹사이트의 예약 화면', null).kind === 'none' && screenKindOf('가상각 웹사이트에서 가상박물관의 이용시간이 표시된 화면', null).kind === 'none',
   )
+  // 예전 기대값은 「관광정보 사이트에서 한 장소의 … 화면」도 place였다 — 브랜드를 말하지 않아 이제 unowned다(위 검사).
   ok(
-    '장소 안내 화면 자리 — 화면 이름 없이 이용시간 · 여는 시간 · 휴관 · 입장료 · 요금 낱말(웹사이트 낱말이 없어도 「관광정보 사이트」면)',
-    screenKindOf('가상각 웹사이트에서 가상박물관의 이용시간과 휴관일, 입장료가 표시된 화면', profile).screen?.id === 'place-info' &&
-      kindOf('가상각 웹사이트에서 가상박물관의 여는 시간과 요금 안내가 보이는 화면') === 'place' &&
-      kindOf('관광정보 사이트에서 한 장소의 여는 시간, 요금, 가는 길이 함께 표시된 화면') === 'place' && kindOf('가상각 홈페이지의 가상박물관 쉬는 날 안내 화면') === 'place',
+    '장소 안내 화면 자리 — 화면 이름 없이 이용시간 · 여는 시간 · 휴관 · 입장료 · 요금 낱말(브랜드를 말할 때)',
+    screenKindOf('가상각 웹사이트에서 가상박물관의 이용시간과 휴관일, 입장료가 표시된 화면', profile, '가상각').screen?.id === 'place-info' &&
+      kindOf('가상각 웹사이트에서 가상박물관의 여는 시간과 요금 안내가 보이는 화면') === 'place' && kindOf('가상각 홈페이지의 가상박물관 쉬는 날 안내 화면') === 'place',
   )
   ok(
     '가이드 화면 자리 — 「아이와 함께」 안내(따옴표 · 띄어쓰기 무시)',
-    screenKindOf("가상각 웹사이트의 '아이와 함께' 안내 화면", profile).screen?.id === 'kids-guide' && kindOf('가상각 웹사이트의 아이와 함께 안내 화면') === 'guide' &&
+    screenKindOf("가상각 웹사이트의 '아이와 함께' 안내 화면", profile, '가상각').screen?.id === 'kids-guide' && kindOf('가상각 웹사이트의 아이와 함께 안내 화면') === 'guide' &&
       kindOf("가상각 사이트의 '아이와 함께' 안내 메뉴 화면") === 'guide',
   )
   ok(
@@ -421,6 +597,30 @@ try {
       screenFactGaps('휴관일이 보이는 화면', '쉬는 날\n연중무휴').length === 0 && screenFactGaps('요금 안내', '입장료 무료').length === 0,
   )
   ok('사실 확인 — 「월요일에도 여는 곳」은 월요일이 찍은 글자에 있어야', JSON.stringify(screenFactGaps('월요일에도 여는 곳을 확인할 수 있습니다.', '아이와 함께 가상 여행\n두 묶음으로 나눠 다니면 됩니다.')) === JSON.stringify(['월요일']))
+  // 낱말 단위로만 견주면 틀린 설명 줄이 지나간다 — 주차의 무료를 입장료의 무료로, 여름철 18:00을 겨울철 18:00으로, 연중무휴를 휴관일로 보고,
+  // 「오전 10시」는 견주지 않았다(검토 2026-11-04). 찍은 글자를 항목(이용시간 · 쉬는 날 · 요금 · 주차) · 글 조각으로 나눠 견준다.
+  const SHOWN_MUSEUM = [
+    '관광지', '가상박물관', '가상박물관은 가상 전시관입니다. 개별권 관람료는 성인 2,000원이고 주차는 무료입니다. 매주 월요일과 1월 1일에 휴관합니다.',
+    '이용시간', '3~10월 09:00–18:00(입장마감 17:30)', '11~2월 09:00–17:00(입장마감 16:30)', '쉬는 날', '매주 월요일', '요금', '개별 성인 2,000원', '통합권 성인 3,000원',
+    '주차 요금', '무료', '전화', '000-0000-0000',
+  ].join('\n')
+  const SHOWN_OPEN = '가상곰박물관\n이용시간\n10:00–19:00\n입장 마감 18:00\n쉬는 날\n연중무휴\n요금\n성인 12,000원'
+  const gapsOf = (said: string, shown = SHOWN_MUSEUM) => JSON.stringify(screenFactGaps(said, shown))
+  ok(
+    '사실 확인 — 무료는 같은 항목(입장료 · 주차)에서 · 달 범위의 시각은 그 달의 줄에서 · 연중무휴면 휴관일이 있다는 말은 어긋남 · 「오전 10시」도 견준다',
+    gapsOf('가상박물관 입장료는 무료이고 이용시간은 09:00–18:00입니다.') === '["무료"]' &&
+      gapsOf('가상박물관은 11~2월에도 09:00–18:00까지 엽니다.') === '["18:00"]' &&
+      gapsOf('가상곰박물관은 휴관일이 있으니 미리 확인하세요. 입장료 성인 12,000원.', SHOWN_OPEN) === '["휴관"]' &&
+      gapsOf('가상박물관은 오전 10시에 문을 열고 입장료는 성인 2,000원입니다.') === '["오전 10시"]' &&
+      gapsOf('두 곳 모두 월요일에 쉽니다.', SHOWN_OPEN) === '["월요일","쉬는 날"]' &&
+      gapsOf('연중무휴로 엽니다.') === '["연중무휴"]',
+  )
+  ok(
+    '사실 확인 — 맞는 설명 줄은 그대로 지나간다(주차 무료 · 철마다 시각 · 오후 6시 · 쉬는 날 안내 · 연중무휴 · 통합권)',
+    gapsOf('주차는 무료입니다.') === '[]' && gapsOf('3~10월 09:00–18:00, 11~2월 09:00–17:00에 엽니다.') === '[]' && gapsOf('오후 6시까지 열어요.') === '[]' &&
+      gapsOf('휴관일이 보이는 화면', SHOWN_OPEN) === '[]' && gapsOf('연중무휴로 엽니다.', SHOWN_OPEN) === '[]' && gapsOf('매주 월요일에 휴관합니다.') === '[]' &&
+      gapsOf('통합권은 성인 3,000원입니다.') === '[]' && gapsOf('입장료는 성인 2,000원, 주차는 무료') === '[]',
+  )
   ok(
     '장소 안내 · 가이드 화면도 내보낸다(앱 주소 · 프로필의 장소 이름 모양)',
     screenExportable({ src: appSrc, origin: 'screen', screenId: 'place-info', variantId: '가상박물관' }) && screenExportable({ src: appSrc, origin: 'screen', screenId: 'kids-guide', variantId: 'default' }) &&
@@ -472,6 +672,15 @@ try {
         '연인과 걷는 코스', '커플 사진 코스', '기념일 데이트 동선', '친구들끼리 군산에서 하루', '친구와 1박 2일', '둘이서 걷는 골목', '둘만의 야경 코스', '둘이 나란히 걷는 길',
         '부부 여행 일정', '신혼여행 코스', '두 사람이 함께 걷는 산책로', '우정 여행 코스', '연인·친구 조건',
       ].every((t) => companionOf(t) === 'couple | default (prefer)'),
+  )
+  // 아이 낱말 바로 뒤의 「친구」(어린이 친구들 · 아이 친구)는 연인·친구가 아니다 — 아이 글에 연인·친구(어른 2) 화면이 「확인 필요」 없이 들어갔다.
+  // 「혼자 하는 · 하기 좋은 · 해도 좋은」 뒤에 여행 · 코스 · 일정이 오면 혼자다(「혼자 하기 어려운 일정 짜기」는 아니다)(검토 2026-11-04).
+  ok(
+    '「어린이 친구들」 · 「아이 친구」는 아이와만 · 「혼자 하는 여행」 · 「혼자 하기 좋은 여행」 · 「혼자 해도 좋은 1박」은 혼자',
+    companionOf('어린이 친구들이 좋아하는 체험 코스') === 'kids | default (prefer)' && companionOf('아이 친구 가족과 함께 가는 군산') === 'kids | default (prefer)' &&
+      companionOf('아이의 친구와 함께') === 'kids | default (prefer)' &&
+      ['혼자 하는 군산 여행 코스', '혼자 하기 좋은 군산 여행', '혼자 해도 좋은 군산 1박 2일'].every((t) => companionOf(t) === 'solo | default (prefer)') &&
+      companionOf('혼자 하기 어려운 일정 짜기') === 'default | kids,parents,solo,couple (general)',
   )
   // 동행이 아닌 말 — 이런 자리에 혼자 · 연인·친구 조건 화면이 「확인 필요」 없이 나가면 안 된다(조건을 말하지 않은 자리로 본다).
   ok(
@@ -705,7 +914,7 @@ try {
       '<p class="kicker" data-r="364,108,403,32">관광지</p><h1 data-r="364,146,384,47">가상박물관</h1><div class="summary" data-r="364,235,384,167">가상 소개</div>',
       '<dl class="kf kf-hero" data-r="364,430,384,323"><dt>이용시간</dt><dd><img src="/assets/icons/fact-hours-64.webp" data-r="390,600,32,32">09:00–18:00</dd><dt>요금</dt><dd>성인 2,000원</dd></dl>',
       '</div><figure class="pv" data-r="799,114,342,323"><img src="https://tong.visitkorea.or.kr/a.jpg" data-kogl="3" data-r="799,114,342,291"></figure></article>',
-      '<div class="fab" style="position:fixed" data-r="1167,452,56,195"></div>',
+      '<div class="fab" style="position:fixed;background:#123" data-r="1167,452,56,195"></div>',
     ].join('')
     const SEL = ['article.place .pl-head h1', 'article.place dl.kf.kf-hero']
     const OPT = ['article.place .pl-head .kicker', 'article.place .pl-head .pl-alt', 'article.place .pl-head .summary']
@@ -754,8 +963,41 @@ try {
         JSON.stringify(inPage<string[]>(pw, capture.pageClipCovers, SEL, OPT, { x: 348, y: 92, width: 900, height: 500 })) === '["div.fab"]' &&
         JSON.stringify(inPage<string[]>(rectWindow('<div class="stick" style="position:sticky" data-r="300,80,600,700"><h1 data-r="364,146,384,47">x</h1></div>'), capture.pageClipCovers, ['h1'], [], plan.rect)) === '[]',
     )
-    const hosts = capture.closedShadowHosts(tree(true))
-    ok('닫힌 shadow root를 단 요소(잘라 찍기는 그 상자로 본다)', hosts.length === 1 && hosts[0]?.nodeName === 'X-INNER' && capture.closedShadowHosts(tree(false)).length === 0 && capture.closedShadowHosts(null).length === 0)
+    // 가리는 고정 요소 — 내용 뒤에 깔린 고정 배경(z-index 음수)과 그리는 것이 없는 투명 틀(알림 뿌리 inset:0)은 가리지 않는다. 투명 틀 안의
+    // 알림이 사각형에 걸치면 가린다(검토 2026-11-04: 전체 화면 고정 배경이 있는 페이지는 늘 clip-covered였다).
+    const coverOf = (html: string) => JSON.stringify(inPage<string[]>(chromeLike(rectWindow(`${html}<h1 data-r="364,146,384,47">x</h1>`)), capture.pageClipCovers, ['h1'], [], plan.rect))
+    ok(
+      '가리는 고정 요소 — 뒤에 깔린 고정 배경 · 투명한 틀은 아니고, 틀 안의 알림이 걸치거나 색이 있는 고정 요소는 가린다',
+      coverOf('<div class="bgfx" style="position:fixed;z-index:-1;background:#eef" data-r="0,0,1280,800"></div>') === '[]' &&
+        coverOf('<div class="toasts" style="position:fixed" data-r="0,0,1280,800"><div class="toast" style="background:#123" data-r="1000,700,200,50">알림</div></div>') === '[]' &&
+        coverOf('<div class="toasts" style="position:fixed" data-r="0,0,1280,800"><div class="toast" style="background:#123" data-r="400,300,200,50">알림</div></div>') === '["div.toasts"]' &&
+        coverOf('<div class="bar" style="position:fixed;background:#123" data-r="0,200,1280,60"></div>') === '["div.bar"]',
+    )
+    // 그림 검사 — 투명도 0인 공공누리 · 바깥 그림도 센다(스크롤로 드러나는 그림이 검사 뒤 · 찍기 전에 나타날 수 있다). display:none은 세지 않는다.
+    const KOGL_IMG = '<figure data-kogl="3" data-r="100,120,200,100"><img src="/img/k.png" data-r="100,120,200,100"></figure>'
+    const REGION = { x: 84, y: 84, width: 532, height: 400 }
+    const chromeInspect = (html: string, region: Rect | null = REGION) =>
+      inPage<InspectResult>(chromeLike(rectWindow(html)), capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region)
+    ok(
+      '그림 검사 — 투명도 0(드러내기 전)인 공공누리 그림도 센다 · display:none은 세지 않는다',
+      chromeInspect(`<div class="rv" style="opacity:0" data-r="100,120,200,100">${KOGL_IMG}</div>`).kogl > 0 &&
+        chromeInspect(`<div class="rv" style="opacity:0" data-r="100,120,200,100">${KOGL_IMG}</div>`, null).kogl > 0 &&
+        chromeInspect(`<div style="display:none" data-r="100,120,200,100">${KOGL_IMG}</div>`).kogl === 0,
+    )
+    // 가상 요소(::before · ::after) 그림 — host 상자 밖으로 그려도 그 자리로 본다(사각형 옆 요소의 가상 요소가 사각형 안에 그린 공공누리 그림).
+    const PSEUDO = (left: string) =>
+      `<div class="side" data-kogl="3" data-r="700,100,300,300" data-cs='{"position":"absolute"}' data-before='${JSON.stringify({ backgroundImage: 'url("/img/k.png")', position: 'absolute', left, top: '40px', width: '200px', height: '100px', marginLeft: '0px', marginTop: '0px', transform: 'none' })}'></div>`
+    ok(
+      '그림 검사 — 사각형 밖 요소의 가상 요소가 사각형 안에 그린 공공누리 그림을 잡는다 · 사각형 밖에 그리면 괜찮다',
+      chromeInspect(PSEUDO('-300px')).kogl > 0 && chromeInspect(PSEUDO('20px')).kogl === 0,
+    )
+    ok(
+      '그림 검사 — SVG pattern 안의 <image> · <input type=image> · border-image의 공공누리 그림도 잡는다',
+      chromeInspect('<svg data-kogl="3" data-r="100,120,300,120"><defs><pattern id="p"><image href="/img/k.png"></image></pattern></defs><rect fill="url(#p)" data-r="100,120,300,120"></rect></svg>').kogl > 0 &&
+        chromeInspect('<span data-kogl="3" data-r="100,120,200,100"><input type="image" src="/img/k.png" data-r="100,120,200,100"></span>').kogl > 0 &&
+        chromeInspect(`<div data-kogl="3" data-r="100,120,200,100" data-cs='{"borderImageSource":"url(\\"/img/k.png\\")"}'></div>`).kogl > 0 &&
+        chromeInspect('<span data-r="100,120,200,100"><input type="image" src="https://foreign.example/b.png" data-r="100,120,200,100"></span>').foreign.includes('foreign.example'),
+    )
     const dnsCache = new Map([['gunsan.webforai.kr', Promise.resolve(false)], ['tong.visitkorea.or.kr', Promise.resolve(false)]])
     const own = { host: 'gunsan.webforai.kr', ownHostOnly: true, dnsCache }
     ok(
@@ -809,6 +1051,32 @@ try {
     } finally {
       dns.promises.lookup = realLookup
     }
+  }
+
+  // ── 6c) 캡처 순서(captureSteps) — 가짜 페이지로 한 장을 끝까지 돈다(창 · 사이트 · 네트워크 없음) ─────────────
+  {
+    // 잘라 찍기 스크롤 뒤에는 페이지가 반응할 틈(조용함 0.8초)을 준 다음 그림을 검사한다 — 예전에는 스크롤하고 5ms 안에 검사해, 스크롤로
+    // 드러나는 공공누리 그림이 검사 뒤 · 찍기 전에 나타나 그대로 찍혔다(검토 2026-11-04, 드러내기 40~120ms).
+    const scrolled = await runFakePage({ clip: true })
+    const waited = scrolled.log.scrollAt !== null && scrolled.log.inspectAt[0] !== undefined ? scrolled.log.inspectAt[0] - scrolled.log.scrollAt : -1
+    ok(`잘라 찍기 — 스크롤한 뒤 조용함(0.8초)을 기다린 다음 그림을 검사한다(기다린 시간 ${waited}ms)`, scrolled.code === 'resolved' && waited >= 750)
+    // 찍은 뒤 그림 검사를 한 번 더 — 그사이 공공누리 · 바깥 그림이 나타났으면 그 그림을 버린다.
+    const KOGL_AFTER: InspectResult = { images: 1, mapImages: 0, foreign: [], kogl: 1, frames: [] }
+    const FOREIGN_AFTER: InspectResult = { images: 1, mapImages: 0, foreign: ['foreign.example'], kogl: 0, frames: [] }
+    const changedClip = await runFakePage({ clip: true, afterShot: KOGL_AFTER })
+    const changedFull = await runFakePage({ clip: false, afterShot: FOREIGN_AFTER })
+    ok(
+      '찍은 뒤 다시 검사해 그사이 나타난 공공누리 · 바깥 그림이 있으면 버린다(잘라 찍기 · 첫 화면 모두)',
+      changedClip.code === 'kogl-image' && changedClip.log.inspectAt.length === 2 && changedFull.code === 'foreign-image' && changedFull.log.inspectAt.length === 2,
+    )
+    // 잘라 찍기도 닫힌 shadow root는 모두 센다 — host 상자로 사각형과 견주면 display:contents host(상자 없음) · host 밖으로 넘친 내용 안의
+    // 공공누리 그림을 놓친다(검토 2026-11-04). 첫 화면 모드와 같다.
+    const closedTree = {
+      nodeName: '#document',
+      children: [{ nodeName: 'HTML', children: [{ nodeName: 'BODY', children: [{ nodeName: 'X-BOX', backendNodeId: 7, shadowRoots: [{ nodeName: '#document-fragment', shadowRootType: 'closed', children: [] }] }] }] }],
+    }
+    const closedClip = await runFakePage({ clip: true, tree: closedTree })
+    ok('잘라 찍기 — 상자가 없는(display:contents) host의 닫힌 shadow root도 세어 버린다', closedClip.code === 'closed-shadow')
   }
 
   // ── 7) 저장 · 같은 날 다시 쓰기 ─────────────────────────────────────────

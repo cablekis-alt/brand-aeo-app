@@ -366,7 +366,7 @@ export default function SitePhotoPanel({
         }
       }),
     )
-    const first = screenKindOf(slot.key, screenProfile).screen?.id
+    const first = screenKindOf(slot.key, screenProfile, brand.brandName).screen?.id
     return first ? [...all.filter((o) => o.screenId === first), ...all.filter((o) => o.screenId !== first)] : all
   }
 

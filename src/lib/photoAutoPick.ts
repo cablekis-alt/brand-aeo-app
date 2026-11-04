@@ -838,6 +838,8 @@ export interface AutoSlotRow {
    * (src/lib/screenCapture.ts screenFactGaps, 「09:30」 · 「휴관」 · 「월요일」). 「확인 필요」를 단다.
    */
   factGaps?: string[]
+  /** 장소 안내 자리의 장면 글자가 말한 사이트 장소들(둘 이상일 때만) — 한 곳의 화면만 찍히므로 「확인 필요」를 단다(factGaps와 따로 보인다). */
+  screenPlaces?: string[]
 }
 
 /** 이미 넣은 자동 사진을 바꾸거나 뺄 것 — 저장할 때 서버가 그 자리에 같은 자동 사진이 아직 있을 때만 한다(server/contentDraft.ts). */
@@ -1262,11 +1264,12 @@ export function autoPickPhotos(input: {
   const placeNames = [...placeVariants.keys()]
   /**
    * 장소 안내 자리의 장소 — 장면 글자 · 설명 줄 · 소제목 차례로 사전에서 찾은 첫 장소(findPlaces 순서). 소제목에만 나온 장소(by heading)나
-   * 장면 글자가 장소를 둘 이상 말하는 자리(한 장소의 안내만 찍힌다)는 「확인 필요」.
+   * 장면 글자가 장소를 둘 이상 말하는 자리(한 장소의 안내만 찍힌다 — many에 그 장소들)는 「확인 필요」.
    */
-  const placeChoice = (row: AutoSlotRow): { choice: ScreenVariantChoice; review: boolean } | { miss: 'no-place' | 'no-directory' } => {
+  const placeChoice = (row: AutoSlotRow): { choice: ScreenVariantChoice; review: boolean; many: string[] } | { miss: 'no-place' | 'no-directory' } => {
     if (!placeVariants.size) return { miss: 'no-directory' }
     const named = findPlaces(row.slot.key, placeNames)
+    const many = named.length > 1 ? named : []
     for (const [text, by] of [
       [row.slot.key, 'place'],
       [row.caption, 'place'],
@@ -1274,7 +1277,7 @@ export function autoPickPhotos(input: {
     ] as const) {
       const name = text ? findPlaces(text, placeNames)[0] : undefined
       const v = name ? placeVariants.get(name) : undefined
-      if (v) return { choice: { tiers: [[v]], by }, review: by === 'heading' || named.length > 1 }
+      if (v) return { choice: { tiers: [[v]], by }, review: by === 'heading' || many.length > 0, many }
     }
     return { miss: 'no-place' }
   }
@@ -1317,7 +1320,7 @@ export function autoPickPhotos(input: {
             ? 'screen'
             : 'nomatch'
       const found = (state === 'nomatch' || old) && places.length ? slotPlaces({ key: slot.key, caption }, places) : []
-      const screenKind = state === 'screen' ? screenKindOf(slot.key, screenProfile) : null
+      const screenKind = state === 'screen' ? screenKindOf(slot.key, screenProfile, input.brandName) : null
       const row: AutoSlotRow = {
         slot,
         caption,
@@ -1668,6 +1671,7 @@ export function autoPickPhotos(input: {
           }
           choice = found.choice
           placeReview = found.review
+          if (found.many.length) row.screenPlaces = found.many
         } else choice = screenVariantChoice(screen, row.slot.key, places.length ? findPlaces(row.slot.key, places) : [], `${row.slot.heading}\n${row.caption}`)
         const open = (v: ScreenVariant) => !blocked(screenKey(screen, v)) && !removed(row, screenKey(screen, v))
         const shotOf = (v: ScreenVariant) => shotAt.get(`${screen.id}:${v.id}`)

@@ -898,12 +898,15 @@ ok(
   '장소 안내 — 아직 찍지 않았으면 uncaptured로 두고 그 장소를 찍기 청한다(변형 id는 장소 이름, 이름표 함께)',
   wantRun.articles[0]!.rows[0]!.state === 'uncaptured' && JSON.stringify(wantRun.screenWanted) === JSON.stringify([{ screenId: 'place-info', variantId: '가상박물관', variantLabel: '가상박물관' }]),
 )
-const noPlace = placeOne(['## 관광정보 서비스 고르기', '', '![관광정보 사이트에서 한 장소의 여는 시간, 요금, 가는 길이 함께 표시된 화면](#image-slot)', '*장소마다 여는 시간과 요금이 따로 적혀 있는지 먼저 확인하세요.*']).rows[0]!
+// 예전에는 장면 글자가 「관광정보 사이트에서 …」였다 — 브랜드를 말하지 않는 장소 안내 자리는 이제 unowned라(아래 검사), 장소 이름이 없는
+// 경우를 보려고 브랜드 이름을 넣었다(기대값 screen · place · no-place는 그대로).
+const noPlace = placeOne(['## 관광정보 서비스 고르기', '', `![${SB} 웹사이트에서 한 장소의 여는 시간, 요금, 가는 길이 함께 표시된 화면](#image-slot)`, '*장소마다 여는 시간과 요금이 따로 적혀 있는지 먼저 확인하세요.*']).rows[0]!
 ok(
   '장소 이름이 자리 글자 · 소제목 어디에도 없으면 비워 둔다(screenMiss no-place · 찍기 청하지 않음)',
   noPlace.state === 'screen' && noPlace.screenSlot === 'place' && noPlace.screenMiss === 'no-place' && !noPlace.screenPick && !noPlace.pick,
 )
-const headingPlace = placeOne(['## 가상 해양공원 둘러보기', '', '![관광정보 사이트에서 한 장소의 여는 시간, 요금이 함께 표시된 화면](#image-slot)'], [placeShotOf('가상-해양공원', 23, '가상 해양공원\n이용시간\n09:00–21:00\n요금\n무료')]).rows[0]!
+// 장면 글자는 위와 같은 까닭으로 「관광정보 사이트에서 …」에서 브랜드 웹사이트로 바꿨다(기대값 그대로).
+const headingPlace = placeOne(['## 가상 해양공원 둘러보기', '', `![${SB} 웹사이트에서 한 장소의 여는 시간, 요금이 함께 표시된 화면](#image-slot)`], [placeShotOf('가상-해양공원', 23, '가상 해양공원\n이용시간\n09:00–21:00\n요금\n무료')]).rows[0]!
 ok(
   '소제목에만 장소가 나오면 그 장소(by heading) · 「확인 필요」 — 이름의 띄어쓰기는 사전 주소의 하이픈',
   headingPlace.state === 'filled' && headingPlace.pick?.variantId === '가상-해양공원' && headingPlace.screenPick?.by === 'heading' && headingPlace.review === true && !headingPlace.factGaps,
@@ -953,6 +956,55 @@ ok(
   '지도에서 고르기 · 코스 결과 자리는 장소 안내가 아니다(action — 비워 둠), 코스 자리는 그대로 코스',
   notStolen[0]!.screenSlot === 'action' && notStolen[0]!.state === 'screen' && notStolen[1]!.screenSlot === 'action' && notStolen[1]!.state === 'screen' &&
     notStolen[2]!.screenSlot === 'course' && notStolen[2]!.pick?.screenId === 'course',
+)
+// 다른 기관 사이트를 말하는 화면 자리 · 사이트를 말하지 않는 장소 안내 자리에 자사 화면을 넣지 않는다 — 예전에는 안내 낱말(관람시간 · 입장료)만
+// 보고 「확인 필요」 없이 장소 안내 화면을 넣었다(검토 2026-11-04).
+const otherSites = placeRun(
+  [
+    article('o1', [
+      '## 가상박물관 가기 전에', '', '![가상박물관 공식 홈페이지의 관람시간 안내 화면](#image-slot)', '*관람시간은 09:00–18:00입니다.*',
+      '', '## 2', '', '![한국관광공사 대한민국 구석구석 사이트에서 가상박물관의 이용시간과 입장료가 표시된 화면](#image-slot)',
+      '', '## 3', '', '![웹사이트에서 가상박물관의 이용시간이 표시된 화면](#image-slot)',
+    ]),
+  ],
+  [placeShotOf('가상박물관', 21)],
+).articles[0]!
+ok(
+  '다른 기관 사이트(공식 홈페이지 · 관광공사)를 말하는 화면 자리는 other, 사이트를 말하지 않는 장소 안내 자리는 unowned — 비워 둔다',
+  JSON.stringify(otherSites.rows.map((r) => `${r.state}:${r.screenSlot ?? ''}`)) === JSON.stringify(['screen:other', 'screen:other', 'screen:unowned']) &&
+    otherSites.picks.length === 0 && otherSites.rows.every((r) => !r.screenPick),
+)
+// 실물 안내판 사진 자리 — 「장소 안내 화면」 · 「아이와 함께 안내 화면」 이름만으로는 화면 자리가 아니다(사진 자리 그대로).
+const physical = placeRun(
+  [article('ph', ['## 가상박물관', '', '![가상박물관 로비의 장소 안내 화면 앞 풍경](#image-slot)', '', '## 어린이박물관', '', '![가상박물관 어린이박물관 입구의 아이와 함께 안내 화면](#image-slot)'])],
+  [placeShotOf('가상박물관', 21), GUIDE_SHOT],
+).articles[0]!
+ok(
+  '「장소 안내 화면」 · 「아이와 함께 안내 화면」 실물 안내판 자리는 사진 자리(화면을 넣지 않는다)',
+  physical.rows.every((r) => r.state === 'nomatch' && !r.screenSlot && !r.pick) && physical.picks.length === 0,
+)
+// 장면 글자가 장소를 둘 이상 말하고 설명 줄의 사실도 빠졌으면 까닭 둘을 다 남긴다 — 장소들(screenPlaces)과 빠진 사실(factGaps).
+const twoPlacesGap = placeOne(
+  ['## 원도심', '', `![${SB} 웹사이트에서 가상박물관과 가상 해양공원의 이용시간이 표시된 화면](#image-slot)`, '*두 곳 모두 화요일에 쉽니다.*'],
+  [placeShotOf('가상박물관', 21), placeShotOf('가상-해양공원', 23)],
+).rows[0]!
+ok(
+  '장소가 둘 이상 · 사실 빠짐이 함께면 둘 다 남긴다(screenPlaces · factGaps)',
+  twoPlacesGap.state === 'filled' && twoPlacesGap.review === true && JSON.stringify([...(twoPlacesGap.screenPlaces ?? [])].sort()) === JSON.stringify(['가상 해양공원', '가상박물관']) &&
+    (twoPlacesGap.factGaps ?? []).includes('화요일'),
+)
+ok('장소가 한 곳이면 screenPlaces를 달지 않는다', !pRow.screenPlaces && !gapRow.screenPlaces)
+// 동행 낱말 — 「어린이 친구들」 소제목은 아이와(연인·친구 아님), 「혼자 하는 여행」 소제목은 혼자.
+const kidsFriends = screenRun([article('kf', ['## 어린이 친구들이 좋아하는 가상 체험 코스', '', `![${COURSE_SLOT}](#image-slot)`, '*조건만 고르면 일정을 짜 드려요.*'], { group: 'w1' })], { available: true, shots: ALL_SHOTS }, {
+  others: [0, 1, 2].map((i) => ({ src: 'screen:course:kids', group: `o${i}` })),
+}).articles[0]!.rows[0]!
+const soloTrip = screenRun([article('st', ['## 혼자 하는 가상 여행, 코스는 이렇게', '', `![${COURSE_SLOT}](#image-slot)`, '*조건만 고르면 일정을 짜 드려요.*'], { group: 'w1' })], { available: true, shots: ALL_SHOTS }, {
+  others: [{ src: 'screen:course:default', group: 'w1' }],
+}).articles[0]!.rows[0]!
+ok(
+  '「어린이 친구들」 소제목 아래 코스 자리는 아이와(브랜드에서 많이 썼어도 연인·친구를 넣지 않는다) · 「혼자 하는 여행」은 혼자',
+  kidsFriends.state === 'filled' && kidsFriends.pick?.variantId === 'kids' && kidsFriends.screenPick?.by === 'prefer' && !kidsFriends.review &&
+    soloTrip.state === 'filled' && soloTrip.pick?.variantId === 'solo' && soloTrip.screenPick?.by === 'prefer' && !soloTrip.review,
 )
 ok(
   '장소 사전을 주어도 코스 · 지도 · 목록에 없는 화면 자리의 결과는 같다',

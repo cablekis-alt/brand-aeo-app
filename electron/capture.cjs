@@ -13,12 +13,13 @@
 //   - GTM · GA4 · track.js · Vercel Insights 요청을 막는다(캡처가 방문 통계에 잡히지 않게).
 //   - 127/8 · ::1 · 사설 주소로 가는 요청을 막는다(인증 없는 로컬 API 보호). 이름은 DNS로 풀어 확인한다.
 //   - 보이는 그림 가운데 자사 호스트가 아니거나 data-kogl이 붙은 것이 있으면 그 캡처는 버린다(<html> · <body> 배경과
-//     웹 컴포넌트의 열린 shadow root 안까지 본다 — 안을 볼 수 없는 닫힌 shadow root가 있으면 버린다).
-//     지도 상자 안의 카카오 타일만 예외다.
+//     웹 컴포넌트의 열린 shadow root 안까지 본다 — 안을 볼 수 없는 닫힌 shadow root가 있으면 버린다). 투명도 0인 그림도 센다
+//     (드러내기 효과로 곧 나타난다). 찍기 전과 찍은 뒤 두 번 검사한다. 지도 상자 안의 카카오 타일만 예외다.
 //   - 빈 그림(한 가지 색)이면 실패로 돌려준다.
 //   - 동의 배너는 숨기기만 하고 절대 누르지 않는다.
-//   - 잘라 찍기(clip): 선택자들의 요소를 합친 사각형(+ 여백)만 찍는다. 그림 검사도 그 사각형에 걸친 것만 본다(밖의 공공누리 사진은 괜찮다).
-//     사각형이 첫 화면(1280×800, 위에 붙은 머리 아래)에 들어가게 스크롤하고, 들어가지 않으면 찍지 않는다. 배율은 1 그대로.
+//   - 잘라 찍기(clip): 선택자들의 요소를 합친 사각형(+ 여백)만 찍는다. 그림 검사도 그 사각형에 걸친 것만 본다(밖의 공공누리 사진은 괜찮다 —
+//     닫힌 shadow root만은 자리와 상관없이 모두 센다). 사각형이 첫 화면(1280×800, 위에 붙은 머리 아래)에 들어가게 스크롤하고(스크롤한 뒤
+//     조용함을 다시 기다린다), 들어가지 않으면 찍지 않는다. 배율은 1 그대로.
 //   - ownHostOnly: 자사 호스트 밖의 요청을 모두 막는다(관광공사 사진 · 지도 SDK · 동영상 썸네일 — 잘라 찍는 부분에 필요 없다).
 'use strict'
 
@@ -463,19 +464,37 @@ function pageClipState(selectors, optional) {
 }
 
 /**
- * 잘라 찍을 사각형(화면 좌표)에 걸친 고정 · sticky 요소 — 잘라 찍을 요소를 품거나 그 안에 든 것은 빼고. 있으면 그림을 가리므로 찍지 않는다.
+ * 잘라 찍을 사각형(화면 좌표)을 가리는 고정 · sticky 요소 — 잘라 찍을 요소를 품거나 그 안에 든 것은 빼고. 있으면 그림을 가리므로 찍지 않는다.
+ * 내용 뒤에 깔린 것(z-index 음수 — 전체 화면 고정 배경)은 가리지 않는다. 스스로 그리는 것이 없는 투명 틀(알림 · 대화창 뿌리 inset:0)은 그 안의
+ * 보이는 요소가 사각형에 걸칠 때만 가린다.
  */
 function pageClipCovers(selectors, optional, region) {
   const clipEls = [...selectors, ...optional].flatMap((s) => [...document.querySelectorAll(s)])
+  const hits = (r) => r.width > 0 && r.height > 0 && r.right > region.x && r.bottom > region.y && r.left < region.x + region.width && r.top < region.y + region.height
+  const visible = (el) => !el.checkVisibility || el.checkVisibility({ opacityProperty: true, visibilityProperty: true })
+  const clear = (v) => !v || v === 'transparent' || /^rgba\([^)]*,\s*0(?:\.0+)?\)$/.test(v)
+  const none = (v) => !v || v === 'none'
+  /** 스스로 무엇을 그리나 — 배경색 · 배경 그림 · 테두리 · 그림자 · 직접 든 글자, 또는 그림 · 입력 같은 바뀐 요소. */
+  const paints = (el) => {
+    const cs = getComputedStyle(el)
+    const border = ['Top', 'Right', 'Bottom', 'Left'].some(
+      (s) => parseFloat(cs[`border${s}Width`]) > 0 && cs[`border${s}Style`] !== 'none' && !clear(cs[`border${s}Color`]),
+    )
+    const ownText = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
+    return (
+      !clear(cs.backgroundColor) || !none(cs.backgroundImage) || border || !none(cs.boxShadow) || ownText ||
+      /^(img|svg|video|canvas|iframe|embed|object|input|button|select|textarea|picture)$/i.test(el.tagName)
+    )
+  }
   const out = []
   for (const el of document.querySelectorAll('body *')) {
-    const pos = getComputedStyle(el).position
-    if (pos !== 'fixed' && pos !== 'sticky') continue
-    const r = el.getBoundingClientRect()
-    if (!(r.width > 0 && r.height > 0)) continue
-    if (el.checkVisibility && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue
-    const hit = r.right > region.x && r.bottom > region.y && r.left < region.x + region.width && r.top < region.y + region.height
-    if (!hit || clipEls.some((c) => c === el || c.contains(el) || el.contains(c))) continue
+    const cs = getComputedStyle(el)
+    if (cs.position !== 'fixed' && cs.position !== 'sticky') continue
+    if (parseInt(cs.zIndex, 10) < 0 || !visible(el)) continue
+    if (clipEls.some((c) => c === el || c.contains(el) || el.contains(c))) continue
+    const covers =
+      (hits(el.getBoundingClientRect()) && paints(el)) || [...el.querySelectorAll('*')].some((d) => hits(d.getBoundingClientRect()) && visible(d) && paints(d))
+    if (!covers) continue
     const cls = typeof el.className === 'string' && el.className.trim() ? `.${el.className.trim().split(/\s+/).join('.')}` : ''
     out.push(`${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${cls}`.slice(0, 80))
   }
@@ -485,13 +504,42 @@ function pageClipCovers(selectors, optional, region) {
 /**
  * 그림 검사 — 첫 화면(region이 없을 때) 또는 잘라 찍을 사각형(region, 화면 좌표)에 걸친 그림 · 배경 · 프레임을 본다. 사각형 밖에 있는
  * 공공누리 · 바깥 그림은 찍히지 않으므로 괜찮다. <html> · <body> 배경은 어디든 비치므로 늘 본다.
+ * 투명도 0인 그림도 센다(드러내기 효과 — 검사 뒤 · 찍기 전에 나타날 수 있다). display · visibility로 숨긴 것만 뺀다. 그려지지 않는 SVG
+ * 묶음(defs · pattern · symbol …) 안의 <image>는 다른 곳(fill:url(#…) · <use>)에서 그려지므로 자리와 상관없이 보고, 가상 요소(::before ·
+ * ::after)의 그림은 host 상자가 아니라 가상 요소의 자리(어림)로 본다.
  */
 function pageInspect(ownHost, mapSelector, mapHosts, region) {
   const vw = innerWidth
   const vh = innerHeight
-  const box = region || { x: 0, y: 0, width: vw, height: vh }
-  const inView = (r) => r.width > 1 && r.height > 1 && r.bottom > box.y && r.right > box.x && r.top < box.y + box.height && r.left < box.x + box.width
-  const shown = (el) => (el.checkVisibility ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true)
+  const view = { x: 0, y: 0, width: vw, height: vh }
+  const box = region || view
+  const hits = (r, b) => r.width > 1 && r.height > 1 && r.bottom > b.y && r.right > b.x && r.top < b.y + b.height && r.left < b.x + b.width
+  const inView = (r) => hits(r, box)
+  const shown = (el) => (el.checkVisibility ? el.checkVisibility({ visibilityProperty: true }) : true)
+  const SVG_NS = 'http://www.w3.org/2000/svg'
+  const SVG_UNPAINTED = 'defs, pattern, symbol, mask, marker, clipPath, filter'
+  const px = (v) => (/^-?\d+(?:\.\d+)?px$/.test(String(v)) ? parseFloat(v) : null)
+  /**
+   * 가상 요소의 상자(화면 좌표) 어림 — 흐름 안(static)이면 host 상자, 절대 위치면 위치 지정 host의 padding 상자에서 left · top(또는 right ·
+   * bottom)과 width · height로. 어림할 수 없으면(host가 위치 지정 요소가 아님 · fixed · relative · transform · px가 아닌 값) null.
+   */
+  const pseudoBox = (el, cs) => {
+    const hr = el.getBoundingClientRect()
+    if (cs.transform && cs.transform !== 'none') return null
+    if (!cs.position || cs.position === 'static') return hr
+    const hs = getComputedStyle(el)
+    if (cs.position !== 'absolute' || hs.position === 'static') return null
+    const w = px(cs.width)
+    const h = px(cs.height)
+    if (w === null || h === null) return null
+    const x0 = hr.left + (px(hs.borderLeftWidth) || 0)
+    const y0 = hr.top + (px(hs.borderTopWidth) || 0)
+    const [left, top, right, bottom] = [px(cs.left), px(cs.top), px(cs.right), px(cs.bottom)]
+    const x = left !== null ? x0 + left + (px(cs.marginLeft) || 0) : right !== null ? x0 + el.clientWidth - right - w : null
+    const y = top !== null ? y0 + top + (px(cs.marginTop) || 0) : bottom !== null ? y0 + el.clientHeight - bottom - h : null
+    if (x === null || y === null) return null
+    return { left: x, top: y, right: x + w, bottom: y + h, width: w, height: h }
+  }
   const parse = (u) => {
     try {
       const x = new URL(u, location.href)
@@ -528,14 +576,22 @@ function pageInspect(ownHost, mapSelector, mapHosts, region) {
     if (!out.foreign.includes(host)) out.foreign.push(host || scheme)
   }
   for (const root of roots) {
-    for (const img of root.querySelectorAll('img')) {
+    for (const img of root.querySelectorAll('img, input[type="image"]')) {
       if (!inView(img.getBoundingClientRect()) || !shown(img)) continue
       out.images += 1
       if (inKogl(img)) out.kogl += 1
       judge(img, img.currentSrc || img.src)
     }
-    for (const el of root.querySelectorAll('image, video, iframe, embed, object')) {
-      if (!inView(el.getBoundingClientRect()) || !shown(el)) continue
+    for (const el of root.querySelectorAll('image, feImage, video, iframe, embed, object')) {
+      const svg = el.namespaceURI === SVG_NS
+      const unpainted = svg && Boolean(el.closest(SVG_UNPAINTED))
+      if (!unpainted) {
+        // SVG <image>는 자기 상자가 비면(크기 0) 그 SVG의 상자로 본다.
+        let r = el.getBoundingClientRect()
+        const outer = svg && !(r.width > 1 && r.height > 1) ? el.closest('svg') : null
+        if (outer) r = outer.getBoundingClientRect()
+        if (!inView(r) || !shown(el)) continue
+      }
       if (inKogl(el)) out.kogl += 1
       const url =
         el.getAttribute('href') || el.getAttribute('xlink:href') || el.getAttribute('src') || el.getAttribute('poster') || el.getAttribute('data') || ''
@@ -544,15 +600,31 @@ function pageInspect(ownHost, mapSelector, mapHosts, region) {
     }
   }
   const urlsIn = (v) => [...String(v || '').matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/g)].map((m) => m[2])
-  // CSS 배경 — <html> · <body>는 첫 화면 전체를 덮으므로 자리와 상관없이 보고, 나머지는 첫 화면(잘라 찍기면 그 사각형)에 걸친 요소만 본다.
+  // CSS 그림(배경 · content · 마스크 · border-image · 목록 표시) — <html> · <body>는 첫 화면 전체를 덮으므로 자리와 상관없이 보고, 나머지는 첫
+  // 화면(잘라 찍기면 그 사각형)에 걸친 요소만 본다. 가상 요소는 host가 밖이어도 그 자리(어림)가 걸치면 보고, 어림할 수 없으면 host가 첫 화면에
+  // 걸칠 때 본다.
   const page = [document.documentElement, document.body].filter(Boolean)
   const boxes = roots.flatMap((root) => [...root.querySelectorAll(root === document ? 'body *' : '*')])
   for (const el of [...page, ...boxes]) {
-    if (!page.includes(el) && !inView(el.getBoundingClientRect())) continue
+    const always = page.includes(el)
+    const rect = always ? null : el.getBoundingClientRect()
+    const hostIn = always || inView(rect)
     for (const pseudo of [null, '::before', '::after']) {
+      if (!pseudo && !hostIn) continue
       const cs = getComputedStyle(el, pseudo)
-      const urls = [...urlsIn(cs.backgroundImage), ...urlsIn(cs.content), ...urlsIn(cs.maskImage)]
+      const urls = [
+        ...urlsIn(cs.backgroundImage),
+        ...urlsIn(cs.content),
+        ...urlsIn(cs.maskImage),
+        ...urlsIn(cs.borderImageSource),
+        ...urlsIn(cs.listStyleImage),
+        ...urlsIn(cs.getPropertyValue('-webkit-mask-box-image-source')),
+      ]
       if (!urls.length || cs.visibility === 'hidden' || cs.display === 'none') continue
+      if (pseudo && !hostIn) {
+        const pb = pseudoBox(el, cs)
+        if (pb ? !inView(pb) : !hits(rect, view)) continue
+      }
       if (inKogl(el)) out.kogl += 1
       for (const u of urls) judge(el, u)
     }
@@ -562,7 +634,8 @@ function pageInspect(ownHost, mapSelector, mapHosts, region) {
 
 /**
  * CDP DOM.getDocument({ depth: -1, pierce: true })의 노드 트리에서 닫힌(closed) shadow root 수를 센다. 페이지 스크립트(pageInspect)는
- * 닫힌 root 안을 볼 수 없으므로 하나라도 있으면 그 캡처는 버린다. 브라우저 기본 root(video · input 등의 user-agent)는 세지 않는다.
+ * 닫힌 root 안을 볼 수 없으므로 하나라도 있으면 그 캡처는 버린다 — 잘라 찍기도 자리와 상관없이 모두 센다(host 상자로 견주면 display:contents
+ * host나 host 밖으로 넘친 내용을 놓친다). 브라우저 기본 root(video · input 등의 user-agent)는 세지 않는다.
  */
 function countClosedShadowRoots(root) {
   let closed = 0
@@ -574,24 +647,6 @@ function countClosedShadowRoots(root) {
     if (node.contentDocument) stack.push(node.contentDocument)
   }
   return closed
-}
-
-/**
- * 닫힌 shadow root를 단 요소(host)들 — 잘라 찍기는 그 상자가 사각형에 걸친 것만 센다(closedRootsIn). CDP 노드 트리(DOM.getDocument pierce)에서
- * 찾는다. 브라우저 기본 root(user-agent)는 보지 않는다.
- */
-function closedShadowHosts(root) {
-  const out = []
-  const stack = root ? [root] : []
-  while (stack.length) {
-    const node = stack.pop()
-    if (Array.isArray(node.shadowRoots) && node.shadowRoots.some((s) => s && s.shadowRootType === 'closed')) {
-      out.push({ backendNodeId: node.backendNodeId, nodeName: node.nodeName })
-    }
-    for (const list of [node.children, node.shadowRoots, node.pseudoElements]) if (Array.isArray(list)) stack.push(...list)
-    if (node.contentDocument) stack.push(node.contentDocument)
-  }
-  return out
 }
 
 // ── 잘라 찍기 계획 ────────────────────────────────────────────────────────
@@ -628,37 +683,6 @@ const CLIP_PROBLEM_TEXT = {
 function clipError(plan) {
   const size = plan.rect ? ` — ${plan.rect.width}×${plan.rect.height}` : ''
   return captureError(plan.problem, `${CLIP_PROBLEM_TEXT[plan.problem]}${size}.`)
-}
-
-/** 두 사각형이 겹치나 — a는 { left, top, right, bottom }, region은 { x, y, width, height }. */
-function rectHits(a, region) {
-  return a.right > region.x && a.bottom > region.y && a.left < region.x + region.width && a.top < region.y + region.height
-}
-
-/**
- * 잘라 찍을 사각형(화면 좌표)에 걸친 닫힌 shadow root 수 — host의 상자(DOM.getBoxModel)로 본다. 그려지지 않은 host(상자 없음)는 보이지
- * 않으니 세지 않고, 그 밖에 상자를 읽지 못하면 볼 수 없으니 센다.
- */
-async function closedRootsIn(ctx, root, region) {
-  let n = 0
-  for (const host of closedShadowHosts(root)) {
-    let model = null
-    try {
-      model = (await cdp(ctx, 'DOM.getBoxModel', { backendNodeId: host.backendNodeId })).model
-    } catch (err) {
-      if (!/box model/i.test(err && err.message ? err.message : String(err))) n += 1
-      continue
-    }
-    const q = model && model.border
-    if (!Array.isArray(q) || q.length < 8) {
-      n += 1
-      continue
-    }
-    const xs = [q[0], q[2], q[4], q[6]]
-    const ys = [q[1], q[3], q[5], q[7]]
-    if (rectHits({ left: Math.min(...xs), top: Math.min(...ys), right: Math.max(...xs), bottom: Math.max(...ys) }, region)) n += 1
-  }
-  return n
 }
 
 // ── 픽셀 검사 ────────────────────────────────────────────────────────────
@@ -1101,6 +1125,9 @@ async function captureSteps(url, opts, ctx) {
     if (plan.problem) throw clipError(plan)
     if (plan.scrollY !== state.scrollY) {
       await evalIn(ctx, `(window.scrollTo({ top: ${Number(plan.scrollY)}, left: 0, behavior: 'instant' }), true)`)
+      // 스크롤로 드러나는 것(IntersectionObserver · 늦게 읽는 그림)이 반응할 틈 — 스크롤한 때부터 적어도 QUIET_MS를 기다린다. 요청이 없으면
+      // waitQuiet가 바로 돌아와 검사 뒤 · 찍기 전에 그림이 나타날 수 있었다.
+      ctx.lastNetworkAt = Date.now()
       const again = await evalIn(ctx, pageCall(pageDecode), remaining())
       if (again.failed > 0) ctx.warnings.add(`images-failed-clip:${again.failed}`)
       if (!(await waitQuiet(ctx))) ctx.warnings.add('network-busy-clip')
@@ -1117,18 +1144,24 @@ async function captureSteps(url, opts, ctx) {
     mark('clipMs')
   }
 
-  // 보이는 그림 검사: 바깥 호스트 · 공공누리 그림이 있으면 버린다(잘라 찍기면 그 사각형에 걸친 것만)
+  // 보이는 그림 검사: 바깥 호스트 · 공공누리 그림이 있으면 버린다(잘라 찍기면 그 사각형에 걸친 것만). 찍기 전과 찍은 뒤 두 번 — 그사이에
+  // 나타난 그림(드러내기 · 늦게 붙은 요소)이 있으면 찍은 그림도 버린다.
   const where = clipView ? '잘라 찍을 부분' : '첫 화면'
-  const seen = await evalIn(ctx, pageCall(pageInspect, ctx.host, opts.map ? opts.map.selector : null, MAP_IMAGE_HOST_SUFFIXES, clipView))
-  if (seen.kogl > 0) throw captureError('kogl-image', `공공누리 표시가 붙은 그림이 ${where}에 있습니다(${seen.kogl}개).`, { inspect: seen })
-  if (seen.foreign.length > 0) {
-    throw captureError('foreign-image', `자사 호스트가 아닌 그림이 ${where}에 있습니다(${seen.foreign.join(', ')}).`, { inspect: seen })
+  const inspect = async (after) => {
+    const seen = await evalIn(ctx, pageCall(pageInspect, ctx.host, opts.map ? opts.map.selector : null, MAP_IMAGE_HOST_SUFFIXES, clipView))
+    const when = after ? '찍는 사이에 ' : ''
+    if (seen.kogl > 0) throw captureError('kogl-image', `${when}공공누리 표시가 붙은 그림이 ${where}에 있습니다(${seen.kogl}개).`, { inspect: seen })
+    if (seen.foreign.length > 0) {
+      throw captureError('foreign-image', `${when}자사 호스트가 아닌 그림이 ${where}에 있습니다(${seen.foreign.join(', ')}).`, { inspect: seen })
+    }
+    if (seen.frames.length > 0) throw captureError('foreign-image', `${when}${where}에 iframe이 있습니다(${seen.frames.join(', ')}).`, { inspect: seen })
+    // 닫힌 shadow root 안은 위 검사가 볼 수 없다 — 하나라도 있으면 바깥 · 공공누리 그림이 없다고 말할 수 없으므로 버린다(잘라 찍기도 모두 센다).
+    const tree = await cdp(ctx, 'DOM.getDocument', { depth: -1, pierce: true })
+    const closedRoots = countClosedShadowRoots(tree && tree.root)
+    if (closedRoots > 0) throw captureError('closed-shadow', `${when}그림을 검사할 수 없는 닫힌 shadow root가 ${closedRoots}개 있습니다.`, { inspect: seen })
+    return seen
   }
-  if (seen.frames.length > 0) throw captureError('foreign-image', `${where}에 iframe이 있습니다(${seen.frames.join(', ')}).`, { inspect: seen })
-  // 닫힌 shadow root 안은 위 검사가 볼 수 없다 — 하나라도 있으면(잘라 찍기면 사각형에 걸친 것) 바깥 · 공공누리 그림이 없다고 말할 수 없으므로 버린다.
-  const tree = await cdp(ctx, 'DOM.getDocument', { depth: -1, pierce: true })
-  const closedRoots = clipView ? await closedRootsIn(ctx, tree && tree.root, clipView) : countClosedShadowRoots(tree && tree.root)
-  if (closedRoots > 0) throw captureError('closed-shadow', `그림을 검사할 수 없는 닫힌 shadow root가 ${closedRoots}개 있습니다.`, { inspect: seen })
+  const seen = await inspect(false)
   mark('inspectMs')
 
   const shot = await cdp(
@@ -1144,6 +1177,8 @@ async function captureSteps(url, opts, ctx) {
     SHOT_TIMEOUT_MS,
   )
   mark('shotMs')
+  await inspect(true)
+  mark('reinspectMs')
   checkAlive(ctx)
   const png = Buffer.from(shot.data, 'base64')
   const image = nativeImage.createFromBuffer(png)
@@ -1379,7 +1414,6 @@ module.exports = {
   clipPlan,
   requestBlockReason,
   countClosedShadowRoots,
-  closedShadowHosts,
   VIEW_WIDTH,
   VIEW_HEIGHT,
   DEFAULT_TIMEOUT_MS,

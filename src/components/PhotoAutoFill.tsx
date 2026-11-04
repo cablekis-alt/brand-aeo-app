@@ -814,7 +814,10 @@ function screenWhy(row: AutoSlotRow): string {
 
 /** 자사 화면의 변형을 고른 까닭 — 장소 안내는 자리 글자 · 소제목의 장소, 가이드는 그 이름, 코스 · 지도는 조건 · 권역. */
 function screenByText(row: AutoSlotRow, sp: AutoScreenPick): string {
-  if (sp.by === 'place') return `자리 글자의 장소 — ${sp.variantLabel}${row.review && !row.factGaps?.length ? '(자리 글자에 장소가 둘 이상 — 맞는지 확인)' : ''}`
+  if (sp.by === 'place') {
+    const many = row.screenPlaces?.length ? `(자리 글자에 장소가 둘 이상 — ${row.screenPlaces.join(' · ')} — 한 곳만 찍혀요, 맞는지 확인)` : ''
+    return `자리 글자의 장소 — ${sp.variantLabel}${many}`
+  }
   if (sp.by === 'heading') return `소제목의 장소 — ${sp.variantLabel}(맞는지 확인)`
   if (sp.kind === 'guide') return sp.variantLabel
   return sp.by === 'region'
