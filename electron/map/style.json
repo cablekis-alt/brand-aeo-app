@@ -1,0 +1,2031 @@
+{
+ "version": 8,
+ "name": "gunsan-light",
+ "sources": {
+  "protomaps": {
+   "type": "vector",
+   "url": "pmtiles://osmmap://app/gunsan.pmtiles",
+   "attribution": "© OpenStreetMap contributors"
+  }
+ },
+ "layers": [
+  {
+   "id": "background",
+   "type": "background",
+   "paint": {
+    "background-color": "#f5f3ee"
+   }
+  },
+  {
+   "id": "earth",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "earth",
+   "filter": [
+    "==",
+    [
+     "geometry-type"
+    ],
+    "Polygon"
+   ],
+   "paint": {
+    "fill-color": "#f5f3ee"
+   }
+  },
+  {
+   "id": "landcover",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landcover",
+   "paint": {
+    "fill-color": [
+     "match",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "forest"
+     ],
+     "#d2e4c5",
+     [
+      "grassland",
+      "scrub"
+     ],
+     "#dcebd2",
+     [
+      "farmland"
+     ],
+     "#f0f0e1",
+     [
+      "barren"
+     ],
+     "#e7e3dc",
+     [
+      "glacier"
+     ],
+     "#ffffff",
+     "#f5f3ee"
+    ],
+    "fill-opacity": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     5,
+     1,
+     8,
+     0
+    ]
+   }
+  },
+  {
+   "id": "landuse-farm",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "farmland",
+       "orchard",
+       "vineyard",
+       "plant_nursery"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#f0f0e1",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-urban",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "commercial",
+       "industrial",
+       "railway",
+       "retail",
+       "dam"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#eeebe5",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-civic",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "school",
+       "college",
+       "university",
+       "kindergarten"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#f1ebe2",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-hospital",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "hospital"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#f3e6e4",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-green",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "park",
+       "nature_reserve",
+       "garden",
+       "village_green",
+       "recreation_ground",
+       "golf_course",
+       "grass",
+       "meadow",
+       "grassland",
+       "playground",
+       "allotments",
+       "pitch",
+       "protected_area",
+       "national_park",
+       "zoo",
+       "theme_park"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#dcebd2",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-wood",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "wood",
+       "forest",
+       "scrub"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#d2e4c5",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-wetland",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "wetland",
+       "marsh",
+       "swamp",
+       "mud"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#d9ebe3",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-cemetery",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "cemetery",
+       "grave_yard"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#e2e9da",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-sand",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "beach",
+       "sand"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#f3ebcc",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-rock",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "bare_rock",
+       "scree"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#e7e3dc",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "landuse-pedestrian",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "all",
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "pedestrian",
+       "pier",
+       "platform"
+      ]
+     ]
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "military",
+        "airfield",
+        "aerodrome",
+        "runway",
+        "taxiway",
+        "apron",
+        "helipad",
+        "naval_base",
+        "range",
+        "danger_area",
+        "barracks",
+        "bunker"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#ebe8e2",
+    "fill-antialias": true
+   }
+  },
+  {
+   "id": "water",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "water",
+   "filter": [
+    "all",
+    [
+     "==",
+     [
+      "geometry-type"
+     ],
+     "Polygon"
+    ],
+    [
+     "!",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "swimming_pool",
+        "fountain",
+        "reef"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#b5d6ec"
+   }
+  },
+  {
+   "id": "water-line",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "water",
+   "minzoom": 9,
+   "filter": [
+    "all",
+    [
+     "==",
+     [
+      "geometry-type"
+     ],
+     "LineString"
+    ],
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "river",
+       "canal",
+       "stream",
+       "drain",
+       "ditch"
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#b5d6ec",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     9,
+     [
+      "match",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "river",
+       "canal"
+      ],
+      0.6,
+      0
+     ],
+     12,
+     [
+      "match",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "river",
+       "canal"
+      ],
+      1.4,
+      0.4
+     ],
+     15,
+     [
+      "match",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "river",
+       "canal"
+      ],
+      3,
+      1.2
+     ],
+     18,
+     [
+      "match",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "river",
+       "canal"
+      ],
+      6,
+      2.5
+     ]
+    ]
+   }
+  },
+  {
+   "id": "boundaries-county",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "boundaries",
+   "minzoom": 9,
+   "filter": [
+    "in",
+    [
+     "get",
+     "kind"
+    ],
+    [
+     "literal",
+     [
+      "county"
+     ]
+    ]
+   ],
+   "paint": {
+    "line-color": "#c6bdd0",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     9,
+     0.6,
+     14,
+     1.2,
+     18,
+     1.8
+    ],
+    "line-dasharray": [
+     3,
+     2
+    ]
+   }
+  },
+  {
+   "id": "boundaries-region",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "boundaries",
+   "filter": [
+    "in",
+    [
+     "get",
+     "kind"
+    ],
+    [
+     "literal",
+     [
+      "region",
+      "country"
+     ]
+    ]
+   ],
+   "paint": {
+    "line-color": "#a79cb8",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     6,
+     0.8,
+     12,
+     1.4,
+     18,
+     2.4
+    ],
+    "line-dasharray": [
+     4,
+     2
+    ]
+   }
+  },
+  {
+   "id": "buildings",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "buildings",
+   "minzoom": 14,
+   "paint": {
+    "fill-color": "#e9e5dd",
+    "fill-outline-color": "#dcd6cb",
+    "fill-opacity": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     14,
+     0.55,
+     16,
+     0.95
+    ]
+   }
+  },
+  {
+   "id": "ferry",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 10,
+   "filter": [
+    "in",
+    [
+     "get",
+     "kind"
+    ],
+    [
+     "literal",
+     [
+      "ferry"
+     ]
+    ]
+   ],
+   "paint": {
+    "line-color": "#8fbcd9",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     10,
+     0.6,
+     14,
+     1.2,
+     18,
+     2
+    ],
+    "line-dasharray": [
+     3,
+     3
+    ]
+   }
+  },
+  {
+   "id": "path",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 14.5,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "path"
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#cbc3b4",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     14,
+     0.6,
+     16,
+     1.2,
+     18,
+     2
+    ],
+    "line-dasharray": [
+     2,
+     1.5
+    ]
+   }
+  },
+  {
+   "id": "rail",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 10,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "rail"
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#b9b4ac",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     10,
+     0.6,
+     14,
+     1.2,
+     18,
+     2.4
+    ],
+    "line-dasharray": [
+     4,
+     2
+    ]
+   }
+  },
+  {
+   "id": "service-casing",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 14,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "all",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "minor_road"
+       ]
+      ]
+     ],
+     [
+      "==",
+      [
+       "get",
+       "kind_detail"
+      ],
+      "service"
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#d9d3c7",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     13,
+     1.6,
+     14,
+     2.5,
+     16,
+     5,
+     18,
+     10
+    ]
+   }
+  },
+  {
+   "id": "minor-casing",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 12.5,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "all",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "minor_road",
+        "other"
+       ]
+      ]
+     ],
+     [
+      "!=",
+      [
+       "get",
+       "kind_detail"
+      ],
+      "service"
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#d9d3c7",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     12,
+     1.6,
+     13,
+     2,
+     14,
+     3.2,
+     16,
+     6.9,
+     18,
+     14
+    ]
+   }
+  },
+  {
+   "id": "service",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 14,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "all",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "minor_road"
+       ]
+      ]
+     ],
+     [
+      "==",
+      [
+       "get",
+       "kind_detail"
+      ],
+      "service"
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#ffffff",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     13,
+     0.4,
+     14,
+     0.9,
+     16,
+     2.6,
+     18,
+     6
+    ]
+   }
+  },
+  {
+   "id": "minor",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 12.5,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "all",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "minor_road",
+        "other"
+       ]
+      ]
+     ],
+     [
+      "!=",
+      [
+       "get",
+       "kind_detail"
+      ],
+      "service"
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#ffffff",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     12,
+     0.4,
+     13,
+     0.8,
+     14,
+     1.6,
+     16,
+     4.5,
+     18,
+     10
+    ]
+   }
+  },
+  {
+   "id": "major-casing",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 10,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "all",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "major_road"
+       ]
+      ]
+     ],
+     [
+      "!",
+      [
+       "in",
+       [
+        "get",
+        "kind_detail"
+       ],
+       [
+        "literal",
+        [
+         "trunk",
+         "primary",
+         "trunk_link",
+         "primary_link"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#d5c4a3",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     10,
+     1.6,
+     12,
+     2.5999999999999996,
+     14,
+     4.800000000000001,
+     16,
+     9.9,
+     18,
+     19
+    ]
+   }
+  },
+  {
+   "id": "trunk-casing",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 8,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "all",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "major_road"
+       ]
+      ]
+     ],
+     [
+      "in",
+      [
+       "get",
+       "kind_detail"
+      ],
+      [
+       "literal",
+       [
+        "trunk",
+        "primary",
+        "trunk_link",
+        "primary_link"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#d5c4a3",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     8,
+     1.7,
+     10,
+     2.2,
+     12,
+     3.4000000000000004,
+     14,
+     6,
+     16,
+     11.4,
+     18,
+     22
+    ]
+   }
+  },
+  {
+   "id": "major",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 10,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "all",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "major_road"
+       ]
+      ]
+     ],
+     [
+      "!",
+      [
+       "in",
+       [
+        "get",
+        "kind_detail"
+       ],
+       [
+        "literal",
+        [
+         "trunk",
+         "primary",
+         "trunk_link",
+         "primary_link"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#ffffff",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     10,
+     0.6,
+     12,
+     1.4,
+     14,
+     3.2,
+     16,
+     7.5,
+     18,
+     15
+    ]
+   }
+  },
+  {
+   "id": "trunk",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 8,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "all",
+     [
+      "in",
+      [
+       "get",
+       "kind"
+      ],
+      [
+       "literal",
+       [
+        "major_road"
+       ]
+      ]
+     ],
+     [
+      "in",
+      [
+       "get",
+       "kind_detail"
+      ],
+      [
+       "literal",
+       [
+        "trunk",
+        "primary",
+        "trunk_link",
+        "primary_link"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#fff1cf",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     8,
+     0.7,
+     10,
+     1.2,
+     12,
+     2.2,
+     14,
+     4.4,
+     16,
+     9,
+     18,
+     18
+    ]
+   }
+  },
+  {
+   "id": "highway-casing",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 7,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "highway"
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#d4a663",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     8,
+     2,
+     10,
+     2.6,
+     12,
+     4,
+     14,
+     7,
+     16,
+     12.8,
+     18,
+     24
+    ]
+   }
+  },
+  {
+   "id": "highway",
+   "type": "line",
+   "source": "protomaps",
+   "source-layer": "roads",
+   "minzoom": 7,
+   "filter": [
+    "all",
+    [
+     "all",
+     [
+      "!=",
+      [
+       "get",
+       "kind"
+      ],
+      "aeroway"
+     ],
+     [
+      "!",
+      [
+       "boolean",
+       [
+        "get",
+        "is_tunnel"
+       ],
+       false
+      ]
+     ]
+    ],
+    [
+     "in",
+     [
+      "get",
+      "kind"
+     ],
+     [
+      "literal",
+      [
+       "highway"
+      ]
+     ]
+    ]
+   ],
+   "layout": {
+    "line-cap": "round",
+    "line-join": "round"
+   },
+   "paint": {
+    "line-color": "#fbdca8",
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.6
+     ],
+     [
+      "zoom"
+     ],
+     8,
+     1,
+     10,
+     1.6,
+     12,
+     2.6,
+     14,
+     5,
+     16,
+     10,
+     18,
+     20
+    ]
+   }
+  },
+  {
+   "id": "mask-military",
+   "type": "fill",
+   "source": "protomaps",
+   "source-layer": "landuse",
+   "filter": [
+    "in",
+    [
+     "get",
+     "kind"
+    ],
+    [
+     "literal",
+     [
+      "military",
+      "airfield",
+      "aerodrome",
+      "runway",
+      "taxiway",
+      "apron",
+      "helipad",
+      "naval_base",
+      "range",
+      "danger_area",
+      "barracks",
+      "bunker"
+     ]
+    ]
+   ],
+   "paint": {
+    "fill-color": "#f5f3ee",
+    "fill-antialias": false
+   }
+  }
+ ]
+}

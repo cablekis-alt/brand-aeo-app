@@ -5,7 +5,7 @@
 // 이 모듈은 디스크에 아무것도 쓰지 않는다. 세션도 메모리 전용 partition이다.
 //
 // 지키는 것
-//   - 한 번에 한 장(줄 세우기). 한 장마다 창을 새로 만들고 끝나면 destroy. 앱 종료 때 disposeCapture().
+//   - 한 번에 한 장(줄 세우기 — 지도 그리기 mapRender.cjs도 같은 줄에 선다). 한 장마다 창을 새로 만들고 끝나면 destroy. 앱 종료 때 disposeCapture().
 //   - 크기 1280×800 · 배율 1 고정(CDP Emulation) — Windows 125/150% 배율과 상관없이 같은 그림.
 //   - capturePage()+toPNG()는 쓰지 않는다(메인에서 동기 인코딩 → 큰 그림이면 앱 창이 멈춘다). CDP
 //     Page.captureScreenshot은 렌더러가 인코딩한다.
@@ -1306,10 +1306,18 @@ async function runJob(rawUrl, options) {
  *   foreign-image · closed-shadow · bad-size · blank · map-blank · renderer-gone · aborted · eval-timeout · cdp-timeout.
  */
 function captureScreen(url, options) {
+  return runQueued(() => runJob(url, options))
+}
+
+/**
+ * 메인의 숨긴 창 일을 한 줄에 세운다(한 번에 하나, 들어온 순서대로) — 화면 찍기와 지도 그리기(mapRender.cjs)가 함께 쓴다.
+ * 종료 뒤면 'disposed', 대기열이 가득 차면(MAX_QUEUE) 'busy'로 거부한다.
+ */
+function runQueued(run) {
   if (disposed) return Promise.reject(captureError('disposed', '앱이 종료 중입니다.'))
   if (queued >= MAX_QUEUE) return Promise.reject(captureError('busy', '캡처 대기열이 가득 찼습니다.'))
   queued += 1
-  const job = queueTail.then(() => runJob(url, options))
+  const job = queueTail.then(() => run())
   // 사슬은 순서만 지킨다 — 성공 · 실패는 job을 받은 호출자가 처리한다.
   const release = () => {
     queued -= 1
@@ -1339,8 +1347,10 @@ function captureStatus() {
 //   요청 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, clip?, ownHostOnly?, timeoutMs? } }
 //   답   { type: 'screen-capture-result', id, ok: true, png(base64), width, height, url, finalUrl, waitedMs, warnings, text? }
 //        { type: 'screen-capture-result', id, ok: false, code, message }
+// 지도 그리기 요청 { type: 'map-render', id, spec }은 mapRender.cjs handleMapRequest로 넘기고 'map-render-result'로 답한다(같은 줄에 선다).
 const REQUEST_TYPE = 'screen-capture'
 const RESULT_TYPE = 'screen-capture-result'
+const MAP_REQUEST_TYPE = 'map-render'
 const REQUEST_ID = /^[\w-]{1,64}$/
 const REQUEST_OPTION_KEYS = new Set(['host', 'map', 'scrollTo', 'hide', 'activateFragmentLink', 'clip', 'ownHostOnly', 'timeoutMs'])
 
@@ -1382,18 +1392,23 @@ async function handleCaptureRequest(msg) {
 }
 
 /**
- * 서버 utilityProcess(child)의 찍기 요청을 받아 답을 돌려보내도록 건다(main.cjs startServerProcess). 다른 type의 메시지는 지나친다.
- * isCurrent()가 false면(그사이 서버가 끝났거나 바뀜) 답하지 않는다.
+ * 서버 utilityProcess(child)의 찍기 · 지도 그리기 요청을 받아 답을 돌려보내도록 건다(main.cjs startServerProcess). 다른 type의 메시지는
+ * 지나친다. isCurrent()가 false면(그사이 서버가 끝났거나 바뀜) 답하지 않는다.
  */
 function relayCaptureRequests(child, isCurrent) {
   child.on('message', (msg) => {
-    if (!msg || typeof msg !== 'object' || msg.type !== REQUEST_TYPE) return
-    void handleCaptureRequest(msg).then((reply) => {
+    if (!msg || typeof msg !== 'object') return
+    let handled
+    if (msg.type === REQUEST_TYPE) handled = handleCaptureRequest(msg)
+    else if (msg.type === MAP_REQUEST_TYPE) handled = require('./mapRender.cjs').handleMapRequest(msg)
+    else return
+    void handled.then((reply) => {
       if (!reply || !isCurrent()) return
       try {
         child.postMessage(reply)
       } catch (err) {
-        console.warn(`[capture] 서버에 찍은 결과를 보내지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+        const what = msg.type === MAP_REQUEST_TYPE ? '그린 지도' : '찍은 결과'
+        console.warn(`[capture] 서버에 ${what}를 보내지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
       }
     })
   })
@@ -1401,6 +1416,7 @@ function relayCaptureRequests(child, isCurrent) {
 
 module.exports = {
   captureScreen,
+  runQueued,
   disposeCapture,
   captureStatus,
   handleCaptureRequest,

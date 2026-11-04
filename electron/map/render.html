@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src osmmap://app; worker-src osmmap://app blob:; connect-src osmmap://app; style-src osmmap://app 'unsafe-inline'; img-src data: blob:; font-src 'none'">
+<title>gunsan map render</title>
+<link rel="stylesheet" href="./maplibre-gl.css">
+<style>
+  html, body { margin: 0; padding: 0; width: 1280px; height: 800px; overflow: hidden; background: #f5f3ee; }
+  #map { position: absolute; inset: 0; width: 1280px; height: 800px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script src="./pmtiles.js"></script>
+<script type="module" src="./render.js"></script>
+</body>
+</html>

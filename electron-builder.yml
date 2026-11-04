@@ -12,6 +12,7 @@ files:
   - electron/**/*
   - dist/**/*
   - dist-electron/server.cjs
+  - dist-electron/map-vendor/**/* # 지도 그리기 라이브러리(maplibre-gl · pmtiles) — scripts/build-electron-server.mjs가 복사
   - src/data/**/* # 첫 실행 시드 소스(커밋된 스코어카드·분석·질문은행)
   - cohort-banks/**/* # 코호트 공통 질문지 기준본(server/cohortQuestionBank.ts readCohortBank)
   - package.json
@@ -24,6 +25,12 @@ asar: true
 extraResources:
   - from: electron/build/bundled.env
     to: bundled.env
+  # 군산 지도 데이터(OpenStreetMap, ODbL) — electron/mapRender.cjs가 resources/map/gunsan.pmtiles를 Range로 읽는다(asar 밖에 둔다).
+  # patch:asar로는 바뀌지 않는다 — 지도 데이터를 바꾸려면 설치본을 새로 낸다. 알림 파일은 ODbL 알림 + 라이브러리 라이선스 글.
+  - from: map-data/gunsan-20261103.pmtiles
+    to: map/gunsan.pmtiles
+  - from: map-data/NOTICE-OSM.txt
+    to: map/NOTICE-OSM.txt
 
 # 빌드 후 NSIS 설치본(.exe)을 ZIP으로 감싼 "설치본 ZIP"을 자동 생성한다(.exe 다운로드 차단 우회용).
 afterAllArtifactBuild: electron/after-all-artifact-build.cjs

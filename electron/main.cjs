@@ -15,6 +15,11 @@ const { spawn, execFileSync } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 const net = require('node:net')
+const { registerMapScheme, disposeMapRender } = require('./mapRender.cjs')
+
+// 지도 그리기(electron/mapRender.cjs)의 osmmap:// 스킴은 app ready 전에 특권 스킴으로 등록해야 한다(capture.cjs는 ready 뒤에 읽혀 늦다).
+// 처리기는 지도 전용 partition에만 걸리므로 본 창(기본 세션)은 osmmap://을 열 수 없다.
+registerMapScheme()
 
 const IS_WINDOWS = process.platform === 'win32'
 const API_PORT = process.env.PORT || '4000'
@@ -107,6 +112,7 @@ function startServerProcess(env) {
 // 메인이 숨긴 창으로 찍어 { type: 'screen-capture-result', id, ok, png(base64) … }로 답하고, 저장은 서버가 한다(메인은 파일을 쓰지
 // 않는다). 주소 · 호스트 · 사설 주소 검사와 한 번에 한 장 줄 세우기는 capture.cjs가 한다(relayCaptureRequests — 그사이 서버가 끝났으면
 // 답하지 않는다). 모듈은 번들 서버를 띄울 때(패키징) 읽는다 — dev의 tsx 서버는 자식 프로세스라 parentPort가 없어 요청을 보내지 않는다.
+// 지도 그리기 { type: 'map-render', id, spec }도 같은 다리로 오고, electron/mapRender.cjs가 같은 줄에서 그려 'map-render-result'로 답한다.
 let captureModule = null
 
 function captureApi() {
@@ -114,9 +120,10 @@ function captureApi() {
   return captureModule
 }
 
-/** 찍던 창을 부수고 기다리던 찍기를 끝낸다(앱 종료). 한 번도 읽지 않았으면 할 일이 없다. */
+/** 찍던 창 · 지도 그리던 창을 부수고 기다리던 일을 끝낸다(앱 종료). 찍기 모듈을 한 번도 읽지 않았으면 그쪽은 할 일이 없다. */
 function disposeCaptureWindows() {
   if (captureModule) captureModule.disposeCapture()
+  disposeMapRender()
 }
 
 /**

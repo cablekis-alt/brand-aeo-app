@@ -1,0 +1,2 @@
+# 지도 데이터(PMTiles)는 바이트 그대로 둔다 — 줄 끝 바꾸기 · diff를 하지 않는다(electron/mapRender.cjs가 Range로 읽는다).
+*.pmtiles binary
