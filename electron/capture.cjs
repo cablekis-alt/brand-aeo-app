@@ -1009,10 +1009,76 @@ function captureStatus() {
   return { busy: Boolean(activeCtx), queued, disposed }
 }
 
+// ── 서버(utilityProcess)와 주고받는 메시지 ──────────────────────────────────
+// 서버(server/screens.ts)가 process.parentPort로 찍기를 청하면 main.cjs가 여기로 넘기고, 돌려준 답을 서버로 보낸다.
+//   요청 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, timeoutMs? } }
+//   답   { type: 'screen-capture-result', id, ok: true, png(base64), width, height, url, finalUrl, waitedMs, warnings }
+//        { type: 'screen-capture-result', id, ok: false, code, message }
+const REQUEST_TYPE = 'screen-capture'
+const RESULT_TYPE = 'screen-capture-result'
+const REQUEST_ID = /^[\w-]{1,64}$/
+const REQUEST_OPTION_KEYS = new Set(['host', 'map', 'scrollTo', 'hide', 'activateFragmentLink', 'timeoutMs'])
+
+/**
+ * 서버가 보낸 찍기 요청 하나를 처리하고 서버로 보낼 답을 돌려준다. 거부하지 않는다 — 실패도 답(ok false)이다. 요청 모양이 아니거나 id가
+ * 맞지 않으면 null(답할 곳이 없다). 주소 검사(https · 기본 포트 · 호스트 = options.host · 사설 · 루프백 주소 아님)와 선택자 검사는
+ * captureScreen이 하고, 여기서는 모양과 옵션 이름만 본다. 줄 세우기(한 번에 한 장)도 captureScreen이 한다.
+ */
+async function handleCaptureRequest(msg) {
+  if (!msg || typeof msg !== 'object' || msg.type !== REQUEST_TYPE) return null
+  const id = typeof msg.id === 'string' && REQUEST_ID.test(msg.id) ? msg.id : null
+  if (!id) return null
+  try {
+    const options = msg.options
+    if (typeof msg.url !== 'string' || !msg.url || msg.url.length > 2048) throw captureError('invalid-url', '주소가 없거나 너무 깁니다.')
+    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some((k) => !REQUEST_OPTION_KEYS.has(k))) {
+      throw captureError('invalid-options', '찍기 옵션이 올바르지 않습니다.')
+    }
+    const shot = await captureScreen(msg.url, options)
+    return {
+      type: RESULT_TYPE,
+      id,
+      ok: true,
+      png: shot.png.toString('base64'),
+      width: shot.width,
+      height: shot.height,
+      url: shot.url,
+      finalUrl: shot.finalUrl,
+      waitedMs: shot.waitedMs,
+      warnings: shot.warnings,
+    }
+  } catch (err) {
+    const code = err && typeof err.code === 'string' ? err.code : 'failed'
+    const message = err instanceof Error ? err.message : String(err)
+    console.warn(`[capture] 찍기 실패(${code}): ${typeof msg.url === 'string' ? msg.url.slice(0, 200) : ''} — ${message}`)
+    return { type: RESULT_TYPE, id, ok: false, code, message: message.slice(0, 300) }
+  }
+}
+
+/**
+ * 서버 utilityProcess(child)의 찍기 요청을 받아 답을 돌려보내도록 건다(main.cjs startServerProcess). 다른 type의 메시지는 지나친다.
+ * isCurrent()가 false면(그사이 서버가 끝났거나 바뀜) 답하지 않는다.
+ */
+function relayCaptureRequests(child, isCurrent) {
+  child.on('message', (msg) => {
+    if (!msg || typeof msg !== 'object' || msg.type !== REQUEST_TYPE) return
+    void handleCaptureRequest(msg).then((reply) => {
+      if (!reply || !isCurrent()) return
+      try {
+        child.postMessage(reply)
+      } catch (err) {
+        console.warn(`[capture] 서버에 찍은 결과를 보내지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+      }
+    })
+  })
+}
+
 module.exports = {
   captureScreen,
   disposeCapture,
   captureStatus,
+  handleCaptureRequest,
+  relayCaptureRequests,
   assertCaptureUrl,
   isPrivateAddress,
   blankCheck,

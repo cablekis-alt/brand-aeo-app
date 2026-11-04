@@ -72,6 +72,27 @@ import {
   type PublicPhotoFields,
 } from '../src/lib/articlePhotos.js';
 import { AUTO_PICK_RULES, autoCandidateSkip, placeKey } from '../src/lib/photoAutoPick.js';
+import {
+  findScreenVariant,
+  isScreenShotId,
+  photoRepeatKey,
+  screenAlt,
+  screenAppSrc,
+  screenProfileFor,
+  screenSaveAllowed,
+  screenUrl,
+  type ScreenShot,
+} from '../src/lib/screenCapture.js';
+import {
+  captureErrorStatus,
+  captureScreenShot,
+  readScreenFile,
+  readScreenShots,
+  ScreenCaptureError,
+  screenCaptureAvailable,
+  screenFileForPick,
+  screenShotView,
+} from './screens.js';
 import { findRegionTourPhotos, findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
 import { describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
@@ -201,6 +222,9 @@ app.get('/api/health', (_req, res) => {
     tourApi: tourApiConfigured(),
     // 사진 장면(비전 모델)을 읽을 수 있는가 — 이 PC에 Claude 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 장면 없이 고른다.
     photoScenes: photoScenesConfigured(),
+    // 자사 화면을 찍을 수 있는가 — 설치한 데스크톱 앱(서버가 utilityProcess)에서만 true(server/screens.ts). 웹 · dev에는 없거나 false라
+    // 화면이 「화면 찍기」를 숨긴다. 찍어 둔 화면은 그래도 쓴다.
+    screens: screenCaptureAvailable(),
   });
 });
 
@@ -859,6 +883,9 @@ app.put('/api/content-draft/:tenantId/evidence', async (req, res) => {
 // 유형 · 출처 · 이용 허락 주소가 맞지 않으면 400(publicPhotoFields). 공공 사진 호스트의 사진을 출처 없이 고르면 400(브랜드 자사 사이트
 // 주소의 사진은 홈페이지 사진 — origin site로 저장). op credit은 이미 고른
 // 출처 없는 공공 사진에 출처를 붙인다(「출처 붙이기」 — 자리 · 주소가 같은 사진만, 확인 시각 · 자동 표시는 그대로).
+// 자사 화면(origin screen — { slot, nth, same, heading, origin: 'screen', screenId, variantId, shotId })은 이 PC에 찍어 둔 화면 목록에서
+// 서버가 찾아 저장한다(앱 주소 · 찍은 주소 · 찍은 때 · 화면 이름 대체 텍스트). 지도 화면은 넣지 않는다(SCREEN_AUTO_SAVE_KINDS). 자동
+// 채우기의 같은 화면 상한은 「화면 + 변형」 단위로 글 하나에 한 번 · 작성자에게 한 번, 브랜드 상한은 받지 않는다(saveAutoPhotoPicks).
 app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -883,17 +910,46 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   // 확인했다는 표시(origin site)를 달아 저장한다(photoCreditState가 「출처 없음」으로 보지 않게). 화면이 보낸 origin site는 믿지 않는다.
   const owned = tenant.ownedDomains ?? [];
   const ownSite = (src: string): { origin?: 'site' } => (needsPhotoCredit(src) && !needsPhotoCredit(src, owned) ? { origin: 'site' } : {});
+  // 자사 화면(origin screen — src/lib/screenCapture.ts · server/screens.ts) — 화면이 보낸 src · pageUrl · alt는 쓰지 않는다. 화면 id · 변형 id ·
+  // 찍은 화면 id(shotId)로 이 PC의 screens.json에서 찾아 서버가 앱 주소 · 찍은 주소 · 찍은 때 · 대체 텍스트(화면 이름만)를 단다. 지금 글에
+  // 넣지 않는 종류(SCREEN_AUTO_SAVE_KINDS 밖 — 카카오 지도)는 saveAllowed false — 넣기는 400, 자동 채우기는 빼고 센다. 목록은 넣기 ·
+  // 자동 채우기 앞에서 읽는다(screenShots).
+  const screenProfile = screenProfileFor(owned);
+  let screenShots: ScreenShot[] = [];
+  const SCREEN_NOT_SAVED = '지도 화면은 카카오 지도 이용 조건을 확인하기 전까지 글에 넣지 않아요 — 미리보기로만 봐 주세요.';
+  const screenPickOf = (raw: Record<string, unknown>) => {
+    const target = screenProfile ? findScreenVariant(screenProfile, raw.screenId, raw.variantId) : null;
+    const shot = target && isScreenShotId(raw.shotId)
+      ? screenShots.find((s) => s.sha16 === raw.shotId && s.screenId === target.screen.id && s.variantId === target.variant.id)
+      : undefined;
+    if (!target || !shot) return null;
+    return {
+      src: screenAppSrc(tenant.tenantId, shot.sha16),
+      pageUrl: shot.url,
+      alt: cleanPhotoAlt(screenAlt(tenant.brandName, target.screen)),
+      screen: {
+        fields: { origin: 'screen' as const, screenId: shot.screenId, variantId: shot.variantId, capturedAt: shot.capturedAt },
+        saveAllowed: screenSaveAllowed(target.screen.kind),
+      },
+    };
+  };
   // 고른 사진 하나 — 자리 · https 사진 주소 · 페이지 주소가 맞지 않으면 null. 설명은 사실 가드를 거친다(걸리면 '' — siteAlt로 알린다).
+  // 자사 화면이면 screenPickOf로 찾고(못 찾으면 null), screen에 저장할 표시를 싣는다.
   const pickOf = (v: unknown) => {
     const raw = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
     const place = placeOf(raw);
     const same = count(raw.same);
+    if (!place || !same || same < place.nth) return null;
+    if (raw.origin === 'screen') {
+      const found = screenPickOf(raw);
+      return found ? { place, same, siteAlt: '', pub: null, ...found } : null;
+    }
     const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
     const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
-    if (!place || !same || same < place.nth || !src || !pageUrl) return null;
+    if (!src || !pageUrl) return null;
     const siteAlt = cleanPhotoAlt(typeof raw.alt === 'string' ? raw.alt : '');
     const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
-    return { place, same, src, pageUrl, siteAlt, alt, pub: publicOf(raw) };
+    return { place, same, src, pageUrl, siteAlt, alt, pub: publicOf(raw), screen: null };
   };
   // 공공 사진 표시 — 홈페이지 사진이면 null, 맞지 않으면 이유(글자). 출처 글자도 사실 가드를 거친다(브랜드 사실에 없는 숫자).
   function publicOf(raw: Record<string, unknown>): PublicPhotoFields | string | null {
@@ -927,6 +983,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         return;
       }
       // 뺀 사진 주소도 적는다 — 「사람이 뺀 자리도 다시 채우기」가 그 사진을 다시 고르지 않게(앞서 뺀 사진에 더해, 오래된 것부터 버린다).
+      // 자사 화면은 「화면 + 변형」 열쇠(photoRepeatKey)를 적는다 — 다른 날 다시 찍은 같은 화면도 막게.
       res.json(
         await savePhotoPicks(
           tenant.tenantId,
@@ -935,7 +992,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
           (cur) => cur.filter((p) => !samePlace(p, place)),
           (cleared, before) => {
             const prev = cleared.find((c) => samePlace(c, place))?.removed ?? [];
-            const gone = before.filter((p) => samePlace(p, place)).map((p) => p.src);
+            const gone = before.filter((p) => samePlace(p, place)).map(photoRepeatKey);
             const removed = [...new Set([...prev.filter((s) => !gone.includes(s)), ...gone])].slice(-MAX_REMOVED_SRCS);
             return [...cleared.filter((c) => !samePlace(c, place)), { ...place, ...(removed.length ? { removed } : {}) }];
           },
@@ -954,6 +1011,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     }
     const publicAt = settings.photoRights.publicAt;
     const PUBLIC_NEEDED = '먼저 이 브랜드의 공공 사진(공공누리) 사용 확인을 해 주세요 — 글의 「홈페이지 사진」 칸에 있습니다.';
+    if (screenProfile && (op === 'pick' || op === 'auto')) screenShots = await readScreenShots(tenant.tenantId);
     if (op === 'credit') {
       const patch = creditOf(b);
       if (typeof patch === 'string') {
@@ -990,6 +1048,14 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       // 자동으로 넣을 사진 하나 — 맞지 않으면 null(rejected로 센다). 공공 사진인데 공공 사진 사용 확인이 없으면 needPublic.
       const autoPickOf = (raw: unknown): PhotoPick | null => {
         const p = pickOf(raw);
+        // 자사 화면 — 사진 후보 검사(일러스트 · 사람 · 출처)는 보지 않는다(자사 사이트 화면이고 대체 텍스트는 화면 이름뿐이다). 지도는 뺀다.
+        if (p?.screen) {
+          if (!p.screen.saveAllowed) {
+            rejected += 1;
+            return null;
+          }
+          return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.screen.fields };
+        }
         const pub = p?.pub && typeof p.pub === 'object' ? p.pub : null;
         if (pub && !publicAt) {
           needPublic = true;
@@ -1087,7 +1153,16 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     }
     const p = pickOf(b.pick);
     if (!p) {
-      res.status(400).json({ error: '사진 자리(slot · nth · same · heading)와 https 사진 주소 · http(s) 페이지 주소가 필요합니다.' });
+      const screenAsked = Boolean(b.pick && typeof b.pick === 'object' && (b.pick as Record<string, unknown>).origin === 'screen');
+      res.status(400).json({
+        error: screenAsked
+          ? '화면 자리(slot · nth · same · heading)와 이 PC에 찍어 둔 자사 화면(screenId · variantId · shotId)이 필요합니다.'
+          : '사진 자리(slot · nth · same · heading)와 https 사진 주소 · http(s) 페이지 주소가 필요합니다.',
+      });
+      return;
+    }
+    if (p.screen && !p.screen.saveAllowed) {
+      res.status(400).json({ error: SCREEN_NOT_SAVED });
       return;
     }
     const { place, same, src, pageUrl, siteAlt, alt, pub } = p;
@@ -1108,7 +1183,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       return;
     }
     const replaces = placeOf(b.replaces);
-    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(pub ?? ownSite(src)) };
+    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(p.screen?.fields ?? pub ?? ownSite(src)) };
     const stored = await savePhotoPicks(
       tenant.tenantId,
       actionId,
@@ -1269,6 +1344,30 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
     });
     return;
   }
+  // 자사 화면 — 이 PC에 찍어 둔 파일을 그대로 보낸다(바깥에서 받지 않는다). 지금 글에 넣지 않는 종류(지도)면 409.
+  if (pick.origin === 'screen') {
+    try {
+      const png = await screenFileForPick(tenant.tenantId, tenant.ownedDomains, pick);
+      if (png === 'not-allowed') {
+        res.status(409).json({ error: '지도 화면은 카카오 지도 이용 조건을 확인하기 전까지 내보내지 않아요.' });
+        return;
+      }
+      if (png === 'gone') {
+        res.status(404).json({ error: '그 화면 파일이 이 PC에 없어요 — 화면을 다시 찍어 넣어 주세요.' });
+        return;
+      }
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', 'attachment; filename="photo.png"');
+      res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Cache-Control', 'no-store');
+      res.send(png);
+    } catch (err) {
+      console.warn(`[photo-file] ${tenant.tenantId} 화면 ${pick.src} 읽기 실패:`, err);
+      res.status(500).json({ error: '화면 파일을 읽지 못했어요.' });
+    }
+    return;
+  }
   try {
     const file = await fetchSitePhoto(pick.src);
     res.setHeader('Content-Type', file.type);
@@ -1280,6 +1379,99 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
   } catch (err) {
     console.warn(`[photo-file] ${tenant.tenantId} ${pick.src} 받기 실패:`, err);
     res.status(502).json({ error: publicCollectorError(err).message });
+  }
+});
+
+// 자사 화면 찍기(src/lib/screenCapture.ts · server/screens.ts) — { tenantId, screenId, variantId }. 찍을 주소는 브랜드 자사 사이트
+// (ownedDomains)의 화면 프로필에서만 만든다(화면이 주소를 보내지 않는다). 메인 프로세스가 숨긴 창으로 찍고 서버가 이 PC에 저장한다.
+// 오늘(KST) 같은 주소로 찍어 둔 것이 있으면 다시 찍지 않는다(reused). 설치한 데스크톱 앱에서만 찍는다 — 아니면 503(/api/health screens).
+// 지도도 찍고 미리보기는 하지만 글에 넣지는 않는다(saveAllowed). Express 전용(Vercel 함수 12/12).
+app.post('/api/screens/capture', async (req, res) => {
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const tenantId = typeof b.tenantId === 'string' ? b.tenantId : '';
+  if (!tenantId) {
+    res.status(400).json({ error: 'tenantId · screenId · variantId가 필요합니다.' });
+    return;
+  }
+  const tenant = await findTenant(tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${tenantId}` });
+    return;
+  }
+  const profile = screenProfileFor(tenant.ownedDomains);
+  if (!profile) {
+    res.status(404).json({ error: '이 브랜드에는 찍을 자사 화면이 없어요.' });
+    return;
+  }
+  const target = findScreenVariant(profile, b.screenId, b.variantId);
+  if (!target) {
+    res.status(400).json({ error: '화면(screenId) · 변형(variantId)이 이 브랜드의 화면 목록에 없어요.' });
+    return;
+  }
+  try {
+    const { shot, reused } = await captureScreenShot(tenant.tenantId, { profile, ...target });
+    res.json({ shot: screenShotView(tenant.tenantId, shot), reused, saveAllowed: screenSaveAllowed(target.screen.kind) });
+  } catch (err) {
+    if (err instanceof ScreenCaptureError) {
+      if (err.code !== 'unavailable') console.warn(`[screens] ${tenant.tenantId} ${target.screen.id}/${target.variant.id} 찍기 실패(${err.code}): ${err.message}`);
+      res.status(captureErrorStatus(err.code)).json({ error: err.message, code: err.code });
+      return;
+    }
+    console.warn(`[screens] ${tenant.tenantId} ${target.screen.id}/${target.variant.id} 저장 실패:`, err);
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 자사 화면 목록 — 이 브랜드의 화면 · 변형(프로필, 지금 글에 넣을 수 있는지 saveAllowed)과 이 PC에 찍어 둔 화면(늦게 찍은 것부터).
+// 프로필이 없는 브랜드는 screens가 비어 있다. available은 이 실행에서 찍을 수 있는지(/api/health screens와 같다).
+app.get('/api/screens/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const profile = screenProfileFor(tenant.ownedDomains);
+  const shots = (await readScreenShots(tenant.tenantId)).sort((a, b) => Date.parse(b.capturedAt) - Date.parse(a.capturedAt));
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    available: screenCaptureAvailable(),
+    host: profile?.host ?? null,
+    screens: profile
+      ? profile.screens.map((s) => ({
+          id: s.id,
+          kind: s.kind,
+          label: s.label,
+          saveAllowed: screenSaveAllowed(s.kind),
+          variants: s.variants.map((v) => ({ id: v.id, label: v.label, url: screenUrl(profile, v) })),
+        }))
+      : [],
+    shots: shots.map((s) => screenShotView(tenant.tenantId, s)),
+  });
+});
+
+// 자사 화면 파일 — /api/screens/<tenant>/<id>.png(글의 사진 기록에 적는 앱 주소). id는 PNG sha256 앞 16자(소문자 16진수)이고 그 브랜드의
+// 목록(screens.json)에 있는 것만 준다 — 다른 경로 글자는 받지 않는다. 내용으로 이름을 지었으므로 바뀌지 않는다(오래 캐시).
+app.get('/api/screens/:tenantId/:file', async (req, res) => {
+  const m = /^([0-9a-f]{16})\.png$/.exec(req.params.file);
+  const tenant = m ? await findTenant(req.params.tenantId) : undefined;
+  if (!m || !tenant) {
+    res.status(404).json({ error: '그 화면 파일이 없어요.' });
+    return;
+  }
+  try {
+    const png = await readScreenFile(tenant.tenantId, m[1]!);
+    if (!png) {
+      res.status(404).json({ error: '그 화면 파일이 없어요.' });
+      return;
+    }
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    res.send(png);
+  } catch (err) {
+    console.warn(`[screens] ${tenant.tenantId} 화면 파일 ${m[1]} 읽기 실패:`, err);
+    res.status(500).json({ error: '화면 파일을 읽지 못했어요.' });
   }
 });
 

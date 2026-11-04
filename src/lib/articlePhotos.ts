@@ -18,7 +18,7 @@ export interface PhotoPick {
   same: number
   /** 고를 때 그 자리 위 소제목(번호를 뗀 글자). */
   heading: string
-  /** 사진 주소 — https(canonicalPhotoSrc). */
+  /** 사진 주소 — https(canonicalPhotoSrc). 자사 화면(origin 'screen')이면 앱 주소 /api/screens/<tenant>/<id>.png(src/lib/screenCapture.ts screenAppSrc). */
   src: string
   /** 사진의 대체 텍스트 — 사이트가 단 장면 설명(서버가 사실 가드로 거른 것). 비면 사진 자리 글자를 쓴다. */
   alt: string
@@ -35,9 +35,16 @@ export interface PhotoPick {
    * 사진이 어디서 왔나 — 'public'은 출처 표시가 필요한 공공 사진(자사 사이트 장소 페이지의 공공누리 제1유형 사진). 없으면 홈페이지
    * 사진(옛 기록 포함). 공공 사진은 license · credit · creditUrl이 모두 있어야 넣는다(publicPhotoProblem). 'site'는 공공 사진 호스트의
    * 주소지만 브랜드 자사 사이트(ownedDomains)의 사진이라고 서버가 고를 때 확인한 홈페이지 사진(자사 사이트가 visitkorea.or.kr · go.kr인
-   * 브랜드) — 화면이 보낸 'site'는 믿지 않고 서버만 단다.
+   * 브랜드) — 화면이 보낸 'site'는 믿지 않고 서버만 단다. 'screen'은 운영자 PC에 찍어 둔 자사 사이트 화면(src/lib/screenCapture.ts) —
+   * 서버가 screens.json에서 찾아 src · pageUrl · alt · screenId · variantId · capturedAt을 단다(화면이 보낸 주소는 믿지 않는다).
    */
   origin?: PhotoOrigin
+  /** 자사 화면의 화면 id(src/lib/screenCapture.ts 프로필 표). origin 'screen'에만. */
+  screenId?: string
+  /** 자사 화면의 변형 id. origin 'screen'에만. */
+  variantId?: string
+  /** 자사 화면을 찍은 때(screens.json capturedAt). origin 'screen'에만. */
+  capturedAt?: string
   /** 공공 사진의 이용 허락 — 공공누리 제1유형만 받는다(PHOTO_LICENSES). */
   license?: PhotoLicense
   /** 공공 사진의 출처(저작권자) — 사이트 구조화 데이터의 creditText(예: 「한국관광공사」). */
@@ -51,7 +58,8 @@ export type PhotoPlace = Pick<PhotoPick, 'slot' | 'nth' | 'heading'>
 
 /**
  * 사람이 사진을 뺀 자리(StoredDraft.photoCleared) — 뺀 사진 주소(removed, 오래된 것부터)도 적는다. 「사람이 뺀 자리도 다시 채우기」가 그
- * 사진을 다시 고르지 않게. 옛 기록에는 removed가 없다(그때는 막을 사진을 모른다).
+ * 사진을 다시 고르지 않게. 옛 기록에는 removed가 없다(그때는 막을 사진을 모른다). 자사 화면은 주소 대신 「화면 + 변형」 열쇠
+ * (src/lib/screenCapture.ts photoRepeatKey — screen:<screenId>:<variantId>)를 적는다 — 다른 날 다시 찍은 같은 화면도 막게.
  */
 export interface ClearedPhotoPlace extends PhotoPlace {
   removed?: string[]
@@ -65,7 +73,7 @@ export function clearedMatches(c: PhotoPlace, place: PhotoPlace): boolean {
   return c.slot === place.slot && (c.heading === place.heading || c.nth === place.nth)
 }
 
-export type PhotoOrigin = 'site' | 'public'
+export type PhotoOrigin = 'site' | 'public' | 'screen'
 
 /**
  * 받는 공공 사진의 이용 허락 — 공공누리 제1유형(출처 표시 · 상업 이용 · 변경 가능)만. 제2유형(상업 이용 금지) · 제3유형(변경 금지) ·

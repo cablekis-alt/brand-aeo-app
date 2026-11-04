@@ -8,6 +8,7 @@ import {
   type PhotoPlace,
   type PublicPhotoFields,
 } from '../src/lib/articlePhotos.js';
+import { brandRepeatExempt, photoRepeatKey } from '../src/lib/screenCapture.js';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -640,6 +641,8 @@ export interface AutoPhotoSaveResult {
  * 사람이 뺀 사진 검사로 본다(걸리면 그 자동 사진은 그대로 — 그사이 같은 글의 다른 자리가 그 사진을 받았으면 뺀다). 뺀 자리는 사람이 뺀
  * 자리(photoCleared)로 적지 않는다 — 다음 자동 채우기가 다시 채운다(같은 사진은 읽어 둔 장면이 막는다 — 키가 없는 PC도 읽어 둔 장면을
  * 받는다). 사람이 고른 사진 · 뺀 기록은 건드리지 않는다.
+ * 「같은 사진」은 반복 열쇠(src/lib/screenCapture.ts photoRepeatKey)로 센다 — 사진은 주소, 자사 화면은 「화면 + 변형」(다른 날 다시 찍은
+ * 파일도 같은 화면). 자사 화면은 브랜드 상한(brandRepeat)을 받지 않고 글 하나에 한 번 · 같은 작성자에게 한 번만 지킨다(2026-11-04 결정 3).
  */
 export async function saveAutoPhotoPicks(
   tenantId: string,
@@ -652,18 +655,21 @@ export async function saveAutoPhotoPicks(
     const result: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [], replaced: 0, removed: 0, stale: [] };
     const brandCount = new Map<string, number>();
     const groupUsed = new Map<string, Map<string, number>>();
-    const count = (group: string | undefined, src: string, by: number) => {
-      brandCount.set(src, Math.max(0, (brandCount.get(src) ?? 0) + by));
+    const count = (group: string | undefined, p: PhotoPick, by: number) => {
+      const key = photoRepeatKey(p);
+      brandCount.set(key, Math.max(0, (brandCount.get(key) ?? 0) + by));
       if (group === undefined) return;
       const mine = groupUsed.get(group) ?? new Map<string, number>();
-      mine.set(src, Math.max(0, (mine.get(src) ?? 0) + by));
+      mine.set(key, Math.max(0, (mine.get(key) ?? 0) + by));
       groupUsed.set(group, mine);
     };
     for (const [id, d] of Object.entries(map)) {
       const group = groupOf(id);
-      for (const p of d.photos ?? []) count(group, p.src, 1);
+      for (const p of d.photos ?? []) count(group, p, 1);
     }
-    const groupHas = (group: string | undefined, src: string) => group !== undefined && (groupUsed.get(group)?.get(src) ?? 0) > 0;
+    const groupHas = (group: string | undefined, p: PhotoPick) => group !== undefined && (groupUsed.get(group)?.get(photoRepeatKey(p)) ?? 0) > 0;
+    const overBrand = (p: PhotoPick) => !brandRepeatExempt(p) && (brandCount.get(photoRepeatKey(p)) ?? 0) >= brandRepeat;
+    const sameKey = (a: PhotoPick, b: PhotoPick) => photoRepeatKey(a) === photoRepeatKey(b);
     for (const entry of entries) {
       const current = map[entry.actionId];
       if (!current) {
@@ -690,10 +696,10 @@ export async function saveAutoPhotoPicks(
           continue;
         }
         vacated.push({ at, old: slots[at]!, place: swap.place, ...(swap.pick ? { pick: swap.pick } : {}) });
-        count(group, slots[at]!.src, -1);
+        count(group, slots[at]!, -1);
         slots[at] = null;
       }
-      const taken = (src: string) => slots.some((p) => p?.src === src) || groupHas(group, src) || (brandCount.get(src) ?? 0) >= brandRepeat;
+      const taken = (pick: PhotoPick) => slots.some((p) => p !== null && sameKey(p, pick)) || groupHas(group, pick) || overBrand(pick);
       for (const { at, old, place, pick } of vacated) {
         if (!pick) {
           result.removed += 1;
@@ -701,44 +707,44 @@ export async function saveAutoPhotoPicks(
           continue;
         }
         const blocked =
-          pick.src === old.src ||
+          sameKey(pick, old) ||
           !samePhotoPlace(pick, place) ||
-          cleared.filter((c) => clearedMatches(c, place)).some((c) => (c.removed ?? []).includes(pick.src)) ||
-          taken(pick.src);
+          cleared.filter((c) => clearedMatches(c, place)).some((c) => (c.removed ?? []).includes(photoRepeatKey(pick))) ||
+          taken(pick);
         if (!blocked) {
           slots[at] = pick;
-          count(group, pick.src, 1);
+          count(group, pick, 1);
           result.replaced += 1;
           swapped += 1;
           continue;
         }
         result.skipped += 1;
         // 바꿀 사진이 걸리면 그 자동 사진은 그대로 — 그사이 같은 글의 다른 자리가 그 사진을 받아 되돌릴 수 없으면 뺀다.
-        if (taken(old.src)) {
+        if (taken(old)) {
           result.removed += 1;
           swapped += 1;
           continue;
         }
         slots[at] = old;
-        count(group, old.src, 1);
+        count(group, old, 1);
       }
       const photos = slots.filter((p): p is PhotoPick => p !== null);
       for (const pick of entry.picks) {
         const clearedHere = opts.refillCleared
-          ? cleared.filter((c) => clearedMatches(c, pick)).some((c) => (c.removed ?? []).includes(pick.src))
+          ? cleared.filter((c) => clearedMatches(c, pick)).some((c) => (c.removed ?? []).includes(photoRepeatKey(pick)))
           : cleared.some((c) => samePhotoPlace(c, pick));
         const taken =
-          photos.some((p) => samePhotoPlace(p, pick) || p.src === pick.src) ||
+          photos.some((p) => samePhotoPlace(p, pick) || sameKey(p, pick)) ||
           clearedHere ||
           photos.length >= PHOTO_LIMITS.picks ||
-          groupHas(group, pick.src) ||
-          (brandCount.get(pick.src) ?? 0) >= brandRepeat;
+          groupHas(group, pick) ||
+          overBrand(pick);
         if (taken) {
           result.skipped += 1;
           continue;
         }
         photos.push(pick);
-        count(group, pick.src, 1);
+        count(group, pick, 1);
         added += 1;
       }
       if (!added && !swapped && !fixed.credited) continue;

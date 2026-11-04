@@ -43,6 +43,7 @@ function spawnChild(command, args, label) {
 }
 
 function killChildren() {
+  disposeCaptureWindows()
   for (const child of children) {
     if (child.exitCode === null) {
       // 개발 모드는 shell:true로 띄운다(npx.cmd·npm.cmd). child.pid는 cmd 껍데기라
@@ -96,8 +97,26 @@ function startServerProcess(env) {
     serverProcess = null
     console.log(`[api] utilityProcess 종료 (code ${code})`)
   })
+  captureApi().relayCaptureRequests(child, () => serverProcess === child)
   serverProcess = child
   return child
+}
+
+// ── 자사 화면 캡처(electron/capture.cjs) ─────────────────────────────────
+// 서버(utilityProcess)는 창을 띄울 수 없어 { type: 'screen-capture', id, url, options }로 메인에 찍기를 청한다(server/screens.ts).
+// 메인이 숨긴 창으로 찍어 { type: 'screen-capture-result', id, ok, png(base64) … }로 답하고, 저장은 서버가 한다(메인은 파일을 쓰지
+// 않는다). 주소 · 호스트 · 사설 주소 검사와 한 번에 한 장 줄 세우기는 capture.cjs가 한다(relayCaptureRequests — 그사이 서버가 끝났으면
+// 답하지 않는다). 모듈은 번들 서버를 띄울 때(패키징) 읽는다 — dev의 tsx 서버는 자식 프로세스라 parentPort가 없어 요청을 보내지 않는다.
+let captureModule = null
+
+function captureApi() {
+  if (!captureModule) captureModule = require('./capture.cjs')
+  return captureModule
+}
+
+/** 찍던 창을 부수고 기다리던 찍기를 끝낸다(앱 종료). 한 번도 읽지 않았으면 할 일이 없다. */
+function disposeCaptureWindows() {
+  if (captureModule) captureModule.disposeCapture()
 }
 
 /**

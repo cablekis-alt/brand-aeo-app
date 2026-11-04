@@ -92,7 +92,7 @@ npx electron-builder --dir -c.directories.output=%TEMP%/eb-out
 |---|---|
 | `electron/main.cjs` | 메인 프로세스 — 창 생성, (dev) API·vite 자식 프로세스 / (패키징) 번들 서버 인프로세스 기동, 외부 링크 처리 |
 | `electron/preload.cjs` | 렌더러에 `window.electron`(플랫폼·버전) 최소 노출 (contextIsolation) |
-| `electron/capture.cjs` | 자사 화면 캡처(메인 전용) — 숨긴 오프스크린 창 + CDP로 1280×800 첫 화면 PNG를 돌려준다(저장은 서버). 한 번에 한 장, GET만 허용, 분석 요청 · 사설 주소 · 자사 밖 이동 차단, 공공누리 · 바깥 그림이 보이거나 빈 화면이면 실패 |
+| `electron/capture.cjs` | 자사 화면 캡처(메인 전용) — 숨긴 오프스크린 창 + CDP로 1280×800 첫 화면 PNG를 돌려준다(저장은 서버). 한 번에 한 장, GET만 허용, 분석 요청 · 사설 주소 · 자사 밖 이동 차단, 공공누리 · 바깥 그림이 보이거나 빈 화면이면 실패. 서버(utilityProcess, `server/screens.ts`)가 `process.parentPort`로 `{ type: 'screen-capture', id, url, options }`를 보내면 `main.cjs`가 건 `relayCaptureRequests`가 `handleCaptureRequest`로 찍어 `{ type: 'screen-capture-result', id, ok, png(base64) … }`로 답한다. 파일은 서버가 `<userData>/data/<tenantId>/screens/`에 쓴다 |
 | `scripts/build-electron-server.mjs` | `server/index.ts` → `dist-electron/server.cjs` 단일 CJS 번들(esbuild, node_modules는 external) |
 | `electron-builder.yml` | 패키징 설정(appId·타깃·asar·아이콘·파일 포함 규칙) |
 | `electron/build/icon.png` | 앱 아이콘 소스(512px). electron-builder가 각 크기·.ico로 변환 |

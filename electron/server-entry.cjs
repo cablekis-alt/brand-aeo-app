@@ -8,6 +8,10 @@
 // 메인에서 오는 메시지:
 //   { type: 'set-env', name, value } — 앱에서 API 키를 바꿨을 때. 프로세스가 분리되면서
 //   메인의 process.env 변경이 서버에 자동 전파되지 않으므로 명시적으로 받아 반영한다.
+//   { type: 'screen-capture-result', id, … } — 서버가 청한 자사 화면 찍기의 답. 여기서는 받지 않고 서버 모듈
+//   (server/screens.ts)이 같은 process.parentPort에 직접 귀를 기울인다(아래 set-env는 다른 type을 그대로 넘긴다).
+// 서버가 메인으로 보내는 메시지:
+//   { type: 'screen-capture', id, url, options } — 메인(electron/capture.cjs)이 숨긴 창으로 찍어 위 답으로 돌려준다.
 const path = require('node:path')
 
 const ALLOWED_ENV = new Set([
