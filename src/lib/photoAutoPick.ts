@@ -41,7 +41,15 @@ import {
   type PhotoSlot,
   type PublicPhotoFields,
 } from './articlePhotos.js'
-import { SCENE_TIME_TEXT, type PhotoScene, type SceneSetting, type SceneTime, type SceneWant } from './photoScenes.js'
+import {
+  REGION_SCENE_LIMITS,
+  REGION_SCENE_PLACE,
+  SCENE_TIME_TEXT,
+  type PhotoScene,
+  type SceneSetting,
+  type SceneTime,
+  type SceneWant,
+} from './photoScenes.js'
 import type { TourSource } from './tourPhotos.js'
 
 export { needsPhotoCredit }
@@ -113,6 +121,10 @@ export interface AutoCandidate {
   tour?: TourSource
   /** 촬영 연월(YYYYMM, 관광사진 정보) — 장면을 읽을 사진을 시기마다 고루 고른다(src/lib/photoScenes.ts scenesToRead). */
   month?: string
+  /** 관광사진 정보의 검색 낱말 — 장소 없는 자리에 견줄 지역 사진을 낱말로 먼저 고른다. */
+  keywords?: string
+  /** 관광공사 사진의 촬영지 · 주소(「전라북도 군산시」) — 미리보기에 보인다. */
+  location?: string
 }
 
 /** 공공 사진 후보의 저장 모양(출처 · 이용 허락) — 맞지 않으면 null. */
@@ -388,15 +400,17 @@ export interface SceneWants {
 
 /**
  * 장면을 보고 뺀 이유 — kind 화면 · 그림, setting 장면 종류가 다름(외관 자리에 실내), time 시간이 다름, people 사람을 알아볼 수 있음,
- * unread 장면을 아직 읽지 않음, failed 장면을 읽지 못함(받지 못함 · 형식 · 모델이 읽지 않음 — 다시 눌러도 한동안 읽지 않는다).
+ * words 장소 없는 자리의 지역 사진인데 자리 낱말이 장면 · 사진 제목에 하나도 없음, unread 장면을 아직 읽지 않음, failed 장면을 읽지
+ * 못함(받지 못함 · 형식 · 모델이 읽지 않음 — 다시 눌러도 한동안 읽지 않는다).
  */
-export type SceneSkip = 'kind' | 'setting' | 'time' | 'people' | 'unread' | 'failed'
+export type SceneSkip = 'kind' | 'setting' | 'time' | 'people' | 'words' | 'unread' | 'failed'
 
 export const SCENE_SKIP_TEXT: Record<SceneSkip, string> = {
   kind: '화면 · 그림',
   setting: '장면 종류가 다름',
   time: '시간대가 다름',
   people: '사람을 알아볼 수 있음',
+  words: '자리 낱말이 장면 · 제목에 없음',
   unread: '장면을 아직 읽지 않음',
   failed: '장면을 읽지 못함',
 }
@@ -404,7 +418,7 @@ export const SCENE_SKIP_TEXT: Record<SceneSkip, string> = {
 /** 사진 장면 하나가 자리와 맞는 정도. ok가 아니면 miss가 이유. */
 export interface SceneFit {
   ok: boolean
-  miss?: Exclude<SceneSkip, 'unread' | 'failed'>
+  miss?: Exclude<SceneSkip, 'words' | 'unread' | 'failed'>
   /**
    * 시간만 다르다(miss time — 낮 사진 · 해 질 무렵 자리, 밤 사진 · 낮 자리) — 종류 · 사람은 맞는다. 맞는 사진이 어디에도 없을 때만
    * 「비슷한 사진」으로 쓴다(늘 「확인 필요」 — 2026-11-04 결정). 그래서 점수 · 맞은 낱말도 낸다. 종류 · 사람 · 화면이 어긋난 사진(miss가
@@ -500,6 +514,26 @@ export function sceneFit(wants: SceneWants, scene: Pick<PhotoScene, 'text' | 'se
   const score = 2 * key.length + caption.length + (wants.settings?.[0] === scene.setting ? 1 : 0) + (timeOk && wants.times?.[0] === scene.time ? 1 : 0)
   const words = [...new Set([...key, ...caption])]
   return timeOk ? { ok: true, score, words } : { ok: false, miss: 'time', soft: true, score, words }
+}
+
+/**
+ * 장소 없는 자리를 지역 사진에 견줄 장면 낱말 — 내용어에 더해 이 낱말들은 글자 안에서도 찾는다(한 글자 낱말 「꽃 · 숲 · 섬」 —
+ * 「꽃이 핀 산책로」의 「꽃」이 「벚꽃」과 맞게).
+ */
+const REGION_SCENE_WORDS = [
+  '꽃', '숲', '섬', '벚꽃', '거리', '골목', '산책로', '산책길', '둘레길', '바닷가', '해변', '해안', '바다', '호수', '강변', '난간', '야경', '노을', '일몰',
+  '조명', '철길', '시장', '항구', '포구', '등대', '다리', '공원', '정원', '광장', '구도심', '원도심', '갈대', '갯벌', '방파제', '선착장',
+]
+
+/** 글자의 지역 사진 견주기 낱말 — 내용어(stop 제외)와 글자 안의 장면 낱말(REGION_SCENE_WORDS). */
+function regionTerms(text: string, stop: ReadonlySet<string>): string[] {
+  const s = normSlotAlt(text).toLowerCase()
+  return [...new Set([...contentWords(s, stop), ...REGION_SCENE_WORDS.filter((w) => s.includes(w))])]
+}
+
+/** want 낱말 가운데 have에 맞는 것 — 같은 낱말이거나 한쪽이 다른 쪽을 품는다(한 글자 장면 낱말은 글자 안에 있으면). */
+function termHits(want: readonly string[], have: readonly string[]): string[] {
+  return want.filter((w) => have.some((h) => sameWord(w, h) || (w.length === 1 && h.includes(w))))
 }
 
 /** 비슷한 사진의 까닭 — 「비슷한 사진 — 시간이 다름: 낮 사진 · 해 질 무렵 자리」. */
@@ -625,6 +659,10 @@ export interface AutoSlotRow {
   /** 그 사진의 장면과 자리에 견준 결과(장면을 읽었을 때). */
   oldScene?: PhotoScene
   oldFit?: SceneFit
+  /** 장소 이름이 없는 자리에 지역 사진(비슷한 장면)을 넣었다 — 늘 「확인 필요」. */
+  placeless?: true
+  /** 장소 없는 자리에서 자리 낱말이 맞아 장면을 견준 지역 사진 수(지역 사진을 볼 때만 — 0이면 낱말이 맞는 사진이 없었다). */
+  regionTried?: number
 }
 
 /** 이미 넣은 자동 사진을 바꾸거나 뺄 것 — 저장할 때 서버가 그 자리에 같은 자동 사진이 아직 있을 때만 한다(server/contentDraft.ts). */
@@ -667,6 +705,11 @@ export interface AutoPickResult {
   usablePublic: number
   /** 자동으로 쓸 수 있는 관광공사 사진 수(3단계). */
   usableTour: number
+  /**
+   * 장소 없는 자리의 지역 사진(regionCandidates를 줄 때) — rows 본 자리 수, pool 지역 사진 수(이번에 받은 관광공사 사진 포함), matched
+   * 자리 낱말이 맞은 사진 수, wanted 장면을 읽으려고 고른 사진 수(자리마다 REGION_SCENE_LIMITS.perSlot장까지).
+   */
+  region?: { rows: number; pool: number; matched: number; wanted: number }
   /**
    * 장면을 읽으면 고르는 데 쓰일 사진 — 열린 자리마다 설명이 맞은 홈페이지 사진, 자리 장소의 장소 페이지 사진 · 관광공사 사진(자리 순서,
    * 중복 없이). 화면이 이 사진들의 장면을 서버에 묻고(src/lib/sitePhotos.ts loadScenesFor) 다시 고른다.
@@ -823,6 +866,13 @@ export function autoPickPhotos(input: {
    * 사진이 없으면 뺀다(replaces).
    */
   recheckAuto?: boolean
+  /**
+   * 장소 없는 자리(자리 글자에 장소 이름이 없다)에 견줄 지역 사진 — 관광사진 정보를 브랜드 도시로 찾은 사진(src/lib/sitePhotos.ts
+   * regionCandidatesOf). 이번에 받은 관광공사 사진(tourCandidates)도 함께 본다. scenes를 줄 때만 쓴다(장면 없이는 넣지 않는다).
+   */
+  regionCandidates?: readonly AutoCandidate[]
+  /** 브랜드 도시(「군산」) — 지역 사진에 다 들어 있어 견주는 낱말에서 뺀다. */
+  regionCity?: string
 }): AutoPickResult {
   const stop = new Set(contentWords(input.brandName ?? ''))
   const scenes = input.scenes
@@ -889,6 +939,44 @@ export function autoPickPhotos(input: {
     tourByPlace.set(raw.place, [...(tourByPlace.get(raw.place) ?? []), { ...raw, src, alt: cleanPhotoAlt(raw.alt) }])
   }
   const usableTour = tourSrcs.size
+
+  // 지역 사진(장소 없는 자리) — 받은 지역 사진(공공누리 제1유형 · 출처 · 사람 낱말 검사)과 이번에 받은 관광공사 사진, 중복 없이. 장면으로
+  // 고를 때만.
+  const regionPool: AutoCandidate[] | null = scenes && input.regionCandidates ? [] : null
+  if (regionPool) {
+    const poolSeen = new Set<string>()
+    for (const raw of input.regionCandidates ?? []) {
+      const src = canonicalPhotoSrc(raw.src)
+      if (!src || poolSeen.has(src) || seen.has(src) || publicSeen.has(src)) continue
+      const reason = autoCandidateSkip({ ...raw, origin: 'public' })
+      if (reason) {
+        skipped.push({ candidate: raw, reason })
+        continue
+      }
+      poolSeen.add(src)
+      regionPool.push({ ...raw, src, alt: cleanPhotoAlt(raw.alt) })
+    }
+    for (const list of tourByPlace.values()) {
+      for (const c of list) {
+        if (poolSeen.has(c.src)) continue
+        poolSeen.add(c.src)
+        regionPool.push(c)
+      }
+    }
+  }
+  const regionStop = new Set([...stop, ...contentWords(input.regionCity ?? '')])
+  const poolTerms = new Map<string, string[]>()
+  const termsOfCandidate = (c: AutoCandidate) => {
+    let t = poolTerms.get(c.src)
+    if (!t) {
+      t = regionTerms(`${c.alt} ${c.keywords ?? ''}`, regionStop)
+      poolTerms.set(c.src, t)
+    }
+    return t
+  }
+  /** 자리마다 장면을 읽을 지역 사진(낱말이 맞는 순서) — 모든 글을 본 뒤 자리를 돌아가며 sceneWanted에 넣는다(앞 자리만 상한을 쓰지 않게). */
+  const regionWants: AutoCandidate[][] = []
+  const regionMatched = new Set<string>()
 
   const brandCount = new Map<string, number>()
   /** 작성자마다 쓴 사진 수 — 바꾸거나 뺀 자동 사진은 덜어 낸다(countUse by -1). */
@@ -1120,10 +1208,65 @@ export function autoPickPhotos(input: {
       }
     }
 
+    // ③b 장소 없는 자리 — 지역 사진 가운데 자리 낱말(내용어 · 꽃 · 골목 · 바닷가 …, 사람 낱말 · 브랜드 도시 제외, 밤 · 해 질 무렵 자리면 야경 ·
+    // 노을)이 제목 · 검색 낱말에 맞는 사진을 낱말이 많이 맞는 순서로 자리마다 REGION_SCENE_LIMITS.perSlot장만 장면을 읽고(sceneWanted
+    // region), 장면이 맞고(sceneFit — 종류 · 사람 · 화면은 그대로 뺀다) 자리 낱말이 장면 · 사진 제목에 하나 이상 맞는 사진을 장면 점수 순서로
+    // 넣는다(장소로 묶어 둘 이름이 없어서). 늘 「확인 필요」, 시간만 다르면 ④ 비슷한 사진.
+    const regionOpts = new Map<AutoSlotRow, Options>()
+    const regionRows = regionPool ? rows.filter((row) => row.state === 'nomatch' && !row.places?.length) : []
+    for (const row of regionRows) {
+      const w = wantsOf(row)
+      const terms = [
+        ...new Set([
+          ...regionTerms(`${row.slot.key} ${row.caption}`, regionStop).filter((t) => !PEOPLE_SCENE.test(t)),
+          ...(w.times?.[0] === 'night' ? ['야경'] : w.times?.[0] === 'dusk' ? ['노을'] : []),
+        ]),
+      ]
+      const ranked = regionPool!
+        .map((candidate, i) => ({ candidate, i, n: termHits(terms, termsOfCandidate(candidate)).length }))
+        .filter((x) => x.n > 0)
+      for (const x of ranked) regionMatched.add(x.candidate.src)
+      const top = ranked.sort((a, b) => b.n - a.n || a.i - b.i).slice(0, REGION_SCENE_LIMITS.perSlot).map((x) => x.candidate)
+      row.regionTried = top.length
+      regionWants.push(top)
+      const opts: Options = { fit: [], soft: [] }
+      top.forEach((candidate, order) => {
+        if (removed(row, candidate.src)) return
+        const scene = scenes!.get(candidate.src)
+        if (!scene) {
+          skipScene(row, input.sceneFailed?.has(candidate.src) ? 'failed' : 'unread')
+          return
+        }
+        const fit = sceneFit(w, scene)
+        if (!fit.ok && !fit.soft) {
+          skipScene(row, fit.miss!)
+          return
+        }
+        const seenTerms = [...scene.tags.map((t) => t.toLowerCase()), ...regionTerms(scene.text.replace(NO_PEOPLE_TEXT, ' '), new Set()), ...regionTerms(candidate.alt, regionStop)]
+        const anchors = termHits(terms, seenTerms)
+        if (!anchors.length) {
+          skipScene(row, 'words')
+          return
+        }
+        if (!fit.ok) skipScene(row, fit.miss!)
+        opts[fit.ok ? 'fit' : 'soft'].push({ candidate, order, scene, fit: { ...fit, score: fit.score + anchors.length, words: [...new Set([...fit.words, ...anchors])] } })
+      })
+      regionOpts.set(row, opts)
+    }
+    const regionScore = (o: Option): SlotScore => ({ score: 0, words: o.fit?.words ?? [], coverage: 1, pass: true })
+    for (const row of regionRows) {
+      if (row.state !== 'nomatch' || !hasRoom(row)) continue
+      const open = (regionOpts.get(row)?.fit ?? []).filter((o) => !isBlocked(o.candidate.src))
+      if (!open.length) continue
+      const best = [...open].sort((a, b) => sceneScore(b) - sceneScore(a) || a.order - b.order)[0]!
+      fill(row, best.candidate, regionScore(best), best)
+      row.placeless = true
+    }
+
     // ④ 비슷한 사진 — 장면이 맞는 사진이 어디에도 없어(①②③ 모두 — 반복 상한에 걸린 사진 포함) 아직 빈 자리에, 시간만 다른 사진(soft —
     // 낮 사진 · 해 질 무렵 자리)을 장면 점수가 높은 것부터(같으면 홈페이지 → 장소 페이지 → 관광공사, 그 안에서는 ①②③의 순서). 늘 「확인
     // 필요」. 종류 · 사람 · 화면이 어긋난 사진은 쓰지 않는다(틀린 사진은 빈자리보다 나쁘다). 장면으로 고를 때만 생긴다.
-    type Similar = { candidate: AutoCandidate; score: SlotScore; scene?: PhotoScene; fit: SceneFit; rank: number[]; place?: string }
+    type Similar = { candidate: AutoCandidate; score: SlotScore; scene?: PhotoScene; fit: SceneFit; rank: number[]; place?: string; region?: true }
     const byRank = (a: Similar, b: Similar) => {
       for (let i = 0; i < a.rank.length; i += 1) if (a.rank[i] !== b.rank[i]) return a.rank[i]! - b.rank[i]!
       return 0
@@ -1143,11 +1286,13 @@ export function autoPickPhotos(input: {
           .map((p, order): Similar => ({ candidate: p.candidate, score: p.score, ...(p.scene ? { scene: p.scene } : {}), fit: p.fit!, rank: [-p.fit!.score, 0, 0, 0, order] })),
         ...fromPlace(publicOpts, 1),
         ...(tourOk(row) ? fromPlace(tourOpts, 2) : []),
+        ...(regionOpts.get(row)?.soft ?? []).map((o): Similar => ({ ...o, fit: o.fit!, score: regionScore(o), region: true, rank: [-sceneScore(o), 3, 0, 0, o.order] })),
       ]
       const best = list.filter((o) => !isBlocked(o.candidate.src)).sort(byRank)[0]
       if (!best?.scene) continue
       fill(row, best.candidate, best.score, best, similarWhy(wantsOf(row), best.scene))
       if (best.place) row.place = best.place
+      if (best.region) row.placeless = true
     }
 
     // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소의 공공 사진이 모두 「제1유형 아님」으로 빠졌으면 license.
@@ -1210,7 +1355,40 @@ export function autoPickPhotos(input: {
     for (const row of rows) if (row.old && (row.state === 'replace' || row.state === 'remove')) countUse(row.old.src, article.group, -1)
     return { actionId: article.actionId, generatedAt: article.generatedAt, rows, picks: out, replaces, credits }
   })
-  return { articles, skipped, usable: usable.length, usablePublic, usableTour, sceneWanted }
+  // 지역 사진의 장면 — 자리를 돌아가며(첫째 자리의 1번 · 둘째 자리의 1번 …) 넣는다. 한 번 누를 때 REGION_SCENE_LIMITS.perRun장까지는 읽기
+  // 쪽(src/lib/sitePhotos.ts loadScenesFor)이 REGION_SCENE_PLACE로 센다.
+  const regionWanted = new Set<string>()
+  for (let i = 0; i < REGION_SCENE_LIMITS.perSlot; i += 1) {
+    for (const list of regionWants) {
+      const c = list[i]
+      if (!c) continue
+      regionWanted.add(c.src)
+      want({ src: c.src, place: REGION_SCENE_PLACE, ...(c.month ? { month: c.month } : {}) }, 'region')
+    }
+  }
+  return {
+    articles,
+    skipped,
+    usable: usable.length,
+    usablePublic,
+    usableTour,
+    sceneWanted,
+    ...(regionPool ? { region: { rows: regionWants.length, pool: regionPool.length, matched: regionMatched.size, wanted: regionWanted.size } } : {}),
+  }
+}
+
+/**
+ * 지역 사진을 찾을 장소 없는 자리 수 — 자리 글자에 장소 이름이 없고 아직 빈(맞는 사진 없음 · 장면이 맞는 사진 없음 · 아직 읽지 않음 ·
+ * 홈페이지 짝만 상한에 걸림 · 장면이 어긋나 뺌) 자리와 비슷한 사진으로 채운 자리. 화면이 이 수가 있을 때만 지역 사진을 부른다.
+ */
+export function regionRowsWanted(result: Pick<AutoPickResult, 'articles'>): number {
+  return result.articles
+    .flatMap((a) => a.rows)
+    .filter(
+      (row) =>
+        !row.places?.length &&
+        (row.state === 'nomatch' || row.state === 'scene' || row.state === 'unread' || row.state === 'remove' || Boolean(row.similar) || (row.state === 'used' && row.homeOnly)),
+    ).length
 }
 
 /** 이번에 돌지 않는 글의 고른 사진 — 브랜드 · 작성자 반복 상한에 센다. */

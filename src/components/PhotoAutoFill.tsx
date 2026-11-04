@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   loadPhotoScenesStatus,
   loadPublishSettings,
+  loadRegionTourPhotos,
   loadTourApiStatus,
   saveDraftPhotosAuto,
   type AutoPhotoSaveResult,
@@ -19,6 +20,7 @@ import {
   photoStateKey,
   placesToRead,
   publicCandidateFields,
+  regionRowsWanted,
   SCENE_SKIP_TEXT,
   tourPlacesWanted,
   type AutoArticle,
@@ -28,7 +30,7 @@ import {
   type AutoSlotState,
   type SceneSkip,
 } from '../lib/photoAutoPick'
-import { SCENE_SETTING_TEXT, sceneMeta, type PhotoScene, type SceneWant } from '../lib/photoScenes'
+import { REGION_SCENE_LIMITS, SCENE_SETTING_TEXT, sceneMeta, type PhotoScene, type SceneWant } from '../lib/photoScenes'
 import {
   loadPlaceDirectory,
   loadPublicPhotos,
@@ -39,12 +41,13 @@ import {
   photoPageOf,
   pickReadingScenes,
   publicCandidatesOf,
+  regionCandidatesOf,
   siteRootOf,
   tourCandidatesOf,
   type PublicPhotoPage,
   type SitePhotoResult,
 } from '../lib/sitePhotos'
-import { TOUR_PLACE_LIMIT, TOUR_SOURCES, tourSourceOf, type TourSource } from '../lib/tourPhotos'
+import { TOUR_PLACE_LIMIT, TOUR_SOURCES, tourRegionOf, tourSourceOf, type TourSource } from '../lib/tourPhotos'
 
 /**
  * 사진 자리 자동 채우기 — 단추를 누르면 홈페이지 사진 후보로 빈 사진 자리를 맞추고(1단계), 그래도 빈 자리는 자리 글자에 나온 장소의
@@ -68,6 +71,9 @@ import { TOUR_PLACE_LIMIT, TOUR_SOURCES, tourSourceOf, type TourSource } from '.
  * 보지 않는다)의 장면도 읽어 자리와 견준다 — 맞으면 그대로, 시간만 다르면 맞는 사진이 있을 때만 바꾸고 아니면 비슷한 사진으로 두며,
  * 종류 · 사람이 어긋나면 맞는 사진 → 비슷한 사진으로 바꾸고 둘 다 없으면 뺀다. 미리보기에 「장면 안 맞음 → 바꿈 · 뺌」 · 「비슷한 사진으로
  * 둠」으로 보이고, 저장을 눌러야 바뀐다(서버가 그 자리에 화면이 본 그 자동 사진이 있을 때만 — 그사이 사람이 고른 자리는 건드리지 않는다).
+ * 장소 이름이 없는 자리(「군산 원도심 골목을 연인이 나란히 걸어가는 뒷모습」)는 지역형 브랜드(지역이 시 · 군 · 구까지)이고 장면을 읽을 수
+ * 있으며 공공 사진 사용 확인 · TourAPI 키가 있을 때, 브랜드 도시로 찾은 관광사진(지역 사진 — /api/tourapi/photos?mode=region)과 이번에
+ * 받은 관광공사 사진 가운데 자리 낱말이 맞는 사진만 장면을 읽어 비슷한 장면을 넣는다(「장소 없는 자리 — 비슷한 장면」, 늘 「확인 필요」).
  *
  * 미리보기는 계산한 때의 초안으로 고른다 — 그사이 다른 미리보기 · 사람이 고른 사진이 저장되거나 글이 바뀌면(photoStateKey) 그
  * 미리보기로는 저장하지 않고 다시 맞추게 한다(작성자 · 브랜드 반복 상한이 달라진다). 서버도 쓰기 안에서 상한을 다시 본다.
@@ -189,12 +195,17 @@ export default function PhotoAutoFill({
           sceneNotes.push(`사진 장면을 다 읽지 못했어요 — ${e instanceof Error ? e.message : String(e)} 장면을 읽은 사진으로만 골랐어요.`)
         }
       }
-      const pick = (tourCandidates: AutoCandidate[] = []) =>
+      // 관광공사 사진(3단계)과 지역 사진(장소 없는 자리) — 찾은 뒤에 채운다.
+      let tourCandidates: AutoCandidate[] = []
+      let regionCandidates: AutoCandidate[] | null = null
+      const regionCity = brand.marketScope === 'national' || brand.marketScope === 'b2b' ? null : (tourRegionOf(brand.region)?.city ?? null)
+      const pick = () =>
         autoPickPhotos({
           articles: autoArticles,
           candidates: found.photos.map((p) => ({ src: p.src, alt: p.alt, pageUrl, ...(p.credit ? { credit: true } : {}) })),
           publicCandidates: pub.candidates,
           tourCandidates,
+          ...(regionCandidates && regionCity ? { regionCandidates, regionCity } : {}),
           pagesRead,
           places: pub.places,
           others: otherPhotoUses(drafts, ids, groupOf),
@@ -205,17 +216,18 @@ export default function PhotoAutoFill({
           recheckAuto: recheckOn,
         })
       // 장면으로 고르기 — 고르고, 새로 쓰일 사진의 장면을 읽고, 다시 고른다(새 사진이 없을 때까지).
-      const pickScenes = (tourCandidates: AutoCandidate[] = []) =>
-        scenes ? pickReadingScenes(() => pick(tourCandidates), readScenes, asked) : Promise.resolve(pick(tourCandidates))
+      const pickScenes = () => (scenes ? pickReadingScenes(pick, readScenes, asked) : Promise.resolve(pick()))
       let result = await pickScenes()
       // 3단계 — 장소 페이지에 쓸 사진이 없던(또는 장면이 맞지 않던) 장소 자리를 관광공사 사진으로.
       const tourWanted = publicOk ? tourPlacesWanted(result, pagesRead) : []
       const tourNotes: string[] = []
+      let morePhotos = false
       if (tourWanted.length) {
         if (await loadTourApiStatus()) {
           setProgress('관광공사 사진 찾는 중…')
           const tour = await loadTourPhotosFor(tenantId, tourWanted, pub.pages)
-          result = await pickScenes(tourCandidatesOf(tour.results))
+          tourCandidates = tourCandidatesOf(tour.results)
+          morePhotos = true
           const none = tour.results.filter((r) => !r.photos.length && !r.error).map((r) => r.place)
           tourNotes.push(...tour.notes)
           if (none.length) {
@@ -228,6 +240,27 @@ export default function PhotoAutoFill({
         } else {
           tourNotes.push(`장소 페이지에 쓸 사진이 없는 장소 ${tourWanted.length}곳 — 이 PC에 관광공사 TourAPI 키가 있으면 관광공사 사진(공공누리 제1유형)으로 채울 수 있어요.`)
         }
+      }
+      // 장소 없는 자리 — 지역형 브랜드(도시가 정해진 지역)이고 장면을 읽을 수 있을 때, 브랜드 도시로 찾은 관광사진에서 비슷한 장면을.
+      const regionRows = publicOk && scenes && regionCity ? regionRowsWanted(result) : 0
+      if (regionRows && (await loadTourApiStatus())) {
+        setProgress('장소 없는 자리의 지역 사진 찾는 중…')
+        try {
+          const region = await loadRegionTourPhotos(tenantId)
+          regionCandidates = regionCandidatesOf(region)
+          morePhotos = true
+          if (region.note) tourNotes.push(`지역 사진 — ${region.note}`)
+        } catch (e) {
+          console.warn('[PhotoAutoFill] 지역 사진을 찾지 못했습니다', e)
+          tourNotes.push(`장소 없는 자리의 지역 사진을 찾지 못했어요 — ${e instanceof Error ? e.message : String(e)}`)
+        }
+      }
+      if (morePhotos) result = await pickScenes()
+      if (result.region) {
+        const r = result.region
+        tourNotes.push(
+          `장소 없는 자리 ${r.rows}곳 — ${regionCity}의 관광사진 ${r.pool}장 가운데 자리 낱말이 맞는 ${r.matched}장에서 자리마다 ${REGION_SCENE_LIMITS.perSlot}장까지 장면을 견줘요(낱말이 맞지 않거나 순서에 밀려 읽지 않은 사진 ${r.pool - r.wanted}장).`,
+        )
       }
       const placeRows = result.articles.flatMap((a) => a.rows).filter((r) => r.place && r.state !== 'filled').length
       const notes = [
@@ -356,6 +389,7 @@ export default function PhotoAutoFill({
   const credits = preview ? preview.result.articles.reduce((n, a) => n + a.credits.length, 0) : 0
   const review = rows.filter((r) => r.row.review).length
   const similar = rows.filter((r) => r.row.state === 'filled' && r.row.similar).length
+  const placeless = rows.filter((r) => r.row.state === 'filled' && r.row.placeless).length
   const refilled = rows.filter((r) => r.row.state === 'filled' && r.row.refill).length
   const replaced = count('replace')
   const removed = count('remove')
@@ -432,6 +466,7 @@ export default function PhotoAutoFill({
             {filledTour > 0 && ` (관광공사 사진 ${filledTour})`}
             {review > 0 && ` (확인 필요 ${review})`}
             {similar > 0 && ` (비슷한 사진 ${similar})`}
+            {placeless > 0 && ` (장소 없는 자리 — 비슷한 장면 ${placeless})`}
             {refilled > 0 && ` (사람이 뺀 자리 ${refilled})`}
             {recheckParts.length > 0 && ` · 이미 넣은 자동 사진: ${recheckParts.join(' · ')}`}
             {others.length > 0 && ` · ${others.join(' · ')}`}
@@ -620,7 +655,12 @@ function PreviewRow({ title, row }: { title: string | null; row: AutoSlotRow }) 
         )}
       </td>
       <td className="cell-text">
-        {c?.origin === 'public' && row.place ? (
+        {row.placeless && c ? (
+          <>
+            장소 없는 자리 — 비슷한 장면: 「{c.alt}」{c.location ? ` · ${c.location}` : ''}
+            {c.place && <span className="doc-meta"> (관광공사 사진의 장소: {c.place})</span>}
+          </>
+        ) : c?.origin === 'public' && row.place ? (
           `장소: ${row.place}${c.tour && c.alt !== row.place ? ` → 관광공사 「${c.alt}」` : ''}`
         ) : row.score ? (
           `${row.score.words.join(' · ')} · ${row.score.score}`
@@ -642,6 +682,9 @@ function PreviewRow({ title, row }: { title: string | null; row: AutoSlotRow }) 
           </span>
         )}
         {skips && <span className="doc-meta" style={{ display: 'block' }}>장면 때문에 뺀 사진: {skips}</span>}
+        {row.regionTried === 0 && row.state !== 'filled' && row.state !== 'replace' && (
+          <span className="doc-meta" style={{ display: 'block' }}>장소 없는 자리 — 지역 사진 가운데 자리 낱말(거리 · 골목 · 꽃 …)이 맞는 사진이 없어요</span>
+        )}
       </td>
       <td className="cell-text">
         <span className={`status-pill ${warn ? 'st-warn' : row.state === 'filled' ? 'st-good' : 'st-ok'}`}>{status}</span>

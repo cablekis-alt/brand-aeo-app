@@ -25,6 +25,7 @@ import {
   autoPickPhotos,
   isPeopleScene,
   placesToRead,
+  regionRowsWanted,
   sceneFit,
   slotSceneWants,
   tourPlacesWanted,
@@ -32,7 +33,7 @@ import {
   type AutoCandidate,
   type AutoPickResult,
 } from '../src/lib/photoAutoPick'
-import { parseScene, scenesToRead, spreadByMonth, validScene, type PhotoScene, type SceneWant } from '../src/lib/photoScenes'
+import { parseScene, REGION_SCENE_LIMITS, REGION_SCENE_PLACE, scenesToRead, spreadByMonth, validScene, type PhotoScene, type SceneWant } from '../src/lib/photoScenes'
 import { loadScenesFor, newSceneBudget, pickReadingScenes } from '../src/lib/sitePhotos'
 import { TOUR_SOURCES } from '../src/lib/tourPhotos'
 import { PHOTO_LICENSES, type PhotoPick } from '../src/lib/articlePhotos'
@@ -398,6 +399,86 @@ ok('뺀 다음 번 — 사람이 그 자리에서 뺀 사진은 바꿀 사진으
 ok('다시 볼 자동 사진의 장소 페이지도 읽는다(맨 뒤)', JSON.stringify(placesToRead([duskWith('k13', [pickOfCand(DUSK_SLOT, '바다', inside)])], PLACES, false, true, true)) === JSON.stringify(['진포해양공원']) && placesToRead([duskWith('k13', [pickOfCand(DUSK_SLOT, '바다', inside)])], PLACES).length === 0)
 const existingFirst = scenesToRead([{ src: 'https://x.example/a.jpg', source: 'site' }, { src: 'https://x.example/old.jpg', source: 'public', existing: true }], new Set(['https://x.example/a.jpg', 'https://x.example/old.jpg']), { perPlace: 40, total: 1 })
 ok('이미 넣은 자동 사진의 장면을 다른 사진보다 먼저 읽는다(상한에 밀리지 않게)', JSON.stringify(existingFirst.read) === JSON.stringify(['https://x.example/old.jpg']) && existingFirst.left === 1)
+
+// 5e) 2026-11-04 결정 — 장소 없는 자리(자리 글자에 장소 이름이 없다)는 지역 사진(브랜드 도시로 찾은 관광사진)에서 비슷한 장면을.
+const reg = (name: string, title: string, keywords: string, month = '202104'): AutoCandidate => ({
+  src: `https://tong.visitkorea.or.kr/cms2/website/region/${name}.jpg`, alt: title, pageUrl: TOUR_SOURCES.gallery.page, origin: 'public', license: 'kogl-1', licenseType: 1,
+  creditText: '한국관광공사 김지호', tour: 'gallery', month, keywords, location: '전라북도 군산시',
+})
+const ALLEY_SLOT = '군산 원도심 골목을 연인이 나란히 걸어가는 뒷모습'
+const FLOWER_SLOT = '꽃이 핀 산책로를 두 사람이 나란히 걷는 뒷모습'
+const NIGHT_SEA_SLOT = '해가 진 뒤 조명이 켜진 군산 바닷가 산책로와 난간'
+const STREET_SLOT = '군산 구도심 거리를 가족이 걸어서 이동하는 장면'
+const alley = reg('alley', '군산 월명동 골목', '군산, 월명동, 골목, 근대')
+const flower = reg('flower', '은파호수공원 벚꽃', '군산, 은파호수공원, 벚꽃, 산책로')
+const nightSea = reg('nightsea', '군산 비응항 야경', '군산, 비응항, 야경, 바다, 바닷가')
+const daySea = reg('daysea', '군산 선유도 해변', '군산, 선유도, 바다, 바닷가, 해변')
+const market = reg('market', '군산 공설시장 거리', '군산, 시장, 거리')
+const kwOnly = reg('kwonly', '군산 근대 건축물', '군산, 골목')
+const lovers = reg('lovers', '군산 월명동 풍경', '군산, 연인')
+const regionScenes = freshScenes([
+  [alley, S({ text: '낡은 담장 사이 좁은 골목길, 사람 없음', tags: ['골목', '담장', '거리'] })],
+  [flower, S({ text: '벚꽃이 핀 호숫가 산책로', tags: ['벚꽃', '산책로', '호수'] })],
+  [nightSea, S({ time: 'night', text: '조명이 켜진 항구와 바다, 밤', tags: ['야경', '항구', '바다', '조명'] })],
+  [daySea, S({ text: '맑은 날 바닷가 해변과 난간', tags: ['해변', '바다', '난간'] })],
+  [market, S({ setting: 'interior', time: 'unknown', text: '시장 안 상점들', tags: ['시장', '상점', '거리'] })],
+  [kwOnly, S({ text: '붉은 벽돌 건물 외관', tags: ['건물', '외관'] })],
+  [lovers, S({ text: '연인 조형물이 있는 골목', tags: ['연인', '골목'] })],
+])
+const placeless = (id: string, slot: string) => doc(id, ['## 1. 산책', '', `![${slot}](#image-slot)`], { group: id })
+const regionAll = [alley, flower, nightSea, daySea, market, kwOnly, lovers]
+const regionRun = (articles: AutoArticle[], over: Partial<Parameters<typeof autoPickPhotos>[0]> = {}) =>
+  run(articles, { candidates: [], publicCandidates: [], tourCandidates: [], scenes: regionScenes, regionCandidates: regionAll, regionCity: '군산', ...over })
+const rr = regionRun([placeless('r1', ALLEY_SLOT), placeless('r2', FLOWER_SLOT), placeless('r3', NIGHT_SEA_SLOT), placeless('r4', STREET_SLOT)])
+const rRow = (id: string) => rowsOf(rr, id)[0]!
+ok(
+  '장소 없는 자리 — 골목 자리에 골목 사진(장소 없는 자리 · 확인 필요 · 공공누리 출처)',
+  rRow('r1').state === 'filled' && rRow('r1').pick?.src === alley.src && rRow('r1').placeless === true && rRow('r1').review === true && rRow('r1').pick?.license === 'kogl-1' && rRow('r1').pick?.credit === '한국관광공사 김지호',
+)
+ok('장소 없는 자리 — 「꽃이 핀 산책로」에 벚꽃 산책로 사진(한 글자 낱말 「꽃」도 맞춘다)', rRow('r2').pick?.src === flower.src && Boolean(rRow('r2').fit?.words.length))
+ok('장소 없는 자리 — 「해가 진 뒤 조명이 켜진 바닷가」에 밤 사진(낮 해변 사진보다)', rRow('r3').pick?.src === nightSea.src && !rRow('r3').similar)
+ok('장소 없는 자리 — 「구도심 거리」에 실내 시장 사진은 넣지 않는다(종류가 다름 — 비슷한 사진으로도)', rRow('r4').state === 'scene' && !rRow('r4').pick && rRow('r4').sceneSkips?.setting === 1)
+const noNight = rowsOf(regionRun([placeless('r5', NIGHT_SEA_SLOT)], { regionCandidates: [daySea, market] }), 'r5')[0]!
+ok(
+  '장소 없는 자리 — 맞는 사진이 없으면 시간만 다른 사진(낮 바닷가)을 비슷한 사진으로',
+  noNight.state === 'filled' && noNight.pick?.src === daySea.src && noNight.placeless === true && noNight.similar === '비슷한 사진 — 시간이 다름: 낮 사진 · 밤 자리',
+)
+const kwRow = rowsOf(regionRun([placeless('r6', ALLEY_SLOT)], { regionCandidates: [kwOnly] }), 'r6')[0]!
+ok('장소 없는 자리 — 검색 낱말만 맞고 장면 · 제목에 자리 낱말이 없는 사진은 넣지 않는다', kwRow.state === 'scene' && kwRow.sceneSkips?.words === 1 && !kwRow.pick)
+const loversRun = regionRun([placeless('r7', ALLEY_SLOT)], { regionCandidates: [lovers] })
+ok('장소 없는 자리 — 사람 낱말(연인 · 가족)로는 견주지 않는다(장면을 읽을 사진으로도 고르지 않는다)', rowsOf(loversRun, 'r7')[0]!.regionTried === 0 && !loversRun.sceneWanted.some((w) => w.src === lovers.src))
+ok('장소 없는 자리 — 자리 낱말이 맞는 사진이 없으면 빈자리 · 까닭(regionTried 0)', rowsOf(loversRun, 'r7')[0]!.state === 'nomatch' && !rowsOf(loversRun, 'r7')[0]!.pick)
+const capDocs = ['c1', 'c2', 'c3', 'c4'].map((id) => placeless(id, ALLEY_SLOT))
+const alley2 = reg('alley2', '군산 신흥동 골목', '군산, 골목')
+const capR = regionRun(capDocs, { regionCandidates: [alley, alley2], scenes: freshScenes([[alley, regionScenes.get(alley.src)!], [alley2, S({ text: '골목과 담장', tags: ['골목'] })]]) })
+ok('장소 없는 자리 — 반복 상한(브랜드 3번)을 지킨다', capDocs.slice(0, 3).every((d) => rowsOf(capR, d.actionId)[0]!.pick?.src === alley.src) && rowsOf(capR, 'c4')[0]!.pick?.src === alley2.src)
+ok('지역 사진을 주지 않으면(전국형 · B2B형 · 공공 사진 확인 전 · 키 없음) 장소 없는 자리는 그대로', rowsOf(run([placeless('r8', ALLEY_SLOT)], { candidates: [], scenes: regionScenes }), 'r8')[0]!.state === 'nomatch' && rowsOf(run([placeless('r8', ALLEY_SLOT)], { candidates: [], scenes: regionScenes }), 'r8')[0]!.regionTried === undefined)
+ok('장면 없이 고르면(키 없음) 지역 사진을 쓰지 않는다', rowsOf(run([placeless('r9', ALLEY_SLOT)], { candidates: [], regionCandidates: regionAll, regionCity: '군산' }), 'r9')[0]!.state === 'nomatch')
+const tourAlley: AutoCandidate = { ...tour('ta1', '근대역사박물관', '201411'), keywords: '군산, 근대역사박물관, 골목' }
+const reuse = regionRun([placeless('r10', ALLEY_SLOT)], { regionCandidates: [], tourCandidates: [tourAlley], scenes: freshScenes([[tourAlley, S({ text: '박물관 옆 좁은 골목길', tags: ['골목', '거리'] })]]) })
+ok('장소 없는 자리 — 이번에 받은 다른 장소의 관광공사 사진도 지역 사진으로 견준다', rowsOf(reuse, 'r10')[0]!.pick?.src === tourAlley.src && rowsOf(reuse, 'r10')[0]!.placeless === true)
+const ok2 = regionRun([placeless('r11', ALLEY_SLOT), placeless('r12', FLOWER_SLOT)], { scenes: new Map() })
+const regionWanted = ok2.sceneWanted.filter((w) => w.source === 'region')
+ok(
+  '장소 없는 자리 — 낱말이 맞는 사진만 장면을 읽으려고 고르고(지역 사진 열쇠), 장면을 읽기 전에는 넣지 않는다',
+  regionWanted.length > 0 && regionWanted.every((w) => w.place === REGION_SCENE_PLACE) && !regionWanted.some((w) => w.src === nightSea.src || w.src === lovers.src) &&
+    rowsOf(ok2, 'r11')[0]!.state === 'unread' && ok2.region?.rows === 2 && ok2.region.pool === regionAll.length,
+)
+const manyAlley = Array.from({ length: 30 }, (_, i) => reg(`m${i}`, `군산 골목 ${i}`, '군산, 골목'))
+const manyFlower = Array.from({ length: 30 }, (_, i) => reg(`f${i}`, `군산 벚꽃 ${i}`, '군산, 벚꽃, 산책로'))
+const manyRun = regionRun([placeless('m1', ALLEY_SLOT), placeless('m2', FLOWER_SLOT)], { regionCandidates: [...manyAlley, ...manyFlower], scenes: new Map() })
+const manyWanted = manyRun.sceneWanted.filter((w) => w.source === 'region')
+ok(
+  `장소 없는 자리 — 자리마다 ${REGION_SCENE_LIMITS.perSlot}장까지, 자리를 돌아가며 읽을 사진을 고른다`,
+  manyWanted.length === 2 * REGION_SCENE_LIMITS.perSlot && manyWanted[0]!.src === manyAlley[0]!.src && manyWanted[1]!.src === manyFlower[0]!.src && manyRun.region?.matched === 60 && manyRun.region.wanted === 40,
+)
+const regionPlan = scenesToRead(
+  Array.from({ length: 100 }, (_, i) => ({ src: `https://tong.visitkorea.or.kr/r/${i}.jpg`, source: 'region' as const, place: REGION_SCENE_PLACE })),
+  new Set(Array.from({ length: 100 }, (_, i) => `https://tong.visitkorea.or.kr/r/${i}.jpg`)),
+  { perPlace: 40, total: 150, caps: { [REGION_SCENE_PLACE]: REGION_SCENE_LIMITS.perRun } },
+)
+ok(`지역 사진은 한 번 누를 때 ${REGION_SCENE_LIMITS.perRun}장까지 장면을 읽는다(남은 수 · 상한에 걸림)`, regionPlan.read.length === REGION_SCENE_LIMITS.perRun && regionPlan.left === 40 && regionPlan.cappedPlaces.includes(REGION_SCENE_PLACE))
+ok('지역 사진을 찾을 장소 없는 자리 수', regionRowsWanted(run([placeless('w1', ALLEY_SLOT), duskDoc], { candidates: [], scenes: regionScenes })) === 1)
 
 // 읽지 못한 사진(failed)은 「아직 읽지 않음」이 아니다 — 장면이 맞는 사진 없음으로 관광공사 사진을 찾는다.
 const fa = pubInside[0]!

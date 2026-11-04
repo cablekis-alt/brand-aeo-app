@@ -25,6 +25,7 @@ import {
   korTourPhotos,
   pickTourPlace,
   regionCityOf,
+  regionGalleryPhotos,
   titleDistance,
   TOUR_SOURCES,
   tourCreditOf,
@@ -174,6 +175,23 @@ ok('시간 초과가 나면 남은 장소는 묻지 않는다', timedOut.asked.l
 const upstream = await askLoop(6, () => ({ liveCalls: 1, error: 'UPSTREAM', note: 'TourAPI 응답 오류' }))
 ok('같은 응답 오류가 되풀이되면 남은 장소는 묻지 않는다', upstream.asked.length <= 3 && upstream.load.skipped >= 3)
 
+// 1b) 지역 사진(장소 없는 자리) — 촬영지가 브랜드 지역인 사진만, 제목이 장소 이름과 맞을 필요는 없다. 사람 낱말 · 다른 도시는 뺀다.
+const regionItems = [
+  { galContentId: '61', galTitle: '가상 골목길', galWebImageUrl: GAL('61'), galPhotographyLocation: '전라북도 가상시', galPhotographer: '한국관광공사 가상촬영', galSearchKeyword: '가상, 골목, 근대', galPhotographyMonth: '202104' },
+  { galContentId: '62', galTitle: '가상 바닷가 야경', galWebImageUrl: GAL('62'), galPhotographyLocation: '전북특별자치도 가상시', galPhotographer: '', galSearchKeyword: '가상, 바다, 야경' },
+  { galContentId: '63', galTitle: '다른시 골목', galWebImageUrl: GAL('63'), galPhotographyLocation: '부산 다른구', galPhotographer: '', galSearchKeyword: '골목' },
+  { galContentId: '64', galTitle: '가상 축제 관광객', galWebImageUrl: GAL('64'), galPhotographyLocation: '전라북도 가상시', galPhotographer: '', galSearchKeyword: '가상, 축제' },
+  { galContentId: '65', galTitle: '가상 공원', galWebImageUrl: GAL('65'), galPhotographyLocation: '전라북도 가상시', galPhotographer: '', galSearchKeyword: '가상, 공원, 가족' },
+  { galContentId: '61', galTitle: '가상 골목길', galWebImageUrl: GAL('61'), galPhotographyLocation: '전라북도 가상시', galPhotographer: '', galSearchKeyword: '가상' },
+]
+const regionPhotos = regionGalleryPhotos(regionItems, '전북 가상')
+ok(
+  '지역 사진 — 촬영지가 그 지역이고 제목 · 검색 낱말에 사람 낱말이 없는 사진만(같은 사진은 한 번), 검색 낱말 · 촬영 연월 · 출처와 함께',
+  JSON.stringify(regionPhotos.photos.map((p) => p.src)) === JSON.stringify([GAL('61'), GAL('62')]) && regionPhotos.rejected === 3 &&
+    regionPhotos.photos[0]?.keywords === '가상, 골목, 근대' && regionPhotos.photos[0]?.month === '202104' && regionPhotos.photos[0]?.creditText === '한국관광공사 가상촬영' &&
+    regionPhotos.photos[1]?.creditText === '한국관광공사' && regionPhotos.photos.every((p) => p.source === 'gallery' && p.license === 'kogl-1' && p.place === '전북 가상'),
+)
+
 // 2) 가짜 TourAPI 서버
 const FAKE_KEY = 'FAKE+key/abc=123'
 const MOCK_PORT = 4105
@@ -185,6 +203,8 @@ const ok0 = (item: unknown) => ({
 })
 const mockCalls: string[] = []
 const badKeys: string[] = []
+/** 지역 사진(mode=region) — 브랜드 도시 「가상」으로 찾은 쪽. */
+const regionPages: number[] = []
 /** 관광사진 정보 쪽 넘기기 확인 — 「가상큰박물관」 130장(2013-01 100장 · 2014-11 30장)을 쪽마다 numOfRows건씩. */
 const BIG_TOTAL = 130
 const bigPages: string[] = []
@@ -250,6 +270,10 @@ const mock = http.createServer((req, res) => {
     const late = setTimeout(() => json(ok0('')), 10_500)
     res.on('close', () => clearTimeout(late))
     return
+  }
+  if (op === 'PhotoGalleryService1/gallerySearchList1' && kw === '가상') {
+    regionPages.push(Number(p.get('pageNo') ?? '1'))
+    return json({ response: { header: { resultCode: '0000', resultMsg: 'OK' }, body: { items: { item: regionItems }, numOfRows: Number(p.get('numOfRows') ?? '10'), pageNo: 1, totalCount: regionItems.length } } })
   }
   switch (`${op}|${kw}`) {
     case 'KorService2/searchKeyword2|가상근대역사관':
@@ -319,6 +343,7 @@ const TENANT = 'vtour'
 const NATIONAL = 'vtour-national'
 const NOPUBLIC = 'vtour-nopublic'
 const JUNGGU = 'vtour-junggu'
+const B2B = 'vtour-b2b'
 const AT = '2026-11-03T00:00:00.000Z'
 const tenant = (tenantId: string, region: string) => ({
   tenantId, brandName: `가상 여행 ${tenantId}`, aliases: [`가상 여행 ${tenantId}`], ownedDomains: [`${tenantId}.example`], industry: '관광안내', region,
@@ -326,9 +351,9 @@ const tenant = (tenantId: string, region: string) => ({
 })
 writeFileSync(
   path.join(dir, 'tenants.overlay.json'),
-  JSON.stringify([tenant(TENANT, '전북 가상'), tenant(NATIONAL, '국내'), tenant(NOPUBLIC, '전북 가상'), tenant(JUNGGU, '부산 중구')]),
+  JSON.stringify([tenant(TENANT, '전북 가상'), tenant(NATIONAL, '국내'), tenant(NOPUBLIC, '전북 가상'), tenant(JUNGGU, '부산 중구'), { ...tenant(B2B, '전북 가상'), marketScope: 'b2b' }]),
 )
-for (const t of [TENANT, NATIONAL, NOPUBLIC, JUNGGU]) {
+for (const t of [TENANT, NATIONAL, NOPUBLIC, JUNGGU, B2B]) {
   mkdirSync(path.join(dir, 'data', t), { recursive: true })
   const rights = t === NOPUBLIC ? { confirmedAt: AT } : { confirmedAt: AT, publicAt: AT }
   writeFileSync(path.join(dir, 'data', t, 'publish-settings.json'), JSON.stringify({ photoRights: rights }))
@@ -531,6 +556,29 @@ try {
       '관광사진 정보의 다음 쪽이 실패해도 이미 받은 쪽의 사진은 쓰고 오류는 알린다',
       half.body.photos.length === 100 && JSON.stringify(halfPages) === JSON.stringify([1, 2]) && half.body.error === 'UPSTREAM' && String(half.body.note).includes('HTTP 500'),
     )
+
+    // 지역 사진(mode=region) — 지역형 브랜드만, 공공 사진 사용 확인 뒤에, 쪽마다 캐시
+    const region = await get(`/api/tourapi/photos/${TENANT}?mode=region`)
+    ok(
+      '지역 사진 — 브랜드 도시(「가상」)로 관광사진을 찾아 그 지역의 사진만(사람 낱말 · 다른 도시 빼고)',
+      region.status === 200 && JSON.stringify(region.body.photos.map((p) => p.src)) === JSON.stringify([GAL('61'), GAL('62')]) && region.body.city === '전북 가상' &&
+        JSON.stringify(regionPages) === JSON.stringify([1]) && (region.body.liveCalls ?? 0) === 1,
+    )
+    const regionAgain = await get(`/api/tourapi/photos/${TENANT}?mode=region`)
+    ok('지역 사진도 캐시에서(TourAPI를 다시 부르지 않는다)', regionAgain.body.photos.length === 2 && regionPages.length === 1 && regionAgain.body.liveCalls === 0)
+    const regionCalls = mockCalls.length
+    const regionNat = await get(`/api/tourapi/photos/${NATIONAL}?mode=region`)
+    const regionB2b = await get(`/api/tourapi/photos/${B2B}?mode=region`)
+    ok(
+      '전국형 · B2B형 브랜드는 지역 사진을 찾지 않고 알린다(TourAPI를 부르지 않는다)',
+      regionNat.status === 200 && regionNat.body.photos.length === 0 && typeof regionNat.body.note === 'string' && regionB2b.body.photos.length === 0 && mockCalls.length === regionCalls,
+    )
+    ok('지역 사진도 공공 사진 사용 확인 전에는 409', (await get(`/api/tourapi/photos/${NOPUBLIC}?mode=region`)).status === 409 && mockCalls.length === regionCalls)
+    const regionSave = await put({
+      op: 'auto',
+      articles: [{ actionId: 'content:a', generatedAt: AT, picks: [pick('가상 원도심 골목을 걷는 뒷모습', GAL('61'), { alt: '가상 골목길' })] }],
+    })
+    ok('지역 사진도 공공 사진으로 저장한다(받은 적 있는 제1유형 · 출처)', regionSave.status === 200 && regionSave.body.saved === 1)
 
     // 캐시 · 키 노출
     await new Promise((r) => setTimeout(r, 1500))

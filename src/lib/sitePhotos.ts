@@ -15,7 +15,7 @@ import { publishMarkdownOf } from './draftGaps'
 import { downloadBlob, safeFileName } from './markdownFile'
 import { fetchPage } from './aeo/fetchPage'
 import { findPlace, placeKey, placeNameOfPath, publicCandidateFields, type AutoCandidate, type AutoPickResult } from './photoAutoPick'
-import { scenesToRead, type PhotoScene, type SceneWant } from './photoScenes'
+import { REGION_SCENE_LIMITS, REGION_SCENE_PLACE, scenesToRead, type PhotoScene, type SceneWant } from './photoScenes'
 import { TOUR_PLACE_LIMIT, type TourPhotoQuery, type TourPhotoResult } from './tourPhotos'
 import { todayKst } from './publishedUrl'
 import { brandSiteUrl } from './publishArticle'
@@ -706,8 +706,26 @@ export function tourCandidatesOf(results: readonly TourPhotoResult[]): AutoCandi
       creditText: p.creditText,
       tour: p.source,
       ...(p.month ? { month: p.month } : {}),
+      ...(p.keywords ? { keywords: p.keywords } : {}),
     })),
   )
+}
+
+/** 지역 사진(장소 없는 자리 — 관광사진 정보를 브랜드 도시로 찾은 사진) → 자동 채우기 후보(origin public · tour gallery, 장소 없음). 받은 순서 그대로. */
+export function regionCandidatesOf(result: TourPhotoResult): AutoCandidate[] {
+  return result.photos.map((p) => ({
+    src: p.src,
+    alt: p.title,
+    pageUrl: p.sourcePageUrl,
+    origin: 'public' as const,
+    license: p.license,
+    licenseType: p.licenseType,
+    creditText: p.creditText,
+    tour: p.source,
+    ...(p.month ? { month: p.month } : {}),
+    ...(p.keywords ? { keywords: p.keywords } : {}),
+    ...(p.location ? { location: p.location } : {}),
+  }))
 }
 
 /** 한 번 누를 때 장소마다 새로 읽는 사진 장면 수의 상한(관광공사 사진은 촬영 연월이 고루 섞이게). */
@@ -777,7 +795,12 @@ export async function loadScenesFor(
     r.notes.forEach(note)
   }
   if (!out.available || !missing.size) return out
-  const plan = scenesToRead(wanted, missing, { perPlace: SCENE_PER_PLACE, total: Math.max(0, budget.total), used: budget.perPlace })
+  const plan = scenesToRead(wanted, missing, {
+    perPlace: SCENE_PER_PLACE,
+    total: Math.max(0, budget.total),
+    used: budget.perPlace,
+    caps: { [REGION_SCENE_PLACE]: REGION_SCENE_LIMITS.perRun },
+  })
   out.left = plan.left
   budget.total -= plan.read.length
   const placeOf = new Map(wanted.map((w) => [w.src, w.place ?? '']))
@@ -810,7 +833,11 @@ export async function loadScenesFor(
       break
     }
   }
-  if (plan.cappedPlaces.length) note(`장소마다 한 번에 ${SCENE_PER_PLACE}장까지 장면을 읽어요(${plan.cappedPlaces.join(' · ')}) — 다시 누르면 남은 사진을 이어서 읽어요.`)
+  const cappedPlaces = plan.cappedPlaces.filter((p) => p !== REGION_SCENE_PLACE)
+  if (cappedPlaces.length) note(`장소마다 한 번에 ${SCENE_PER_PLACE}장까지 장면을 읽어요(${cappedPlaces.join(' · ')}) — 다시 누르면 남은 사진을 이어서 읽어요.`)
+  if (plan.cappedPlaces.includes(REGION_SCENE_PLACE)) {
+    note(`장소 없는 자리의 지역 사진은 한 번에 ${REGION_SCENE_LIMITS.perRun}장까지 장면을 읽어요 — 다시 누르면 남은 사진을 이어서 읽어요.`)
+  }
   return out
 }
 

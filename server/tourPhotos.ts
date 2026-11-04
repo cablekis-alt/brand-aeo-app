@@ -8,6 +8,7 @@ import {
   knownRegion,
   korTourPhotos,
   pickTourPlace,
+  regionGalleryPhotos,
   regionLabel,
   regionsAgree,
   TOUR_SOURCES,
@@ -51,6 +52,8 @@ const GALLERY_WHEN_FEWER = 4;
  */
 const GALLERY_ROWS = 100;
 const GALLERY_PAGES = 5;
+/** 지역 사진(장소 없는 자리)은 브랜드 도시 이름으로 관광사진 정보를 이만큼 쪽까지 받는다(쪽마다 GALLERY_ROWS건 · 7일 캐시). */
+const REGION_PAGES = 5;
 
 type Service = 'KorService2' | 'PhotoGalleryService1';
 const SERVICE_NAME: Record<Service, string> = { KorService2: TOUR_SOURCES.kor.name, PhotoGalleryService1: TOUR_SOURCES.gallery.name };
@@ -395,6 +398,50 @@ export async function findTourPhotos(q: TourPhotoQuery, brandRegion: string): Pr
     rejectedType: kor.rejected,
     rejectedGallery: gallery.rejected,
     ...(notes.length ? { note: notes.join(' ') } : {}),
+    ...(error ? { error } : {}),
+    liveCalls: stats.live,
+  };
+}
+
+/**
+ * 장소 없는 자리의 지역 사진 — 관광사진 정보를 브랜드 도시 이름(「전북 군산」 → 「군산」)으로 찾아 촬영지가 그 지역인 공공누리 제1유형
+ * 사진(regionGalleryPhotos — 제목 · 검색 낱말에 사람 낱말이 있으면 뺀다). 브랜드 지역이 시 · 군 · 구까지 정해진 지역형 브랜드만 —
+ * 전국형 · B2B형이나 도시를 정하지 못한 지역이면 부르지 않고 알린다. 쪽마다 7일 캐시 · 하루 상한은 장소 사진과 같다. 서비스 오류는
+ * note · error로 돌려주고(받은 쪽의 사진은 그대로) 던지지 않는다 — 키가 없을 때만 TourApiError('NO_KEY'). place는 지역의 표시 글자.
+ */
+export async function findRegionTourPhotos(brandRegion: string, marketScope?: string): Promise<TourPhotoResult> {
+  if (!tourApiConfigured()) throw new TourApiError('NO_KEY', '이 PC에 관광공사 TourAPI 키가 없어요.');
+  const brand = tourRegionOf(brandRegion);
+  const empty = { resolved: null, photos: [], rejectedType: 0, rejectedGallery: 0, liveCalls: 0 };
+  if (marketScope === 'national' || marketScope === 'b2b' || !brand?.city || !knownRegion(brand)) {
+    return {
+      ...empty,
+      place: '',
+      city: null,
+      note: '지역 사진은 브랜드 지역이 시 · 군 · 구까지 정해진 지역형 브랜드만 찾아요.',
+    };
+  }
+  const city = regionLabel(brand);
+  const stats = { live: 0 };
+  let note: string | undefined;
+  let error: TourApiErrorCode | undefined;
+  let gallery: { photos: TourPhoto[]; rejected: number } = { photos: [], rejected: 0 };
+  try {
+    const pages = await callPages('PhotoGalleryService1', 'gallerySearchList1', { keyword: brand.city }, stats, GALLERY_ROWS, REGION_PAGES);
+    gallery = regionGalleryPhotos(pages.items, brand);
+    for (const p of gallery.photos) remember(p.src, p.title, true);
+    if (pages.error !== undefined) ({ note, error } = noteOf(pages.error));
+  } catch (err) {
+    ({ note, error } = noteOf(err));
+  }
+  if (!gallery.photos.length && !note) note = `관광공사 관광사진 정보에서 ${city}의 공공누리 제1유형 사진을 찾지 못했어요.`;
+  return {
+    ...empty,
+    place: city,
+    city,
+    photos: gallery.photos,
+    rejectedGallery: gallery.rejected,
+    ...(note ? { note } : {}),
     ...(error ? { error } : {}),
     liveCalls: stats.live,
   };

@@ -1883,6 +1883,28 @@ export async function loadTourPhotos(tenantId: string, q: import('./tourPhotos')
   return out as import('./tourPhotos').TourPhotoResult
 }
 
+/**
+ * 장소 없는 자리에 견줄 지역 사진(server/tourPhotos.ts findRegionTourPhotos) — 브랜드 도시 이름으로 찾은 관광사진. 공공 사진 사용 확인이
+ * 있어야 하고 지역형 브랜드만 사진이 온다(아니면 note). 서비스 오류는 note · error로 오고, 키가 없거나 시간 안에 답이 없으면 throw.
+ */
+export async function loadRegionTourPhotos(tenantId: string): Promise<import('./tourPhotos').TourPhotoResult> {
+  let res: Response
+  try {
+    res = await fetch(`/api/tourapi/photos/${encodeURIComponent(tenantId)}?mode=region`, { signal: AbortSignal.timeout(TOUR_REQUEST_TIMEOUT_MS) })
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'TimeoutError') {
+      throw new Error(`지역 사진 요청이 ${TOUR_REQUEST_TIMEOUT_MS / 1000}초 안에 끝나지 않았어요 — 잠시 뒤 다시 눌러 주세요.`, { cause: e })
+    }
+    throw e
+  }
+  const out: unknown = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const error = (out as { error?: unknown }).error
+    throw new Error(typeof error === 'string' && error ? error : `지역 사진을 찾지 못했어요 (HTTP ${res.status})`)
+  }
+  return out as import('./tourPhotos').TourPhotoResult
+}
+
 /** 브랜드 사실(팩트 그래프) — 데스크톱·로컬 전용. null = 라우트 없는 환경(웹). */
 /**
  * 브랜드 페이지에서 팩트 그래프 후보를 뽑는다. 저장하지 않는다 — 사람이 골라 넣는다.

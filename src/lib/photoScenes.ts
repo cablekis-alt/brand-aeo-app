@@ -93,11 +93,19 @@ export function sceneMeta(s: Pick<PhotoScene, 'setting' | 'people' | 'time'>): s
   return `${SCENE_SETTING_TEXT[s.setting]} · ${SCENE_PEOPLE_TEXT[s.people]} · ${SCENE_TIME_TEXT[s.time]}`
 }
 
+/**
+ * 장소 없는 자리에 견줄 지역 사진(source region)의 장소 열쇠 — 장소 상한 대신 REGION_SCENE_LIMITS.perRun으로 센다(한 번 누를 때 모두).
+ * 사이트 장소 이름과 겹치지 않게 괄호를 둔다.
+ */
+export const REGION_SCENE_PLACE = '(지역 사진)'
+/** 지역 사진의 장면을 읽는 상한 — 자리마다 낱말이 맞는 앞 perSlot장, 한 번 누를 때 모두 perRun장(SCENE_RUN_LIMIT 안에서). */
+export const REGION_SCENE_LIMITS = { perSlot: 20, perRun: 60 } as const
+
 /** 장면을 읽을 사진 하나 — 자동 채우기가 자리에 견줄 후보(src/lib/photoAutoPick.ts sceneWanted). */
 export interface SceneWant {
   src: string
-  /** 사진이 어디서 왔나 — site 홈페이지 · public 장소 페이지 · tour 관광공사. */
-  source: 'site' | 'public' | 'tour'
+  /** 사진이 어디서 왔나 — site 홈페이지 · public 장소 페이지 · tour 관광공사 · region 장소 없는 자리의 지역 사진(관광사진 정보). */
+  source: 'site' | 'public' | 'tour' | 'region'
   /** 공공 사진 · 관광공사 사진의 장소(사이트 장소 이름). */
   place?: string
   /** 촬영 연월(YYYYMM, 관광사진 정보) — 같은 장소에서 여러 시기의 사진을 고루 읽는다. */
@@ -126,12 +134,13 @@ export function spreadByMonth<T extends { month?: string }>(list: readonly T[]):
 /**
  * 새로 읽을 사진 — 장면이 없는(missing) 사진 가운데, 장소마다 perPlace장까지(관광공사 사진은 촬영 연월이 고루 섞이게 — spreadByMonth),
  * 모두 합쳐 total장까지. 이미 넣은 자동 사진(existing — 다시 보기) → 홈페이지 사진 → 장소 페이지 사진 → 관광공사 사진 순서(앞 단계가 먼저
- * 쓰인다). used는 같은 실행에서 이미 읽은 장소별 수(장소 상한에 함께 센다). left는 읽지 않고 남긴 수, cappedPlaces는 장소 상한에 걸린 장소.
+ * 쓰인다) → 지역 사진(받은 순서 그대로 — 자리 낱말이 맞는 순서다). used는 같은 실행에서 이미 읽은 장소별 수(장소 상한에 함께 센다), caps는
+ * 장소마다 다른 상한(지역 사진 REGION_SCENE_PLACE). left는 읽지 않고 남긴 수, cappedPlaces는 장소 상한에 걸린 장소.
  */
 export function scenesToRead(
   wanted: readonly SceneWant[],
   missing: ReadonlySet<string>,
-  limits: { perPlace: number; total: number; used?: ReadonlyMap<string, number> },
+  limits: { perPlace: number; total: number; used?: ReadonlyMap<string, number>; caps?: Readonly<Record<string, number>> },
 ): { read: string[]; left: number; cappedPlaces: string[] } {
   const seen = new Set<string>()
   const todo: SceneWant[] = []
@@ -140,7 +149,7 @@ export function scenesToRead(
     seen.add(w.src)
     todo.push(w)
   }
-  const order: SceneWant['source'][] = ['site', 'public', 'tour']
+  const order: SceneWant['source'][] = ['site', 'public', 'tour', 'region']
   const read: string[] = []
   const perPlace = new Map<string, number>(limits.used ?? [])
   const capped = new Set<string>()
@@ -153,7 +162,7 @@ export function scenesToRead(
       for (const w of source === 'tour' ? spreadByMonth(list) : list) {
         if (read.length >= limits.total) break
         const n = perPlace.get(place) ?? 0
-        if (place && n >= limits.perPlace) {
+        if (place && n >= (limits.caps?.[place] ?? limits.perPlace)) {
           capped.add(place)
           continue
         }

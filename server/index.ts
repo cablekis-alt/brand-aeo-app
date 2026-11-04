@@ -72,7 +72,7 @@ import {
   type PublicPhotoFields,
 } from '../src/lib/articlePhotos.js';
 import { AUTO_PICK_RULES, autoCandidateSkip, placeKey } from '../src/lib/photoAutoPick.js';
-import { findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
+import { findRegionTourPhotos, findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
 import { describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
@@ -1133,6 +1133,8 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
 // 공공 사진 사용 확인(photoRights.publicAt)이 있어야 하고, 키는 이 PC의 TOURAPI_SERVICE_KEY(server/tourPhotos.ts — 응답 7일 캐시).
 // 한 번에 장소 하나. 서비스 오류는 200의 note · error로 알린다(키 값은 어디에도 싣지 않는다). Express 전용(Vercel 함수 12/12 —
 // 웹은 /api/health에 tourApi가 없어 화면이 이 단계를 건너뛴다).
+// mode=region이면 장소 없는 자리에 견줄 지역 사진 — 브랜드 도시 이름으로 찾은 관광사진(지역형 브랜드만, server/tourPhotos.ts
+// findRegionTourPhotos). 같은 공공 사진 사용 확인 · 키 · 캐시 · 하루 상한을 쓴다.
 app.get('/api/tourapi/photos/:tenantId', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant) {
@@ -1149,6 +1151,16 @@ app.get('/api/tourapi/photos/:tenantId', async (req, res) => {
     return;
   }
   const q = req.query as Record<string, unknown>;
+  if (q.mode === 'region') {
+    try {
+      res.json(await findRegionTourPhotos(tenant.region, tenant.marketScope));
+    } catch (err) {
+      const message = scrubTourKey(err instanceof Error ? err.message : String(err));
+      console.warn(`[tourapi] ${tenant.tenantId} 지역 사진을 찾지 못했습니다: ${message}`);
+      res.status(502).json({ error: `지역 사진을 찾지 못했어요 — ${message.slice(0, 160)}` });
+    }
+    return;
+  }
   const text = (v: unknown, max: number) => (typeof v === 'string' ? normSlotAlt(v).slice(0, max) : '');
   const place = text(q.place, 60);
   const names = (Array.isArray(q.name) ? q.name : [q.name]).map((n) => text(n, 60)).filter(Boolean).slice(0, 3);
