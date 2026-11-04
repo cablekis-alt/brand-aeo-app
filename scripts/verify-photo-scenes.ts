@@ -125,7 +125,7 @@ ok('장면 설명의 「사람 없음」은 자리의 「사람」 낱말과 맞
 // 4) 장면으로 고르기 — 관광공사 사진 · 홈페이지 사진
 const tour = (name: string, place: string, month: string): AutoCandidate => ({
   src: `https://tong.visitkorea.or.kr/cms2/website/${name}.jpg`, alt: place === '근대역사박물관' ? '군산근대역사박물관' : place, pageUrl: TOUR_SOURCES.gallery.page,
-  origin: 'public', place, license: 'kogl-1', licenseType: 1, creditText: '한국관광공사 김지호', tour: 'gallery', month,
+  origin: 'public', place, license: 'kogl-1', licenseType: 1, creditText: '한국관광공사 가상촬영', tour: 'gallery', month,
 })
 const T = {
   t1: tour('t1', '근대역사박물관', '201301'),
@@ -404,7 +404,7 @@ ok('이미 넣은 자동 사진의 장면을 다른 사진보다 먼저 읽는�
 // 5e) 2026-11-04 결정 — 장소 없는 자리(자리 글자에 장소 이름이 없다)는 지역 사진(브랜드 도시로 찾은 관광사진)에서 비슷한 장면을.
 const reg = (name: string, title: string, keywords: string, month = '202104'): AutoCandidate => ({
   src: `https://tong.visitkorea.or.kr/cms2/website/region/${name}.jpg`, alt: title, pageUrl: TOUR_SOURCES.gallery.page, origin: 'public', license: 'kogl-1', licenseType: 1,
-  creditText: '한국관광공사 김지호', tour: 'gallery', month, keywords, location: '전라북도 군산시',
+  creditText: '한국관광공사 가상촬영', tour: 'gallery', month, keywords, location: '전라북도 군산시',
 })
 const ALLEY_SLOT = '군산 원도심 골목을 연인이 나란히 걸어가는 뒷모습'
 const FLOWER_SLOT = '꽃이 핀 산책로를 두 사람이 나란히 걷는 뒷모습'
@@ -434,7 +434,7 @@ const rr = regionRun([placeless('r1', ALLEY_SLOT), placeless('r2', FLOWER_SLOT),
 const rRow = (id: string) => rowsOf(rr, id)[0]!
 ok(
   '장소 없는 자리 — 골목 자리에 골목 사진(장소 없는 자리 · 확인 필요 · 공공누리 출처)',
-  rRow('r1').state === 'filled' && rRow('r1').pick?.src === alley.src && rRow('r1').placeless === true && rRow('r1').review === true && rRow('r1').pick?.license === 'kogl-1' && rRow('r1').pick?.credit === '한국관광공사 김지호',
+  rRow('r1').state === 'filled' && rRow('r1').pick?.src === alley.src && rRow('r1').placeless === true && rRow('r1').review === true && rRow('r1').pick?.license === 'kogl-1' && rRow('r1').pick?.credit === '한국관광공사 가상촬영',
 )
 ok('장소 없는 자리 — 「꽃이 핀 산책로」에 벚꽃 산책로 사진(한 글자 낱말 「꽃」도 맞춘다)', rRow('r2').pick?.src === flower.src && Boolean(rRow('r2').fit?.words.length))
 ok('장소 없는 자리 — 「해가 진 뒤 조명이 켜진 바닷가」에 밤 사진(낮 해변 사진보다)', rRow('r3').pick?.src === nightSea.src && !rRow('r3').similar)
