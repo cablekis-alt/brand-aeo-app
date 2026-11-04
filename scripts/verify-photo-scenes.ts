@@ -35,6 +35,7 @@ import {
 import { parseScene, scenesToRead, spreadByMonth, validScene, type PhotoScene, type SceneWant } from '../src/lib/photoScenes'
 import { loadScenesFor, newSceneBudget, pickReadingScenes } from '../src/lib/sitePhotos'
 import { TOUR_SOURCES } from '../src/lib/tourPhotos'
+import { PHOTO_LICENSES, type PhotoPick } from '../src/lib/articlePhotos'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -316,6 +317,88 @@ ok(
 const plainSoft = rowsOf(run([duskDoc], { candidates: [], publicCandidates: [jpPub(1)], tourCandidates: [] }), 'd1')[0]!
 ok('장면 없이 고르면(키 없음) 지금처럼 — 비슷한 사진 표시 없이 장소 사진', plainSoft.state === 'filled' && plainSoft.pick?.src === jpPub(1).src && !plainSoft.similar)
 
+// 5d) 2026-11-04 결정 — 「이미 넣은 자동 사진도 장면 확인」: 자동 사진(auto)만 다시 보고, 사람이 고른 사진은 보지 않는다.
+const KOGL1 = PHOTO_LICENSES['kogl-1'].url
+const pickOfCand = (slot: string, heading: string, c: AutoCandidate, over: Partial<PhotoPick> = {}): PhotoPick => ({
+  slot, nth: 1, same: 1, heading, src: c.src, alt: c.alt, pageUrl: c.pageUrl, confirmedAt: AT, auto: true,
+  ...(c.origin === 'public' ? { origin: 'public' as const, license: 'kogl-1' as const, credit: c.creditText!, creditUrl: KOGL1 } : {}),
+  ...over,
+})
+const duskWith = (id: string, picks: PhotoPick[], group = id) => doc(id, ['## 1. 바다', '', `![${DUSK_SLOT}](#image-slot)`], { group, picks })
+const recheckRun = (articles: AutoArticle[], tourList: AutoCandidate[], pairs: [AutoCandidate, PhotoScene][], over: Partial<Parameters<typeof autoPickPhotos>[0]> = {}) =>
+  run(articles, { candidates: [], publicCandidates: [], tourCandidates: tourList, scenes: freshScenes(pairs), pagesRead: new Set(['진포해양공원']), recheckAuto: true, ...over })
+const dayOld = jt(10)
+const duskNew = jt(12)
+const inside = jt(13)
+const softKeep = recheckRun([duskWith('k1', [pickOfCand(DUSK_SLOT, '바다', dayOld)])], [dayOld, jt(11)], [[dayOld, DAY_SEA], [jt(11), DIORAMA]])
+const softKeepRow = rowsOf(softKeep, 'k1')[0]!
+ok(
+  '다시 보기 — 시간만 다른 자동 사진(낮 사진 · 해 질 무렵 자리)은 맞는 사진이 없으면 비슷한 사진으로 그대로(저장해도 바뀌지 않는다)',
+  softKeepRow.state === 'kept' && softKeepRow.recheck === 'similar' && softKeepRow.similar === '비슷한 사진 — 시간이 다름: 낮 사진 · 해 질 무렵 자리' && softKeepRow.review === true &&
+    softKeep.articles[0]!.replaces.length === 0 && softKeep.articles[0]!.picks.length === 0,
+)
+ok('비슷한 사진으로 둔 자리도 관광공사 사진을 찾는다', tourPlacesWanted(softKeep, new Set(['진포해양공원'])).includes('진포해양공원'))
+const softSwap = recheckRun([duskWith('k2', [pickOfCand(DUSK_SLOT, '바다', dayOld)])], [dayOld, duskNew], [[dayOld, DAY_SEA], [duskNew, DUSK_SEA]])
+const softSwapRow = rowsOf(softSwap, 'k2')[0]!
+const softSwapRep = softSwap.articles[0]!.replaces[0]
+ok(
+  '다시 보기 — 시간만 다른 자동 사진은 맞는 사진(노을)이 있으면 바꾼다(같은 자리 열쇠 · 자동 표시 · 출처)',
+  softSwapRow.state === 'replace' && softSwapRow.recheck === 'replace' && softSwapRow.pick?.src === duskNew.src && !softSwapRow.similar && softSwapRow.old?.src === dayOld.src &&
+    softSwapRep?.src === dayOld.src && softSwapRep.pick?.src === duskNew.src && softSwapRep.place.slot === DUSK_SLOT && softSwapRep.place.heading === '바다' &&
+    softSwapRep.pick.auto === true && softSwapRep.pick.license === 'kogl-1' && softSwap.articles[0]!.picks.length === 0,
+)
+const hardFull = rowsOf(recheckRun([duskWith('k3', [pickOfCand(DUSK_SLOT, '바다', inside)])], [inside, dayOld, duskNew], [[inside, DIORAMA], [dayOld, DAY_SEA], [duskNew, DUSK_SEA]]), 'k3')[0]!
+ok('다시 보기 — 종류가 어긋난 자동 사진(실내 디오라마)은 맞는 사진으로 바꾼다(비슷한 사진보다 맞는 사진)', hardFull.state === 'replace' && hardFull.pick?.src === duskNew.src && !hardFull.similar && hardFull.oldFit?.miss === 'setting')
+const hardSimilar = rowsOf(recheckRun([duskWith('k4', [pickOfCand(DUSK_SLOT, '바다', inside)])], [inside, dayOld], [[inside, DIORAMA], [dayOld, DAY_SEA]]), 'k4')[0]!
+ok('다시 보기 — 맞는 사진이 없으면 비슷한 사진으로 바꾼다(「확인 필요」)', hardSimilar.state === 'replace' && hardSimilar.pick?.src === dayOld.src && Boolean(hardSimilar.similar) && hardSimilar.review === true)
+const hardRemove = recheckRun([duskWith('k5', [pickOfCand(DUSK_SLOT, '바다', inside)])], [inside, jt(11)], [[inside, DIORAMA], [jt(11), DIORAMA]])
+const hardRemoveRow = rowsOf(hardRemove, 'k5')[0]!
+ok(
+  '다시 보기 — 바꿀 사진(맞는 · 비슷한)이 없으면 뺀다(바꿀 사진 없이)',
+  hardRemoveRow.state === 'remove' && hardRemoveRow.recheck === 'remove' && JSON.stringify(hardRemove.articles[0]!.replaces) === JSON.stringify([{ place: { slot: DUSK_SLOT, nth: 1, heading: '바다' }, src: inside.src }]),
+)
+const unknownRun = recheckRun([duskWith('k6', [pickOfCand(DUSK_SLOT, '바다', jt(14))])], [duskNew], [[duskNew, DUSK_SEA]])
+const unknownRow = rowsOf(unknownRun, 'k6')[0]!
+ok(
+  '다시 보기 — 장면을 모르는 자동 사진은 그대로 두고 알리며, 그 사진의 장면을 먼저 읽는다',
+  unknownRow.state === 'kept' && unknownRow.recheck === 'unknown' && unknownRun.articles[0]!.replaces.length === 0 && unknownRun.sceneWanted[0]?.src === jt(14).src && unknownRun.sceneWanted[0]?.existing === true,
+)
+const fitRow = rowsOf(recheckRun([duskWith('k7', [pickOfCand(DUSK_SLOT, '바다', duskNew)])], [duskNew], [[duskNew, DUSK_SEA]]), 'k7')[0]!
+ok('다시 보기 — 장면이 맞는 자동 사진은 그대로(장면 · 맞은 낱말과 함께)', fitRow.state === 'kept' && fitRow.recheck === 'fit' && fitRow.scene?.time === 'dusk')
+const manual = recheckRun([duskWith('k8', [pickOfCand(DUSK_SLOT, '바다', inside, { auto: undefined })])], [inside, duskNew], [[inside, DIORAMA], [duskNew, DUSK_SEA]])
+ok('다시 보기 — 사람이 고른 사진(auto 없음 · 옛 기록)은 장면이 어긋나도 건드리지 않는다', rowsOf(manual, 'k8')[0]!.state === 'kept' && !rowsOf(manual, 'k8')[0]!.recheck && manual.articles[0]!.replaces.length === 0)
+const off2 = recheckRun([duskWith('k9', [pickOfCand(DUSK_SLOT, '바다', inside)])], [inside, duskNew], [[inside, DIORAMA], [duskNew, DUSK_SEA]], { recheckAuto: false })
+ok('「이미 넣은 자동 사진도 장면 확인」을 끄면 다시 보지 않는다', rowsOf(off2, 'k9')[0]!.state === 'kept' && !rowsOf(off2, 'k9')[0]!.recheck && off2.articles[0]!.replaces.length === 0 && !off2.sceneWanted.some((w) => w.existing))
+const noScene = run([duskWith('k10', [pickOfCand(DUSK_SLOT, '바다', inside)])], { candidates: [], tourCandidates: [inside, duskNew], recheckAuto: true })
+ok('장면 없이 고르면(키 없음) 다시 보지 않는다', rowsOf(noScene, 'k10')[0]!.state === 'kept' && !rowsOf(noScene, 'k10')[0]!.recheck)
+// 글에 사진 3장이 다 차 있어도 그 자리의 자동 사진은 바꾼다(나가는 사진 자리) — 빈 자리는 채우지 않는다.
+const fullDoc = doc('k11', ['## 1. 바다', '', `![${DUSK_SLOT}](#image-slot)`, '', '## 2. 거리', '', '![진포해양공원 옆 거리](#image-slot)', '', '## 3. 다리', '', '![진포해양공원 다리](#image-slot)', '', '## 4. 빈 자리', '', '![진포해양공원 바다 풍경](#image-slot)'], {
+  group: 'k11',
+  picks: [pickOfCand(DUSK_SLOT, '바다', inside), pickOfCand('진포해양공원 옆 거리', '거리', jt(20), { auto: undefined }), pickOfCand('진포해양공원 다리', '다리', jt(21), { auto: undefined })],
+})
+const fullRun = recheckRun([fullDoc], [inside, duskNew, jt(22)], [[inside, DIORAMA], [duskNew, DUSK_SEA], [jt(22), DAY_SEA]])
+ok(
+  '사진 3장이 다 찬 글 — 장면이 어긋난 자동 사진 자리는 바꾸고, 빈 자리는 그대로(다 참)',
+  rowsOf(fullRun, 'k11')[0]!.state === 'replace' && rowsOf(fullRun, 'k11')[0]!.pick?.src === duskNew.src && rowsOf(fullRun, 'k11')[3]!.state !== 'filled' && fullRun.articles[0]!.picks.length === 0,
+)
+// 나간 사진은 상한에서 덜어 낸다 — 브랜드에서 3번 쓴 사진(X)을 뺀 뒤 다음 글의 맞는 자리에 쓸 수 있다.
+const INSIDE_SLOT = '진포해양공원 전시관 내부 모습'
+const SEA_SLOT = '진포해양공원 바다 산책로 풍경'
+const xPhoto = jt(30)
+const xa = doc('ka', ['## 1. 전시', '', `![${INSIDE_SLOT}](#image-slot)`], { group: 'ga', picks: [pickOfCand(INSIDE_SLOT, '전시', xPhoto)] })
+const xb = doc('kb', ['## 1. 바다', '', `![${SEA_SLOT}](#image-slot)`], { group: 'gb' })
+const xOthers = [{ src: xPhoto.src, group: 'gx' }, { src: xPhoto.src, group: 'gy' }]
+const capRun = recheckRun([xa, xb], [xPhoto], [[xPhoto, DAY_SEA]], { others: xOthers })
+ok('브랜드에서 3번 쓴 자동 사진이 장면이 어긋나 빠지면(뺌) 뒤 글의 맞는 자리에 쓸 수 있다', rowsOf(capRun, 'ka')[0]!.state === 'remove' && rowsOf(capRun, 'kb')[0]!.state === 'filled' && rowsOf(capRun, 'kb')[0]!.pick?.src === xPhoto.src)
+ok('다시 보지 않으면 그 사진은 상한에 걸린 그대로', rowsOf(recheckRun([xa, xb], [xPhoto], [[xPhoto, DAY_SEA]], { others: xOthers, recheckAuto: false }), 'kb')[0]!.state !== 'filled')
+// 장면 때문에 뺀 자리는 사람이 뺀 자리가 아니다 — 다음에 다시 채우되, 읽어 둔 장면이 같은 사진을 다시 고르지 않게 막는다.
+const nextRun = recheckRun([doc('ka', ['## 1. 전시', '', `![${INSIDE_SLOT}](#image-slot)`], { group: 'ga' })], [xPhoto], [[xPhoto, DAY_SEA]])
+ok('뺀 다음 번 — 그 자리는 다시 채울 빈자리지만, 읽어 둔 장면 때문에 같은 사진은 다시 고르지 않는다', rowsOf(nextRun, 'ka')[0]!.state === 'scene' && !rowsOf(nextRun, 'ka')[0]!.pick)
+ok('뺀 다음 번 — 사람이 그 자리에서 뺀 사진은 바꿀 사진으로도 고르지 않는다', rowsOf(recheckRun([duskWith('k12', [pickOfCand(DUSK_SLOT, '바다', inside)])].map((a) => ({ ...a, cleared: [{ slot: DUSK_SLOT, nth: 1, heading: '바다', removed: [duskNew.src] }] })), [inside, duskNew], [[inside, DIORAMA], [duskNew, DUSK_SEA]]), 'k12')[0]!.pick?.src !== duskNew.src)
+ok('다시 볼 자동 사진의 장소 페이지도 읽는다(맨 뒤)', JSON.stringify(placesToRead([duskWith('k13', [pickOfCand(DUSK_SLOT, '바다', inside)])], PLACES, false, true, true)) === JSON.stringify(['진포해양공원']) && placesToRead([duskWith('k13', [pickOfCand(DUSK_SLOT, '바다', inside)])], PLACES).length === 0)
+const existingFirst = scenesToRead([{ src: 'https://x.example/a.jpg', source: 'site' }, { src: 'https://x.example/old.jpg', source: 'public', existing: true }], new Set(['https://x.example/a.jpg', 'https://x.example/old.jpg']), { perPlace: 40, total: 1 })
+ok('이미 넣은 자동 사진의 장면을 다른 사진보다 먼저 읽는다(상한에 밀리지 않게)', JSON.stringify(existingFirst.read) === JSON.stringify(['https://x.example/old.jpg']) && existingFirst.left === 1)
+
 // 읽지 못한 사진(failed)은 「아직 읽지 않음」이 아니다 — 장면이 맞는 사진 없음으로 관광공사 사진을 찾는다.
 const fa = pubInside[0]!
 const fb = pubInside[1]!
@@ -533,6 +616,67 @@ const savedNew = await saveAutoPhotoPicks(TENANT, [{ actionId: 'content:a', gene
 const afterNew = (JSON.parse(readFileSync(path.join(tenantDir, 'drafts.json'), 'utf-8')) as Record<string, { photos?: { src: string }[]; photoCleared?: { removed?: string[] }[] }>)['content:a']
 ok('켜면 다른 사진은 넣고(소제목이 바뀌어도 같은 자리로 본다), 뺀 기록은 남긴다', savedNew.saved === 1 && afterNew?.photos?.[0]?.src === `${SITE}/new.jpg` && afterNew.photoCleared?.[0]?.removed?.[0] === `${SITE}/old.jpg`)
 
+// 7b) 저장 — 장면으로 다시 본 자동 사진 바꾸기 · 빼기(쓰는 때에 그 자리에 화면이 본 그 자동 사진이 있을 때만)
+type Stored = Record<string, { photos?: (PhotoPick & { auto?: true })[]; photoCleared?: { slot: string; removed?: string[] }[] }>
+const readStored = () => JSON.parse(readFileSync(path.join(tenantDir, 'drafts.json'), 'utf-8')) as Stored
+const manualPick = (slot: string, heading: string, src: string) => ({ ...sitePick(slot, heading, src), auto: undefined })
+writeFileSync(
+  path.join(tenantDir, 'drafts.json'),
+  JSON.stringify({
+    'content:s': draftOf('content:s', {
+      photos: [sitePick('정문', '박물관', `${SITE}/inside.jpg`), manualPick('거리', '거리', `${SITE}/manual.jpg`), sitePick('바다', '바다', `${SITE}/day.jpg`)],
+      photoCleared: [{ slot: '정문', nth: 1, heading: '박물관', removed: [`${SITE}/person-removed.jpg`] }],
+    }),
+    'content:o1': draftOf('content:o1', { photos: [sitePick('다른', '다른', `${SITE}/busy.jpg`)] }),
+    'content:o2': draftOf('content:o2', { photos: [sitePick('다른', '다른', `${SITE}/busy.jpg`)] }),
+    'content:o3': draftOf('content:o3', { photos: [sitePick('다른', '다른', `${SITE}/busy.jpg`)] }),
+  }),
+)
+const placeOfPick = (slot: string, heading: string) => ({ slot, nth: 1, heading })
+const swapSaved = await saveAutoPhotoPicks(
+  TENANT,
+  [
+    {
+      actionId: 'content:s',
+      generatedAt: AT,
+      picks: [],
+      replaces: [
+        { place: placeOfPick('정문', '박물관'), src: `${SITE}/inside.jpg`, pick: sitePick('정문', '박물관', `${SITE}/outside.jpg`) },
+        { place: placeOfPick('바다', '바다'), src: `${SITE}/day.jpg` },
+        { place: placeOfPick('거리', '거리'), src: `${SITE}/manual.jpg` },
+      ],
+    },
+  ],
+  3,
+)
+const afterSwap = readStored()['content:s']!
+ok(
+  '바꾸기 · 빼기 — 화면이 본 자동 사진만 바꾸고 빼며, 사람이 고른 사진은 건드리지 않고 stale로 알린다',
+  swapSaved.replaced === 1 && swapSaved.removed === 1 && swapSaved.stale.length === 1 && swapSaved.stale[0]?.slot === '거리' &&
+    JSON.stringify(afterSwap.photos?.map((p) => [p.slot, p.src.split('/').pop(), p.auto ?? null])) === JSON.stringify([['정문', 'outside.jpg', true], ['거리', 'manual.jpg', null]]),
+)
+ok('장면 때문에 뺀 자리는 사람이 뺀 자리로 적지 않는다(뺀 기록은 그대로)', JSON.stringify(afterSwap.photoCleared) === JSON.stringify([{ slot: '정문', nth: 1, heading: '박물관', removed: [`${SITE}/person-removed.jpg`] }]))
+const staleSrc = await saveAutoPhotoPicks(TENANT, [{ actionId: 'content:s', generatedAt: AT, picks: [], replaces: [{ place: placeOfPick('정문', '박물관'), src: `${SITE}/inside.jpg` }] }], 3)
+ok('그사이 다른 사진으로 바뀐 자리 — 건드리지 않고 stale로 알린다', staleSrc.removed === 0 && staleSrc.stale.length === 1 && readStored()['content:s']!.photos?.[0]?.src === `${SITE}/outside.jpg`)
+const blockedPerson = await saveAutoPhotoPicks(
+  TENANT,
+  [{ actionId: 'content:s', generatedAt: AT, picks: [], replaces: [{ place: placeOfPick('정문', '박물관'), src: `${SITE}/outside.jpg`, pick: sitePick('정문', '박물관', `${SITE}/person-removed.jpg`) }] }],
+  3,
+)
+ok('바꿀 사진이 그 자리에서 사람이 뺀 사진이면 바꾸지 않고 그대로 둔다', blockedPerson.replaced === 0 && blockedPerson.skipped === 1 && readStored()['content:s']!.photos?.[0]?.src === `${SITE}/outside.jpg`)
+const blockedCap = await saveAutoPhotoPicks(
+  TENANT,
+  [{ actionId: 'content:s', generatedAt: AT, picks: [], replaces: [{ place: placeOfPick('정문', '박물관'), src: `${SITE}/outside.jpg`, pick: sitePick('정문', '박물관', `${SITE}/busy.jpg`) }] }],
+  3,
+)
+ok('바꿀 사진이 브랜드 반복 상한에 걸리면 바꾸지 않는다', blockedCap.replaced === 0 && blockedCap.skipped === 1 && readStored()['content:s']!.photos?.[0]?.src === `${SITE}/outside.jpg`)
+const roomSwap = await saveAutoPhotoPicks(
+  TENANT,
+  [{ actionId: 'content:s', generatedAt: AT, picks: [sitePick('새 자리', '새', `${SITE}/fresh.jpg`)], replaces: [{ place: placeOfPick('정문', '박물관'), src: `${SITE}/outside.jpg` }] }],
+  3,
+)
+ok('빼기는 새 사진보다 먼저 — 나간 자리만큼 새 사진을 넣을 수 있다', roomSwap.removed === 1 && roomSwap.saved === 1 && readStored()['content:s']!.photos?.map((p) => p.src.split('/').pop()).join(',') === 'manual.jpg,fresh.jpg')
+
 // 8) 서버 길 — 검사 · 키 없음 · 키 노출 · 뺀 사진 기록
 const PORT = 4104
 const MOCK_PORT = 4106
@@ -558,6 +702,7 @@ writeFileSync(
   path.join(tenantDir, 'drafts.json'),
   JSON.stringify({
     'content:r': draftOf('content:r', { photos: [{ ...sitePick('정문', '박물관', `${SITE}/gate.jpg`) }] }),
+    'content:q': draftOf('content:q', { photos: [sitePick('정문', '박물관', `${SITE}/q-inside.jpg`), manualPick('거리', '거리', `${SITE}/q-manual.jpg`)] }),
   }),
 )
 const anthropicCalls: string[] = []
@@ -642,6 +787,34 @@ try {
     ok('다시 채우기는 다른 사진을 저장하고 뺀 기록은 남긴다', refillOther.body.saved === 1 && stored?.photos?.[0]?.src === `${SITE}/gate2.jpg` && stored.photoCleared?.length === 1)
     const removedAgain = await call('PUT', `/api/content-draft/${TENANT}/photos`, { actionId: 'content:r', generatedAt: AT, op: 'remove', place: { slot: '정문', nth: 1, heading: '박물관' } })
     ok('다시 빼면 뺀 사진이 쌓인다', JSON.stringify((removedAgain.body.photoCleared as { removed?: string[] }[])[0]?.removed) === JSON.stringify([`${SITE}/gate.jpg`, `${SITE}/gate2.jpg`]))
+    // 바꾸기 · 빼기 — 서버 길(검사 · stale)
+    const badReplace = await call('PUT', `/api/content-draft/${TENANT}/photos`, { op: 'auto', articles: [{ actionId: 'content:q', generatedAt: AT, picks: [], replaces: [{ src: `${SITE}/q-inside.jpg` }] }] })
+    ok('바꾸거나 뺄 자동 사진의 자리가 없으면 400', badReplace.status === 400)
+    const swapHttp = await call('PUT', `/api/content-draft/${TENANT}/photos`, {
+      op: 'auto',
+      articles: [
+        {
+          actionId: 'content:q',
+          generatedAt: AT,
+          picks: [],
+          replaces: [
+            { place: { slot: '정문', nth: 1, heading: '박물관' }, src: `${SITE}/q-inside.jpg`, pick: sitePick('정문', '박물관', `${SITE}/q-outside.jpg`) },
+            { place: { slot: '거리', nth: 1, heading: '거리' }, src: `${SITE}/q-manual.jpg` },
+          ],
+        },
+      ],
+    })
+    const storedQ = (JSON.parse(readFileSync(path.join(tenantDir, 'drafts.json'), 'utf-8')) as Record<string, { photos?: { src: string; auto?: true; confirmedAt: string }[]; photoCleared?: unknown[] }>)['content:q']
+    ok(
+      '서버 길 — 자동 사진은 바꾸고(확인 시각 · 자동 표시) 사람이 고른 사진은 stale로 알리며, 뺀 기록을 만들지 않는다',
+      swapHttp.status === 200 && swapHttp.body.replaced === 1 && (swapHttp.body.stale as unknown[]).length === 1 &&
+        storedQ?.photos?.[0]?.src === `${SITE}/q-outside.jpg` && storedQ.photos[0]!.auto === true && storedQ.photos[0]!.confirmedAt !== AT && storedQ.photos[1]?.src === `${SITE}/q-manual.jpg` && !storedQ.photoCleared,
+    )
+    const swapBadPick = await call('PUT', `/api/content-draft/${TENANT}/photos`, {
+      op: 'auto',
+      articles: [{ actionId: 'content:q', generatedAt: AT, picks: [], replaces: [{ place: { slot: '정문', nth: 1, heading: '박물관' }, src: `${SITE}/q-outside.jpg`, pick: { ...sitePick('정문', '박물관', `${SITE}/q-illust.jpg`), alt: '일러스트 박물관' } }] }],
+    })
+    ok('서버 길 — 바꿀 사진이 자동 후보 검사(일러스트)에 걸리면 그대로 두고 센다', swapBadPick.status === 200 && swapBadPick.body.replaced === 0 && swapBadPick.body.skipped === 1)
   } finally {
     await stop(noKeyServer)
   }

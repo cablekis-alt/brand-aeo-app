@@ -454,7 +454,12 @@ export function galleryTourPhotos(
   return { photos, rejected }
 }
 
+/** 고른 사진의 찾은 페이지(pageUrl)가 관광공사 데이터 페이지면 그 서비스, 아니면 null. */
+export function tourSourceOf(pageUrl: string | undefined): TourSource | null {
+  return (Object.keys(TOUR_SOURCES) as TourSource[]).find((k) => TOUR_SOURCES[k].page === pageUrl) ?? null
+}
+
 /** 고른 사진의 찾은 페이지(pageUrl)가 관광공사 데이터 페이지인가 — 화면이 「관광공사 사진」 표시를 단다. */
 export function isTourSourcePage(pageUrl: string | undefined): boolean {
-  return Object.values(TOUR_SOURCES).some((s) => s.page === pageUrl)
+  return tourSourceOf(pageUrl) !== null
 }

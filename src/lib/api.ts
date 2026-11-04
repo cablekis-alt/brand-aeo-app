@@ -1708,12 +1708,18 @@ export interface AutoPhotoSaveResult {
   saved: number
   /** 출처를 붙인 사진 수(이미 고른 출처 없는 공공 사진). */
   credited: number
-  /** 넣지 않은 사진 수 — 그사이 자리에 사진이 생겼거나, 글이 다 찼거나, 반복 상한 · 후보 검사에 걸렸다. */
+  /** 넣지 않은 사진 수 — 그사이 자리에 사진이 생겼거나, 글이 다 찼거나, 반복 상한 · 후보 검사에 걸렸다(바꿀 사진이 걸리면 그 자동 사진은 그대로). */
   skipped: number
   /** 그사이 다시 만들어진 글 — 건너뛰었다. */
   changed: string[]
   /** 초안이 없어진 글 — 건너뛰었다. */
   missing: string[]
+  /** 장면이 어긋나 다른 사진으로 바꾼 자동 사진 수. */
+  replaced: number
+  /** 장면이 어긋나 뺀 자동 사진 수. */
+  removed: number
+  /** 바꾸거나 빼지 않은 자리 — 그사이 그 자리의 사진이 사람이 고른 사진이 되었거나 다른 사진으로 바뀌었다. */
+  stale: { actionId: string; slot: string; nth: number }[]
 }
 
 /** 한 번에 보내는 글 수 — 서버가 받는 수(server/index.ts op auto)와 JSON 본문 한도 안. */
@@ -1723,6 +1729,7 @@ const AUTO_PHOTO_BATCH = 10
  * 자동 채우기(src/lib/photoAutoPick.ts)가 고른 사진을 저장한다 — 글 AUTO_PHOTO_BATCH편씩 나눠 보내고(한 번에 drafts.json 쓰기 한 번),
  * 결과를 합친다. 그사이 다시 만들어진 글은 서버가 건너뛰고 changed로 알린다. 판정 호출 없음. 중간에 실패하면 그때까지 저장된 것은 남고
  * throw — 오류 응답이든 요청 자체가 끊긴 것이든(서버 재시작 · 연결 끊김) 앞 묶음까지의 결과를 partial로 붙인다(화면이 그 초안을 반영).
+ * replaces(장면으로 다시 본 자동 사진 — 바꾸기 · 빼기)는 서버가 그 자리에 화면이 본 그 자동 사진이 있을 때만 하고, 아니면 stale로 알린다.
  */
 export async function saveDraftPhotosAuto(
   tenantId: string,
@@ -1731,11 +1738,12 @@ export async function saveDraftPhotosAuto(
     generatedAt: string
     picks: readonly import('./photoAutoPick').AutoPickInput[]
     credits?: readonly PhotoCreditInput[]
+    replaces?: readonly import('./photoAutoPick').AutoReplaceInput[]
   }[],
   opts: { refillCleared?: boolean } = {},
 ): Promise<AutoPhotoSaveResult> {
-  const total: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [] }
-  const list = articles.filter((a) => a.picks.length > 0 || (a.credits?.length ?? 0) > 0)
+  const total: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [], replaced: 0, removed: 0, stale: [] }
+  const list = articles.filter((a) => a.picks.length > 0 || (a.credits?.length ?? 0) > 0 || (a.replaces?.length ?? 0) > 0)
   for (let i = 0; i < list.length; i += AUTO_PHOTO_BATCH) {
     let res: Response
     try {
@@ -1755,6 +1763,9 @@ export async function saveDraftPhotosAuto(
     total.skipped += out.skipped ?? 0
     total.changed.push(...(out.changed ?? []))
     total.missing.push(...(out.missing ?? []))
+    total.replaced += out.replaced ?? 0
+    total.removed += out.removed ?? 0
+    total.stale.push(...(out.stale ?? []))
   }
   return total
 }
