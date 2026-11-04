@@ -272,6 +272,50 @@ ok(
   sceneFit(wantsOf('조명이 켜진 근대역사박물관 전시실 내부'), DIORAMA).ok && sceneFit(wantsOf('은은한 불빛이 비치는 객실'), S({ setting: 'interior', time: 'unknown', tags: ['객실'] })).ok,
 )
 
+// 5c) 2026-11-04 결정 — 비슷한 사진(시간만 다름)은 맞는 사진이 어디에도 없을 때만, 「확인 필요」로. 종류 · 사람이 어긋난 사진은 쓰지 않는다.
+const DUSK_SLOT = '해 질 무렵 하늘빛이 남아 있는 진포해양공원 풍경'
+const DAY_SEA = S({ text: '바다와 공원 산책로, 낮', tags: ['바다', '공원', '하늘'] })
+const DUSK_SEA = S({ time: 'dusk', text: '노을 진 하늘과 바다', tags: ['노을', '하늘', '바다'] })
+const softFit = sceneFit(wantsOf(DUSK_SLOT), DAY_SEA)
+ok('시간만 다른 사진은 soft(비슷한 사진 후보)로 — 점수 · 맞은 낱말도 낸다', !softFit.ok && softFit.miss === 'time' && softFit.soft === true && softFit.words.includes('하늘빛') && softFit.score >= 2)
+ok(
+  '종류 · 사람 · 화면이 어긋난 사진은 soft가 아니다(시간도 다를 때도)',
+  !sceneFit(wantsOf(DUSK_SLOT), DIORAMA).soft && !sceneFit(wantsOf(DUSK_SLOT), S({ people: 'identifiable' })).soft && !sceneFit(wantsOf(DUSK_SLOT), S({ setting: 'screen' })).soft &&
+    sceneFit(wantsOf(DUSK_SLOT), S({ people: 'identifiable' })).miss === 'people',
+)
+const jpPub = (i: number): AutoCandidate => ({ ...pubInside[0]!, src: `https://gunsan.example/places/jp${i}.jpg`, place: '진포해양공원', pageUrl: 'https://gunsan.example/places/진포해양공원/' })
+const jt = (i: number) => tour(`jt${i}`, '진포해양공원', '202001')
+const duskDoc = doc('d1', ['## 1. 바다', '', `![${DUSK_SLOT}](#image-slot)`], { group: 'dw' })
+const homeDay: AutoCandidate = { src: 'https://gunsan.example/img/jinpo-day.jpg', alt: '진포해양공원 바다 풍경', pageUrl: 'https://gunsan.example/' }
+const fullLater = rowsOf(
+  run([duskDoc], { candidates: [homeDay], publicCandidates: [jpPub(1)], tourCandidates: [jt(1)], scenes: freshScenes([[homeDay, DAY_SEA], [jpPub(1), DAY_SEA], [jt(1), DUSK_SEA]]), pagesRead: new Set(['진포해양공원']) }),
+  'd1',
+)[0]!
+ok('맞는 사진이 뒤 단계(관광공사)에 있으면 앞 단계의 비슷한 사진(홈페이지 · 장소 페이지 낮 사진)보다 그쪽', fullLater.state === 'filled' && fullLater.pick?.src === jt(1).src && !fullLater.similar)
+const onlySoft = run([duskDoc], { candidates: [homeDay], publicCandidates: [jpPub(1)], tourCandidates: [jt(2)], scenes: freshScenes([[homeDay, DAY_SEA], [jpPub(1), S({ ...DAY_SEA, tags: ['바다', '공원', '하늘', '풍경'] })], [jt(2), DIORAMA]]), pagesRead: new Set(['진포해양공원']) })
+const softRow = rowsOf(onlySoft, 'd1')[0]!
+ok(
+  '맞는 사진이 어디에도 없으면 시간만 다른 사진을 「비슷한 사진」으로 — 까닭 · 「확인 필요」',
+  softRow.state === 'filled' && softRow.similar === '비슷한 사진 — 시간이 다름: 낮 사진 · 해 질 무렵 자리' && softRow.review === true && softRow.scene?.time === 'day' && onlySoft.articles[0]!.picks.length === 1,
+)
+ok('비슷한 사진은 장면 점수가 높은 것부터(같으면 홈페이지 → 장소 페이지)', softRow.pick?.src === homeDay.src || softRow.pick?.src === jpPub(1).src)
+ok('비슷한 사진으로 채운 자리도 관광공사 사진을 찾는다(맞는 사진이 나오면 그쪽)', tourPlacesWanted(onlySoft, new Set(['진포해양공원'])).includes('진포해양공원'))
+const hardOnly = rowsOf(run([duskDoc], { candidates: [], publicCandidates: [jpPub(2)], tourCandidates: [jt(3)], scenes: freshScenes([[jpPub(2), DIORAMA], [jt(3), S({ time: 'dusk', people: 'identifiable', tags: ['노을', '바다'] })]]), pagesRead: new Set(['진포해양공원']) }), 'd1')[0]!
+ok('종류 · 사람이 어긋난 사진뿐이면 비슷한 사진으로도 넣지 않는다(빈자리)', hardOnly.state === 'scene' && !hardOnly.pick && !hardOnly.similar)
+const softRank = rowsOf(
+  run([duskDoc], { candidates: [], publicCandidates: [jpPub(3), jpPub(4)], tourCandidates: [], scenes: freshScenes([[jpPub(3), S({ text: '공원 잔디밭', tags: ['잔디'] })], [jpPub(4), DAY_SEA]]), pagesRead: new Set(['진포해양공원']) }),
+  'd1',
+)[0]!
+ok('비슷한 사진 — 장면 점수가 높은 것(바다 · 하늘이 맞는 사진)부터', softRank.similar !== undefined && softRank.pick?.src === jpPub(4).src)
+const softDocs = ['dx', 'dy', 'dz', 'dq'].map((id) => doc(id, ['## 1. 바다', '', `![${DUSK_SLOT}](#image-slot)`], { group: id }))
+const softCap = run(softDocs, { candidates: [], publicCandidates: [jpPub(4), jpPub(5)], tourCandidates: [], scenes: freshScenes([[jpPub(4), DAY_SEA], [jpPub(5), S({ text: '공원 잔디밭', tags: ['잔디'] })]]), pagesRead: new Set(['진포해양공원']) })
+ok(
+  '비슷한 사진도 반복 상한(브랜드 3번)을 지킨다 — 넷째 글은 다음 비슷한 사진',
+  softDocs.slice(0, 3).every((d) => rowsOf(softCap, d.actionId)[0]!.pick?.src === jpPub(4).src) && rowsOf(softCap, 'dq')[0]!.pick?.src === jpPub(5).src && Boolean(rowsOf(softCap, 'dq')[0]!.similar),
+)
+const plainSoft = rowsOf(run([duskDoc], { candidates: [], publicCandidates: [jpPub(1)], tourCandidates: [] }), 'd1')[0]!
+ok('장면 없이 고르면(키 없음) 지금처럼 — 비슷한 사진 표시 없이 장소 사진', plainSoft.state === 'filled' && plainSoft.pick?.src === jpPub(1).src && !plainSoft.similar)
+
 // 읽지 못한 사진(failed)은 「아직 읽지 않음」이 아니다 — 장면이 맞는 사진 없음으로 관광공사 사진을 찾는다.
 const fa = pubInside[0]!
 const fb = pubInside[1]!

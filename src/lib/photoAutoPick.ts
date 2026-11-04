@@ -11,7 +11,9 @@
  * 키가 없거나 웹) 지금까지처럼 고른다.
  *
  * 틀린 사진은 빈자리보다 나쁘다 — 사람이 고른 사진 3장이 이미 장면과 어긋났다(2026-11-03 점검). 그래서 문턱(AUTO_PICK_RULES)에
- * 못 미치면 비워 두고, 다음은 아예 보지 않는다.
+ * 못 미치면 비워 두고, 다음은 아예 보지 않는다. 다만 빈자리보다는 비슷한 사진이 낫다(2026-11-04 결정) — 장면을 읽었을 때 맞는 사진이
+ * 어디에도 없으면 시간만 다른 사진(낮 사진 · 해 질 무렵 자리)을 「비슷한 사진」(늘 「확인 필요」)으로 넣는다. 종류 · 사람이 어긋난 사진은
+ * 그래도 넣지 않는다.
  * - 자리: 웹사이트 화면 자리(사진이 아니라 캡처가 맞다) · 이미 사진이 있는 자리 · 사람이 사진을 뺀 자리(「사람이 뺀 자리도 다시
  *   채우기」를 켜면 다시 보되, 그 자리에서 뺀 사진은 고르지 않는다).
  * - 후보: 설명 없는 사진 · 일러스트 · 사람이 찍힌 사진(초상권) · 출처를 확인하지 못한 공공 사진 · 공공누리 제1유형이 아닌 공공 사진.
@@ -39,7 +41,7 @@ import {
   type PhotoSlot,
   type PublicPhotoFields,
 } from './articlePhotos.js'
-import type { PhotoScene, SceneSetting, SceneTime, SceneWant } from './photoScenes.js'
+import { SCENE_TIME_TEXT, type PhotoScene, type SceneSetting, type SceneTime, type SceneWant } from './photoScenes.js'
 import type { TourSource } from './tourPhotos.js'
 
 export { needsPhotoCredit }
@@ -403,6 +405,12 @@ export const SCENE_SKIP_TEXT: Record<SceneSkip, string> = {
 export interface SceneFit {
   ok: boolean
   miss?: Exclude<SceneSkip, 'unread' | 'failed'>
+  /**
+   * 시간만 다르다(miss time — 낮 사진 · 해 질 무렵 자리, 밤 사진 · 낮 자리) — 종류 · 사람은 맞는다. 맞는 사진이 어디에도 없을 때만
+   * 「비슷한 사진」으로 쓴다(늘 「확인 필요」 — 2026-11-04 결정). 그래서 점수 · 맞은 낱말도 낸다. 종류 · 사람 · 화면이 어긋난 사진(miss가
+   * kind · setting · people)은 비슷한 사진으로도 쓰지 않는다.
+   */
+  soft?: true
   /** 맞은 낱말(장면 글자 2 · 설명 줄 1) + 바라는 종류 1 + 바라는 시간 1. */
   score: number
   /** 장면(낱말 · 설명)과 맞은 자리 낱말. */
@@ -473,24 +481,31 @@ function signScene(scene: Pick<PhotoScene, 'text' | 'tags'>): boolean {
 }
 
 /**
- * 사진 장면 하나를 자리에 견준다 — 화면 · 그림은 늘 빼고, 자리가 바라는 종류 · 시간과 다르면 빼고(틀린 사진보다 빈자리), 사람을 알아볼 수
- * 있는 사진은 사람이 나오는 장면 자리가 아니면 뺀다. 바깥 안내판 자리(closeupSign)의 가까이 찍은 사진은 안내판 · 간판 사진만 받는다
- * (2026-11-04 — 「입구와 이용시간 안내판」 자리에 디오라마 · 유물 근접 사진이 점수 0으로 들어갔다). 맞으면 맞은 낱말로 점수를 낸다(장면
- * 글자 낱말 2 · 설명 줄 낱말 1 · 바라는 종류 1 · 바라는 시간 1).
+ * 사진 장면 하나를 자리에 견준다 — 화면 · 그림은 늘 빼고, 자리가 바라는 종류와 다르면 빼고(틀린 사진보다 빈자리), 사람을 알아볼 수 있는
+ * 사진은 사람이 나오는 장면 자리가 아니면 뺀다. 바깥 안내판 자리(closeupSign)의 가까이 찍은 사진은 안내판 · 간판 사진만 받는다
+ * (2026-11-04 — 「입구와 이용시간 안내판」 자리에 디오라마 · 유물 근접 사진이 점수 0으로 들어갔다). 시간만 다르면 soft(비슷한 사진 —
+ * 맞는 사진이 없을 때만 쓴다)로 돌려준다. 맞은 낱말로 점수를 낸다(장면 글자 낱말 2 · 설명 줄 낱말 1 · 바라는 종류 1 · 바라는 시간 1).
  */
 export function sceneFit(wants: SceneWants, scene: Pick<PhotoScene, 'text' | 'setting' | 'people' | 'time' | 'tags'>): SceneFit {
   const miss = (m: NonNullable<SceneFit['miss']>): SceneFit => ({ ok: false, miss: m, score: 0, words: [] })
   if (scene.setting === 'screen' || scene.setting === 'illustration') return miss('kind')
   if (wants.settings && !wants.settings.includes(scene.setting)) return miss('setting')
   if (wants.closeupSign && scene.setting === 'closeup' && !signScene(scene)) return miss('setting')
-  if (wants.times && !wants.times.includes(scene.time)) return miss('time')
   if (scene.people === 'identifiable' && !wants.people) return miss('people')
   const seen = [...new Set([...scene.tags.map((t) => t.toLowerCase()), ...contentWords(scene.text.replace(NO_PEOPLE_TEXT, ' '))])]
   const hits = (words: readonly string[]) => words.filter((w) => seen.some((s) => sameWord(w, s)))
   const key = hits(wants.key)
   const caption = hits(wants.caption)
-  const score = 2 * key.length + caption.length + (wants.settings?.[0] === scene.setting ? 1 : 0) + (wants.times?.[0] === scene.time ? 1 : 0)
-  return { ok: true, score, words: [...new Set([...key, ...caption])] }
+  const timeOk = !wants.times || wants.times.includes(scene.time)
+  const score = 2 * key.length + caption.length + (wants.settings?.[0] === scene.setting ? 1 : 0) + (timeOk && wants.times?.[0] === scene.time ? 1 : 0)
+  const words = [...new Set([...key, ...caption])]
+  return timeOk ? { ok: true, score, words } : { ok: false, miss: 'time', soft: true, score, words }
+}
+
+/** 비슷한 사진의 까닭 — 「비슷한 사진 — 시간이 다름: 낮 사진 · 해 질 무렵 자리」. */
+export function similarWhy(wants: Pick<SceneWants, 'times'>, scene: Pick<PhotoScene, 'time'>): string {
+  const want = wants.times?.[0]
+  return `비슷한 사진 — 시간이 다름: ${SCENE_TIME_TEXT[scene.time]} 사진${want ? ` · ${SCENE_TIME_TEXT[want]} 자리` : ''}`
 }
 
 export interface SlotScore {
@@ -592,6 +607,11 @@ export interface AutoSlotRow {
   sceneSkips?: Partial<Record<SceneSkip, number>>
   /** 사람이 뺀 자리를 다시 채우는 자리(refillCleared) — 그 자리에서 뺀 사진은 고르지 않는다. */
   refill?: true
+  /**
+   * 맞는 사진이 어디에도 없어 시간만 다른 「비슷한 사진」을 넣었다 — 그 까닭(similarWhy, 「비슷한 사진 — 시간이 다름: 낮 사진 · 해 질 무렵
+   * 자리」). 늘 「확인 필요」. 관광공사 사진을 더 찾을 자리다(tourPlacesWanted — 맞는 사진이 나오면 그쪽을 쓴다).
+   */
+  similar?: string
 }
 
 /** 이미 고른 사진 가운데 출처가 없는 공공 사진(photoCreditState missing)에 붙일 출처 — 같은 사진이 장소 페이지에 제1유형으로 있다. */
@@ -705,7 +725,8 @@ export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>, pages
   const rest: string[] = []
   for (const a of result.articles) {
     for (const row of a.rows) {
-      const open = row.state === 'nomatch' || row.state === 'license' || row.state === 'scene' || (row.state === 'used' && (row.homeOnly || row.askTour))
+      const open =
+        row.state === 'nomatch' || row.state === 'license' || row.state === 'scene' || Boolean(row.similar) || (row.state === 'used' && (row.homeOnly || row.askTour))
       if (!open || !row.places?.length || !placesRead(row.places, pagesRead)) continue
       row.places.forEach((place, i) => (i === 0 ? first : rest).push(place))
     }
@@ -727,6 +748,8 @@ export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>, pages
  * 박물관 이야기」)는 화면 · 그림이 아닌 장소 사진을 장면 점수 순서로 받는다(2026-11-04 결정 — 빈자리보다 비슷한 사진). 홈페이지 사진(①)은 설명 낱말이 이미
  * 장면을 말하므로 장면을 읽지 않았어도 쓰고, 읽었으면 설명 점수에 장면 점수를 더한다. 같은 점수면 지금까지의 순서 그대로다. 장면을 읽지
  * 못한 사진(sceneFailed)은 「아직 읽지 않음」(unread — 다시 누르면 읽는다)이 아니라 장면이 맞지 않은 사진으로 센다(관광공사 사진을 찾는다).
+ * ①②③ 어디에도 장면이 맞는 사진이 없는 자리는 ④ 시간만 다른 사진(SceneFit soft)을 「비슷한 사진」으로 넣는다(row.similar — 관광공사
+ * 사진을 더 찾을 자리, 늘 「확인 필요」).
  * 장면 없이 고를 때 「사람이 뺀 자리도 다시 채우기」는 뺀 사진을 아는 자리만 다시 채운다(refills).
  */
 export function autoPickPhotos(input: {
@@ -876,7 +899,7 @@ export function autoPickPhotos(input: {
       row.sceneSkips = { ...row.sceneSkips, [why]: (row.sceneSkips?.[why] ?? 0) + 1 }
     }
     const out: AutoPickInput[] = []
-    const fill = (row: AutoSlotRow, candidate: AutoCandidate, score: SlotScore, seen?: { scene?: PhotoScene; fit?: SceneFit }) => {
+    const fill = (row: AutoSlotRow, candidate: AutoCandidate, score: SlotScore, seen?: { scene?: PhotoScene; fit?: SceneFit }, similar?: string) => {
       const credit = candidate.origin === 'public' ? publicCandidateFields(candidate) : null
       const pick: AutoPickInput = {
         slot: row.slot.key,
@@ -896,7 +919,8 @@ export function autoPickPhotos(input: {
         score,
         ...(seen?.scene ? { scene: seen.scene } : {}),
         ...(seen?.fit ? { fit: seen.fit } : {}),
-        ...(isPeopleScene(row.slot.key, row.places ?? []) || credit ? { review: true } : {}),
+        ...(isPeopleScene(row.slot.key, row.places ?? []) || credit || similar ? { review: true } : {}),
+        ...(similar ? { similar } : {}),
       })
       out.push(pick)
       inArticle.add(candidate.src)
@@ -907,6 +931,8 @@ export function autoPickPhotos(input: {
     // ① 홈페이지 사진 — 점수(설명 낱말 + 장면)가 높은 짝부터. 장면을 읽었는데 자리와 어긋나면 짝으로 두지 않는다.
     type Pair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore; rank: number; scene?: PhotoScene; fit?: SceneFit }
     const pairs: Pair[] = []
+    /** 시간만 다른 짝(비슷한 사진 — ④에서 맞는 사진이 없는 자리에만). */
+    const softPairs: Pair[] = []
     for (const row of rows) {
       if (row.state !== 'nomatch') continue
       for (const candidate of usable) {
@@ -916,11 +942,13 @@ export function autoPickPhotos(input: {
         want(candidate, 'site')
         const scene = scenes?.get(candidate.src)
         const fit = scene ? sceneFit(wantsOf(row), scene) : undefined
+        const pair = { row, candidate, score, rank: score.score + (fit?.score ?? 0), ...(scene ? { scene } : {}), ...(fit ? { fit } : {}) }
         if (fit && !fit.ok) {
           skipScene(row, fit.miss!)
+          if (fit.soft) softPairs.push(pair)
           continue
         }
-        pairs.push({ row, candidate, score, rank: score.score + (fit?.score ?? 0), ...(scene ? { scene } : {}), ...(fit ? { fit } : {}) })
+        pairs.push(pair)
       }
     }
     const better = (a: Pair, b: Pair) =>
@@ -939,13 +967,15 @@ export function autoPickPhotos(input: {
     // 자리는 관광공사 사진을 보지 않는다(pagesRead).
     type Option = { candidate: AutoCandidate; order: number; scene?: PhotoScene; fit?: SceneFit }
     const tourOk = (row: AutoSlotRow) => !input.pagesRead || placesRead(row.places ?? [], input.pagesRead)
-    const optionsOf = (row: AutoSlotRow, list: readonly AutoCandidate[], source: SceneWant['source']): Option[] => {
-      const opts: Option[] = []
+    /** 자리 · 장소 하나의 후보 — fit 장면이 맞는 것(장면 없이 고르면 모두), soft 시간만 다른 것(비슷한 사진). */
+    type Options = { fit: Option[]; soft: Option[] }
+    const optionsOf = (row: AutoSlotRow, list: readonly AutoCandidate[], source: SceneWant['source']): Options => {
+      const opts: Options = { fit: [], soft: [] }
       list.forEach((candidate, order) => {
         if (removed(row, candidate.src)) return
         want(candidate, source)
         if (!scenes) {
-          opts.push({ candidate, order })
+          opts.fit.push({ candidate, order })
           return
         }
         const scene = scenes.get(candidate.src)
@@ -954,22 +984,19 @@ export function autoPickPhotos(input: {
           return
         }
         const fit = sceneFit(wantsOf(row), scene)
-        if (!fit.ok) {
-          skipScene(row, fit.miss!)
-          return
-        }
-        opts.push({ candidate, order, scene, fit })
+        if (!fit.ok) skipScene(row, fit.miss!)
+        if (fit.ok || fit.soft) opts[fit.ok ? 'fit' : 'soft'].push({ candidate, order, scene, fit })
       })
       return opts
     }
-    const publicOpts = new Map<AutoSlotRow, Map<string, Option[]>>()
-    const tourOpts = new Map<AutoSlotRow, Map<string, Option[]>>()
+    const publicOpts = new Map<AutoSlotRow, Map<string, Options>>()
+    const tourOpts = new Map<AutoSlotRow, Map<string, Options>>()
     for (const row of rows) {
       if (row.state !== 'nomatch' || !row.places) continue
       publicOpts.set(row, new Map(row.places.map((place) => [place, optionsOf(row, publicByPlace.get(place) ?? [], 'public')])))
       if (tourOk(row)) tourOpts.set(row, new Map(row.places.map((place) => [place, optionsOf(row, tourByPlace.get(place) ?? [], 'tour')])))
     }
-    const optsAt = (m: Map<AutoSlotRow, Map<string, Option[]>>, row: AutoSlotRow, place: string) => m.get(row)?.get(place) ?? []
+    const optsAt = (m: Map<AutoSlotRow, Map<string, Options>>, row: AutoSlotRow, place: string, kind: keyof Options = 'fit') => m.get(row)?.get(place)?.[kind] ?? []
     const sceneScore = (o: Option) => o.fit?.score ?? 0
 
     // ② 공공 사진 — 남은 자리를 앞에서부터, 자리의 장소(앞 장소부터) 페이지 사진 가운데 아직 쓰지 않은 첫 장(장면으로 고르면 장면이 가장
@@ -1002,6 +1029,35 @@ export function autoPickPhotos(input: {
         row.place = place
         break
       }
+    }
+
+    // ④ 비슷한 사진 — 장면이 맞는 사진이 어디에도 없어(①②③ 모두 — 반복 상한에 걸린 사진 포함) 아직 빈 자리에, 시간만 다른 사진(soft —
+    // 낮 사진 · 해 질 무렵 자리)을 장면 점수가 높은 것부터(같으면 홈페이지 → 장소 페이지 → 관광공사, 그 안에서는 ①②③의 순서). 늘 「확인
+    // 필요」. 종류 · 사람 · 화면이 어긋난 사진은 쓰지 않는다(틀린 사진은 빈자리보다 나쁘다). 장면으로 고를 때만 생긴다.
+    type Similar = { candidate: AutoCandidate; score: SlotScore; scene?: PhotoScene; fit: SceneFit; rank: number[]; place?: string }
+    const byRank = (a: Similar, b: Similar) => {
+      for (let i = 0; i < a.rank.length; i += 1) if (a.rank[i] !== b.rank[i]) return a.rank[i]! - b.rank[i]!
+      return 0
+    }
+    for (const row of rows) {
+      if (row.state !== 'nomatch' || room === 0) continue
+      const places = row.places ?? []
+      const fromPlace = (m: Map<AutoSlotRow, Map<string, Options>>, stage: number) =>
+        places.flatMap((place, i) =>
+          optsAt(m, row, place, 'soft').map((o): Similar => ({ ...o, fit: o.fit!, score: placeScore(place), place, rank: [-sceneScore(o), stage, i, stage === 2 ? used(o) : 0, o.order] })),
+        )
+      const list: Similar[] = [
+        ...softPairs
+          .filter((p) => p.row === row)
+          .sort(better)
+          .map((p, order): Similar => ({ candidate: p.candidate, score: p.score, ...(p.scene ? { scene: p.scene } : {}), fit: p.fit!, rank: [-p.fit!.score, 0, 0, 0, order] })),
+        ...fromPlace(publicOpts, 1),
+        ...(tourOk(row) ? fromPlace(tourOpts, 2) : []),
+      ]
+      const best = list.filter((o) => !isBlocked(o.candidate.src)).sort(byRank)[0]
+      if (!best?.scene) continue
+      fill(row, best.candidate, best.score, best, similarWhy(wantsOf(row), best.scene))
+      if (best.place) row.place = best.place
     }
 
     // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소의 공공 사진이 모두 「제1유형 아님」으로 빠졌으면 license.

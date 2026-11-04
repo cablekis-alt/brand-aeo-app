@@ -342,6 +342,7 @@ export default function PhotoAutoFill({
   const filledTour = rows.filter((r) => r.row.state === 'filled' && r.row.candidate?.tour).length
   const credits = preview ? preview.result.articles.reduce((n, a) => n + a.credits.length, 0) : 0
   const review = rows.filter((r) => r.row.review).length
+  const similar = rows.filter((r) => r.row.state === 'filled' && r.row.similar).length
   const refilled = rows.filter((r) => r.row.state === 'filled' && r.row.refill).length
   const shown = showAll ? rows : rows.filter((r) => r.row.state === 'filled')
   const skippedByReason = preview
@@ -396,6 +397,7 @@ export default function PhotoAutoFill({
             {filledPublic > 0 && ` (공공 사진 ${filledPublic})`}
             {filledTour > 0 && ` (관광공사 사진 ${filledTour})`}
             {review > 0 && ` (확인 필요 ${review})`}
+            {similar > 0 && ` (비슷한 사진 ${similar})`}
             {refilled > 0 && ` (사람이 뺀 자리 ${refilled})`}
             {others.length > 0 && ` · ${others.join(' · ')}`}
             {credits > 0 && ` · 출처를 붙일 공공 사진 ${credits}장`}
@@ -413,7 +415,8 @@ export default function PhotoAutoFill({
           <p className="hint" style={{ margin: 0 }}>
             틀린 사진보다 빈자리가 낫다는 기준으로, 설명이 충분히 맞는 사진만 고릅니다. 공공 사진 · 관광공사 사진은 자리 글자에 나온 장소의
             사진이에요 — 사진 장면을 읽었으면 장면이 자리와 어긋난 사진(외관 자리에 실내 사진 · 사람을 알아볼 수 있는 사진 등)은 빼고 장면이 맞는
-            사진을 고르지만, 장면 설명도 AI가 쓴 것이라 늘 「확인 필요」이니 썸네일을 확인해 주세요. 공공 사진은 내보낼 때 사진 아래에
+            사진을 고르지만, 장면 설명도 AI가 쓴 것이라 늘 「확인 필요」이니 썸네일을 확인해 주세요. 장면이 맞는 사진이 어디에도 없으면 시간만
+            다른 사진(낮 사진 · 해 질 무렵 자리)을 「비슷한 사진」으로 넣어요. 공공 사진은 내보낼 때 사진 아래에
             출처(공공누리 제1유형 링크)가 붙습니다. 사람이 나오는 장면 자리는 「확인 필요」 — 저장한 뒤 글의 「홈페이지 사진」 칸에서 바꾸거나 빼
             주세요. 사람이 고른 자리는 덮지 않고, 사람이 뺀 자리는 「사람이 뺀 자리도 다시 채우기」를 켰을 때만 다시 채웁니다.
           </p>
@@ -524,6 +527,7 @@ function PreviewRow({ title, row }: { title: string | null; row: AutoSlotRow }) 
           <span className="muted">—</span>
         )}
         {why && <span className="doc-meta" style={{ display: 'block' }}>{why}</span>}
+        {row.similar && <span className="doc-meta" style={{ display: 'block' }}>{row.similar} — 맞는 사진이 없어 넣었어요</span>}
         {skips && <span className="doc-meta" style={{ display: 'block' }}>장면 때문에 뺀 사진: {skips}</span>}
       </td>
       <td className="cell-text">
