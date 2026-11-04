@@ -707,10 +707,46 @@ ok(
 const KIDS_SLOT = `아이와 함께 ${SB} 웹사이트의 AI 코스 만들기 화면에서 조건을 고르는 모습`
 const kidsRow = screenRun([article('k1', ['## 아이', '', `![${KIDS_SLOT}](#image-slot)`])], { available: true, shots: ALL_SHOTS }).articles[0]!.rows[0]!
 ok('「아이」 자리는 아이와 변형 — 사람 장면 자리여도 「확인 필요」를 달지 않는다', isPeopleScene(KIDS_SLOT) && kidsRow.state === 'filled' && kidsRow.pick?.variantId === 'kids' && !kidsRow.review && kidsRow.screenPick?.by === 'prefer')
+// 조건을 말하지 않는 코스 자리는 기본 화면 먼저 — 예전 기대값은 parents(세 변형 가운데 브랜드에서 덜 쓴 것)였다. 그러면 조건을 말하지 않는
+// 자리에 아이와 · 부모님 조건 화면이 「확인 필요」 없이 들어간다(검토 2026-11-04). 덜 쓴 변형은 이제 같은 묶음(조건 화면) 안에서만 본다.
 const leastUsed = screenRun([article('l1', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`])], { available: true, shots: ALL_SHOTS }, {
   others: [{ src: 'screen:course:default' }, { src: 'screen:course:kids' }],
 }).articles[0]!.rows[0]!
-ok('브랜드에서 가장 덜 쓴 변형(다른 글에서 기본 · 아이와를 썼다)', leastUsed.pick?.variantId === 'parents')
+ok(
+  '조건을 말하지 않는 코스 자리는 기본 화면 먼저 — 다른 글에서 기본 · 아이와를 썼어도(브랜드 상한 면제)',
+  leastUsed.pick?.variantId === 'default' && !leastUsed.review && leastUsed.screenPick?.by === 'general',
+)
+const fallback = screenRun([article('l2', ['## 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w5' })], { available: true, shots: ALL_SHOTS }, {
+  others: [{ src: 'screen:course:default', group: 'w5' }, { src: 'screen:course:kids', group: 'o1' }],
+}).articles[0]!.rows[0]!
+ok(
+  '이 작성자가 기본을 이미 썼으면 조건 화면 가운데 브랜드에서 덜 쓴 것 — 자리가 말하지 않은 조건이라 「확인 필요」',
+  fallback.state === 'filled' && fallback.pick?.variantId === 'parents' && fallback.review === true && fallback.screenPick?.by === 'general',
+)
+
+// 조건은 소제목 · 설명 줄도 본다 — 실데이터의 코스 자리 글자는 거의 다 「조건을 고르는 모습」이고 조건은 소제목이 말한다.
+const condRows = screenRun(
+  [
+    article('h1', [
+      '## 혼자·연인 코스는 어떻게 짜나요?', '', `![${COURSE_SLOT}](#image-slot)`,
+      '', `## ${SB} '아이와 함께' 안내로 시간표 짜기`, '', `![${COURSE_SLOT}](#image-slot)`,
+      '', '## 혼자 여행', '', `![${COURSE_SLOT}](#image-slot)`,
+    ]),
+  ],
+  { available: true, shots: ALL_SHOTS },
+).articles[0]!.rows
+ok(
+  '소제목이 다른 동행(혼자 · 연인)을 말하면 기본 화면만 — 이 글에 기본을 이미 썼으면 조건 화면을 넣지 않고 비워 둔다(used)',
+  condRows[0]!.state === 'filled' && condRows[0]!.pick?.variantId === 'default' && condRows[0]!.screenPick?.by === 'other' && !condRows[0]!.review &&
+    condRows[2]!.state === 'used' && !condRows[2]!.pick,
+)
+ok('「아이와 함께」 소제목 아래 코스 자리는 아이와 변형', condRows[1]!.state === 'filled' && condRows[1]!.pick?.variantId === 'kids' && condRows[1]!.screenPick?.by === 'prefer' && !condRows[1]!.review)
+const captionParents = screenRun([article('h2', ['## 1박 2일 일정', '', `![${COURSE_SLOT}](#image-slot)`, '*부모님과 함께라면 어르신 인원을 넣어 보세요.*'])], { available: true, shots: ALL_SHOTS }).articles[0]!.rows[0]!
+ok('설명 줄이 부모님을 말하면 부모님 변형', captionParents.state === 'filled' && captionParents.pick?.variantId === 'parents' && captionParents.screenPick?.by === 'prefer')
+const coupleUsed = screenRun([article('h3', ['## 연인과 걷는 코스', '', `![${COURSE_SLOT}](#image-slot)`], { group: 'w6' })], { available: true, shots: ALL_SHOTS }, {
+  others: [{ src: 'screen:course:default', group: 'w6' }],
+}).articles[0]!.rows[0]!
+ok('「연인」 자리에서 이 작성자가 기본을 이미 썼으면 조건 화면을 넣지 않는다(used)', coupleUsed.state === 'used' && !coupleUsed.pick)
 
 // 상한 — 화면은 브랜드 상한을 받지 않고, 글 하나 · 작성자 한 사람에게 「화면 + 변형」 한 번.
 const busy = ['default', 'kids', 'parents'].flatMap((v) => [0, 1, 2, 3].map((i) => ({ src: `screen:course:${v}`, group: `o${i}` })))
@@ -734,7 +770,11 @@ const twoWriters = screenRun(
   { available: true, shots: ALL_SHOTS },
 )
 const gv = twoWriters.articles.map((a) => a.picks[0]?.variantId)
-ok('같은 작성자의 두 글은 다른 변형, 다른 작성자는 다시 쓸 수 있다', gv[0] === 'default' && gv[1] === 'kids' && gv[2] === 'parents')
+// 예전 기대값은 셋째 글(다른 작성자)이 parents(브랜드에서 덜 쓴 변형)였다 — 조건을 말하지 않는 자리는 이제 기본 화면 먼저라 default다.
+ok(
+  '같은 작성자의 두 글은 다른 변형(뒤 글은 조건 화면 · 확인 필요), 다른 작성자는 기본 화면을 다시 쓸 수 있다',
+  gv[0] === 'default' && gv[1] === 'kids' && twoWriters.articles[1]!.rows[0]!.review === true && gv[2] === 'default' && !twoWriters.articles[2]!.rows[0]!.review,
+)
 
 // 사람이 넣은 사진(일러스트) · 사람이 뺀 화면 · 다 찬 글
 const illustration: PhotoPick = {

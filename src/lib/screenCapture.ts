@@ -50,6 +50,11 @@ export interface ScreenDef {
   map?: true
   /** 이 화면에서 더 숨길 것(챗봇 단추 · 캐러셀 · 동의 배너는 캡처 모듈이 늘 숨긴다). */
   hide?: readonly string[]
+  /**
+   * 조건 변형(prefer)이 없는 다른 조건(코스 화면의 「혼자」 · 「연인·친구」) — 자리(장면 글자 · 소제목 · 설명 줄)가 이것을 말하면 조건 변형을
+   * 쓰지 않고 기본 변형만 쓴다(screenVariantChoice). 「연인·혼자」 소제목 아래 부모님 조건 화면이 나가지 않게.
+   */
+  otherCondition?: RegExp
   variants: readonly ScreenVariant[]
 }
 
@@ -118,6 +123,8 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
         kind: 'course',
         label: 'AI 코스 만들기',
         hide: ['.trp-handed-w', GUNSAN_WEATHER],
+        // 「누구와 가세요?」의 나머지 두 칸(혼자 · 연인·친구) — 사이트의 칸 이름과 글에 흔한 말(커플 · 데이트 · 나홀로).
+        otherCondition: /혼자|홀로|연인|커플|친구|데이트/,
         variants: [
           { id: 'default', label: '기본', path: '/plan/', scrollTo: '#trp-form' },
           { id: 'kids', label: '아이와', path: '/plan/?with=kids&kids=7', scrollTo: GUNSAN_COURSE_STEP, prefer: /아이(?!보리|콘|디어|스|폰|템)|어린이|자녀/ },
@@ -379,15 +386,20 @@ export function screenKindOf(text: string, profile: ScreenProfile | null): { kin
  * - 권역 변형이 있는 화면(지도): 장면 글자에 한 권역의 이름 · 장소만 나오면 그 권역만(by region — 원도심 장소를 말하는 지도 자리에는
  *   #r-원도심만). 권역이 둘 이상이거나, 장소 사전의 장소(namedPlaces — 장면 글자에 나온 장소)가 어느 권역 목록에도 없으면 전체 지도만
  *   (by named — 그 장소가 안 보이는 권역 지도를 넣지 않게).
- * - 조건 변형이 있는 화면(코스): 장면 글자가 「아이」 · 「부모님」을 말하면 그 변형 다음 기본 변형(by prefer — 다른 조건 변형은 쓰지 않는다).
+ * - 조건 변형이 있는 화면(코스): 조건은 장면 글자와 함께 소제목 · 설명 줄(context)도 본다 — 장면 글자는 대개 「조건을 고르는 모습」뿐이고
+ *   조건은 소제목이 말한다.
+ *   - 「아이」 · 「부모님」을 말하면 그 변형 다음 기본 변형(by prefer — 다른 조건 변형은 쓰지 않는다).
+ *   - 다른 조건(otherCondition — 「혼자」 · 「연인」)을 말하면 기본 변형만(by other).
+ *   - 조건을 말하지 않으면 기본 변형 다음 조건 변형(by general) — 기본을 이 글 · 작성자에게 이미 썼을 때만 조건 변형을 쓰고, 그때는 두 번째
+ *     묶음이라 「확인 필요」가 붙는다(photoAutoPick.ts).
  * - 그 밖에는 모든 변형.
  */
 export interface ScreenVariantChoice {
   tiers: ScreenVariant[][]
-  by?: 'region' | 'named' | 'prefer'
+  by?: 'region' | 'named' | 'prefer' | 'other' | 'general'
 }
 
-export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces: readonly string[] = []): ScreenVariantChoice {
+export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces: readonly string[] = [], context = ''): ScreenVariantChoice {
   const general = screen.variants.filter((v) => !v.places?.length && !v.prefer)
   const base = general.length ? general : [...screen.variants]
   const regional = screen.variants.filter((v) => v.places?.length)
@@ -398,8 +410,11 @@ export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces
     if (hits.length === 1 && !unknown.length) return { tiers: [hits], by: 'region' }
     if (hits.length > 1 || unknown.length) return { tiers: [base], by: 'named' }
   }
-  const norm = text.normalize('NFC')
-  const preferred = screen.variants.filter((v) => v.prefer?.test(norm))
+  const conditional = screen.variants.filter((v) => v.prefer)
+  if (!conditional.length) return { tiers: [[...screen.variants]] }
+  const said = `${text}\n${context}`.normalize('NFC')
+  const preferred = conditional.filter((v) => v.prefer!.test(said))
   if (preferred.length) return { tiers: [preferred, base.filter((v) => !preferred.includes(v))].filter((tier) => tier.length > 0), by: 'prefer' }
-  return { tiers: [[...screen.variants]] }
+  if (screen.otherCondition?.test(said)) return { tiers: [base], by: 'other' }
+  return { tiers: [base, conditional.filter((v) => !base.includes(v))].filter((tier) => tier.length > 0), by: 'general' }
 }

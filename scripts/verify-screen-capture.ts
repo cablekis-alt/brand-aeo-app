@@ -3,6 +3,7 @@
  * 화면 라우트(/api/screens) · 사진 PUT(origin screen) · 사진 받기 · 같은 화면 상한(server/contentDraft.ts saveAutoPhotoPicks).
  * 가짜 PNG · 가짜 브랜드만 쓰고 임시 폴더를 APP_DATA_DIR로 쓴다. 다리는 가짜 parentPort로 시험한다(Electron · 바깥 사이트 · AI를 부르지 않는다).
  * HTTP 부분은 서버(server/index.ts)를 포트 4108에 띄운다 — 자식 프로세스라 parentPort가 없어 찍기는 쓸 수 없다(그것도 확인한다).
+ * 캡처 모듈(electron/capture.cjs)은 electron을 가짜로 바꿔 읽고(창을 열지 않는다), 페이지 안 그림 검사(pageInspect)는 jsdom에서 돌린다.
  *
  * 왜:
  * - 찍을 주소는 서버가 프로필에서만 만든다 — 화면이 보낸 주소 · src · alt를 믿으면 아무 사이트나 찍거나 글에 남의 주소가 들어간다.
@@ -10,16 +11,21 @@
  * - 카카오 지도 이용 조건을 확인하기 전에는 지도 화면이 글에 들어가면 안 된다(결정 4) — 화면이 막아도 서버가 다시 막아야 한다.
  * - 같은 화면은 「화면 + 변형」 단위로 글 하나 · 작성자 한 사람에게 한 번, 브랜드 상한 3은 받지 않는다(결정 3) — 다른 날 다시 찍어
  *   파일이 달라져도 같은 화면으로 세야 한다.
+ * - 앱이 끝난 뒤에 캡처 창이 새로 생기면 종료가 늦어지고 자사 사이트를 한 번 더 연다 — 주소를 확인하는 동안 끝나도 창을 만들지 않아야 한다.
+ * - 첫 화면의 바깥 그림 · 공공누리 그림은 <html> · <body> 배경이나 웹 컴포넌트(shadow root) 안에 있어도 잡아야 한다.
  *
  *   npx tsx scripts/verify-screen-capture.ts
  */
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import dns from 'node:dns'
+import Module, { createRequire } from 'node:module'
 import net from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { crc32, deflateSync } from 'node:zlib'
+import { JSDOM, VirtualConsole } from 'jsdom'
 
 const root = mkdtempSync(path.join(tmpdir(), 'verify-screen-capture-'))
 const unitDir = path.join(root, 'unit')
@@ -82,6 +88,74 @@ const codeOf = async (p: Promise<unknown>): Promise<string> => {
     return 'resolved'
   } catch (err) {
     return (err as { code?: string }).code ?? 'no-code'
+  }
+}
+
+/** 캡처 모듈의 페이지 안 그림 검사(pageInspect) 결과. */
+interface InspectResult {
+  images: number
+  mapImages: number
+  foreign: string[]
+  kogl: number
+  frames: string[]
+}
+
+interface CaptureModule {
+  captureScreen: (url: string, options: Record<string, unknown>) => Promise<unknown>
+  disposeCapture: () => void
+  pageInspect: (ownHost: string, mapSelector: string | null, mapHosts: string[]) => InspectResult
+  countClosedShadowRoots: (node: unknown) => number
+}
+
+/**
+ * 캡처 모듈(electron/capture.cjs)을 가짜 electron으로 읽는다 — 창은 만든 수만 세고, 빈 페이지를 여는 순간 실패해 바로 끝난다. 모듈의
+ * 상태(종료 여부)는 이 사본에만 남는다.
+ */
+function loadCaptureModule(): CaptureModule & { windowsCreated: () => number } {
+  let created = 0
+  const noop = () => undefined
+  class FakeWindow {
+    destroyed = false
+    webContents = {
+      id: 77,
+      debugger: { isAttached: () => false, detach: noop, attach: noop, on: noop, sendCommand: () => new Promise(noop) },
+      setFrameRate: noop,
+      setWindowOpenHandler: noop,
+      on: noop,
+      getOSProcessId: () => 0,
+      getURL: () => '',
+      loadURL: () => Promise.reject(Object.assign(new Error('ERR_ABORTED'), { code: 'ERR_ABORTED' })),
+    }
+    constructor() {
+      created += 1
+    }
+    isDestroyed() {
+      return this.destroyed
+    }
+    destroy() {
+      this.destroyed = true
+    }
+  }
+  const fakeSession = {
+    setPermissionRequestHandler: noop,
+    setPermissionCheckHandler: noop,
+    setDevicePermissionHandler: noop,
+    setSpellCheckerEnabled: noop,
+    on: noop,
+    webRequest: { onBeforeRequest: noop },
+    clearStorageData: () => Promise.resolve(),
+  }
+  const fakeElectron = { app: { getAppMetrics: () => [] }, BrowserWindow: FakeWindow, nativeImage: {}, session: { fromPartition: () => fakeSession } }
+  const loader = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown }
+  const realLoad = loader._load
+  loader._load = function (this: unknown, request: string, ...rest: unknown[]) {
+    return request === 'electron' ? fakeElectron : realLoad.call(this, request, ...rest)
+  }
+  try {
+    const mod = createRequire(import.meta.url)('../electron/capture.cjs') as CaptureModule
+    return { ...mod, windowsCreated: () => created }
+  } finally {
+    loader._load = realLoad
   }
 }
 
@@ -205,8 +279,8 @@ try {
     kindOf("가상각 웹사이트의 '아이와 함께' 안내 화면") === 'unrelated' && kindOf('관광정보 사이트에서 한 장소의 요금이 표시된 화면') === 'unrelated' &&
       screenKindOf('가상스테이 웹사이트의 예약 화면', null).kind === 'none',
   )
-  const tiersOf = (screen: NonNullable<typeof map>, text: string, named: string[] = []) => {
-    const c = screenVariantChoice(screen, text, named)
+  const tiersOf = (screen: NonNullable<typeof map>, text: string, named: string[] = [], context = '') => {
+    const c = screenVariantChoice(screen, text, named, context)
     return `${c.tiers.map((t) => t.map((v) => v.id).join(',')).join(' | ')}${c.by ? ` (${c.by})` : ''}`
   }
   ok(
@@ -219,12 +293,24 @@ try {
     tiersOf(map!, '근대역사박물관과 선유도가 표시된 지도에서 찾기 화면') === 'default (named)' && tiersOf(map!, '가상식당 위치가 표시된 지도에서 찾기 화면', ['가상식당']) === 'default (named)',
   )
   ok('장소 없는 지도 자리는 모든 변형', tiersOf(map!, '지도에서 찾기 화면에 관광지 위치가 표시된 모습') === 'default,r-원도심,r-은파,r-고군산,r-금강,r-새만금-비응')
+  // 조건을 말하지 않는 코스 자리는 기본 다음 조건 변형(general) — 예전에는 세 변형을 한 묶음으로 두어 덜 쓴 조건 화면이 「확인 필요」 없이
+  // 들어갔다(검토 2026-11-04: 「연인·혼자」 소제목 아래 부모님 조건 화면).
   ok(
-    '아이 · 부모님 코스 자리는 그 조건 다음 기본 — 다른 조건은 쓰지 않는다(「아이콘」은 아이가 아니다)',
+    '아이 · 부모님 코스 자리는 그 조건 다음 기본 — 다른 조건은 쓰지 않는다(「아이콘」은 아이가 아니다) · 조건을 말하지 않으면 기본 다음 조건',
     tiersOf(course!, '아이와 함께 AI 코스 만들기 조건을 고르는 모습') === 'kids | default (prefer)' && tiersOf(course!, '부모님과 가는 여행의 AI 코스 만들기 화면') === 'parents | default (prefer)' &&
-      tiersOf(course!, 'AI 코스 만들기 화면에서 조건을 고르는 모습') === 'default,kids,parents' && tiersOf(course!, '아이콘이 보이는 AI 코스 만들기 화면') === 'default,kids,parents',
+      tiersOf(course!, 'AI 코스 만들기 화면에서 조건을 고르는 모습') === 'default | kids,parents (general)' &&
+      tiersOf(course!, '아이콘이 보이는 AI 코스 만들기 화면') === 'default | kids,parents (general)',
   )
-  ok('코스 자리에 장소가 나와도 권역으로 좁히지 않는다', tiersOf(course!, 'AI 코스 만들기 화면에 근대역사박물관을 넣는 모습', ['근대역사박물관']) === 'default,kids,parents')
+  ok('코스 자리에 장소가 나와도 권역으로 좁히지 않는다', tiersOf(course!, 'AI 코스 만들기 화면에 근대역사박물관을 넣는 모습', ['근대역사박물관']) === 'default | kids,parents (general)')
+  const COURSE_TEXT = '가상각 웹사이트의 AI 코스 만들기 화면에서 여행 조건을 고르는 모습'
+  ok(
+    '코스 조건은 소제목 · 설명 줄도 본다 — 「아이와 함께」 · 「부모님」은 그 조건, 「혼자 · 연인 · 친구 · 커플」은 기본만',
+    tiersOf(course!, COURSE_TEXT, [], "가상각 '아이와 함께' 안내로 시간표를 짜면 어떻게 되나요?") === 'kids | default (prefer)' &&
+      tiersOf(course!, COURSE_TEXT, [], '1박 2일 일정\n부모님과 함께라면 어르신 인원을 넣어 보세요.') === 'parents | default (prefer)' &&
+      tiersOf(course!, COURSE_TEXT, [], '가상각으로 연인·혼자 코스는 어떻게 짜나요?') === 'default (other)' &&
+      tiersOf(course!, COURSE_TEXT, [], '혼자·친구·커플 조건으로 코스를 짜 보면\n조건을 고른 뒤 일정을 다듬습니다.') === 'default (other)',
+  )
+  ok('지도 권역은 소제목 · 설명 줄을 보지 않는다(장면 글자만)', tiersOf(map!, '지도에서 찾기 화면에 관광지 위치가 표시된 모습', [], '선유도 가는 길') === 'default,r-원도심,r-은파,r-고군산,r-금강,r-새만금-비응')
   const exportPick = { src: appSrc, origin: 'screen' as const, screenId: 'course', variantId: 'kids' }
   ok(
     '내보내는 화면 — 앱 주소 · 프로필의 코스 화면만(지도 · 모르는 변형 · https 주소 · origin 없음은 아니다)',
@@ -339,6 +425,85 @@ try {
     const port3 = new FakePort()
     port3.throwOnPost = true
     ok('메인에 보내지 못하면 unavailable', (await codeOf(createCaptureBridge(port3, { waitMs: () => 2000 }).capture(req1))) === 'unavailable')
+  }
+
+  // ── 6b) 캡처 모듈(electron/capture.cjs) — electron을 가짜로 바꿔 읽는다(창 · 사이트를 열지 않는다) ─────────────
+  {
+    const capture = loadCaptureModule()
+    // 페이지 안 그림 검사 — 모든 요소가 1280×800 첫 화면에 보인다고 두고 jsdom에서 그대로 돌린다.
+    const inspect = (html: string, setup?: (doc: Document) => void) => {
+      const dom = new JSDOM(html, { url: 'https://gunsan.webforai.kr/plan/', runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
+      const w = dom.window
+      w.innerWidth = 1280
+      w.innerHeight = 800
+      w.Element.prototype.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1280, bottom: 800, width: 1280, height: 800, x: 0, y: 0, toJSON: () => ({}) })
+      setup?.(w.document)
+      return w.eval(`(${capture.pageInspect.toString()})('gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'])`) as InspectResult
+    }
+    const FOREIGN_BG = 'background-image:url(https://foreign.example/bg.jpg)'
+    ok('그림 검사 — 요소의 바깥 배경 · 바깥 그림을 잡는다', inspect(`<style>.c{${FOREIGN_BG}}</style><div class="c">x</div>`).foreign.includes('foreign.example') && inspect('<img src="https://foreign.example/a.jpg">').foreign.includes('foreign.example'))
+    ok(
+      '그림 검사 — <body> · <html> 배경의 바깥 그림도 잡는다(첫 화면 전체를 덮는다)',
+      inspect(`<style>body{${FOREIGN_BG}}</style><div>x</div>`).foreign.includes('foreign.example') && inspect(`<style>html{${FOREIGN_BG}}</style><div>x</div>`).foreign.includes('foreign.example'),
+    )
+    ok('그림 검사 — 공공누리 표시가 붙은 <body>의 배경도 공공누리로 센다', inspect('<style>body{background-image:url(https://gunsan.webforai.kr/k.jpg)}</style><body data-kogl="3"><div>x</div></body>').kogl > 0)
+    ok('그림 검사 — 자사 호스트의 배경 · 그림은 그대로 둔다', inspect('<style>body{background-image:url(/bg.jpg)}</style><img src="/a.png">').foreign.length === 0)
+    const shadowImg = inspect('<div id="h"></div>', (doc) => {
+      doc.getElementById('h')!.attachShadow({ mode: 'open' }).innerHTML = '<img src="https://foreign.example/in-shadow.jpg">'
+    })
+    const shadowKogl = inspect('<div data-kogl="3"><div id="h"></div></div>', (doc) => {
+      doc.getElementById('h')!.attachShadow({ mode: 'open' }).innerHTML = '<img src="https://gunsan.webforai.kr/k.jpg">'
+    })
+    // jsdom은 shadow root 안의 <style>을 계산 스타일에 넣지 않는다 — 인라인 style로 둔다.
+    const nestedBg = inspect('<div id="h"></div>', (doc) => {
+      const outer = doc.getElementById('h')!.attachShadow({ mode: 'open' })
+      outer.innerHTML = '<span id="i"></span>'
+      outer.getElementById('i')!.attachShadow({ mode: 'open' }).innerHTML = `<p style="${FOREIGN_BG}">x</p>`
+    })
+    ok(
+      '그림 검사 — 웹 컴포넌트(열린 shadow root, 겹쳐도) 안의 바깥 그림 · 배경 · 공공누리 표시 아래 그림도 잡는다',
+      shadowImg.images === 1 && shadowImg.foreign.includes('foreign.example') && shadowKogl.kogl > 0 && nestedBg.foreign.includes('foreign.example'),
+    )
+    const tree = (closed: boolean) => ({
+      nodeName: '#document',
+      children: [{
+        nodeName: 'HTML',
+        children: [{
+          nodeName: 'BODY',
+          children: [
+            { nodeName: 'VIDEO', shadowRoots: [{ nodeName: '#document-fragment', shadowRootType: 'user-agent', children: [] }] },
+            {
+              nodeName: 'X-CARD',
+              shadowRoots: [{ nodeName: '#document-fragment', shadowRootType: 'open', children: [{ nodeName: 'X-INNER', shadowRoots: [{ nodeName: '#document-fragment', shadowRootType: closed ? 'closed' : 'open', children: [] }] }] }],
+            },
+          ],
+        }],
+      }],
+    })
+    ok(
+      '닫힌 shadow root 세기(CDP DOM.getDocument pierce) — 열린 root 안까지 내려가 세고, 브라우저 기본 root(video 등)는 세지 않는다',
+      capture.countClosedShadowRoots(tree(true)) === 1 && capture.countClosedShadowRoots(tree(false)) === 0 && capture.countClosedShadowRoots(null) === 0,
+    )
+
+    // 종료 경합 — 주소의 DNS를 확인하는 동안 앱이 끝나면(disposeCapture) 창을 만들지 않는다.
+    const realLookup = dns.promises.lookup
+    const dnsGate: { release?: () => void } = {}
+    dns.promises.lookup = (() =>
+      new Promise((resolve) => {
+        dnsGate.release = () => resolve([{ address: '93.184.216.34', family: 4 }])
+      })) as unknown as typeof dns.promises.lookup
+    try {
+      const job = codeOf(capture.captureScreen('https://gunsan.webforai.kr/plan/', { host: 'gunsan.webforai.kr' }))
+      for (let i = 0; i < 50 && !dnsGate.release; i += 1) await flush()
+      const waitedForDns = Boolean(dnsGate.release)
+      capture.disposeCapture()
+      dnsGate.release?.()
+      const code = await job
+      ok('DNS를 확인하는 동안 앱이 끝나면 캡처 창을 만들지 않고 disposed로 거부', waitedForDns && code === 'disposed' && capture.windowsCreated() === 0)
+      ok('끝난 뒤의 찍기는 바로 disposed', (await codeOf(capture.captureScreen('https://gunsan.webforai.kr/plan/', { host: 'gunsan.webforai.kr' }))) === 'disposed')
+    } finally {
+      dns.promises.lookup = realLookup
+    }
   }
 
   // ── 7) 저장 · 같은 날 다시 쓰기 ─────────────────────────────────────────

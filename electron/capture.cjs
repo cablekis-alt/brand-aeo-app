@@ -12,7 +12,8 @@
 //   - 자사 호스트 밖으로 이동 · 새 창 · 권한 요청 · 내려받기를 거절한다.
 //   - GTM · GA4 · track.js · Vercel Insights 요청을 막는다(캡처가 방문 통계에 잡히지 않게).
 //   - 127/8 · ::1 · 사설 주소로 가는 요청을 막는다(인증 없는 로컬 API 보호). 이름은 DNS로 풀어 확인한다.
-//   - 보이는 그림 가운데 자사 호스트가 아니거나 data-kogl이 붙은 것이 있으면 그 캡처는 버린다.
+//   - 보이는 그림 가운데 자사 호스트가 아니거나 data-kogl이 붙은 것이 있으면 그 캡처는 버린다(<html> · <body> 배경과
+//     웹 컴포넌트의 열린 shadow root 안까지 본다 — 안을 볼 수 없는 닫힌 shadow root가 있으면 버린다).
 //     지도 상자 안의 카카오 타일만 예외다.
 //   - 빈 그림(한 가지 색)이면 실패로 돌려준다.
 //   - 동의 배너는 숨기기만 하고 절대 누르지 않는다.
@@ -387,8 +388,22 @@ function pageInspect(ownHost, mapSelector, mapHosts) {
       return { scheme: 'bad:', host: String(err).slice(0, 40) }
     }
   }
+  // 웹 컴포넌트(열린 shadow root) 안도 본다. 닫힌 root는 페이지 스크립트로 볼 수 없어 captureSteps가 CDP로 따로 센다(countClosedShadowRoots).
+  const roots = [document]
+  for (let i = 0; i < roots.length; i += 1) {
+    for (const el of roots[i].querySelectorAll('*')) if (el.shadowRoot) roots.push(el.shadowRoot)
+  }
+  /** shadow root 경계를 넘어 위로 찾는 closest — 공공누리 표시 · 지도 상자 안의 웹 컴포넌트도 그 안으로 친다. */
+  const closestAcross = (el, selector) => {
+    for (let n = el; n; n = n.getRootNode().host) {
+      const hit = n.closest(selector)
+      if (hit) return hit
+    }
+    return null
+  }
+  const inKogl = (el) => Boolean(closestAcross(el, '[data-kogl]'))
   const mapOk = (el, host) =>
-    Boolean(mapSelector) && Boolean(el.closest(mapSelector)) && mapHosts.some((s) => host === s || host.endsWith(`.${s}`))
+    Boolean(mapSelector) && Boolean(closestAcross(el, mapSelector)) && mapHosts.some((s) => host === s || host.endsWith(`.${s}`))
   const out = { images: 0, mapImages: 0, foreign: [], kogl: 0, frames: [] }
   const judge = (el, url) => {
     const { scheme, host } = parse(url)
@@ -400,33 +415,53 @@ function pageInspect(ownHost, mapSelector, mapHosts) {
     }
     if (!out.foreign.includes(host)) out.foreign.push(host || scheme)
   }
-  for (const img of document.images) {
-    if (!inView(img.getBoundingClientRect()) || !shown(img)) continue
-    out.images += 1
-    if (img.closest('[data-kogl]')) out.kogl += 1
-    judge(img, img.currentSrc || img.src)
-  }
-  for (const el of document.querySelectorAll('image, video, iframe, embed, object')) {
-    if (!inView(el.getBoundingClientRect()) || !shown(el)) continue
-    if (el.closest('[data-kogl]')) out.kogl += 1
-    const url =
-      el.getAttribute('href') || el.getAttribute('xlink:href') || el.getAttribute('src') || el.getAttribute('poster') || el.getAttribute('data') || ''
-    if (el.tagName === 'IFRAME') out.frames.push(parse(url).host)
-    if (url) judge(el, url)
+  for (const root of roots) {
+    for (const img of root.querySelectorAll('img')) {
+      if (!inView(img.getBoundingClientRect()) || !shown(img)) continue
+      out.images += 1
+      if (inKogl(img)) out.kogl += 1
+      judge(img, img.currentSrc || img.src)
+    }
+    for (const el of root.querySelectorAll('image, video, iframe, embed, object')) {
+      if (!inView(el.getBoundingClientRect()) || !shown(el)) continue
+      if (inKogl(el)) out.kogl += 1
+      const url =
+        el.getAttribute('href') || el.getAttribute('xlink:href') || el.getAttribute('src') || el.getAttribute('poster') || el.getAttribute('data') || ''
+      if (el.tagName === 'IFRAME') out.frames.push(parse(url).host)
+      if (url) judge(el, url)
+    }
   }
   const urlsIn = (v) => [...String(v || '').matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/g)].map((m) => m[2])
-  for (const el of document.querySelectorAll('body *')) {
-    const r = el.getBoundingClientRect()
-    if (!inView(r)) continue
+  // CSS 배경 — <html> · <body>는 첫 화면 전체를 덮으므로 자리와 상관없이 보고, 나머지는 첫 화면에 걸친 요소만 본다.
+  const page = [document.documentElement, document.body].filter(Boolean)
+  const boxes = roots.flatMap((root) => [...root.querySelectorAll(root === document ? 'body *' : '*')])
+  for (const el of [...page, ...boxes]) {
+    if (!page.includes(el) && !inView(el.getBoundingClientRect())) continue
     for (const pseudo of [null, '::before', '::after']) {
       const cs = getComputedStyle(el, pseudo)
       const urls = [...urlsIn(cs.backgroundImage), ...urlsIn(cs.content), ...urlsIn(cs.maskImage)]
       if (!urls.length || cs.visibility === 'hidden' || cs.display === 'none') continue
-      if (el.closest('[data-kogl]')) out.kogl += 1
+      if (inKogl(el)) out.kogl += 1
       for (const u of urls) judge(el, u)
     }
   }
   return out
+}
+
+/**
+ * CDP DOM.getDocument({ depth: -1, pierce: true })의 노드 트리에서 닫힌(closed) shadow root 수를 센다. 페이지 스크립트(pageInspect)는
+ * 닫힌 root 안을 볼 수 없으므로 하나라도 있으면 그 캡처는 버린다. 브라우저 기본 root(video · input 등의 user-agent)는 세지 않는다.
+ */
+function countClosedShadowRoots(root) {
+  let closed = 0
+  const stack = root ? [root] : []
+  while (stack.length) {
+    const node = stack.pop()
+    if (node.shadowRootType === 'closed') closed += 1
+    for (const list of [node.children, node.shadowRoots, node.pseudoElements]) if (Array.isArray(list)) stack.push(...list)
+    if (node.contentDocument) stack.push(node.contentDocument)
+  }
+  return closed
 }
 
 // ── 픽셀 검사 ────────────────────────────────────────────────────────────
@@ -565,6 +600,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 function checkAlive(ctx) {
   if (ctx.aborted) throw captureError(ctx.abortCode || 'aborted', ctx.abortMessage || '캡처를 멈췄습니다.')
+  if (disposed) throw captureError('disposed', '앱이 종료 중입니다.')
   if (ctx.win && ctx.win.isDestroyed()) throw captureError('aborted', '캡처 창이 닫혔습니다.')
 }
 
@@ -856,6 +892,10 @@ async function captureSteps(url, opts, ctx) {
     throw captureError('foreign-image', `자사 호스트가 아닌 그림이 첫 화면에 있습니다(${seen.foreign.join(', ')}).`, { inspect: seen })
   }
   if (seen.frames.length > 0) throw captureError('foreign-image', `첫 화면에 iframe이 있습니다(${seen.frames.join(', ')}).`, { inspect: seen })
+  // 닫힌 shadow root 안은 위 검사가 볼 수 없다 — 하나라도 있으면 바깥 · 공공누리 그림이 없다고 말할 수 없으므로 버린다.
+  const tree = await cdp(ctx, 'DOM.getDocument', { depth: -1, pierce: true })
+  const closedRoots = countClosedShadowRoots(tree && tree.root)
+  if (closedRoots > 0) throw captureError('closed-shadow', `그림을 검사할 수 없는 닫힌 shadow root가 ${closedRoots}개 있습니다.`, { inspect: seen })
   mark('inspectMs')
 
   const shot = await cdp(
@@ -940,6 +980,8 @@ async function runJob(rawUrl, options) {
   if (disposed) throw captureError('disposed', '앱이 종료 중입니다.')
   const opts = normalizeOptions(options)
   const url = await assertCaptureUrl(rawUrl, opts.host)
+  // DNS를 확인하는 동안 앱이 끝났으면(disposeCapture — 그때는 멈출 작업이 아직 없다) 창을 만들지 않는다.
+  if (disposed) throw captureError('disposed', '앱이 종료 중입니다.')
   const ctx = newContext(opts)
   activeCtx = ctx
   let hardTimer = null
@@ -977,7 +1019,7 @@ async function runJob(rawUrl, options) {
  *   finalUrl: string, warnings: string[], timings: object, blocked: object[], inspect: object,
  *   pixels: object, mapPixels: object|null, mapTiles: number, memoryPeakKB: number|null}>}
  *   실패하면 code가 붙은 Error로 거부한다: invalid-url · off-host · private-address · invalid-options · busy ·
- *   disposed · timeout · load-failed · map-not-ready · kogl-image · foreign-image · bad-size · blank · map-blank ·
+ *   disposed · timeout · load-failed · map-not-ready · kogl-image · foreign-image · closed-shadow · bad-size · blank · map-blank ·
  *   renderer-gone · aborted · eval-timeout · cdp-timeout.
  */
 function captureScreen(url, options) {
@@ -1082,6 +1124,8 @@ module.exports = {
   assertCaptureUrl,
   isPrivateAddress,
   blankCheck,
+  pageInspect,
+  countClosedShadowRoots,
   VIEW_WIDTH,
   VIEW_HEIGHT,
   DEFAULT_TIMEOUT_MS,

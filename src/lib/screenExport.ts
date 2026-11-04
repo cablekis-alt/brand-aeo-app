@@ -1,9 +1,10 @@
 /**
  * 자사 화면 내보내기 — 글의 사진 기록에는 자사 화면의 앱 주소(/api/screens/<tenant>/<id>.png)만 있다(2026-11-04 결정 1). 앱 안
- * 미리보기는 같은 출처라 그 주소로 바로 보이지만, 앱 밖으로 나가는 글(홈페이지용 .html · 서식째 복사 · 작성자 묶음의 .html)에 그 주소가
+ * 썸네일은 같은 출처라 그 주소로 바로 보이지만, 앱 밖으로 나가는 글(홈페이지용 .html · 서식째 복사 · 작성자 묶음의 .html)에 그 주소가
  * 남으면 운영자 PC에서만 보이고 독자에게는 깨진다. 그래서 내보낼 때 그림을 받아 data:image/png로 문서 안에 넣는다(inlineScreens). 받지
  * 못한 화면은 그림을 빼고 「[화면: 이름]」 글자로 둔다 — 앱 주소를 남기지 않는다. 서식째 복사의 글자 쪽(text/plain — 마크다운)에는
- * 그림 대신 「[화면: 이름]」을 넣는다(screenPlainText).
+ * 그림 대신 「[화면: 이름]」을 넣는다(screenPlainText). 앱 안의 글 미리보기도 골라 복사하는 곳이라 화면을 「[화면: 이름]」 글자로 그린다
+ * (screenPreviewHtml — 그림은 자동 채우기 · 화면 고르기의 썸네일에서 본다).
  *
  * 네이버 SmartEditor ONE · 티스토리가 붙여 넣은 data: 그림을 받는지는 아직 모른다(결정 2) — 그때까지 기본 전달은 「사진 N장 받기」
  * 파일이다(서버 photo-file이 이 PC의 화면 파일을 준다). 「사진 N장 받기」 · 작성자 묶음의 사진 파일은 여기를 거치지 않는다.
@@ -85,6 +86,16 @@ export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promi
       data.set(src, null)
     }
   }
+  const out = replaceScreens(html, data)
+  if (APP_PATH.test(out.html)) throw new Error('내보낼 글에 앱 안에서만 열리는 화면 주소(/api/screens/)가 남았어요 — 화면을 넣지 못해 내보내지 않았어요.')
+  return out
+}
+
+/**
+ * HTML의 화면 그림(앱 주소)을 바꾼다 — data에 그 주소의 data: 그림이 있으면 그것으로, 없으면 그림을 빼고 「[화면: 이름]」 글자로(그림 줄이면
+ * 사진 자리처럼 figure 안 문단으로).
+ */
+function replaceScreens(html: string, data: ReadonlyMap<string, string | null>): InlinedScreens {
   let inlined = 0
   let dropped = 0
   const out = html
@@ -102,8 +113,16 @@ export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promi
       dropped += 1
       return screenPlaceholder(alt)
     })
-  if (APP_PATH.test(out)) throw new Error('내보낼 글에 앱 안에서만 열리는 화면 주소(/api/screens/)가 남았어요 — 화면을 넣지 못해 내보내지 않았어요.')
   return { html: out, inlined, dropped }
+}
+
+/**
+ * 앱 안 글 미리보기(콘텐츠 보관함 「본문 보기」 · 올리기 목록의 줄 미리보기)의 HTML — 화면 그림을 「[화면: 이름]」 글자로 둔다. 미리보기는
+ * 복사가 막혔을 때 골라 복사하는 곳이기도 해서, 앱 주소 그림을 그리면 그 주소(http://localhost:…/api/screens/…)가 블로그로 나간다.
+ * 화면이 없으면 그대로.
+ */
+export function screenPreviewHtml(html: string): string {
+  return APP_PATH.test(html) ? replaceScreens(html, new Map()).html : html
 }
 
 /**

@@ -26,7 +26,7 @@ import type { PublishSettings } from '../lib/publishSettings'
 import { effectiveDraft, workMarkdownOf } from '../lib/draftGaps'
 import { publishArticleOf } from '../lib/publishArticle'
 import { countGapNotes, downloadHtml, draftTitle, gapNoteLines, safeFileName } from '../lib/markdownFile'
-import { inlineScreens, richCopyWithScreens, screensDroppedText } from '../lib/screenExport'
+import { inlineScreens, richCopyWithScreens, screenPreviewHtml, screensDroppedText } from '../lib/screenExport'
 
 /**
  * 만든 글이 모이는 곳.
@@ -105,7 +105,8 @@ export default function ContentLibrary() {
       return
     }
     if (!(await copyRich(out.markdown, out.html))) {
-      setCopyError('클립보드에 복사하지 못했습니다. 「본문 보기」를 열어 글을 골라 복사하세요 — 서식이 함께 복사됩니다.')
+      // 「본문 보기」에는 자사 화면이 글자(「[화면: 이름]」)로 보인다 — 그림까지 든 .html을 권한다(DraftPanel과 같은 안내).
+      setCopyError('클립보드에 복사하지 못했습니다. 「홈페이지용 .html」을 브라우저로 열어 글을 골라 복사하세요 — 서식이 함께 복사됩니다.')
       return
     }
     if (out.dropped) setCopyError(screensDroppedText(out.dropped))
@@ -375,8 +376,11 @@ export default function ContentLibrary() {
                   {shown && (
                     <div className="brief-body">
                       {/* 서식째 보인다(markdownToHtml은 모든 글자를 이스케이프한다) — 복사가 막힌 곳에서 여기서 골라 복사해도
-                          블로그에 #·** 기호가 남지 않는다. */}
-                      <div className="channel-preview" dangerouslySetInnerHTML={{ __html: markdownToHtml(publishArticleOf(d, { brand: tenant, settings })) }} />
+                          블로그에 #·** 기호가 남지 않는다. 자사 화면은 「[화면: 이름]」 글자로 — 앱 주소 그림이 복사되지 않게. */}
+                      <div
+                        className="channel-preview"
+                        dangerouslySetInnerHTML={{ __html: screenPreviewHtml(markdownToHtml(publishArticleOf(d, { brand: tenant, settings }))) }}
+                      />
                       {/* 작업용 원고(.md)를 뺀 대신 — 그 주 목록에서 빠진 글도 남은 빈칸 · 쓴 사실을 여기서 본다. */}
                       {gaps > 0 && (
                         <>

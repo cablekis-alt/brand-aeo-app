@@ -16,7 +16,7 @@ import { sourceKeyOf } from '../src/prompts/b9d-channel-adapt'
 import type { StoredDraft, TenantSummary } from '../src/lib/api'
 import type { PhotoPick } from '../src/lib/articlePhotos'
 import { screenAppSrc } from '../src/lib/screenCapture'
-import { exportLeaks, inlineScreens, richCopyWithScreens, screenPlainText, type ScreenFetcher } from '../src/lib/screenExport'
+import { exportLeaks, inlineScreens, richCopyWithScreens, screenPlainText, screenPreviewHtml, type ScreenFetcher } from '../src/lib/screenExport'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -156,8 +156,9 @@ ok(
   screenParts.markdown.includes(`![가상 여행 웹사이트 'AI 코스 만들기' 화면](${SCREEN_SRC})\n*골목 입구*`) &&
     screenParts.photos.length === 1 && screenParts.photos[0]!.screen?.screenId === 'course' && screenParts.photos[0]!.screen.variantId === 'kids',
 )
+// 라벨만 고쳤다(기대값 그대로): 앱 안 글 미리보기는 이제 screenPreviewHtml로 화면을 글자로 그린다 — 앱 주소 img는 내보내기(inlineScreens)의 입력이다.
 ok(
-  '앱 안 미리보기 — 앱 주소도 그림(img)으로',
+  'markdownToHtml — 앱 주소도 그림(img)으로(내보낼 때 inlineScreens가 data:로 바꾼다)',
   markdownToHtml(`![화면](${SCREEN_SRC})\n*캡션*`) === `<figure><img src="${SCREEN_SRC}" alt="화면" ${FIGURE_SIZE}><figcaption>캡션</figcaption></figure>` &&
     markdownToHtml(`문장 속 ![화면](${SCREEN_SRC}) 그림`).includes(`<img src="${SCREEN_SRC}" alt="화면" style="max-width:100%;height:auto">`),
 )
@@ -234,6 +235,18 @@ ok(
   '채널 줄(블로그 문체)도 같은 길 — 앱 주소로 들어가고, 복사하면 data: · 「[화면: …]」',
   blogParts.markdown.includes(SCREEN_SRC) && blogRich.inlined === 1 && exportLeaks(blogRich.markdown).length === 0 && exportLeaks(blogRich.html).length === 0,
 )
+// 앱 안 글 미리보기(콘텐츠 보관함 「본문 보기」 · 올리기 목록 줄 미리보기)는 복사가 막혔을 때 골라 복사하는 곳이다 — 앱 주소 그림을 그리면
+// 그 주소가 블로그로 나간다(검토 2026-11-04). 화면은 「[화면: 이름]」 글자로 그린다.
+const previewHtml = screenPreviewHtml(markdownToHtml(copyMd))
+ok(
+  '앱 안 글 미리보기 — 화면은 「[화면: 이름]」 글자로(설명 줄은 그대로), 골라 복사해도 앱 주소 · 이 PC 주소가 없다',
+  exportLeaks(markdownToHtml(copyMd)).length > 0 && exportLeaks(previewHtml).length === 0 &&
+    previewHtml.includes('<figure class="image-slot"><p>[화면: AI 코스 만들기]</p><figcaption>골목 입구</figcaption></figure>'),
+)
+const blogPreview = screenPreviewHtml(markdownToHtml(blogParts.markdown))
+ok('채널 줄 미리보기도 화면은 글자로', exportLeaks(blogPreview).length === 0 && blogPreview.includes('[화면: AI 코스 만들기]'))
+const noScreenHtml = markdownToHtml(publishArticleOf(withPhoto, { brand, settings: rights }))
+ok('화면이 없는 글의 미리보기는 그대로(사진은 그림으로)', screenPreviewHtml(noScreenHtml) === noScreenHtml && noScreenHtml.includes('<img'))
 ok('누출 검사 — 앱 주소 · 127.0.0.1 · localhost를 찾는다', JSON.stringify(exportLeaks(`a ${SCREEN_SRC} http://127.0.0.1:4000/x http://localhost/`)) === '["/api/screens/","127.0.0.1","localhost"]')
 
 // 4) 인용 — 빈 `>` 줄은 문단 나눔

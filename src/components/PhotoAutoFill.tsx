@@ -792,7 +792,13 @@ function screenWhy(row: AutoSlotRow): string {
           ? sp.kind === 'course' && row.review
             ? '자리 글자가 말한 조건의 화면은 이 글 · 작성자에게 이미 써서 다른 변형'
             : `자리 글자가 말한 조건 — ${sp.variantLabel}`
-          : '브랜드에서 덜 쓴 변형'
+          : sp.by === 'other'
+            ? `자리 글자가 다른 동행(혼자 · 연인 · 친구)을 말해 조건 화면은 쓰지 않음 — ${sp.variantLabel}`
+            : sp.by === 'general'
+              ? row.review
+                ? `자리 글자가 조건을 말하지 않는데 기본 화면을 이 글 · 작성자에게 이미 써서 조건 화면 — ${sp.variantLabel}(맞는지 확인)`
+                : `자리 글자가 조건을 말하지 않음 — ${sp.variantLabel}`
+              : '브랜드에서 덜 쓴 변형'
   return `${SCREEN_SLOT_KIND_TEXT[kind]} · ${by}`
 }
 

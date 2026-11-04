@@ -1582,13 +1582,15 @@ export function autoPickPhotos(input: {
 
     /**
      * 자사 화면 — 모든 글의 사진(①②③③b · 비슷한 사진)을 고른 뒤, 화면 자리(state screen) 가운데 코스 · 지도 자리(screenOfRow)에 글에 남은
-     * 자리만큼. 변형은 자리 글자로 좁힌 묶음(screenVariantChoice — 원도심 장소 → #r-원도심, 아이 · 부모님 → 그 조건) 앞부터, 묶음 안에서는
-     * 브랜드에서 덜 쓴 변형(같으면 표 순서). 같은 「화면 + 변형」은 글 하나 · 작성자 한 사람에게 한 번이고 브랜드 상한은 받지 않는다(결정 3).
+     * 자리만큼. 변형은 자리 글자로 좁힌 묶음(screenVariantChoice — 원도심 장소 → #r-원도심, 장면 글자 · 소제목 · 설명 줄이 아이 · 부모님 →
+     * 그 조건, 혼자 · 연인 → 기본만, 조건을 말하지 않으면 기본 다음 조건) 앞부터, 묶음 안에서는 브랜드에서 덜 쓴 변형(같으면 표 순서). 같은
+     * 「화면 + 변형」은 글 하나 · 작성자 한 사람에게 한 번이고 브랜드 상한은 받지 않는다(결정 3).
      * 사람이 그 자리에서 뺀 화면(refill — removed의 화면 열쇠)은 고르지 않는다. 사람 장면 규칙(isPeopleScene)은 보지 않는다(화면이다).
      * 찍을 수 있으면 변형은 찍었는지와 상관없이 고르고, 아직 찍지 않았으면 uncaptured로 두어 screenWanted로 청한다(찍은 뒤 같은 결과가
      * 나오게). 찍을 수 없으면(웹 · dev) 찍어 둔 변형을 먼저 고른다. 글에 넣지 않는 종류(지도 — SCREEN_AUTO_SAVE_KINDS 밖)는 미리보기
      * (preview)만 — 보낼 사진(out)에 넣지 않고 글의 사진 수도 쓰지 않는다. 지도는 늘 「확인 필요」(지도에 장소 이름이 보이지 않을 수 있다),
-     * 코스는 자리가 말한 조건의 변형을 쓰지 못했을 때 「확인 필요」. 글의 사진 수(room)는 고치지 않는다 — finish가 사진 자리의 상태를
+     * 코스는 첫 묶음 밖의 변형을 쓸 때 — 자리가 말한 조건의 변형을 쓰지 못했거나, 조건을 말하지 않는 자리에 조건 변형을 쓸 때 — 「확인
+     * 필요」. 글의 사진 수(room)는 고치지 않는다 — finish가 사진 자리의 상태를
      * 지금처럼 정하게(사진이 먼저다).
      */
     const screenStage = () => {
@@ -1604,7 +1606,7 @@ export function autoPickPhotos(input: {
           row.state = 'full'
           continue
         }
-        const choice = screenVariantChoice(screen, row.slot.key, places.length ? findPlaces(row.slot.key, places) : [])
+        const choice = screenVariantChoice(screen, row.slot.key, places.length ? findPlaces(row.slot.key, places) : [], `${row.slot.heading}\n${row.caption}`)
         const open = (v: ScreenVariant) => !blocked(screenKey(screen, v)) && !removed(row, screenKey(screen, v))
         const shotOf = (v: ScreenVariant) => shotAt.get(`${screen.id}:${v.id}`)
         const byUse = (a: ScreenVariant, b: ScreenVariant) =>
