@@ -1,0 +1,1023 @@
+// 자사 화면 캡처 — Electron 메인 프로세스 전용 모듈.
+//
+// 서버(utilityProcess)는 창을 띄울 수 없으므로, 메인이 숨긴 BrowserWindow(show:false + 오프스크린 렌더링)로
+// 자사 사이트의 첫 화면(뷰포트)만 찍어 PNG 바이트를 돌려준다. 파일 저장은 서버가 한다(PIPELINE_DATA_DIR) —
+// 이 모듈은 디스크에 아무것도 쓰지 않는다. 세션도 메모리 전용 partition이다.
+//
+// 지키는 것
+//   - 한 번에 한 장(줄 세우기). 한 장마다 창을 새로 만들고 끝나면 destroy. 앱 종료 때 disposeCapture().
+//   - 크기 1280×800 · 배율 1 고정(CDP Emulation) — Windows 125/150% 배율과 상관없이 같은 그림.
+//   - capturePage()+toPNG()는 쓰지 않는다(메인에서 동기 인코딩 → 큰 그림이면 앱 창이 멈춘다). CDP
+//     Page.captureScreenshot은 렌더러가 인코딩한다.
+//   - 자사 호스트 밖으로 이동 · 새 창 · 권한 요청 · 내려받기를 거절한다.
+//   - GTM · GA4 · track.js · Vercel Insights 요청을 막는다(캡처가 방문 통계에 잡히지 않게).
+//   - 127/8 · ::1 · 사설 주소로 가는 요청을 막는다(인증 없는 로컬 API 보호). 이름은 DNS로 풀어 확인한다.
+//   - 보이는 그림 가운데 자사 호스트가 아니거나 data-kogl이 붙은 것이 있으면 그 캡처는 버린다.
+//     지도 상자 안의 카카오 타일만 예외다.
+//   - 빈 그림(한 가지 색)이면 실패로 돌려준다.
+//   - 동의 배너는 숨기기만 하고 절대 누르지 않는다.
+'use strict'
+
+const { app, BrowserWindow, nativeImage, session } = require('electron')
+const dns = require('node:dns').promises
+const net = require('node:net')
+
+const VIEW_WIDTH = 1280
+const VIEW_HEIGHT = 800
+const DEFAULT_TIMEOUT_MS = 25000
+const MAX_TIMEOUT_MS = 45000
+/** 기다리는 한도가 끝난 뒤 찍기 · 검사에 더 주는 시간. 이것까지 넘으면 창을 부수고 실패한다. */
+const HARD_GRACE_MS = 12000
+const QUIET_MS = 800
+/** 이보다 오래 걸린 요청은 '조용함' 판단에서 뺀다(오래 붙는 요청 하나 때문에 한도까지 기다리지 않게). */
+const STALLED_REQUEST_MS = 8000
+const POLL_MS = 150
+const EVAL_TIMEOUT_MS = 5000
+const SHOT_TIMEOUT_MS = 15000
+const MAX_QUEUE = 20
+/** 오프스크린 창의 프레임 수. 찍기에는 이것으로 충분하고, 기본 60보다 CPU를 덜 쓴다. */
+const OFFSCREEN_FPS = 30
+/** 'persist:'가 없는 이름 = 디스크에 남지 않는 메모리 전용 세션. */
+const PARTITION = 'screen-capture'
+
+/** 방문 통계 · 광고 추적 — 캡처가 사이트 통계에 잡히지 않게 막는다. */
+const ANALYTICS_HOST_SUFFIXES = [
+  'googletagmanager.com',
+  'google-analytics.com',
+  'analytics.google.com',
+  'doubleclick.net',
+  'vercel-insights.com',
+  'vercel-analytics.com',
+]
+const ANALYTICS_PATHS = [/^\/_vercel\/(insights|speed-insights)\//, /\/track\.js$/]
+/** 지도 상자 안에서만 허용하는 바깥 그림(카카오 지도 타일 · 로고). */
+const MAP_IMAGE_HOST_SUFFIXES = ['daumcdn.net', 'kakao.com', 'kakaocdn.net']
+/** 늘 숨기는 것: 챗봇 단추, 캐러셀, 미리 채움 안내 줄, 동의 배너. */
+const DEFAULT_HIDE = [
+  '[data-chat-open]',
+  '.chat-fab',
+  '[data-hcar]',
+  '[data-gallery]',
+  '[data-marquee]',
+  '[data-plan-handed]',
+  '#onetrust-consent-sdk',
+  '#onetrust-banner-sdk',
+  '.cc-window',
+  '[id*="cookie" i][class*="banner" i]',
+  '[class*="cookie-banner" i]',
+  '[class*="consent-banner" i]',
+  '[id*="consent-banner" i]',
+  '[aria-label*="cookie" i]',
+]
+/** 밤 테마를 막는다: <html>에 이 속성이 있으면 낮 값으로 고정한다. */
+const DAY_THEME_ATTRS = [['data-wxt', 'day']]
+const DEFAULT_MAP_SELECTOR = '.map'
+const DEFAULT_MAP_READY_EVENT = 'gs:mapready'
+
+function captureError(code, message, extra) {
+  const err = new Error(message)
+  err.code = code
+  if (extra) Object.assign(err, extra)
+  return err
+}
+
+// ── 주소 검사 ─────────────────────────────────────────────────────────────
+
+function expandIpv6(ip) {
+  let text = ip
+  let tail = []
+  const lastColon = text.lastIndexOf(':')
+  const maybeV4 = text.slice(lastColon + 1)
+  if (net.isIPv4(maybeV4)) {
+    const p = maybeV4.split('.').map(Number)
+    tail = [(p[0] << 8) | p[1], (p[2] << 8) | p[3]]
+    text = text.slice(0, lastColon + 1) + '0'
+  }
+  const halves = text.split('::')
+  const head = halves[0] ? halves[0].split(':') : []
+  const rest = halves.length > 1 && halves[1] ? halves[1].split(':') : []
+  const want = 8 - (tail.length ? 1 : 0)
+  const fill = halves.length > 1 ? Array(want - head.length - rest.length).fill('0') : []
+  const words = [...head, ...fill, ...rest].map((w) => parseInt(w, 16))
+  if (tail.length) words.splice(words.length - 1, 1, ...tail)
+  return words
+}
+
+function isPrivateV4(ip) {
+  const [a, b, c] = ip.split('.').map(Number)
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    a >= 224 ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 192 && b === 0 && c === 0) ||
+    (a === 198 && (b === 18 || b === 19))
+  )
+}
+
+function v4FromWords(hi, lo) {
+  return [hi >> 8, hi & 255, lo >> 8, lo & 255].join('.')
+}
+
+function isPrivateV6(ip) {
+  const w = expandIpv6(ip)
+  if (w.length !== 8 || w.some((x) => !Number.isInteger(x) || x < 0 || x > 0xffff)) return true
+  const zeros = (from, to) => w.slice(from, to).every((x) => x === 0)
+  if (zeros(0, 8)) return true // ::
+  if (zeros(0, 7) && w[7] === 1) return true // ::1
+  if (zeros(0, 5) && w[5] === 0xffff) return isPrivateV4(v4FromWords(w[6], w[7])) // ::ffff:a.b.c.d
+  if (zeros(0, 6)) return isPrivateV4(v4FromWords(w[6], w[7])) // ::a.b.c.d(옛 표기)
+  if (w[0] === 0x64 && w[1] === 0xff9b && zeros(2, 6)) return isPrivateV4(v4FromWords(w[6], w[7])) // NAT64
+  if (w[0] === 0x2002) return isPrivateV4(v4FromWords(w[1], w[2])) // 6to4
+  if ((w[0] & 0xfe00) === 0xfc00) return true // fc00::/7
+  if ((w[0] & 0xffc0) === 0xfe80) return true // fe80::/10
+  if ((w[0] & 0xffc0) === 0xfec0) return true // fec0::/10(옛 사이트 로컬)
+  if ((w[0] & 0xff00) === 0xff00) return true // 멀티캐스트
+  return false
+}
+
+/** 루프백 · 사설 · 링크 로컬 · 예약 주소면 true. IP 주소가 아니면 막는 쪽(true)으로 본다. */
+function isPrivateAddress(address) {
+  let ip = String(address || '').trim().toLowerCase()
+  if (ip.startsWith('[') && ip.endsWith(']')) ip = ip.slice(1, -1)
+  const zone = ip.indexOf('%')
+  if (zone >= 0) ip = ip.slice(0, zone)
+  const kind = net.isIP(ip)
+  if (kind === 4) return isPrivateV4(ip)
+  if (kind === 6) return isPrivateV6(ip)
+  return true
+}
+
+function bareHost(hostname) {
+  const h = String(hostname || '').toLowerCase()
+  return h.startsWith('[') && h.endsWith(']') ? h.slice(1, -1) : h
+}
+
+function hostMatches(host, suffixes) {
+  return suffixes.some((s) => host === s || host.endsWith(`.${s}`))
+}
+
+/** 호스트 이름이 사설 주소로 풀리면 true. 풀 수 없으면 막는 쪽(true)으로 본다. */
+async function resolvesPrivate(host) {
+  if (host === 'localhost' || host.endsWith('.localhost')) return true
+  if (net.isIP(host)) return isPrivateAddress(host)
+  try {
+    const list = await dns.lookup(host, { all: true, verbatim: true })
+    return list.length === 0 || list.some((x) => isPrivateAddress(x.address))
+  } catch (err) {
+    console.warn(`[capture] DNS 확인 실패(${host}): ${err && err.code ? err.code : err}`)
+    return true
+  }
+}
+
+/**
+ * 캡처할 주소를 검사한다: https · 기본 포트 · 계정 정보 없음 · 호스트 = 허용 호스트 · 사설 주소로 풀리지 않음.
+ * 통과하면 정규화한 주소를 돌려주고, 아니면 code가 붙은 Error를 던진다.
+ */
+async function assertCaptureUrl(rawUrl, allowedHost) {
+  let u
+  try {
+    u = new URL(String(rawUrl))
+  } catch {
+    throw captureError('invalid-url', '주소를 읽을 수 없습니다.')
+  }
+  const host = bareHost(u.hostname)
+  const want = bareHost(allowedHost)
+  if (u.protocol !== 'https:') throw captureError('invalid-url', 'https 주소만 찍습니다.')
+  if (u.username || u.password) throw captureError('invalid-url', '계정 정보가 든 주소는 찍지 않습니다.')
+  if (u.port && u.port !== '443') throw captureError('invalid-url', '기본 포트가 아닌 주소는 찍지 않습니다.')
+  if (!want || host !== want) throw captureError('off-host', '허용한 호스트의 주소가 아닙니다.')
+  if (await resolvesPrivate(host)) throw captureError('private-address', '사설 · 루프백 주소로 풀리는 호스트는 찍지 않습니다.')
+  return u.href
+}
+
+// ── 옵션 ────────────────────────────────────────────────────────────────
+
+function safeSelector(s) {
+  return typeof s === 'string' && s.length > 0 && s.length <= 200 && !/[{};<>\\]/.test(s)
+}
+
+function normalizeOptions(options) {
+  const o = options || {}
+  const host = bareHost(o.host)
+  if (!host) throw captureError('invalid-options', '허용 호스트(host)가 없습니다.')
+  const hide = Array.isArray(o.hide) ? o.hide : []
+  if (hide.length > 20 || !hide.every(safeSelector)) throw captureError('invalid-options', '숨길 선택자가 올바르지 않습니다.')
+  if (o.scrollTo !== undefined && !safeSelector(o.scrollTo)) throw captureError('invalid-options', '스크롤 선택자가 올바르지 않습니다.')
+  let map = null
+  if (o.map) {
+    const m = typeof o.map === 'object' ? o.map : {}
+    const selector = m.selector === undefined ? DEFAULT_MAP_SELECTOR : m.selector
+    const readyEvent = m.readyEvent === undefined ? DEFAULT_MAP_READY_EVENT : m.readyEvent
+    if (!safeSelector(selector)) throw captureError('invalid-options', '지도 선택자가 올바르지 않습니다.')
+    if (typeof readyEvent !== 'string' || !/^[\w:.-]{1,60}$/.test(readyEvent)) {
+      throw captureError('invalid-options', '지도 준비 이벤트 이름이 올바르지 않습니다.')
+    }
+    map = { selector, readyEvent }
+  }
+  const asked = Number(o.timeoutMs)
+  const timeoutMs = Number.isFinite(asked) && asked > 0 ? Math.min(Math.max(asked, 5000), MAX_TIMEOUT_MS) : DEFAULT_TIMEOUT_MS
+  return {
+    host,
+    hide: [...DEFAULT_HIDE, ...hide],
+    scrollTo: o.scrollTo || null,
+    map,
+    activateFragmentLink: o.activateFragmentLink === true,
+    timeoutMs,
+  }
+}
+
+function captureCss(hide) {
+  return [
+    // 애니메이션은 끝 상태로 바로 건너뛴다(none으로 지우면 opacity 0에서 시작하는 요소가 안 보인 채 남는다).
+    '*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;' +
+      'animation-iteration-count:1!important;transition-duration:0s!important;transition-delay:0s!important;' +
+      'caret-color:transparent!important}',
+    'html{scroll-behavior:auto!important;scrollbar-width:none!important}',
+    `${hide.join(',')}{display:none!important}`,
+  ].join('\n')
+}
+
+// ── 페이지 안에서 도는 스크립트(문자열로 넘긴다) ─────────────────────────────
+
+function pageCall(fn, ...args) {
+  return `(${fn.toString()})(${args.map((a) => JSON.stringify(a)).join(',')})`
+}
+
+// 아래 page* 함수들은 문자열로 바뀌어 캡처 창의 페이지 안에서 돈다(Node 쪽 변수를 쓰지 않는다).
+function pageSetup(attrs, readyEvent) {
+  const root = document.documentElement
+  for (const [name, value] of attrs) if (root.hasAttribute(name)) root.setAttribute(name, value)
+  if (readyEvent && !window.__screenCaptureHooked) {
+    window.__screenCaptureHooked = true
+    document.addEventListener(readyEvent, () => {
+      if (!window.__screenCaptureMapReadyAt) window.__screenCaptureMapReadyAt = performance.now()
+    })
+  }
+  return true
+}
+
+function pageScroll(selector) {
+  let el = null
+  if (selector) el = document.querySelector(selector)
+  else if (location.hash.length > 1) {
+    const raw = location.hash.slice(1)
+    let id = raw
+    try {
+      id = decodeURIComponent(raw)
+    } catch {
+      id = raw // 잘못된 % 표기면 그대로 찾는다
+    }
+    el = document.getElementById(id)
+  }
+  if (!el) return { found: false, y: Math.round(scrollY) }
+  el.scrollIntoView({ block: 'start', behavior: 'instant' })
+  // 화면 맨 위에 붙은 머리(고정 · sticky)가 덮는 만큼 더 내린다.
+  let cover = 0
+  for (const x of [innerWidth * 0.25, innerWidth * 0.5, innerWidth * 0.75]) {
+    for (let n = document.elementFromPoint(x, 2); n && n !== document.documentElement; n = n.parentElement) {
+      const pos = getComputedStyle(n).position
+      if (pos === 'fixed' || pos === 'sticky') {
+        const r = n.getBoundingClientRect()
+        if (r.top <= 2 && r.bottom < innerHeight / 2) cover = Math.max(cover, r.bottom)
+      }
+    }
+  }
+  const top = el.getBoundingClientRect().top
+  if (top < cover + 12) scrollBy({ top: top - cover - 12, behavior: 'instant' })
+  return { found: true, y: Math.round(scrollY), cover: Math.round(cover) }
+}
+
+/**
+ * 주소의 #조각과 같은 곳을 가리키는 페이지 안 링크(a[href="#…"])를 한 번 누른다. 탭처럼 그 링크에 걸린
+ * 페이지 스크립트를 깨우려는 것이다(군산각 /map/#r-권역: 바로 열면 목록만 걸러지고 지도는 전체로 남는다).
+ * 폼 안의 링크는 누르지 않는다. 이동은 will-navigate에서, 요청은 GET 밖을 모두 막으므로 보내는 일이 없다.
+ */
+function pageActivateFragmentLink() {
+  const norm = (h) => {
+    try {
+      return decodeURIComponent(h)
+    } catch {
+      return h // 잘못된 % 표기면 그대로 비교한다
+    }
+  }
+  if (location.hash.length < 2) return { clicked: false, why: 'no-hash' }
+  const want = norm(location.hash)
+  const link = [...document.querySelectorAll('a[href^="#"]')].find((a) => norm(a.getAttribute('href')) === want)
+  if (!link) return { clicked: false, why: 'no-link' }
+  if (link.closest('form')) return { clicked: false, why: 'in-form' }
+  link.click()
+  return { clicked: true }
+}
+
+function pageMapState(selector, tileHosts) {
+  const box = document.querySelector(selector)
+  if (!box) return { box: false }
+  const r = box.getBoundingClientRect()
+  const ok = (h) => tileHosts.some((s) => h === s || h.endsWith(`.${s}`))
+  let tiles = 0
+  let pending = 0
+  let broken = 0
+  for (const img of box.querySelectorAll('img')) {
+    let host = ''
+    try {
+      host = new URL(img.currentSrc || img.src, location.href).hostname
+    } catch {
+      host = '' // 읽을 수 없는 주소는 타일로 세지 않는다
+    }
+    if (!ok(host)) continue
+    tiles += 1
+    if (!img.complete) pending += 1
+    else if (img.naturalWidth === 0) broken += 1
+  }
+  const ready = Boolean(window.__screenCaptureMapReadyAt) || Boolean(window.GSMaps && window.GSMaps.length)
+  return {
+    box: true,
+    ready,
+    readyAt: window.__screenCaptureMapReadyAt || null,
+    inView: r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight,
+    rect: { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) },
+    tiles,
+    pending,
+    broken,
+  }
+}
+
+async function pageDecode() {
+  const vw = innerWidth
+  const vh = innerHeight
+  const imgs = [...document.images].filter((i) => {
+    const r = i.getBoundingClientRect()
+    return r.width > 1 && r.height > 1 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw
+  })
+  const failed = []
+  await Promise.all(
+    imgs.map((i) =>
+      (i.complete
+        ? Promise.resolve()
+        : new Promise((res) => {
+            i.addEventListener('load', res, { once: true })
+            i.addEventListener('error', res, { once: true })
+          })
+      )
+        .then(() => i.decode())
+        .then(
+          () => null,
+          () => failed.push(i.currentSrc || i.src),
+        ),
+    ),
+  )
+  return { count: imgs.length, failed: failed.length }
+}
+
+function pageInspect(ownHost, mapSelector, mapHosts) {
+  const vw = innerWidth
+  const vh = innerHeight
+  const inView = (r) => r.width > 1 && r.height > 1 && r.bottom > 0 && r.right > 0 && r.top < vh && r.left < vw
+  const shown = (el) => (el.checkVisibility ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true)
+  const parse = (u) => {
+    try {
+      const x = new URL(u, location.href)
+      return { scheme: x.protocol, host: x.hostname }
+    } catch (err) {
+      return { scheme: 'bad:', host: String(err).slice(0, 40) }
+    }
+  }
+  const mapOk = (el, host) =>
+    Boolean(mapSelector) && Boolean(el.closest(mapSelector)) && mapHosts.some((s) => host === s || host.endsWith(`.${s}`))
+  const out = { images: 0, mapImages: 0, foreign: [], kogl: 0, frames: [] }
+  const judge = (el, url) => {
+    const { scheme, host } = parse(url)
+    if (scheme === 'data:' || scheme === 'blob:') return
+    if (host === ownHost) return
+    if (mapOk(el, host)) {
+      out.mapImages += 1
+      return
+    }
+    if (!out.foreign.includes(host)) out.foreign.push(host || scheme)
+  }
+  for (const img of document.images) {
+    if (!inView(img.getBoundingClientRect()) || !shown(img)) continue
+    out.images += 1
+    if (img.closest('[data-kogl]')) out.kogl += 1
+    judge(img, img.currentSrc || img.src)
+  }
+  for (const el of document.querySelectorAll('image, video, iframe, embed, object')) {
+    if (!inView(el.getBoundingClientRect()) || !shown(el)) continue
+    if (el.closest('[data-kogl]')) out.kogl += 1
+    const url =
+      el.getAttribute('href') || el.getAttribute('xlink:href') || el.getAttribute('src') || el.getAttribute('poster') || el.getAttribute('data') || ''
+    if (el.tagName === 'IFRAME') out.frames.push(parse(url).host)
+    if (url) judge(el, url)
+  }
+  const urlsIn = (v) => [...String(v || '').matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/g)].map((m) => m[2])
+  for (const el of document.querySelectorAll('body *')) {
+    const r = el.getBoundingClientRect()
+    if (!inView(r)) continue
+    for (const pseudo of [null, '::before', '::after']) {
+      const cs = getComputedStyle(el, pseudo)
+      const urls = [...urlsIn(cs.backgroundImage), ...urlsIn(cs.content), ...urlsIn(cs.maskImage)]
+      if (!urls.length || cs.visibility === 'hidden' || cs.display === 'none') continue
+      if (el.closest('[data-kogl]')) out.kogl += 1
+      for (const u of urls) judge(el, u)
+    }
+  }
+  return out
+}
+
+// ── 픽셀 검사 ────────────────────────────────────────────────────────────
+
+/** BGRA 비트맵의 한 영역 통계: 밝기 표준편차, 가장 흔한 색의 비율, 서로 다른 색 수(4비트 양자화). */
+function regionStats(bitmap, width, height, rect) {
+  const x0 = Math.max(0, Math.floor(rect.x))
+  const y0 = Math.max(0, Math.floor(rect.y))
+  const x1 = Math.min(width, Math.floor(rect.x + rect.w))
+  const y1 = Math.min(height, Math.floor(rect.y + rect.h))
+  const counts = new Map()
+  let n = 0
+  let sum = 0
+  let sumSq = 0
+  for (let y = y0; y < y1; y += 3) {
+    for (let x = x0; x < x1; x += 3) {
+      const i = (y * width + x) * 4
+      const b = bitmap[i]
+      const g = bitmap[i + 1]
+      const r = bitmap[i + 2]
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+      sum += lum
+      sumSq += lum * lum
+      n += 1
+      const key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4)
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+  }
+  if (n === 0) return { samples: 0, stddev: 0, dominantShare: 1, colors: 0 }
+  const mean = sum / n
+  const stddev = Math.sqrt(Math.max(0, sumSq / n - mean * mean))
+  const top = Math.max(...counts.values())
+  return { samples: n, stddev: Math.round(stddev * 10) / 10, dominantShare: Math.round((top / n) * 1000) / 1000, colors: counts.size }
+}
+
+function isBlank(stats) {
+  return stats.samples === 0 || stats.stddev < 4 || stats.dominantShare > 0.985 || stats.colors < 6
+}
+
+/** PNG 한 장이 빈 그림(거의 한 가지 색)인지 본다. 캡처 뒤 검사와 같은 기준이다. */
+function blankCheck(png) {
+  const image = nativeImage.createFromBuffer(png)
+  const { width, height } = image.getSize()
+  const stats = regionStats(image.toBitmap(), width, height, { x: 0, y: 0, w: width, h: height })
+  return { blank: isBlank(stats), stats, width, height }
+}
+
+// ── 창 · 세션 ────────────────────────────────────────────────────────────
+
+let captureSession = null
+/** 지금 찍고 있는 작업. 세션의 요청 검사기는 이것만 본다(다른 웹콘텐츠의 요청은 모두 막는다). */
+let activeCtx = null
+let disposed = false
+let queueTail = Promise.resolve()
+let queued = 0
+
+function noteBlocked(ctx, host, reason, type) {
+  const key = `${reason}|${host}|${type}`
+  ctx.blocked.set(key, (ctx.blocked.get(key) || 0) + 1)
+}
+
+async function requestBlockReason(details, ctx) {
+  let u
+  try {
+    u = new URL(details.url)
+  } catch {
+    return 'bad-url'
+  }
+  if (u.protocol === 'data:' || u.protocol === 'blob:') return null
+  // 캡처는 읽기만 한다 — GET · HEAD 밖의 요청(폼 제출 · fetch POST · 비콘)은 모두 막는다.
+  if (details.method && details.method !== 'GET' && details.method !== 'HEAD') return 'method'
+  if (u.protocol !== 'https:' && u.protocol !== 'wss:') return 'scheme'
+  const host = bareHost(u.hostname)
+  if (hostMatches(host, ANALYTICS_HOST_SUFFIXES) || ANALYTICS_PATHS.some((re) => re.test(u.pathname))) return 'analytics'
+  if ((details.resourceType === 'mainFrame' || details.resourceType === 'subFrame') && host !== ctx.host) return 'off-host'
+  if (!ctx.dnsCache.has(host)) ctx.dnsCache.set(host, resolvesPrivate(host))
+  if (await ctx.dnsCache.get(host)) return 'private-address'
+  return null
+}
+
+function ensureSession() {
+  if (captureSession) return captureSession
+  const ses = session.fromPartition(PARTITION, { cache: true })
+  ses.setPermissionRequestHandler((_wc, _permission, callback) => callback(false))
+  ses.setPermissionCheckHandler(() => false)
+  ses.setDevicePermissionHandler(() => false)
+  ses.setSpellCheckerEnabled(false)
+  ses.on('will-download', (event) => event.preventDefault())
+  ses.webRequest.onBeforeRequest((details, callback) => {
+    const ctx = activeCtx
+    if (!ctx || ctx.aborted || (details.webContentsId !== undefined && details.webContentsId !== ctx.wcId)) {
+      callback({ cancel: true })
+      return
+    }
+    requestBlockReason(details, ctx).then(
+      (reason) => {
+        if (reason) {
+          let host = ''
+          try {
+            host = new URL(details.url).hostname
+          } catch {
+            host = '(bad-url)'
+          }
+          noteBlocked(ctx, host, reason, details.resourceType)
+          callback({ cancel: true })
+        } else callback({})
+      },
+      (err) => {
+        noteBlocked(ctx, '(check-failed)', String(err).slice(0, 60), details.resourceType)
+        callback({ cancel: true })
+      },
+    )
+  })
+  captureSession = ses
+  return ses
+}
+
+function destroyWindow(win) {
+  if (!win || win.isDestroyed()) return
+  const dbg = win.webContents.debugger
+  if (dbg.isAttached()) dbg.detach()
+  win.destroy()
+}
+
+function withTimeout(promise, ms, code, message) {
+  let timer = null
+  return Promise.race([
+    promise,
+    new Promise((_resolve, reject) => {
+      timer = setTimeout(() => reject(captureError(code, message)), ms)
+    }),
+  ]).finally(() => clearTimeout(timer))
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+function checkAlive(ctx) {
+  if (ctx.aborted) throw captureError(ctx.abortCode || 'aborted', ctx.abortMessage || '캡처를 멈췄습니다.')
+  if (ctx.win && ctx.win.isDestroyed()) throw captureError('aborted', '캡처 창이 닫혔습니다.')
+}
+
+function evalIn(ctx, code, ms = EVAL_TIMEOUT_MS) {
+  checkAlive(ctx)
+  return withTimeout(ctx.win.webContents.executeJavaScript(code), ms, 'eval-timeout', '페이지 스크립트가 응답하지 않습니다.')
+}
+
+function cdp(ctx, method, params, ms = EVAL_TIMEOUT_MS) {
+  checkAlive(ctx)
+  return withTimeout(ctx.win.webContents.debugger.sendCommand(method, params || {}), ms, 'cdp-timeout', `${method} 응답이 없습니다.`)
+}
+
+function sampleMemory(ctx) {
+  // 사이트 격리 때문에 이동하면서 렌더러 프로세스가 바뀔 수 있어 매번 다시 읽는다.
+  if (ctx.win && !ctx.win.isDestroyed()) ctx.rendererPid = ctx.win.webContents.getOSProcessId()
+  if (!ctx.rendererPid) return
+  for (const m of app.getAppMetrics()) {
+    if (m.pid !== ctx.rendererPid || !m.memory) continue
+    ctx.memoryPeakKB = Math.max(ctx.memoryPeakKB, m.memory.workingSetSize || 0)
+    if (m.memory.privateBytes) ctx.privatePeakKB = Math.max(ctx.privatePeakKB, m.memory.privateBytes)
+  }
+}
+
+/** 요청이 QUIET_MS 동안 하나도 없을 때까지 기다린다. 한도까지 조용해지지 않으면 false. */
+async function waitQuiet(ctx) {
+  for (;;) {
+    checkAlive(ctx)
+    const now = Date.now()
+    let live = 0
+    for (const [id, started] of ctx.inflight) {
+      if (now - started.at > STALLED_REQUEST_MS) {
+        ctx.inflight.delete(id)
+        ctx.stalledHosts.add(started.host)
+      } else live += 1
+    }
+    if (live === 0 && now - ctx.lastNetworkAt >= QUIET_MS) return true
+    if (now >= ctx.deadline) return false
+    await sleep(POLL_MS)
+  }
+}
+
+function onDebuggerMessage(ctx, method, params) {
+  if (method === 'Network.requestWillBeSent') {
+    const type = params.type || ''
+    if (type === 'WebSocket' || type === 'EventSource') return
+    let host = ''
+    try {
+      host = new URL(params.request.url).hostname
+    } catch {
+      host = '(bad-url)'
+    }
+    ctx.inflight.set(params.requestId, { at: Date.now(), host })
+    ctx.lastNetworkAt = Date.now()
+  } else if (method === 'Network.loadingFinished' || method === 'Network.loadingFailed') {
+    if (ctx.inflight.delete(params.requestId)) ctx.lastNetworkAt = Date.now()
+  }
+}
+
+async function runCapture(url, opts, ctx) {
+  try {
+    return await captureSteps(url, opts, ctx)
+  } catch (err) {
+    // 종료 · 한도로 창을 부순 뒤에 나는 오류(ERR_FAILED 등)는 원래 까닭으로 돌려준다.
+    if (ctx.aborted && err && err.code !== ctx.abortCode) {
+      throw captureError(ctx.abortCode || 'aborted', ctx.abortMessage || '캡처를 멈췄습니다.')
+    }
+    throw err
+  } finally {
+    // 한도를 넘겨 runJob이 먼저 끝난 경우에도 이 작업이 만든 창 · 타이머는 여기서 치운다.
+    if (ctx.memoryTimer) clearInterval(ctx.memoryTimer)
+    ctx.memoryTimer = null
+    if (ctx.aborted) destroyWindow(ctx.win)
+  }
+}
+
+async function captureSteps(url, opts, ctx) {
+  const t0 = ctx.startedAt
+  const mark = (name) => {
+    ctx.timings[name] = Date.now() - t0
+  }
+  const ses = ensureSession()
+  await ses.clearStorageData()
+  checkAlive(ctx)
+
+  // 오프스크린 렌더링(offscreen) 창. 보통의 숨긴 창은 Windows에서 합성기가 프레임을 내지 않아 CDP
+  // Page.captureScreenshot이 응답하지 않는다(실측 2026-11-04: 4번 중 3번 15초 무응답, 나머지도 3.5초).
+  // capturePage({stayHidden})는 프레임은 받지만 화면 배율(125%)대로 1600×1000이 나온다. 오프스크린 창은
+  // 화면에 그려지지 않고 늘 '보이는' 상태라 CDP가 0.2초 안팎에 1280×800을 돌려준다.
+  const win = new BrowserWindow({
+    show: false,
+    width: VIEW_WIDTH,
+    height: VIEW_HEIGHT,
+    useContentSize: true,
+    frame: false,
+    skipTaskbar: true,
+    focusable: false,
+    backgroundColor: '#ffffff',
+    webPreferences: {
+      offscreen: true,
+      partition: PARTITION,
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      nodeIntegrationInSubFrames: false,
+      webviewTag: false,
+      backgroundThrottling: false,
+      spellcheck: false,
+      disableDialogs: true,
+      navigateOnDragDrop: false,
+      autoplayPolicy: 'document-user-activation-required',
+    },
+  })
+  ctx.win = win
+  if (ctx.aborted) destroyWindow(win)
+  checkAlive(ctx)
+  const wc = win.webContents
+  ctx.wcId = wc.id
+  wc.setFrameRate(OFFSCREEN_FPS)
+
+  wc.setWindowOpenHandler(() => ({ action: 'deny' }))
+  wc.on('will-attach-webview', (event) => event.preventDefault())
+  wc.on('will-navigate', (event) => {
+    event.preventDefault()
+    ctx.warnings.add('navigation-denied')
+  })
+  wc.on('will-frame-navigate', (event) => {
+    let host = ''
+    try {
+      host = bareHost(new URL(event.url).hostname)
+    } catch {
+      host = ''
+    }
+    if (event.isMainFrame && host !== ctx.host) {
+      event.preventDefault()
+      ctx.warnings.add('navigation-denied')
+    }
+  })
+  wc.on('will-redirect', (event) => {
+    let ok = false
+    try {
+      const target = new URL(event.url)
+      ok = target.protocol === 'https:' && bareHost(target.hostname) === ctx.host
+    } catch {
+      ok = false
+    }
+    if (!ok && event.isMainFrame) {
+      event.preventDefault()
+      ctx.warnings.add('redirect-denied')
+    }
+  })
+  wc.on('render-process-gone', (_e, details) => {
+    ctx.aborted = true
+    ctx.abortCode = 'renderer-gone'
+    ctx.abortMessage = `캡처 창의 렌더러가 멈췄습니다(${details && details.reason}).`
+  })
+  // 새 창은 렌더러가 아직 없어 CDP 명령이 응답하지 않는다(실측: Network.enable 무응답). 빈 페이지를 먼저 연다.
+  await withTimeout(wc.loadURL('about:blank'), EVAL_TIMEOUT_MS, 'load-failed', '빈 페이지를 열지 못했습니다.')
+  checkAlive(ctx)
+  // 빈 페이지가 열린 뒤에 건다 — 빈 페이지의 dom-ready로 CSS를 넣었다고 잘못 기록하지 않게.
+  wc.on('dom-ready', () => {
+    if (ctx.aborted || win.isDestroyed()) return
+    wc.insertCSS(captureCss(opts.hide), { cssOrigin: 'user' }).then(
+      () => {
+        ctx.cssReady = true
+      },
+      (err) => ctx.warnings.add(`css-failed:${String(err).slice(0, 60)}`),
+    )
+    wc.executeJavaScript(pageCall(pageSetup, DAY_THEME_ATTRS, opts.map ? opts.map.readyEvent : null)).then(
+      () => null,
+      (err) => ctx.warnings.add(`setup-failed:${String(err).slice(0, 60)}`),
+    )
+  })
+
+  const dbg = wc.debugger
+  dbg.attach('1.3')
+  dbg.on('message', (_e, method, params) => onDebuggerMessage(ctx, method, params))
+  dbg.on('detach', () => {
+    if (!ctx.done) ctx.warnings.add('debugger-detached')
+  })
+  await cdp(ctx, 'Network.enable')
+  await cdp(ctx, 'Emulation.setDeviceMetricsOverride', {
+    width: VIEW_WIDTH,
+    height: VIEW_HEIGHT,
+    deviceScaleFactor: 1,
+    mobile: false,
+    screenWidth: VIEW_WIDTH,
+    screenHeight: VIEW_HEIGHT,
+  })
+  await cdp(ctx, 'Emulation.setEmulatedMedia', {
+    media: 'screen',
+    features: [
+      { name: 'prefers-reduced-motion', value: 'reduce' },
+      { name: 'prefers-color-scheme', value: 'light' },
+    ],
+  })
+  await cdp(ctx, 'Emulation.setFocusEmulationEnabled', { enabled: true })
+
+  ctx.rendererPid = wc.getOSProcessId()
+  ctx.memoryTimer = setInterval(() => sampleMemory(ctx), 250)
+
+  const loadFailed = new Promise((_resolve, reject) => {
+    wc.on('did-fail-load', (_e, errorCode, errorDescription, _validatedURL, isMainFrame) => {
+      if (isMainFrame && errorCode !== -3) reject(captureError('load-failed', `페이지를 열지 못했습니다(${errorCode} ${errorDescription}).`))
+    })
+  })
+  loadFailed.catch((err) => ctx.warnings.add(`late-load-failure:${err.message}`))
+  const remaining = () => Math.max(1000, ctx.deadline - Date.now())
+  const loading = wc.loadURL(url).catch((err) => {
+    if (err && err.code && !String(err.code).startsWith('ERR_')) throw err
+    throw captureError('load-failed', `페이지를 열지 못했습니다(${err && err.code ? err.code : err}).`)
+  })
+  await withTimeout(Promise.race([loading, loadFailed]), remaining(), 'timeout', '페이지가 한도 안에 열리지 않았습니다.')
+  mark('loadMs')
+  ctx.rendererPid = wc.getOSProcessId()
+
+  const activate = async () => {
+    const r = await evalIn(ctx, pageCall(pageActivateFragmentLink))
+    if (!r.clicked) ctx.warnings.add(`fragment-link:${r.why}`)
+    ctx.activated = r.clicked
+  }
+
+  // 글꼴 → (지도가 아니면) 조각 링크 → 스크롤 → 조용함
+  await evalIn(ctx, pageCall(pageSetup, DAY_THEME_ATTRS, opts.map ? opts.map.readyEvent : null))
+  const fonts = await evalIn(ctx, 'document.fonts.ready.then(() => document.fonts.status)', remaining())
+  if (fonts !== 'loaded') ctx.warnings.add(`fonts:${fonts}`)
+  mark('fontsMs')
+  if (opts.activateFragmentLink && !opts.map) await activate()
+  const scroll1 = await evalIn(ctx, pageCall(pageScroll, opts.scrollTo))
+  if (opts.scrollTo && !scroll1.found) ctx.warnings.add('scroll-target-missing')
+  if (!(await waitQuiet(ctx))) ctx.warnings.add('network-busy-1')
+  mark('quiet1Ms')
+
+  // 지도: 준비 신호 → (조각 링크) → 타일이 다 들어와 0.5초 그대로일 때까지
+  let mapRect = null
+  if (opts.map) {
+    const mapState = () => evalIn(ctx, pageCall(pageMapState, opts.map.selector, MAP_IMAGE_HOST_SUFFIXES))
+    const notReady = (last) => {
+      const why = !last || !last.box ? '지도 상자가 없습니다' : !last.ready ? '지도가 준비되지 않았습니다' : !last.inView ? '지도가 첫 화면에 없습니다' : `타일이 덜 들어왔습니다(${last.pending}/${last.tiles})`
+      return captureError('map-not-ready', `${why}.`, { mapState: last })
+    }
+    let last = await mapState()
+    while (!(last.box && last.ready)) {
+      if (Date.now() >= ctx.deadline) throw notReady(last)
+      await sleep(POLL_MS)
+      last = await mapState()
+    }
+    mark('mapReadyMs')
+    if (opts.activateFragmentLink) {
+      await activate()
+      await sleep(POLL_MS) // 누른 뒤 지도가 옮겨 갈 틈
+    }
+    let stableSince = 0
+    for (;;) {
+      last = await mapState()
+      if (last.box && last.ready && last.inView && last.tiles > 0 && last.pending === 0) {
+        if (!stableSince) stableSince = Date.now()
+        if (Date.now() - stableSince >= 500) break
+      } else stableSince = 0
+      if (Date.now() >= ctx.deadline) throw notReady(last)
+      await sleep(POLL_MS * 2)
+    }
+    if (last.broken > 0) ctx.warnings.add(`map-tiles-broken:${last.broken}`)
+    mapRect = last.rect
+    ctx.mapTiles = last.tiles
+    mark('tilesMs')
+  }
+
+  // 그림 decode → 다시 스크롤(늦게 자리 잡은 요소 때문에 밀렸을 수 있다) → 다시 조용함
+  const decoded = await evalIn(ctx, pageCall(pageDecode), remaining())
+  if (decoded.failed > 0) ctx.warnings.add(`images-failed:${decoded.failed}`)
+  mark('decodeMs')
+  const scroll2 = await evalIn(ctx, pageCall(pageScroll, opts.scrollTo))
+  if (!(await waitQuiet(ctx))) ctx.warnings.add('network-busy-2')
+  if (scroll2.y !== scroll1.y) ctx.warnings.add(`scroll-moved:${scroll1.y}->${scroll2.y}`)
+  if (opts.map) {
+    const s = await evalIn(ctx, pageCall(pageMapState, opts.map.selector, MAP_IMAGE_HOST_SUFFIXES))
+    if (!s.box || s.pending > 0 || !s.inView) throw captureError('map-not-ready', '마지막 확인에서 지도 타일이 덜 들어왔습니다.', { mapState: s })
+    mapRect = s.rect
+  }
+  await evalIn(ctx, pageCall(pageSetup, DAY_THEME_ATTRS, null))
+  mark('quiet2Ms')
+  if (!ctx.cssReady) ctx.warnings.add('css-not-confirmed')
+
+  // 보이는 그림 검사: 바깥 호스트 · 공공누리 그림이 있으면 버린다
+  const seen = await evalIn(ctx, pageCall(pageInspect, ctx.host, opts.map ? opts.map.selector : null, MAP_IMAGE_HOST_SUFFIXES))
+  if (seen.kogl > 0) throw captureError('kogl-image', `공공누리 표시가 붙은 그림이 첫 화면에 있습니다(${seen.kogl}개).`, { inspect: seen })
+  if (seen.foreign.length > 0) {
+    throw captureError('foreign-image', `자사 호스트가 아닌 그림이 첫 화면에 있습니다(${seen.foreign.join(', ')}).`, { inspect: seen })
+  }
+  if (seen.frames.length > 0) throw captureError('foreign-image', `첫 화면에 iframe이 있습니다(${seen.frames.join(', ')}).`, { inspect: seen })
+  mark('inspectMs')
+
+  const shot = await cdp(
+    ctx,
+    'Page.captureScreenshot',
+    { format: 'png', fromSurface: true, captureBeyondViewport: false },
+    SHOT_TIMEOUT_MS,
+  )
+  mark('shotMs')
+  checkAlive(ctx)
+  const png = Buffer.from(shot.data, 'base64')
+  const image = nativeImage.createFromBuffer(png)
+  const size = image.getSize()
+  if (size.width !== VIEW_WIDTH || size.height !== VIEW_HEIGHT) {
+    throw captureError('bad-size', `찍힌 크기가 ${size.width}×${size.height}입니다(기대 ${VIEW_WIDTH}×${VIEW_HEIGHT}).`)
+  }
+  const bitmap = image.toBitmap()
+  const pixels = regionStats(bitmap, size.width, size.height, { x: 0, y: 0, w: size.width, h: size.height })
+  if (isBlank(pixels)) throw captureError('blank', '빈 화면이 찍혔습니다.', { pixels })
+  let mapPixels = null
+  if (mapRect) {
+    mapPixels = regionStats(bitmap, size.width, size.height, mapRect)
+    if (isBlank(mapPixels)) throw captureError('map-blank', '지도 자리가 비어 있습니다.', { pixels: mapPixels })
+  }
+  sampleMemory(ctx)
+  mark('totalMs')
+
+  return {
+    png,
+    width: size.width,
+    height: size.height,
+    waitedMs: ctx.timings.totalMs,
+    url,
+    finalUrl: wc.getURL(),
+    warnings: [...ctx.warnings],
+    timings: { ...ctx.timings },
+    blocked: [...ctx.blocked].map(([key, count]) => {
+      const [reason, host, type] = key.split('|')
+      return { reason, host, type, count }
+    }),
+    stalledHosts: [...ctx.stalledHosts],
+    inspect: seen,
+    pixels,
+    mapPixels,
+    mapTiles: ctx.mapTiles || 0,
+    activated: Boolean(ctx.activated),
+    scrollY: scroll2.y,
+    memoryPeakKB: ctx.memoryPeakKB || null,
+    privatePeakKB: ctx.privatePeakKB || null,
+  }
+}
+
+function newContext(opts) {
+  const now = Date.now()
+  return {
+    host: opts.host,
+    startedAt: now,
+    deadline: now + opts.timeoutMs,
+    win: null,
+    wcId: -1,
+    rendererPid: 0,
+    aborted: false,
+    abortCode: null,
+    abortMessage: null,
+    done: false,
+    cssReady: false,
+    warnings: new Set(),
+    blocked: new Map(),
+    dnsCache: new Map(),
+    inflight: new Map(),
+    stalledHosts: new Set(),
+    lastNetworkAt: now,
+    timings: {},
+    memoryTimer: null,
+    memoryPeakKB: 0,
+    privatePeakKB: 0,
+    mapTiles: 0,
+  }
+}
+
+async function runJob(rawUrl, options) {
+  if (disposed) throw captureError('disposed', '앱이 종료 중입니다.')
+  const opts = normalizeOptions(options)
+  const url = await assertCaptureUrl(rawUrl, opts.host)
+  const ctx = newContext(opts)
+  activeCtx = ctx
+  let hardTimer = null
+  const hardStop = new Promise((_resolve, reject) => {
+    hardTimer = setTimeout(() => {
+      ctx.aborted = true
+      ctx.abortCode = 'timeout'
+      ctx.abortMessage = `캡처가 ${Math.round((opts.timeoutMs + HARD_GRACE_MS) / 1000)}초 안에 끝나지 않았습니다.`
+      destroyWindow(ctx.win)
+      reject(captureError('timeout', ctx.abortMessage))
+    }, opts.timeoutMs + HARD_GRACE_MS)
+  })
+  try {
+    return await Promise.race([runCapture(url, opts, ctx), hardStop])
+  } finally {
+    ctx.done = true
+    clearTimeout(hardTimer)
+    destroyWindow(ctx.win)
+    if (activeCtx === ctx) activeCtx = null
+  }
+}
+
+/**
+ * 자사 화면 한 장을 찍는다(한 번에 한 장, 들어온 순서대로).
+ *
+ * @param {string} url  https 주소. 호스트는 options.host와 같아야 한다.
+ * @param {object} options
+ *   host       허용 호스트(프로필의 호스트). 필수.
+ *   map        true 또는 { selector, readyEvent } — 지도 화면이면 준비 신호와 타일까지 기다린다.
+ *   scrollTo   이 선택자의 요소가 화면 맨 위(고정 머리 아래)에 오게 스크롤한다. 없으면 주소의 #조각.
+ *   hide       더 숨길 선택자 목록(최대 20).
+ *   activateFragmentLink  true면 주소의 #조각을 가리키는 페이지 안 링크를 한 번 누른다(지도면 지도 준비 뒤).
+ *   timeoutMs  기다리는 한도(기본 25초, 최대 45초). 찍기 · 검사에 12초를 더 준다.
+ * @returns {Promise<{png: Buffer, width: number, height: number, waitedMs: number, url: string,
+ *   finalUrl: string, warnings: string[], timings: object, blocked: object[], inspect: object,
+ *   pixels: object, mapPixels: object|null, mapTiles: number, memoryPeakKB: number|null}>}
+ *   실패하면 code가 붙은 Error로 거부한다: invalid-url · off-host · private-address · invalid-options · busy ·
+ *   disposed · timeout · load-failed · map-not-ready · kogl-image · foreign-image · bad-size · blank · map-blank ·
+ *   renderer-gone · aborted · eval-timeout · cdp-timeout.
+ */
+function captureScreen(url, options) {
+  if (disposed) return Promise.reject(captureError('disposed', '앱이 종료 중입니다.'))
+  if (queued >= MAX_QUEUE) return Promise.reject(captureError('busy', '캡처 대기열이 가득 찼습니다.'))
+  queued += 1
+  const job = queueTail.then(() => runJob(url, options))
+  // 사슬은 순서만 지킨다 — 성공 · 실패는 job을 받은 호출자가 처리한다.
+  const release = () => {
+    queued -= 1
+  }
+  queueTail = job.then(release, release)
+  return job
+}
+
+/** 앱 종료 때 부른다: 찍던 창을 부수고, 기다리던 작업은 모두 'disposed'로 거부된다. */
+function disposeCapture() {
+  disposed = true
+  const ctx = activeCtx
+  if (ctx) {
+    ctx.aborted = true
+    ctx.abortCode = 'disposed'
+    ctx.abortMessage = '앱이 종료 중입니다.'
+    destroyWindow(ctx.win)
+  }
+}
+
+function captureStatus() {
+  return { busy: Boolean(activeCtx), queued, disposed }
+}
+
+module.exports = {
+  captureScreen,
+  disposeCapture,
+  captureStatus,
+  assertCaptureUrl,
+  isPrivateAddress,
+  blankCheck,
+  VIEW_WIDTH,
+  VIEW_HEIGHT,
+  DEFAULT_TIMEOUT_MS,
+  MAX_TIMEOUT_MS,
+}
