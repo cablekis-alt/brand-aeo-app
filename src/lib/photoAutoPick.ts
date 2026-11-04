@@ -525,19 +525,36 @@ const REGION_SCENE_WORDS = [
   '조명', '철길', '시장', '항구', '포구', '등대', '다리', '공원', '정원', '광장', '구도심', '원도심', '갈대', '갯벌', '방파제', '선착장',
 ]
 /**
- * 장소 없는 자리 낱말에 더해 지역 사진에서 같이 찾는 낱말 — 한 방향만(「골목」 자리는 「거리」 사진도, 「거리」 자리는 「골목」을 찾지 않는다).
+ * 장소 없는 자리 낱말에 더해 지역 사진에서 같이 찾는 낱말 — 두 방향(「골목」 자리는 「거리」 사진도, 「거리」 자리는 「골목」 사진도).
  * 2026-11-04 요청 — 관광사진 제목 · 검색 낱말에 「골목」이 드물다(군산 지역 사진 500장에 0장, 「근대문화유산거리」 · 「이색거리」는 있다).
+ * 같은 날 요청 — 「구도심 거리」 자리에 검색 낱말 「이색거리」로 읽은 경암동 철길마을 사진이 장면 낱말이 「골목」뿐이라 빠졌다.
  * 더한 낱말만 맞는 사진은 자리 낱말이 맞는 사진 뒤에 읽고, 자리 낱말이 장면 · 제목에 하나도 맞지 않을 때만 쓰며 장면 점수에 더하지 않는다.
  */
-const REGION_TERM_ALSO: ReadonlyMap<string, readonly string[]> = new Map([['골목', ['거리']]])
-/** 더한 낱말로 끝나도 그 장면이 아닌 낱말 — 「먹거리」 · 「볼거리」 · 「즐길거리」는 거리가 아니다(2026-11-04 검토). */
+const REGION_TERM_ALSO: ReadonlyMap<string, readonly string[]> = new Map([
+  ['골목', ['거리']],
+  ['거리', ['골목']],
+])
+/**
+ * 더한 낱말로 끝나도 그 장면이 아닌 낱말 — 「먹거리」 · 「볼거리」 · 「즐길거리」는 거리가 아니다(2026-11-04 검토). 자리 글자의 거리가 이 낱말뿐이면
+ * 골목을 더하지도 않는다(regionAlso). 「골목」으로 끝나는 낱말(먹자골목 · 뒷골목 · 벽화골목 · 카페골목)은 모두 골목이라 두지 않는다.
+ */
 const REGION_ALSO_NOT: Readonly<Record<string, RegExp>> = {
   거리: /(먹|볼|놀|살|할|즐길|구경|이야깃|이야기|얘깃|읽을|체험|웃음|화젯|간식|반찬|안줏|군것질|걱정|고민)거리$/,
 }
 
 /**
- * 더한 낱말(REGION_TERM_ALSO) 가운데 낱말 목록에 맞는 것 — 낱말이 같거나 그 낱말로 끝날 때만(「이색거리」 · 「근대문화유산거리」 · 「길거리」),
- * REGION_ALSO_NOT 낱말(「먹거리」 · 「볼거리」)은 빼고. 글자 안에서는 찾지 않는다(「거리두기」 · 「길거리음식」).
+ * 자리 낱말(own)에 더할 낱말(REGION_TERM_ALSO) — 자리 글자에서 그 낱말이 든 낱말이 REGION_ALSO_NOT 낱말뿐이면(「먹거리」 자리) 더하지 않는다.
+ * 자리 낱말에 이미 있는 낱말은 더하지 않는다.
+ */
+function regionAlso(own: readonly string[], text: string): string[] {
+  const words = normSlotAlt(text).toLowerCase().split(/[^\p{L}\p{N}]+/u).map(stripJosa)
+  const from = own.filter((t) => REGION_TERM_ALSO.has(t) && words.some((w) => w.includes(t) && !REGION_ALSO_NOT[t]?.test(w)))
+  return [...new Set(from.flatMap((t) => REGION_TERM_ALSO.get(t)!))].filter((t) => !own.includes(t))
+}
+
+/**
+ * 더한 낱말(REGION_TERM_ALSO) 가운데 낱말 목록에 맞는 것 — 낱말이 같거나 그 낱말로 끝날 때만(「이색거리」 · 「근대문화유산거리」 · 「길거리」 ·
+ * 「먹자골목」), REGION_ALSO_NOT 낱말(「먹거리」 · 「볼거리」)은 빼고. 글자 안에서는 찾지 않는다(「거리두기」 · 「길거리음식」 · 「골목길」).
  */
 function alsoHits(also: readonly string[], words: readonly string[]): string[] {
   return also.filter((t) => words.some((w) => w.endsWith(t) && !REGION_ALSO_NOT[t]?.test(w)))
@@ -1337,8 +1354,8 @@ export function autoPickPhotos(input: {
 
       // ③b 장소 없는 자리 — 장소 사전을 읽었고 브랜드 자기 시설 · 고유한 장소 이름이 나온 자리가 아니며 글에 사진 자리가 남은 자리(regionSlot)만.
       // 지역 사진 가운데 자리 낱말(내용어 · 꽃 · 골목 · 바닷가 …, 사람 낱말 · 브랜드 도시 제외, 밤 · 해 질 무렵 자리면 야경 · 노을, 골목
-      // 자리면 거리 — REGION_TERM_ALSO)이 제목 · 검색 낱말에 맞는 사진을 낱말이 많이 맞는 순서로(같으면 더한 낱말이 많이 맞는 순서 —
-      // 골목 사진이 거리만 맞는 사진보다 먼저) 자리마다 REGION_SCENE_LIMITS.perSlot장만 장면을 읽고(sceneWanted region), 장면이
+      // 자리면 거리 · 거리 자리면 골목 — REGION_TERM_ALSO · regionAlso)이 제목 · 검색 낱말에 맞는 사진을 낱말이 많이 맞는 순서로(같으면 더한
+      // 낱말이 많이 맞는 순서 — 자리 낱말이 맞는 사진이 더한 낱말만 맞는 사진보다 먼저) 자리마다 REGION_SCENE_LIMITS.perSlot장만 장면을 읽고(sceneWanted region), 장면이
       // 맞고(sceneFit — 종류 · 사람 · 화면은 그대로 뺀다) 자리 낱말이 장면 · 사진 제목에 하나 이상 맞는(하나도 없으면 더한 낱말 — alsoHits,
       // 장면 점수에는 더하지 않는다) 사진을 장면 점수 순서로 넣는다(장소로 묶어 둘 이름이 없어서). 늘 「확인 필요」, 시간만 다르면 ④ 비슷한 사진.
       const regionRows: AutoSlotRow[] = []
@@ -1353,13 +1370,14 @@ export function autoPickPhotos(input: {
       }
       for (const row of regionRows) {
         const w = wantsOf(row)
+        const slotText = `${row.slot.key} ${row.caption}`
         const own = [
           ...new Set([
-            ...regionTerms(`${row.slot.key} ${row.caption}`, regionStop).filter((t) => !PEOPLE_SCENE.test(t)),
+            ...regionTerms(slotText, regionStop).filter((t) => !PEOPLE_SCENE.test(t)),
             ...(w.times?.[0] === 'night' ? ['야경'] : w.times?.[0] === 'dusk' ? ['노을'] : []),
           ]),
         ]
-        const also = [...new Set(own.flatMap((t) => REGION_TERM_ALSO.get(t) ?? []))].filter((t) => !own.includes(t))
+        const also = regionAlso(own, slotText)
         const ranked = regionPool!
           .map((candidate, i) => ({
             candidate,
