@@ -480,6 +480,28 @@ const regionPlan = scenesToRead(
 )
 ok(`지역 사진은 한 번 누를 때 ${REGION_SCENE_LIMITS.perRun}장까지 장면을 읽는다(남은 수 · 상한에 걸림)`, regionPlan.read.length === REGION_SCENE_LIMITS.perRun && regionPlan.left === 40 && regionPlan.cappedPlaces.includes(REGION_SCENE_PLACE))
 ok('지역 사진을 찾을 장소 없는 자리 수', regionRowsWanted(run([placeless('w1', ALLEY_SLOT), duskDoc], { candidates: [], scenes: regionScenes })) === 1)
+// 2026-11-04 요청 — 골목 자리는 거리도 같이 찾는다(군산 지역 사진 500장의 제목 · 검색 낱말에 「골목」 · 「원도심」은 0장, 「근대문화유산거리」 ·
+// 「이색거리」는 있다). 한 방향만 — 거리 자리는 골목을 찾지 않고, 골목이 없는 자리는 그대로. 골목이 맞는 사진이 거리만 맞는 사진보다 먼저.
+const street = reg('street', '군산 근대문화유산거리', '군산, 근대문화유산거리, 근대')
+const STREET_SCENE = S({ text: '근대 건물이 늘어선 거리, 사람 없음', tags: ['근대건물', '보도'] })
+const streetRow = rowsOf(regionRun([placeless('s1', ALLEY_SLOT)], { regionCandidates: [street], scenes: freshScenes([[street, STREET_SCENE]]) }), 's1')[0]!
+ok(
+  '골목 자리 — 골목 사진이 없으면 거리 사진을 장소 없는 자리 · 비슷한 장면 · 확인 필요로(맞은 낱말 「거리」)',
+  streetRow.state === 'filled' && streetRow.pick?.src === street.src && streetRow.placeless === true && streetRow.review === true && Boolean(streetRow.fit?.words.includes('거리')),
+)
+const streetInside = rowsOf(
+  regionRun([placeless('s2', ALLEY_SLOT)], { regionCandidates: [street], scenes: freshScenes([[street, S({ setting: 'interior', time: 'unknown', text: '옛 거리를 재현한 실내 전시', tags: ['거리', '전시실'] })]]) }),
+  's2',
+)[0]!
+ok('골목 자리 — 거리 사진이라도 장면 종류가 다르면(실내) 넣지 않는다(비슷한 사진으로도)', streetInside.state === 'scene' && !streetInside.pick && streetInside.sceneSkips?.setting === 1)
+const oneWay = regionRun([placeless('s3', FLOWER_SLOT), placeless('s4', STREET_SLOT)], { regionCandidates: [street, alley], scenes: freshScenes([[street, STREET_SCENE], [alley, regionScenes.get(alley.src)!]]) })
+ok(
+  '골목이 없는 자리는 거리를 더하지 않는다 — 꽃 산책로 자리는 거리 사진을 찾지 않고, 거리 자리는 골목 사진을 찾지 않는다(한 방향)',
+  rowsOf(oneWay, 's3')[0]!.regionTried === 0 && rowsOf(oneWay, 's3')[0]!.state === 'nomatch' && rowsOf(oneWay, 's4')[0]!.regionTried === 1 && rowsOf(oneWay, 's4')[0]!.pick?.src === street.src,
+)
+const alleyFirst = regionRun([placeless('s5', ALLEY_SLOT)], { regionCandidates: [street, alley], scenes: new Map() }).sceneWanted.filter((w) => w.source === 'region').map((w) => w.src)
+const alleyBoth = rowsOf(regionRun([placeless('s6', ALLEY_SLOT)], { regionCandidates: [street, alley], scenes: freshScenes([[street, STREET_SCENE], [alley, regionScenes.get(alley.src)!]]) }), 's6')[0]!
+ok('골목 자리 — 골목이 맞는 사진을 거리만 맞는 사진보다 먼저 읽고(받은 순서가 뒤여도) 먼저 고른다', JSON.stringify(alleyFirst) === JSON.stringify([alley.src, street.src]) && alleyBoth.pick?.src === alley.src)
 
 // 읽지 못한 사진(failed)은 「아직 읽지 않음」이 아니다 — 장면이 맞는 사진 없음으로 관광공사 사진을 찾는다.
 const fa = pubInside[0]!
