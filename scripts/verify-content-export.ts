@@ -208,7 +208,8 @@ ok(
     exportLeaks(dropped.html).length === 0,
 )
 ok('PNG가 아닌 응답도 넣지 않는다', (await inlineScreens(screenDoc, notPng)).dropped === 1)
-// 잘라 찍은 화면(장소 안내 · 가이드 — 가로 400px 남짓)은 그림 줄 폭 720으로 늘리면 글자가 흐려진다 — 그림 가로로 줄인다(넓은 화면은 그대로).
+// 그림 화소보다 넓게 늘리지 않는다 — 옛 1배 잘라 찍기(장소 안내 · 가이드 — 가로 425)를 그림 줄 폭 720으로 늘리면 글자가 흐려진다. 그림 가로로
+// 줄인다(넓은 화면은 그대로).
 const pngOfWidth = (width: number) => {
   const bytes = new Uint8Array(33)
   bytes.set(PNG)
@@ -219,9 +220,17 @@ const pngOfWidth = (width: number) => {
 const narrow = await inlineScreens(screenDoc, async () => new Blob([pngOfWidth(425)], { type: 'image/png' }))
 const wideShot = await inlineScreens(screenDoc, async () => new Blob([pngOfWidth(1280)], { type: 'image/png' }))
 ok(
-  '잘라 찍은 화면(가로 425)은 그림 폭을 그림 가로로 — 720으로 늘리지 않는다(1280 화면 · 크기를 모르는 그림은 그대로 720)',
+  '옛 1배 잘라 찍기(가로 425)는 그림 폭을 그림 가로로 — 720으로 늘리지 않는다(1280 화면 · 크기를 모르는 그림은 그대로 720)',
   narrow.inlined === 1 && narrow.html.includes('width="425" style="width:100%;max-width:425px;height:auto"') && !narrow.html.includes('max-width:720px') &&
     wideShot.html.includes(FIGURE_SIZE) && inlined.html.includes(FIGURE_SIZE),
+)
+// 2배 잘라 찍기(2026-11-05) — 장소 안내 425(CSS px)는 850 화소, 가이드 824는 1648 화소라 그림 줄 폭 720(칸이 좁으면 칸 폭)까지 크게 보인다(예전
+// 1배 425의 1.7배). 화소가 720보다 적은 2배 그림(가로 300 CSS px → 600)은 화소만큼(600) — 늘리지 않고, 사이트 크기의 2배로.
+const shown = async (width: number) => (await inlineScreens(screenDoc, async () => new Blob([pngOfWidth(width)], { type: 'image/png' }))).html
+ok(
+  '2배 잘라 찍기 — 850 · 1648 화소는 그림 줄 폭 720(칸을 넘지 않게 width:100%), 600 화소는 600',
+  (await shown(850)).includes(FIGURE_SIZE) && (await shown(1648)).includes(FIGURE_SIZE) &&
+    (await shown(600)).includes('width="600" style="width:100%;max-width:600px;height:auto"'),
 )
 const inlineDrop = await inlineScreens(markdownToHtml(`문장 속 ![가상 여행 웹사이트 'AI 코스 만들기' 화면](${SCREEN_SRC}) 그림`), failFetch)
 ok('문장 속 화면도 받지 못하면 글자로', inlineDrop.html === '<p>문장 속 [화면: AI 코스 만들기] 그림</p>' && exportLeaks(inlineDrop.html).length === 0)

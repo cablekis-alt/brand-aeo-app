@@ -108,15 +108,32 @@ export interface ScreenShot {
   url: string
   /** 찍은 때(서버 시각, ISO). 같은 그림을 다른 날 다시 찍으면 이 값만 새로 적는다. */
   capturedAt: string
+  /** PNG 화소 크기(가로 · 세로) — 잘라 찍은 화면의 CSS 크기는 이것 ÷ scale. */
   width: number
   height: number
   bytes: number
   /** 잘라 찍은 화면이면 찍은 부분의 글자(요소들의 innerText, SCREEN_TEXT_MAX자까지) — 설명 줄의 사실과 견준다(screenFactGaps). */
   text?: string
+  /**
+   * 화소 배율(CSS 1px이 그림 몇 화소인가) — 잘라 찍은 화면은 2(2026-11-05부터 — SCREEN_CLIP_SCALE). 없으면 1: 첫 화면 통째(코스 · 지도)와
+   * 그 전에 1배로 찍은 잘라 찍기(옛 기록 — 목록 · 내보내기는 그대로 쓴다).
+   */
+  scale?: number
 }
 
 /** 찍은 부분 글자의 최대 길이. */
 export const SCREEN_TEXT_MAX = 2000
+
+/**
+ * 잘라 찍는 화면(장소 안내 · 가이드)의 화소 배율 — 2배로 찍는다(2026-11-05 결정: 장소 안내 칸은 폭이 425px로 좁아 블로그에서 더 크고
+ * 선명하게 보이게). electron/capture.cjs CLIP_SCALE과 같은 값이다. 첫 화면 통째(코스 · 지도)는 1배 그대로.
+ */
+export const SCREEN_CLIP_SCALE = 2
+
+/** 이 화면을 찍는 화소 배율 — 잘라 찍는 화면은 SCREEN_CLIP_SCALE, 첫 화면 통째는 1. */
+export function screenShotScale(screen: Pick<ScreenDef, 'clip'>): number {
+  return screen.clip ? SCREEN_CLIP_SCALE : 1
+}
 
 /** 목록 · 찍기 응답에 나가는 한 장 — id(= sha16)와 앱 주소(src)를 붙인다. */
 export interface ScreenShotView extends ScreenShot {
@@ -418,7 +435,10 @@ export function screenAlt(brandName: string, screen: Pick<ScreenDef, 'label' | '
   return `${brandName} 웹사이트 '${name}' 화면`
 }
 
-/** 찍은 화면의 가로 · 세로 비율(CSS aspect-ratio 「416 / 677」) — 잘라 찍은 화면은 16:10이 아니다. 크기를 모르면 undefined. */
+/**
+ * 찍은 화면의 가로 · 세로 비율(CSS aspect-ratio 「416 / 677」) — 잘라 찍은 화면은 16:10이 아니다. 2배로 찍은 화면도 비율은 같다(썸네일
+ * 칸 크기는 그대로). 크기를 모르면 undefined.
+ */
 export function screenAspectRatio(shot: { width?: number; height?: number } | undefined): string | undefined {
   const w = shot?.width
   const h = shot?.height

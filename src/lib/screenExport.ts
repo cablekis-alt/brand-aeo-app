@@ -89,8 +89,13 @@ async function dataUrlOf(blob: Blob): Promise<{ url: string; width: number | nul
 const FIGURE_MAX_WIDTH = 720
 
 /**
- * 잘라 찍은 화면(장소 안내 · 가이드 — 가로 400px 남짓)은 그림 줄의 720px로 늘리면 글자가 흐려진다 — 그림 가로가 720보다 좁으면 width ·
- * max-width를 그림 가로로 줄인다(늘리지 않는다). 가로를 모르거나 넓으면 그대로.
+ * 그림 화소보다 넓게 늘리지 않는다 — 그림 가로(화소)가 그림 줄 폭 720보다 좁으면 width · max-width를 그림 가로로 줄인다. 가로를 모르거나
+ * 넓으면 그대로(칸이 좁으면 width:100%로 칸 폭).
+ *
+ * 예전 규칙은 「좁은 화면(잘라 찍은 장소 안내 · 가이드 — 가로 425px 남짓)은 내보낼 때 늘리지 않음」이었다 — 1배 그림을 720으로 늘리면 글자가
+ * 흐려졌다. 2026-11-05부터 잘라 찍기는 2배 화소로 찍어(장소 안내 425 → 850 화소, 가이드 824 → 1648 화소) 720까지 줄여 넣어도 선명하다 —
+ * 그래서 화면 크기(CSS px)가 아니라 그림 화소를 본다: 2배 그림은 그림 줄 폭(칸 폭)까지 크게 보이고(장소 안내는 예전 425의 1.7배), 그 전에
+ * 1배로 찍은 옛 기록(425 화소)은 지금처럼 425 그대로다.
  */
 function notWider(attrs: string, width: number | null): string {
   if (!width || width >= FIGURE_MAX_WIDTH) return attrs
@@ -131,7 +136,7 @@ export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promi
 }
 
 /**
- * HTML의 화면 그림(앱 주소)을 바꾼다 — data에 그 주소의 data: 그림이 있으면 그것으로(그림이 그림 줄 폭보다 좁으면 늘리지 않게 — notWider),
+ * HTML의 화면 그림(앱 주소)을 바꾼다 — data에 그 주소의 data: 그림이 있으면 그것으로(그림 화소가 그림 줄 폭보다 적으면 늘리지 않게 — notWider),
  * 없으면 그림을 빼고 「[화면: 이름]」 글자로(그림 줄이면 사진 자리처럼 figure 안 문단으로).
  */
 function replaceScreens(html: string, data: ReadonlyMap<string, { url: string; width: number | null } | null>): InlinedScreens {

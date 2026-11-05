@@ -16,7 +16,7 @@ import type { WriterPlan, WriterPlanArticle } from '../src/lib/probePlan'
 import { screenAppSrc } from '../src/lib/screenCapture'
 import { exportLeaks } from '../src/lib/screenExport'
 import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos } from '../src/lib/sitePhotos'
-import { bundlePhotoName, canSaveToFolder, PHOTO_CREDITS_FILE, photoCreditsText, saveWriterBundle, writerBundle } from '../src/lib/writerBundle'
+import { bundleFileContent, bundlePhotoName, canSaveToFolder, PHOTO_CREDITS_FILE, photoCreditsText, saveWriterBundle, writerBundle } from '../src/lib/writerBundle'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -393,6 +393,28 @@ async function main(): Promise<void> {
   ok(
     '화면 그림을 받지 못하면 .html에는 「[화면: 이름]」 글자 — 앱 주소 없이, screensDropped로 알린다',
     lostHtml.includes('<figure class="image-slot"><p>[화면: AI 코스 만들기]</p>') && exportLeaks(lostHtml).length === 0 && lostSaved?.screensDropped === 1,
+  )
+  // 2배 잘라 찍기(2026-11-05) — 장소 안내 화면(425 CSS px)은 850 화소라 묶음의 .html에서도 그림 줄 폭 720까지 크게, 옛 1배 기록(425 화소)은
+  // 늘리지 않고 425.
+  const PLACE_SRC = screenAppSrc('vstay', '00000000000000ab')
+  const placePhoto = photo({
+    src: PLACE_SRC, alt: "가상 스테이 웹사이트 '가상박물관 장소 안내' 화면", pageUrl: 'https://gunsan.webforai.kr/places/가상박물관/', origin: 'screen', screenId: 'place-info',
+    variantId: '가상박물관', capturedAt: '2026-11-05T05:00:00.000Z',
+  })
+  const placeBundle = writerBundle({ ...input, drafts: { ...drafts, [a1.id]: { ...drafts[a1.id]!, photos: [placePhoto] } } })
+  const placeHtml = placeBundle.files.find((f) => f.kind === 'html' && f.name.startsWith('01-'))!
+  const pngWide = (width: number) => {
+    const bytes = new Uint8Array(33)
+    bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 73, 72, 68, 82])
+    new DataView(bytes.buffer).setUint32(16, width)
+    new DataView(bytes.buffer).setUint32(20, 1354)
+    return bytes
+  }
+  const bundledPlace = async (width: number) => (await (await bundleFileContent('vstay', placeHtml, new Map(), async () => new Blob([pngWide(width)], { type: 'image/png' }))).blob.text())
+  ok(
+    '묶음 .html — 2배 장소 안내 화면(850 화소)은 그림 줄 폭 720, 옛 1배(425 화소)는 425',
+    (await bundledPlace(850)).includes('width="720" style="width:100%;max-width:720px;height:auto"') &&
+      (await bundledPlace(425)).includes('width="425" style="width:100%;max-width:425px;height:auto"'),
   )
 
   // 8) 앱이 그린 군산 지도(origin osm-map) — 묶음의 .html에는 저장할 때 지도 그림을 문서 안(data:image/png)에 넣고 그림 바로 아래에 OSM 출처 줄,

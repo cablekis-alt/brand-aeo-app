@@ -6,7 +6,7 @@
 //
 // 지키는 것
 //   - 한 번에 한 장(줄 세우기 — 지도 그리기 mapRender.cjs도 같은 줄에 선다). 한 장마다 창을 새로 만들고 끝나면 destroy. 앱 종료 때 disposeCapture().
-//   - 크기 1280×800 · 배율 1 고정(CDP Emulation) — Windows 125/150% 배율과 상관없이 같은 그림.
+//   - 크기 1280×800 · 배율 1 고정(CDP Emulation) — Windows 125/150% 배율과 상관없이 같은 그림. 잘라 찍기만 1280×2100 · 배율 2(아래).
 //   - capturePage()+toPNG()는 쓰지 않는다(메인에서 동기 인코딩 → 큰 그림이면 앱 창이 멈춘다). CDP
 //     Page.captureScreenshot은 렌더러가 인코딩한다.
 //   - 자사 호스트 밖으로 이동 · 새 창 · 권한 요청 · 내려받기를 거절한다.
@@ -18,8 +18,11 @@
 //   - 빈 그림(한 가지 색)이면 실패로 돌려준다.
 //   - 동의 배너는 숨기기만 하고 절대 누르지 않는다.
 //   - 잘라 찍기(clip): 선택자들의 요소를 합친 사각형(+ 여백)만 찍는다. 그림 검사도 그 사각형에 걸친 것만 본다(밖의 공공누리 사진은 괜찮다 —
-//     닫힌 shadow root만은 자리와 상관없이 모두 센다). 사각형이 첫 화면(1280×800, 위에 붙은 머리 아래)에 들어가게 스크롤하고(스크롤한 뒤
-//     조용함을 다시 기다린다), 들어가지 않으면 찍지 않는다. 배율은 1 그대로.
+//     닫힌 shadow root만은 자리와 상관없이 모두 센다). 사각형이 화면(위에 붙은 머리 아래)에 들어가게 스크롤하고(스크롤한 뒤 조용함을 다시
+//     기다린다), 들어가지 않으면 찍지 않는다. 잘라 찍기 화면은 1280×2100 · 배율 2다(2026-11-05 결정 — 블로그에서 더 크게): 배율 2를
+//     사이트를 열기 전에 정해 사이트가 고해상도 그림(srcset)을 고르고 글자도 2배로 그린다(clip.scale로 키우면 1배 그림을 늘린다). 화면이 길어
+//     첫 화면(800)보다 긴 안내 카드(근대역사박물관 425×920)도 통째로 찍는다 — 세로 CLIP_MAX_HEIGHT까지. 사각형 · 그림 검사는 CSS px, 찍은
+//     그림은 그 2배(장치 px)다.
 //   - ownHostOnly: 자사 호스트 밖의 요청을 모두 막는다(관광공사 사진 · 지도 SDK · 동영상 썸네일 — 잘라 찍는 부분에 필요 없다).
 'use strict'
 
@@ -29,6 +32,14 @@ const net = require('node:net')
 
 const VIEW_WIDTH = 1280
 const VIEW_HEIGHT = 800
+/**
+ * 잘라 찍기의 화면 — 배율 2(src/lib/screenCapture.ts SCREEN_CLIP_SCALE과 같다) · 높이 2100. 실측(2026-11-05, 숨긴 창): 배율을 사이트를 열기
+ * 전에 2로 두면 가이드 일러스트가 camp-kids-1280(2배 그림)으로 바뀌고 글자도 2배로 그린다(clip.scale 2는 camp-kids-800을 늘린다). 높이
+ * 2100에서는 긴 카드(425×994까지 봤다)도 스크롤 없이 머리 아래에 들어오고, 그림은 800 화면 · 찍는 도중 화면 늘리기와 바이트까지 같았다
+ * (captureBeyondViewport는 머리 그림자가 들어오고 회차마다 그림이 달랐다). 렌더러 메모리는 1배와 같은 230~240MB.
+ */
+const CLIP_VIEW_HEIGHT = 2100
+const CLIP_SCALE = 2
 const DEFAULT_TIMEOUT_MS = 25000
 const MAX_TIMEOUT_MS = 45000
 /** 기다리는 한도가 끝난 뒤 찍기 · 검사에 더 주는 시간. 이것까지 넘으면 창을 부수고 실패한다. */
@@ -78,11 +89,15 @@ const DEFAULT_HIDE = [
 const DAY_THEME_ATTRS = [['data-wxt', 'day']]
 const DEFAULT_MAP_SELECTOR = '.map'
 const DEFAULT_MAP_READY_EVENT = 'gs:mapready'
-/** 잘라 찍기 — 여백 기본 · 최대, 블로그 그림으로 쓸 수 있는 가장 작은 크기, 함께 돌려주는 글자의 최대 길이. */
+/**
+ * 잘라 찍기 — 여백 기본 · 최대, 블로그 그림으로 쓸 수 있는 가장 작은 크기 · 가장 큰 세로(모두 CSS px — 찍은 그림은 그 CLIP_SCALE배), 함께
+ * 돌려주는 글자의 최대 길이.
+ */
 const CLIP_DEFAULT_PADDING = 16
 const CLIP_MAX_PADDING = 48
 const CLIP_MIN_WIDTH = 200
 const CLIP_MIN_HEIGHT = 120
+const CLIP_MAX_HEIGHT = 2000
 const CLIP_MAX_SELECTORS = 8
 const CLIP_TEXT_MAX = 2000
 
@@ -654,8 +669,9 @@ function countClosedShadowRoots(root) {
 /**
  * 잘라 찍을 사각형과 스크롤 — 요소 자리(문서 좌표 { x, y, w, h })를 합쳐 여백을 두르고 문서 안으로 자른 사각형(정수, 문서 좌표)과, 그
  * 사각형이 화면 안(위에 붙은 머리 cover 아래)에 들어오는 스크롤 가운데 지금 자리에서 가장 덜 움직이는 값. 가로로는 스크롤하지 않는다.
- * problem: clip-missing 요소 없음 · clip-too-small 블로그 그림으로 너무 작음 · clip-too-large 화면(머리를 뺀 높이)보다 큼 ·
- * clip-covered 어떤 스크롤로도 머리 아래에 다 들어오지 않음(문서 맨 위가 머리에 가림). 문제가 없으면 null.
+ * 모두 CSS px다(찍은 그림의 화소는 이것의 배율배).
+ * problem: clip-missing 요소 없음 · clip-too-small 블로그 그림으로 너무 작음 · clip-too-large 화면(머리를 뺀 높이)보다 크거나 세로가
+ * CLIP_MAX_HEIGHT를 넘음 · clip-covered 어떤 스크롤로도 머리 아래에 다 들어오지 않음(문서 맨 위가 머리에 가림). 문제가 없으면 null.
  */
 function clipPlan(rects, padding, page) {
   if (!rects.length) return { rect: null, scrollY: page.scrollY, problem: 'clip-missing' }
@@ -666,7 +682,9 @@ function clipPlan(rects, padding, page) {
   const rect = { x: x0, y: y0, width: Math.max(0, x1 - x0), height: Math.max(0, y1 - y0) }
   const keep = { rect, scrollY: page.scrollY }
   if (rect.width < CLIP_MIN_WIDTH || rect.height < CLIP_MIN_HEIGHT) return { ...keep, problem: 'clip-too-small' }
-  if (x0 < page.scrollX || x1 > page.scrollX + page.viewWidth || rect.height > page.viewHeight - page.cover) return { ...keep, problem: 'clip-too-large' }
+  if (x0 < page.scrollX || x1 > page.scrollX + page.viewWidth || rect.height > Math.min(CLIP_MAX_HEIGHT, page.viewHeight - page.cover)) {
+    return { ...keep, problem: 'clip-too-large' }
+  }
   const lo = Math.max(0, y1 - page.viewHeight)
   const hi = Math.min(Math.max(0, page.docHeight - page.viewHeight), y0 - page.cover)
   if (lo > hi) return { ...keep, problem: 'clip-covered' }
@@ -676,7 +694,7 @@ function clipPlan(rects, padding, page) {
 const CLIP_PROBLEM_TEXT = {
   'clip-missing': '잘라 찍을 요소가 페이지에 없습니다',
   'clip-too-small': `잘라 찍을 부분이 너무 작습니다(최소 ${CLIP_MIN_WIDTH}×${CLIP_MIN_HEIGHT})`,
-  'clip-too-large': '잘라 찍을 부분이 화면(1280×800, 위에 붙은 머리 아래)보다 큽니다',
+  'clip-too-large': `잘라 찍을 부분이 너무 큽니다(가로는 화면 ${VIEW_WIDTH} 안, 세로는 위에 붙은 머리 아래 ${CLIP_MAX_HEIGHT}까지)`,
   'clip-covered': '잘라 찍을 부분이 위에 붙은 머리에 가립니다',
 }
 
@@ -911,7 +929,9 @@ async function captureSteps(url, opts, ctx) {
   // 오프스크린 렌더링(offscreen) 창. 보통의 숨긴 창은 Windows에서 합성기가 프레임을 내지 않아 CDP
   // Page.captureScreenshot이 응답하지 않는다(실측 2026-11-04: 4번 중 3번 15초 무응답, 나머지도 3.5초).
   // capturePage({stayHidden})는 프레임은 받지만 화면 배율(125%)대로 1600×1000이 나온다. 오프스크린 창은
-  // 화면에 그려지지 않고 늘 '보이는' 상태라 CDP가 0.2초 안팎에 1280×800을 돌려준다.
+  // 화면에 그려지지 않고 늘 '보이는' 상태라 CDP가 0.2초 안팎에 1280×800을 돌려준다. 창은 늘 1280×800이다 — 잘라 찍기 화면(1280×2100 ·
+  // 배율 2)은 CDP Emulation이 정한다(창을 2100으로 만들어도 Windows가 화면 높이로 줄였다 — 실측 1281×912, 찍힌 그림은 같다).
+  const view = opts.clip ? { height: CLIP_VIEW_HEIGHT, scale: CLIP_SCALE } : { height: VIEW_HEIGHT, scale: 1 }
   const win = new BrowserWindow({
     show: false,
     width: VIEW_WIDTH,
@@ -1004,13 +1024,14 @@ async function captureSteps(url, opts, ctx) {
     if (!ctx.done) ctx.warnings.add('debugger-detached')
   })
   await cdp(ctx, 'Network.enable')
+  // 배율은 사이트를 열기 전(빈 페이지)에 정한다 — 사이트가 처음부터 그 배율의 그림(srcset)을 고른다.
   await cdp(ctx, 'Emulation.setDeviceMetricsOverride', {
     width: VIEW_WIDTH,
-    height: VIEW_HEIGHT,
-    deviceScaleFactor: 1,
+    height: view.height,
+    deviceScaleFactor: view.scale,
     mobile: false,
     screenWidth: VIEW_WIDTH,
-    screenHeight: VIEW_HEIGHT,
+    screenHeight: view.height,
   })
   await cdp(ctx, 'Emulation.setEmulatedMedia', {
     media: 'screen',
@@ -1171,7 +1192,8 @@ async function captureSteps(url, opts, ctx) {
       format: 'png',
       fromSurface: true,
       captureBeyondViewport: false,
-      // CDP clip은 문서 좌표다(스크롤한 화면에서 실측 2026-11-04 — 화면 좌표로 주면 스크롤만큼 아래가 찍힌다).
+      // CDP clip은 문서 좌표다(스크롤한 화면에서 실측 2026-11-04 — 화면 좌표로 주면 스크롤만큼 아래가 찍힌다). CSS px로 주고 scale은 1 —
+      // 찍힌 그림은 화면 배율(view.scale)배다.
       ...(clipRect ? { clip: { x: clipRect.x, y: clipRect.y, width: clipRect.width, height: clipRect.height, scale: 1 } } : {}),
     },
     SHOT_TIMEOUT_MS,
@@ -1183,7 +1205,9 @@ async function captureSteps(url, opts, ctx) {
   const png = Buffer.from(shot.data, 'base64')
   const image = nativeImage.createFromBuffer(png)
   const size = image.getSize()
-  const want = clipRect ? { width: clipRect.width, height: clipRect.height } : { width: VIEW_WIDTH, height: VIEW_HEIGHT }
+  // 기대 크기 · 지도 자리는 CSS px × 배율(장치 px). 지도는 잘라 찍기와 함께 쓰지 않아 늘 배율 1이다.
+  const css = clipRect ? { width: clipRect.width, height: clipRect.height } : { width: VIEW_WIDTH, height: VIEW_HEIGHT }
+  const want = { width: css.width * view.scale, height: css.height * view.scale }
   if (size.width !== want.width || size.height !== want.height) {
     throw captureError('bad-size', `찍힌 크기가 ${size.width}×${size.height}입니다(기대 ${want.width}×${want.height}).`)
   }
@@ -1192,7 +1216,8 @@ async function captureSteps(url, opts, ctx) {
   if (isBlank(pixels)) throw captureError('blank', '빈 화면이 찍혔습니다.', { pixels })
   let mapPixels = null
   if (mapRect) {
-    mapPixels = regionStats(bitmap, size.width, size.height, mapRect)
+    const k = view.scale
+    mapPixels = regionStats(bitmap, size.width, size.height, { x: mapRect.x * k, y: mapRect.y * k, w: mapRect.w * k, h: mapRect.h * k })
     if (isBlank(mapPixels)) throw captureError('map-blank', '지도 자리가 비어 있습니다.', { pixels: mapPixels })
   }
   sampleMemory(ctx)
@@ -1202,6 +1227,7 @@ async function captureSteps(url, opts, ctx) {
     png,
     width: size.width,
     height: size.height,
+    scale: view.scale,
     waitedMs: ctx.timings.totalMs,
     url,
     finalUrl: wc.getURL(),
@@ -1294,13 +1320,15 @@ async function runJob(rawUrl, options) {
  *   activateFragmentLink  true면 주소의 #조각을 가리키는 페이지 안 링크를 한 번 누른다(지도면 지도 준비 뒤).
  *   clip       { selectors, optional?, padding? } — 선택자들(필수 1~8개 · 있으면 넣는 optional 0~8개)의 요소를 합친 사각형에 여백
  *              (기본 16, 최대 48)을 둘러 그 부분만 찍는다. 그림 검사도 그 사각형에 걸친 것만 본다. map · scrollTo와 함께 쓰지 않는다.
+ *              화면 1280×2100 · 배율 2로 찍는다(세로 2000 CSS px까지).
  *   ownHostOnly  true면 자사 호스트 밖의 요청을 모두 막는다.
  *   timeoutMs  기다리는 한도(기본 25초, 최대 45초). 찍기 · 검사에 12초를 더 준다.
- * @returns {Promise<{png: Buffer, width: number, height: number, waitedMs: number, url: string,
+ * @returns {Promise<{png: Buffer, width: number, height: number, scale: number, waitedMs: number, url: string,
  *   finalUrl: string, warnings: string[], timings: object, blocked: object[], inspect: object,
  *   pixels: object, mapPixels: object|null, mapTiles: number, memoryPeakKB: number|null,
  *   clip: {x: number, y: number, width: number, height: number}|null, clipText: string|null}>}
- *   clip은 찍은 사각형(문서 좌표), clipText는 잘라 찍은 요소들의 글자(CLIP_TEXT_MAX자까지 — 서버가 설명 줄의 사실과 견준다).
+ *   width · height는 PNG 화소, scale은 화면 배율(첫 화면 1 · 잘라 찍기 2 — width = 사각형 가로 × scale). clip은 찍은 사각형(문서 좌표 ·
+ *   CSS px), clipText는 잘라 찍은 요소들의 글자(CLIP_TEXT_MAX자까지 — 서버가 설명 줄의 사실과 견준다).
  *   실패하면 code가 붙은 Error로 거부한다: invalid-url · off-host · private-address · invalid-options · busy ·
  *   disposed · timeout · load-failed · map-not-ready · clip-missing · clip-too-large · clip-too-small · clip-covered · kogl-image ·
  *   foreign-image · closed-shadow · bad-size · blank · map-blank · renderer-gone · aborted · eval-timeout · cdp-timeout.
@@ -1345,7 +1373,7 @@ function captureStatus() {
 // ── 서버(utilityProcess)와 주고받는 메시지 ──────────────────────────────────
 // 서버(server/screens.ts)가 process.parentPort로 찍기를 청하면 main.cjs가 여기로 넘기고, 돌려준 답을 서버로 보낸다.
 //   요청 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, clip?, ownHostOnly?, timeoutMs? } }
-//   답   { type: 'screen-capture-result', id, ok: true, png(base64), width, height, url, finalUrl, waitedMs, warnings, text? }
+//   답   { type: 'screen-capture-result', id, ok: true, png(base64), width, height, scale, url, finalUrl, waitedMs, warnings, text? }
 //        { type: 'screen-capture-result', id, ok: false, code, message }
 // 지도 그리기 요청 { type: 'map-render', id, spec }은 mapRender.cjs handleMapRequest로 넘기고 'map-render-result'로 답한다(같은 줄에 선다).
 const REQUEST_TYPE = 'screen-capture'
@@ -1377,6 +1405,7 @@ async function handleCaptureRequest(msg) {
       png: shot.png.toString('base64'),
       width: shot.width,
       height: shot.height,
+      scale: shot.scale,
       url: shot.url,
       finalUrl: shot.finalUrl,
       waitedMs: shot.waitedMs,

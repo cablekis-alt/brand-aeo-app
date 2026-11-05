@@ -38,7 +38,7 @@ import {
   type AutoScreenShot,
 } from '../src/lib/photoAutoPick'
 import { MAP_CREDIT, mapAppSrc, mapVariantKey } from '../src/lib/mapImage'
-import { screenAppSrc } from '../src/lib/screenCapture'
+import { photoRepeatKey, screenAppSrc } from '../src/lib/screenCapture'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -892,6 +892,14 @@ ok(
     pRow.screenPick?.by === 'place' && pRow.screenPick.saveAllowed === true && placeFilled.picks.length === 1,
 )
 ok('장소 안내 자리 — 설명 줄 · 장면 글자의 시각 · 입장 마감 · 휴관 · 입장료가 찍은 글자에 있으면 「확인 필요」 없음', !pRow.review && !pRow.factGaps)
+// 2배로 찍은 화면(2026-11-05 — PNG 850×1354 · scale 2)도 고르기는 같다 — 크기는 썸네일 비율에만 쓰고, 같은 사진 열쇠 · 상한 · 사실 확인(찍은 글자)은
+// 크기와 상관없다.
+const place2x = placeOne(['## 가상박물관 일정', '', `![${PLACE_SLOT}](#image-slot)`, PLACE_CAPTION], [{ ...placeShotOf('가상박물관', 21), width: 850, height: 1354, scale: 2 } as AutoScreenShot])
+ok(
+  '2배 장소 안내 화면도 1배와 같은 자리 · 같은 사진 기록 · 같은 열쇠(screen:place-info:가상박물관) · 「확인 필요」 없음',
+  JSON.stringify(place2x.picks) === JSON.stringify(placeFilled.picks) && place2x.rows[0]?.state === 'filled' && !place2x.rows[0]?.review &&
+    photoRepeatKey(place2x.picks[0]!) === 'screen:place-info:가상박물관',
+)
 const gapRow = placeOne(['## 가상박물관 일정', '', `![${PLACE_SLOT}](#image-slot)`, PLACE_CAPTION], [placeShotOf('가상박물관', 22, PLACE_TEXT.replace('(입장마감 17:30)', ''))]).rows[0]!
 ok(
   '장소 안내 자리 — 설명 줄의 시각 · 입장 마감이 찍은 글자에 없으면 넣되 「확인 필요」(빠진 사실을 적는다)',

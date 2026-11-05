@@ -11,6 +11,7 @@ import {
   screenAppSrc,
   screenOfPick,
   screenSaveAllowed,
+  screenShotScale,
   screenUrl,
   SCREEN_TEXT_MAX,
   type ScreenDef,
@@ -30,7 +31,7 @@ import type { PhotoPick } from '../src/lib/articlePhotos.js';
  *
  * 메시지(같은 parentPort를 electron/server-entry.cjs의 set-env도 쓴다 — type으로 가른다):
  *   서버 → 메인 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, clip?, ownHostOnly?, timeoutMs? } }
- *   메인 → 서버 { type: 'screen-capture-result', id, ok: true, png(base64), width, height, url, finalUrl, waitedMs, warnings, text? }
+ *   메인 → 서버 { type: 'screen-capture-result', id, ok: true, png(base64), width, height, scale, url, finalUrl, waitedMs, warnings, text? }
  *              { type: 'screen-capture-result', id, ok: false, code, message }
  * 한 번에 한 장(줄 세우기). 답이 한도 안에 오지 않으면 timeout으로 끝내고, 늦게 온 답은 버린다.
  */
@@ -98,6 +99,14 @@ export interface CapturedPng {
   warnings: string[];
   /** 잘라 찍은 요소들의 글자(잘라 찍기만). */
   text?: string;
+  /** 화소 배율 — 잘라 찍기는 2. 1배면 없다. */
+  scale?: number;
+}
+
+/** 기록에 적을 수 있는 화소 배율 — 1~MAX_SHOT_SCALE의 정수. */
+const MAX_SHOT_SCALE = 4;
+function shotScaleOk(v: unknown): v is number {
+  return typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= MAX_SHOT_SCALE;
 }
 
 /** Electron utilityProcess의 process.parentPort에서 쓰는 만큼(검증에서는 가짜를 넣는다). */
@@ -157,6 +166,7 @@ export function createCaptureBridge(
         finalUrl: typeof m.finalUrl === 'string' ? m.finalUrl.slice(0, 2048) : '',
         warnings: Array.isArray(m.warnings) ? m.warnings.filter((w): w is string => typeof w === 'string').slice(0, 20) : [],
         ...(typeof m.text === 'string' ? { text: m.text.slice(0, SCREEN_TEXT_MAX) } : {}),
+        ...(shotScaleOk(m.scale) && m.scale > 1 ? { scale: m.scale } : {}),
       });
       return;
     }
@@ -253,7 +263,8 @@ function validShot(v: unknown): v is ScreenShot {
     int(s.width) &&
     int(s.height) &&
     int(s.bytes) &&
-    (s.text === undefined || (typeof s.text === 'string' && s.text.length <= SCREEN_TEXT_MAX))
+    (s.text === undefined || (typeof s.text === 'string' && s.text.length <= SCREEN_TEXT_MAX)) &&
+    (s.scale === undefined || shotScaleOk(s.scale))
   );
 }
 
@@ -358,9 +369,18 @@ export function screenCaptureOptions(target: ScreenTarget): ScreenCaptureOptions
 
 /**
  * 찍은 PNG를 저장한다 — <sha16>.png(이미 있으면 그대로)와 screens.json 한 줄. 같은 화면 · 변형의 같은 그림이 이미 적혀 있으면 새 줄을
- * 더하지 않고 찍은 때 · 주소(잘라 찍었으면 찍은 부분의 글자 text)만 새로 적는다. PNG가 아니거나 크면 bad-png(아무것도 쓰지 않는다).
+ * 더하지 않고 찍은 때 · 주소(잘라 찍었으면 찍은 부분의 글자 text)만 새로 적는다. width · height는 PNG 화소 크기, scale은 찍은 화소 배율(잘라
+ * 찍기 2 — 1배면 적지 않아 예전 줄과 모양이 같다). PNG가 아니거나 크면 bad-png(아무것도 쓰지 않는다).
  */
-export async function storeScreenShot(tenantId: string, target: ScreenTarget, url: string, png: Buffer, at: Date, text?: string): Promise<ScreenShot> {
+export async function storeScreenShot(
+  tenantId: string,
+  target: ScreenTarget,
+  url: string,
+  png: Buffer,
+  at: Date,
+  text?: string,
+  scale?: number,
+): Promise<ScreenShot> {
   const size = pngSize(png);
   if (!size || png.length > MAX_SCREEN_PNG_BYTES) throw new ScreenCaptureError('bad-png', '찍은 그림이 PNG가 아니거나 너무 커요.');
   const sha16 = createHash('sha256').update(png).digest('hex').slice(0, 16);
@@ -388,6 +408,7 @@ export async function storeScreenShot(tenantId: string, target: ScreenTarget, ur
     height: size.height,
     bytes: png.length,
     ...(text ? { text: text.slice(0, SCREEN_TEXT_MAX) } : {}),
+    ...(shotScaleOk(scale) && scale > 1 ? { scale } : {}),
   };
   return updateShots(tenantId, (shots) => {
     const same = shots.findIndex((s) => s.sha16 === sha16 && s.screenId === shot.screenId && s.variantId === shot.variantId);
@@ -397,11 +418,18 @@ export async function storeScreenShot(tenantId: string, target: ScreenTarget, ur
   });
 }
 
-/** 오늘(KST) 같은 주소로 찍어 둔 그 화면 · 변형 — 가장 늦게 찍은 것. 파일이 없으면 보지 않는다. */
+/**
+ * 오늘(KST) 같은 주소 · 같은 화소 배율로 찍어 둔 그 화면 · 변형 — 가장 늦게 찍은 것. 파일이 없으면 보지 않는다. 배율이 다르면(2배로 바꾸기
+ * 전에 1배로 찍은 잘라 찍기) 같은 날이어도 다시 찍는다.
+ */
 async function sameDayShot(tenantId: string, target: ScreenTarget, url: string, now: Date): Promise<ScreenShot | null> {
   const today = kstDay(now);
+  const scale = screenShotScale(target.screen);
   const shots = (await readScreenShots(tenantId))
-    .filter((s) => s.screenId === target.screen.id && s.variantId === target.variant.id && s.url === url && kstDay(new Date(s.capturedAt)) === today)
+    .filter(
+      (s) =>
+        s.screenId === target.screen.id && s.variantId === target.variant.id && s.url === url && (s.scale ?? 1) === scale && kstDay(new Date(s.capturedAt)) === today,
+    )
     .sort((a, b) => Date.parse(b.capturedAt) - Date.parse(a.capturedAt));
   for (const s of shots) if (await fileExists(path.join(screensDir(tenantId), `${s.sha16}.png`))) return s;
   return null;
@@ -448,7 +476,8 @@ async function assertPlaceListed(target: ScreenTarget, listed: (profile: ScreenP
 }
 
 /**
- * 화면 · 변형 한 장을 찍어 저장한다. 오늘(KST) 같은 주소로 찍어 둔 것이 있으면 다시 찍지 않고 그것을 준다(reused — 다리를 쓸 수 없어도).
+ * 화면 · 변형 한 장을 찍어 저장한다. 오늘(KST) 같은 주소 · 같은 화소 배율로 찍어 둔 것이 있으면 다시 찍지 않고 그것을 준다(reused — 다리를
+ * 쓸 수 없어도).
  * 같은 화면 · 변형을 찍는 중에 또 청하면 그 결과를 함께 받는다. 다리를 쓸 수 없으면 unavailable. 장소 안내(placePages)는 찍기 전에 그
  * 장소가 사이트 장소 목록에 있는지 본다(listedPlaces — 검증은 가짜를 넣는다).
  */
@@ -469,7 +498,7 @@ export async function captureScreenShot(
     if (!bridge.available) throw new ScreenCaptureError('unavailable', UNAVAILABLE_MESSAGE);
     if (target.screen.placePages) await assertPlaceListed(target, opts.listedPlaces ?? listedPlaceSlugs);
     const captured = await bridge.capture({ url, options: screenCaptureOptions(target) });
-    return { shot: await storeScreenShot(tenantId, target, url, captured.png, now(), captured.text), reused: false };
+    return { shot: await storeScreenShot(tenantId, target, url, captured.png, now(), captured.text, captured.scale), reused: false };
   })();
   inflight.set(key, job);
   try {

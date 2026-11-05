@@ -186,22 +186,47 @@ function loadCaptureModule(): CaptureModule & { windowsCreated: () => number } {
   return { ...requireCaptureFresh(fakeElectron), windowsCreated: () => created }
 }
 
-/** 가짜 페이지(captureSteps 시험)가 기록하는 것 — 잘라 찍기 스크롤 · 그림 검사 · 찍기 시각(ms). */
+/**
+ * 가짜 페이지(captureSteps 시험)가 기록하는 것 — 잘라 찍기 스크롤 · 그림 검사 · 찍기 시각(ms), 만든 창의 옵션, 화면 흉내
+ * (Emulation.setDeviceMetricsOverride) · 찍기(Page.captureScreenshot)의 인자, 일의 차례(metrics · load:<주소>).
+ */
 interface FakePageLog {
   scrollAt: number | null
   inspectAt: number[]
   shotAt: number | null
+  windows: Record<string, unknown>[]
+  metrics: Record<string, unknown>[]
+  shots: Record<string, unknown>[]
+  steps: string[]
+}
+
+/** 가짜 페이지로 찍은 결과(captureScreen) 또는 서버로 보낼 답(handleCaptureRequest)에서 시험이 보는 것. */
+interface FakeShot {
+  ok?: boolean
+  width?: number
+  height?: number
+  scale?: number
+  clip?: Rect | null
 }
 
 /**
  * 가짜 페이지로 캡처 한 장을 끝까지 돌린다(창 · 사이트 · 네트워크 없음) — 페이지 안 함수는 이름으로 알아보고 정해 둔 값을 돌려준다.
- * 잘라 찍기면 요소가 문서 y 1300에 있어 한 번 스크롤한다. afterShot을 주면 찍은 뒤의 그림 검사가 그 값을 돌려준다(찍는 사이에 페이지가
- * 바뀐 것). tree는 DOM.getDocument의 뿌리, DOM.getBoxModel은 늘 「상자 없음」으로 실패한다(display:contents host와 같다).
+ * 잘라 찍기면 요소가 문서 y 2300에 있어(rects로 바꾼다) 한 번 스크롤한다 — 잘라 찍기 화면 높이(2100)보다도 아래다. 화면 크기(viewWidth ·
+ * viewHeight)는 마지막 화면 흉내 값이고, 찍은 그림의 크기는 실제 CDP처럼 사각형(없으면 화면) × 화면 배율 × clip.scale이다. afterShot을
+ * 주면 찍은 뒤의 그림 검사가 그 값을 돌려준다(찍는 사이에 페이지가 바뀐 것). tree는 DOM.getDocument의 뿌리, DOM.getBoxModel은 늘
+ * 「상자 없음」으로 실패한다(display:contents host와 같다). relay면 서버 요청 처리(handleCaptureRequest)로 찍고 그 답을 result로 준다.
  */
-async function runFakePage(opts: { clip: boolean; tree?: unknown; afterShot?: InspectResult }): Promise<{ code: string; log: FakePageLog }> {
-  const log: FakePageLog = { scrollAt: null, inspectAt: [], shotAt: null }
+async function runFakePage(opts: {
+  clip: boolean
+  tree?: unknown
+  afterShot?: InspectResult
+  rects?: { x: number; y: number; w: number; h: number }[]
+  relay?: boolean
+}): Promise<{ code: string; log: FakePageLog; result: FakeShot | null }> {
+  const log: FakePageLog = { scrollAt: null, inspectAt: [], shotAt: null, windows: [], metrics: [], shots: [], steps: [] }
   const clean: InspectResult = { images: 0, mapImages: 0, foreign: [], kogl: 0, frames: [] }
   let scrollY = 0
+  let view = { width: 1280, height: 800, deviceScaleFactor: 1 }
   const noop = () => undefined
   const pageResult = (code: string): unknown => {
     if (code.startsWith('document.fonts')) return 'loaded'
@@ -215,8 +240,8 @@ async function runFakePage(opts: { clip: boolean; tree?: unknown; afterShot?: In
     if (fn === 'pageDecode') return { count: 0, failed: 0 }
     if (fn === 'pageClipState') {
       return {
-        missing: [], rects: [{ x: 100, y: 1300, w: 500, h: 300 }], text: '가상박물관\n이용시간', docWidth: 1280, docHeight: 3000,
-        viewWidth: 1280, viewHeight: 800, scrollX: 0, scrollY, cover: 0,
+        missing: [], rects: opts.rects ?? [{ x: 100, y: 2300, w: 500, h: 300 }], text: '가상박물관\n이용시간', docWidth: 1280, docHeight: 4000,
+        viewWidth: view.width, viewHeight: view.height, scrollX: 0, scrollY, cover: 0,
       }
     }
     if (fn === 'pageClipCovers') return []
@@ -229,10 +254,18 @@ async function runFakePage(opts: { clip: boolean; tree?: unknown; afterShot?: In
   const command = (method: string, params: Record<string, unknown> = {}): Promise<unknown> => {
     if (method === 'DOM.getDocument') return Promise.resolve({ root: opts.tree ?? { nodeName: '#document', children: [] } })
     if (method === 'DOM.getBoxModel') return Promise.reject(new Error('Could not compute box model.'))
+    if (method === 'Emulation.setDeviceMetricsOverride') {
+      log.metrics.push(params)
+      log.steps.push('metrics')
+      view = { width: Number(params.width), height: Number(params.height), deviceScaleFactor: Number(params.deviceScaleFactor) }
+    }
     if (method === 'Page.captureScreenshot') {
       log.shotAt = Date.now()
-      const clip = params.clip as { width: number; height: number } | undefined
-      return Promise.resolve({ data: Buffer.from(JSON.stringify({ width: clip?.width ?? 1280, height: clip?.height ?? 800 })).toString('base64') })
+      log.shots.push(params)
+      const clip = params.clip as { width: number; height: number; scale?: number } | undefined
+      const k = view.deviceScaleFactor * (clip?.scale ?? 1)
+      const size = { width: Math.round((clip?.width ?? view.width) * k), height: Math.round((clip?.height ?? view.height) * k) }
+      return Promise.resolve({ data: Buffer.from(JSON.stringify(size)).toString('base64') })
     }
     return Promise.resolve({})
   }
@@ -248,7 +281,13 @@ async function runFakePage(opts: { clip: boolean; tree?: unknown; afterShot?: In
       executeJavaScript: (code: string) => Promise.resolve(pageResult(code)),
       getOSProcessId: () => 0,
       getURL: () => 'https://gunsan.webforai.kr/places/x/',
-      loadURL: () => Promise.resolve(),
+      loadURL: (url: string) => {
+        log.steps.push(`load:${url}`)
+        return Promise.resolve()
+      },
+    }
+    constructor(options: Record<string, unknown>) {
+      log.windows.push(options)
     }
     isDestroyed() {
       return this.destroyed
@@ -288,10 +327,24 @@ async function runFakePage(opts: { clip: boolean; tree?: unknown; afterShot?: In
   const realLookup = dns.promises.lookup
   dns.promises.lookup = (() => Promise.resolve([{ address: '93.184.216.34', family: 4 }])) as unknown as typeof dns.promises.lookup
   try {
+    const url = 'https://gunsan.webforai.kr/places/x/'
     const options = { host: 'gunsan.webforai.kr', ...(opts.clip ? { clip: { selectors: ['h1'], padding: 16 } } : {}) }
-    const code = await codeOf(capture.captureScreen('https://gunsan.webforai.kr/places/x/', options))
+    let result: FakeShot | null = null
+    let code: string
+    if (opts.relay) {
+      const relay = capture as unknown as { handleCaptureRequest: (m: unknown) => Promise<(FakeShot & { code?: string }) | null> }
+      const reply = await relay.handleCaptureRequest({ type: 'screen-capture', id: 'fake-relay', url, options })
+      result = reply
+      code = reply?.ok ? 'resolved' : (reply?.code ?? 'no-reply')
+    } else {
+      code = await codeOf(
+        capture.captureScreen(url, options).then((shot) => {
+          result = shot as FakeShot
+        }),
+      )
+    }
     capture.disposeCapture()
-    return { code, log }
+    return { code, log, result }
   } finally {
     dns.promises.lookup = realLookup
   }
@@ -434,6 +487,10 @@ try {
       screenAlt('가상각', course!, course!.variants[0]) === "가상각 웹사이트 'AI 코스 만들기' 화면",
   )
   ok('썸네일 비율 — 찍은 크기 그대로(모르면 없음)', screenAspectRatio({ width: 425, height: 677 }) === '425 / 677' && screenAspectRatio(undefined) === undefined && screenAspectRatio({ width: 0, height: 5 }) === undefined)
+  ok(
+    '화소 배율 — 잘라 찍는 화면(장소 안내 · 가이드)은 2배, 첫 화면 통째(코스 · 지도)는 1배',
+    lib.SCREEN_CLIP_SCALE === 2 && lib.screenShotScale(placeInfo!) === 2 && lib.screenShotScale(kidsGuide!) === 2 && lib.screenShotScale(course!) === 1 && lib.screenShotScale(map!) === 1,
+  )
   const kidsTarget = { profile: profile!, ...findScreenVariant(profile!, 'course', 'kids')! }
   const wondosim = { profile: profile!, ...findScreenVariant(profile!, 'map', 'r-원도심')! }
   ok('찾을 수 없는 화면 · 변형은 null', findScreenVariant(profile!, 'course', 'nope') === null && findScreenVariant(profile!, 'nope', 'default') === null && findScreenVariant(profile!, 1, 2) === null)
@@ -795,6 +852,18 @@ try {
       await flush()
       portT.emit({ type: 'screen-capture-result', id: portT.posted[1]?.id, ok: true, png: pngA.toString('base64'), text: 42 })
       ok('잘라 찍은 부분의 글자(text)를 받는다 — 2000자까지, 글자가 아니면 없음', gotT.text?.length === 2000 && (await pT2).text === undefined)
+      // 찍은 화소 배율(scale) — 잘라 찍기는 2. 없거나 1이거나 1~4의 정수가 아니면 없음(1배로 본다).
+      const scaleOf = async (scale: unknown) => {
+        const p = bridgeT.capture(req1)
+        await flush()
+        portT.emit({ type: 'screen-capture-result', id: portT.posted[portT.posted.length - 1]?.id, ok: true, png: pngA.toString('base64'), ...(scale === undefined ? {} : { scale }) })
+        return (await p).scale
+      }
+      ok(
+        '찍은 배율(scale)을 받는다 — 2배는 2, 없음 · 1 · 1~4의 정수가 아니면 없음(1배)',
+        (await scaleOf(2)) === 2 && (await scaleOf(undefined)) === undefined && (await scaleOf(1)) === undefined && (await scaleOf(2.5)) === undefined &&
+          (await scaleOf('2')) === undefined && (await scaleOf(9)) === undefined,
+      )
     }
     await flush()
     ok('앞 답이 오면 다음 요청을 보낸다', port.posted.length === 2)
@@ -945,6 +1014,17 @@ try {
         capture.clipPlan([{ x: 364, y: 30, w: 384, h: 200 }], 16, page).problem === 'clip-covered' && capture.clipPlan([], 16, page).problem === 'clip-missing',
     )
     ok('잘라 찍기 계획 — 여백은 문서 안으로 자른다', JSON.stringify(capture.clipPlan([{ x: 5, y: 200, w: 300, h: 200 }], 16, page).rect) === JSON.stringify({ x: 0, y: 184, width: 321, height: 232 }))
+    // 긴 안내 카드(근대역사박물관 425×920 — 2026-11-05 실측, 800 화면에서는 clip-too-large였다) — 잘라 찍기 화면(1280×2100)에서는 통째로
+    // 들어온다. 세로는 2000(CSS px)까지 — 넘으면 화면에 들어와도 clip-too-large.
+    const clipPage = { ...page, viewHeight: 2100 }
+    const museumCard = capture.clipPlan([{ x: 364, y: 108, w: 393, h: 888 }], 16, clipPage)
+    ok(
+      '잘라 찍기 계획(1280×2100) — 425×920 카드는 스크롤 없이 통째로 · 세로 2000까지, 2001이면 clip-too-large',
+      museumCard.problem === null && museumCard.scrollY === 0 && JSON.stringify(museumCard.rect) === JSON.stringify({ x: 348, y: 92, width: 425, height: 920 }) &&
+        capture.clipPlan([{ x: 364, y: 108, w: 393, h: 1968 }], 16, clipPage).problem === null &&
+        capture.clipPlan([{ x: 364, y: 108, w: 393, h: 1969 }], 16, clipPage).problem === 'clip-too-large' &&
+        capture.clipPlan([{ x: 364, y: 108, w: 393, h: 1969 }], 16, { ...clipPage, viewHeight: 2600 }).problem === 'clip-too-large',
+    )
     const clipInspect = (region?: Rect) =>
       inPage<InspectResult>(pw, capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region ?? null)
     const inside = clipInspect(plan.rect!)
@@ -1077,6 +1157,45 @@ try {
     }
     const closedClip = await runFakePage({ clip: true, tree: closedTree })
     ok('잘라 찍기 — 상자가 없는(display:contents) host의 닫힌 shadow root도 세어 버린다', closedClip.code === 'closed-shadow')
+
+    // 2배 잘라 찍기(2026-11-05 결정 — 블로그에서 더 크게) — 화면 배율 2를 사이트를 열기 전(빈 페이지)에 정해 사이트가 고해상도 그림(srcset)을
+    // 고르고 글자도 2배로 그린다(clip.scale 2는 1배 그림을 늘린다 — 실측). 찍은 그림은 사각형(CSS px)의 2배, 사각형 · 검사는 CSS px 그대로.
+    const PAGE_URL = 'https://gunsan.webforai.kr/places/x/'
+    const clip2x = await runFakePage({ clip: true })
+    const metric2x = clip2x.log.metrics[0] ?? {}
+    const shot2x = clip2x.log.shots[0] as { clip?: Rect & { scale?: number }; captureBeyondViewport?: boolean } | undefined
+    ok(
+      '잘라 찍기 — 사이트를 열기 전에 화면 흉내 1280×2100 · 배율 2(창은 그대로 1280×800), 찍기는 clip scale 1 · 화면 안에서만',
+      clip2x.code === 'resolved' && clip2x.log.metrics.length === 1 && metric2x.deviceScaleFactor === 2 && metric2x.width === 1280 && metric2x.height === 2100 &&
+        clip2x.log.steps.indexOf('metrics') < clip2x.log.steps.indexOf(`load:${PAGE_URL}`) && clip2x.log.windows[0]?.width === 1280 && clip2x.log.windows[0]?.height === 800 &&
+        shot2x?.clip?.scale === 1 && shot2x.captureBeyondViewport === false,
+    )
+    ok(
+      '잘라 찍기 — 찍은 그림은 사각형(532×332 CSS px)의 2배 1064×664 · 결과에 scale 2 · 사각형은 CSS px(문서 좌표) 그대로',
+      clip2x.result?.width === 1064 && clip2x.result.height === 664 && clip2x.result.scale === 2 &&
+        JSON.stringify(clip2x.result.clip) === JSON.stringify({ x: 84, y: 2284, width: 532, height: 332 }),
+    )
+    const relay2x = await runFakePage({ clip: true, relay: true })
+    ok('잘라 찍기 — 서버로 보내는 답에도 배율(scale 2)과 2배 크기', relay2x.code === 'resolved' && relay2x.result?.scale === 2 && relay2x.result.width === 1064 && relay2x.result.height === 664)
+    // 긴 안내 카드 — 근대역사박물관 425×920(2026-11-05 실측 · 800 화면에서는 clip-too-large로 두 자리가 비었다)도 통째로 찍는다.
+    const tallCard = await runFakePage({ clip: true, rects: [{ x: 364, y: 108, w: 393, h: 888 }] })
+    ok(
+      '긴 안내 카드(425×920) — clip-too-large 대신 통째로 찍는다(850×1840)',
+      tallCard.code === 'resolved' && tallCard.result?.width === 850 && tallCard.result.height === 1840 &&
+        JSON.stringify(tallCard.result.clip) === JSON.stringify({ x: 348, y: 92, width: 425, height: 920 }),
+    )
+    const tooTall = await runFakePage({ clip: true, rects: [{ x: 364, y: 108, w: 393, h: 1970 }] })
+    ok('잘라 찍을 부분이 2000(CSS px)보다 길면 그대로 clip-too-large(찍지 않는다)', tooTall.code === 'clip-too-large' && tooTall.log.shots.length === 0)
+    // 첫 화면 통째(코스 · 지도)는 그대로 — 창 · 화면 1280×800 · 배율 1 · clip 없이 찍기.
+    const full = await runFakePage({ clip: false })
+    ok(
+      '첫 화면 통째는 그대로 — 창 1280×800 · 화면 흉내 1280×800 배율 1 · clip 없이 찍기 · 1280×800 · scale 1',
+      full.code === 'resolved' &&
+        JSON.stringify(full.log.metrics) === JSON.stringify([{ width: 1280, height: 800, deviceScaleFactor: 1, mobile: false, screenWidth: 1280, screenHeight: 800 }]) &&
+        full.log.windows[0]?.width === 1280 && full.log.windows[0]?.height === 800 &&
+        JSON.stringify(full.log.shots) === JSON.stringify([{ format: 'png', fromSurface: true, captureBeyondViewport: false }]) &&
+        full.result?.width === 1280 && full.result.height === 800 && full.result.scale === 1 && full.result.clip === null,
+    )
   }
 
   // ── 7) 저장 · 같은 날 다시 쓰기 ─────────────────────────────────────────
@@ -1084,6 +1203,8 @@ try {
     const T = 'fake-gunsan'
     const pngs: Buffer[] = []
     const texts: string[] = []
+    // 답의 화소 배율 — 잘라 찍기(장소 안내 · 가이드)는 메인이 2배로 찍어 scale 2를 보낸다(2026-11-05). 넣지 않은 찍기는 scale 없음(1배).
+    const scales: number[] = []
     let calls = 0
     let delayMs = 0
     const port = new FakePort()
@@ -1091,8 +1212,13 @@ try {
       calls += 1
       const png = pngs.shift()
       const text = texts.shift()
+      const scale = (msg.options as { clip?: unknown } | undefined)?.clip ? scales.shift() : undefined
       setTimeout(
-        () => port.emit({ type: 'screen-capture-result', id: msg.id, ok: true, png: png ? png.toString('base64') : '', ...(text !== undefined ? { text } : {}) }),
+        () =>
+          port.emit({
+            type: 'screen-capture-result', id: msg.id, ok: true, png: png ? png.toString('base64') : '', ...(text !== undefined ? { text } : {}),
+            ...(scale !== undefined ? { scale } : {}),
+          }),
         delayMs,
       )
     }
@@ -1180,15 +1306,19 @@ try {
       }),
     )
     ok('장소 안내 — 장소 목록을 읽지 못하면 찍지 않는다(directory-failed · 502)', dirFail === 'directory-failed' && calls === callsBefore && screens.captureErrorStatus('directory-failed') === 502)
-    const pngP = fakePng(21, 425, 677)
+    // 잘라 찍기는 2배로 찍는다(2026-11-05) — 425×677(CSS px) 사각형의 PNG는 850×1354이고 메인이 scale 2를 보낸다.
+    const pngP = fakePng(21, 850, 1354)
     pngs.push(pngP)
     texts.push('가상박물관\n이용시간\n09:00–18:00')
+    scales.push(2)
     const placeShot = await captureScreenShot(T, placeTarget, { bridge, now: () => day3, listedPlaces: listed(['가상박물관']) })
     const placeRow = (await readScreenShots(T)).find((x) => x.screenId === 'place-info')
+    // 예전 기대값은 width 425 · height 677(1배 PNG)이었다 — 잘라 찍기를 2배로 찍게 되어(2026-11-05 결정) 같은 사각형의 PNG가 850×1354다.
+    // 기록의 width · height는 늘 PNG 화소 크기이고, 배율(scale 2)을 함께 적는다(CSS 크기 = 화소 ÷ 배율).
     ok(
-      '장소 안내 — 목록에 있으면 찍고, 찍은 부분의 글자 · 잘라 찍은 크기 · 장소 주소를 적는다',
+      '장소 안내 — 목록에 있으면 찍고, 찍은 부분의 글자 · 잘라 찍은 크기(PNG 화소) · 배율 2 · 장소 주소를 적는다',
       !placeShot.reused && calls === callsBefore + 1 && placeRow?.variantId === '가상박물관' && placeRow.text === '가상박물관\n이용시간\n09:00–18:00' &&
-        placeRow.width === 425 && placeRow.height === 677 && placeRow.url === screenUrl(profile!, placeTarget.variant),
+        placeRow.width === 850 && placeRow.height === 1354 && placeRow.scale === 2 && placeRow.url === screenUrl(profile!, placeTarget.variant),
     )
     const listedBefore = listedCalls
     const placeAgain = await captureScreenShot(T, placeTarget, { bridge, now: () => day3, listedPlaces: listed(['가상박물관']) })
@@ -1197,6 +1327,31 @@ try {
     ok('사진 받기 — 장소 안내 화면도 이 PC의 파일', Buffer.isBuffer(placeFile) && placeFile.equals(pngP))
     writeFileSync(path.join(dir, 'screens.json'), JSON.stringify({ shots: [...(await readScreenShots(T)), { ...placeRow, sha16: 'dddddddddddddddd', text: 42 }] }))
     ok('글자(text)가 글자가 아닌 줄은 목록에서 뺀다', !(await readScreenShots(T)).some((x) => x.sha16 === 'dddddddddddddddd'))
+    writeFileSync(path.join(dir, 'screens.json'), JSON.stringify({ shots: [...(await readScreenShots(T)), { ...placeRow, sha16: 'eeeeeeeeeeeeeeee', scale: 2.5 }] }))
+    ok('배율(scale)이 1~4의 정수가 아닌 줄은 목록에서 뺀다', !(await readScreenShots(T)).some((x) => x.sha16 === 'eeeeeeeeeeeeeeee'))
+
+    // 옛 1배 기록 — 2배로 바꾸기 전(2026-11-05 전)에 찍은 잘라 찍기(scale 없음 · 425×677). 목록 · 사진 받기는 그대로 쓰고, 같은 날 다시 청하면
+    // 1배 그림을 다시 주지 않고 2배로 다시 찍는다. 첫 화면 통째(코스)의 1배 기록은 같은 날 그대로 다시 쓴다(위 「같은 날 …」).
+    const oldTarget = { profile: profile!, ...findScreenVariant(profile!, 'place-info', '옛박물관')! }
+    const pngOld = fakePng(22, 425, 677)
+    const oldShot = await storeScreenShot(T, oldTarget, screenUrl(profile!, oldTarget.variant), pngOld, day3, '옛박물관\n이용시간\n10:00–17:00')
+    const oldRow = (await readScreenShots(T)).find((x) => x.sha16 === sha16(pngOld))
+    const oldFile = await screenFileForPick(T, owned, pickOfShot(sha16(pngOld), 'place-info', '옛박물관'))
+    ok(
+      '옛 1배 기록(scale 없음)도 목록 · 사진 받기에 그대로(425×677)',
+      oldShot.scale === undefined && oldRow?.scale === undefined && oldRow?.width === 425 && oldRow.height === 677 && Buffer.isBuffer(oldFile) && oldFile.equals(pngOld),
+    )
+    const pngNew = fakePng(23, 850, 1354)
+    pngs.push(pngNew)
+    texts.push('옛박물관\n이용시간\n10:00–17:00')
+    scales.push(2)
+    const callsOld = calls
+    const again2x = await captureScreenShot(T, oldTarget, { bridge, now: () => day3, listedPlaces: listed(['옛박물관']) })
+    ok(
+      '같은 날이라도 옛 1배 잘라 찍기는 다시 쓰지 않고 2배로 다시 찍는다',
+      !again2x.reused && calls === callsOld + 1 && again2x.shot.sha16 === sha16(pngNew) && again2x.shot.scale === 2 && again2x.shot.width === 850 &&
+        (await captureScreenShot(T, oldTarget, { bridge, now: () => day3, listedPlaces: listed(['옛박물관']) })).reused && calls === callsOld + 1,
+    )
 
     const C = 'fake-corrupt'
     mkdirSync(screensDir(C), { recursive: true })
