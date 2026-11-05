@@ -409,6 +409,39 @@ export async function findTourPhotos(q: TourPhotoQuery, brandRegion: string): Pr
  * 전국형 · B2B형이나 도시를 정하지 못한 지역이면 부르지 않고 알린다. 쪽마다 7일 캐시 · 하루 상한은 장소 사진과 같다. 서비스 오류는
  * note · error로 돌려주고(받은 쪽의 사진은 그대로) 던지지 않는다 — 키가 없을 때만 TourApiError('NO_KEY'). place는 지역의 표시 글자.
  */
+/** 한 곳 둘레의 관광지 — 관광공사 국문 관광정보(공공데이터)의 이름 · 좌표. */
+export interface TourPlaceNear {
+  contentId: string;
+  title: string;
+  lat: number;
+  lng: number;
+}
+
+/**
+ * 한 곳(at) 둘레 radiusM 안의 관광지(contentTypeId 12) — 가까운 차례(arrange E), 한 쪽(100건)까지. 7일 캐시(callPage). 키가 없으면 KEY
+ * 오류를 던진다. 숙소처럼 장소 목록이 없는 자사 사이트의 지도 표지(server/mapPoints.ts own-geo)가 쓴다 — 다른 고객 사이트의 장소 목록은 쓰지
+ * 않는다(2026-11-05 결정 D5(c)).
+ */
+export async function tourPlacesNear(at: { lat: number; lng: number }, radiusM: number): Promise<{ places: TourPlaceNear[]; live: number }> {
+  if (!tourApiConfigured()) throw new TourApiError('KEY', 'TourAPI 키가 없어요 — 이 PC의 TOURAPI_SERVICE_KEY를 확인해 주세요.');
+  const stats = { live: 0 };
+  const items = await call(
+    'KorService2',
+    'locationBasedList2',
+    { mapX: at.lng.toFixed(7), mapY: at.lat.toFixed(7), radius: String(Math.round(radiusM)), arrange: 'E', contentTypeId: '12' },
+    stats,
+  );
+  const places: TourPlaceNear[] = [];
+  for (const it of items) {
+    const contentId = str(it.contentid);
+    const title = normSlotAlt(str(it.title));
+    const lat = Number(str(it.mapy));
+    const lng = Number(str(it.mapx));
+    if (/^\d{1,12}$/.test(contentId) && title && Number.isFinite(lat) && Number.isFinite(lng)) places.push({ contentId, title, lat, lng });
+  }
+  return { places, live: stats.live };
+}
+
 export async function findRegionTourPhotos(brandRegion: string, marketScope?: string): Promise<TourPhotoResult> {
   if (!tourApiConfigured()) throw new TourApiError('NO_KEY', '이 PC에 관광공사 TourAPI 키가 없어요.');
   const brand = tourRegionOf(brandRegion);

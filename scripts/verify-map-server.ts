@@ -88,6 +88,38 @@ const empty = await loadMapPoints('vmap3', profile, { fetchPage: async () => ({ 
   (e: unknown) => (e instanceof MapPointsError ? e.code : 'other'),
 )
 ok('점이 하나도 없으면 no-points(저장하지 않는다)', empty === 'no-points' && !existsSync(path.join(dir, 'data', 'vmap3', 'map-points.json')))
+
+// 2026-11-05 결정 D5(c) — 숙소(스테이,머뭄) 프로필: 경로로 나눠 쓰는 호스트라 브랜드 페이지가 /s/stay 아래일 때만, 장소 목록은 자사 페이지
+// 구조화 데이터의 위치 한 곳 + 둘레 관광지(관광공사 좌표 — 가짜). 다른 고객 사이트의 장소 목록은 쓰지 않는다.
+const STAY_HOSTS = ['web4ai.o2osolution.ai', 'co.webforai.kr']
+const stayProfile = screenProfileFor(STAY_HOSTS, 'https://co.webforai.kr/s/stay')
+ok(
+  '숙소 프로필은 브랜드 페이지가 그 경로 아래일 때만(같은 호스트의 다른 업체 · 브랜드 페이지 없음은 아님)',
+  stayProfile?.mapPoints?.source === 'own-geo' && screenProfileFor(STAY_HOSTS, 'https://co.webforai.kr/s/other') === null &&
+    screenProfileFor(STAY_HOSTS) === null && screenProfileFor(STAY_HOSTS, 'https://co.webforai.kr/s/stayover') === null,
+)
+const STAY_PAGE = `<!doctype html><html><head><script type="application/ld+json">${JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [{ '@type': ['LodgingBusiness', 'LocalBusiness'], name: '가상스테이', geo: { '@type': 'GeoCoordinates', latitude: 35.9864, longitude: 126.7061 } }],
+})}</script></head><body><div class="map" data-points='{"all":[]}'></div></body></html>`
+let nearAsked: { lat: number; lng: number; r: number } | null = null
+const nearPlaces = async (at: { lat: number; lng: number }, radiusM: number) => {
+  nearAsked = { ...at, r: radiusM }
+  return { places: [{ contentId: '111', title: '가상 근대역사관', lat: 35.9895, lng: 126.7041 }, { contentId: '222', title: '가상 일본식 가옥', lat: 35.9862, lng: 126.7087 }] }
+}
+const stayLoaded = await loadMapPoints('vstay', stayProfile!, { fetchPage: async () => ({ status: 200, html: STAY_PAGE, fetchError: null }), nearPlaces })
+const own = stayLoaded.file.points.find((p) => p.id === 'own')
+ok(
+  '숙소 장소 목록 — 구조화 데이터 위치(숙소) 하나 + 둘레 관광지(tour-<id>), 권역 「둘레」, 출처는 자사 페이지',
+  own?.kind === 'stay' && own.name === '가상스테이' && stayLoaded.file.points.filter((p) => p.id.startsWith('tour-')).length === 2 &&
+    stayLoaded.file.points.every((p) => p.region === '둘레') && stayLoaded.file.source === 'https://co.webforai.kr/s/stay' &&
+    nearAsked !== null && (nearAsked as { r: number }).r === 2000,
+)
+const noGeo = await loadMapPoints('vstay2', stayProfile!, { fetchPage: async () => ({ status: 200, html: '<html><body>위치 없음</body></html>', fetchError: null }), nearPlaces }).then(
+  () => 'resolved',
+  (e: unknown) => (e instanceof MapPointsError ? e.code : 'other'),
+)
+ok('구조화 데이터에 위치가 없으면 받지 못함(fetch-failed) — 사이트 지도 목록으로 넘어가지 않는다', noGeo === 'fetch-failed')
 const noSource = await loadMapPoints(TENANT, { host: 'x.example', screens: [] }, { fetchPage }).then(
   () => 'resolved',
   (e: unknown) => (e instanceof MapPointsError ? e.code : 'other'),

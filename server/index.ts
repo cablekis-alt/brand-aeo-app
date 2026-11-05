@@ -933,7 +933,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   // 찍은 화면 id(shotId)로 이 PC의 screens.json에서 찾아 서버가 앱 주소 · 찍은 주소 · 찍은 때 · 대체 텍스트(화면 이름만)를 단다. 지금 글에
   // 넣지 않는 종류(SCREEN_AUTO_SAVE_KINDS 밖 — 카카오 지도)는 saveAllowed false — 넣기는 400, 자동 채우기는 빼고 센다. 목록은 넣기 ·
   // 자동 채우기 앞에서 읽는다(screenShots).
-  const screenProfile = screenProfileFor(owned);
+  const screenProfile = screenProfileFor(owned, tenant.brandPageUrl);
   let screenShots: ScreenShot[] = [];
   const SCREEN_NOT_SAVED = '지도 화면은 카카오 지도 이용 조건을 확인하기 전까지 글에 넣지 않아요 — 미리보기로만 봐 주세요.';
   const screenPickOf = (raw: Record<string, unknown>) => {
@@ -1492,7 +1492,7 @@ app.post('/api/screens/capture', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${tenantId}` });
     return;
   }
-  const profile = screenProfileFor(tenant.ownedDomains);
+  const profile = screenProfileFor(tenant.ownedDomains, tenant.brandPageUrl);
   if (!profile) {
     res.status(404).json({ error: '이 브랜드에는 찍을 자사 화면이 없어요.' });
     return;
@@ -1525,14 +1525,14 @@ app.get('/api/screens/:tenantId', async (req, res) => {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
-  const profile = screenProfileFor(tenant.ownedDomains);
+  const profile = screenProfileFor(tenant.ownedDomains, tenant.brandPageUrl);
   const shots = (await readScreenShots(tenant.tenantId)).sort((a, b) => Date.parse(b.capturedAt) - Date.parse(a.capturedAt));
   res.setHeader('Cache-Control', 'no-store');
   res.json({
     available: screenCaptureAvailable(),
     host: profile?.host ?? null,
     screens: profile
-      ? profile.screens.map((s) => ({
+      ? profile.screens.filter((s) => !s.drawOnly).map((s) => ({
           id: s.id,
           kind: s.kind,
           label: s.label,
@@ -1575,7 +1575,7 @@ app.get('/api/screens/:tenantId/:file', async (req, res) => {
 // 장소 목록 출처가 있는 프로필(군산각 — ScreenProfile.mapPoints)만. 그리기는 설치한 데스크톱 앱(서버가 utilityProcess)에서만 — 웹 · dev는
 // 그려 둔 지도만 쓴다(그리기 요청은 503). Express 전용(Vercel 함수 12/12 — 웹에는 이 라우트가 없다).
 const mapProfileOf = (tenant: TenantConfig) => {
-  const profile = screenProfileFor(tenant.ownedDomains);
+  const profile = screenProfileFor(tenant.ownedDomains, tenant.brandPageUrl);
   return profile?.mapPoints ? profile : null;
 };
 

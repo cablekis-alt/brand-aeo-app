@@ -93,19 +93,30 @@ export interface ScreenDef {
    * 자리로 보지 않고(isScreenSlotText), 자리 글자가 브랜드 이름이나 프로필 호스트를 말할 때만 이 화면 자리다(screenKindOf).
    */
   commonLabel?: true
+  /**
+   * 찍지 않는 화면 — 지도 자리를 앱이 그린 OSM 지도로만 채운다(사이트에 찍을 지도 화면이 없다 — 스테이,머뭄). 화면 고르기 · 찍기 목록에 없다.
+   */
+  drawOnly?: true
   variants: readonly ScreenVariant[]
 }
 
 /** 자사 사이트 하나의 화면 목록 — 호스트로 찾는다(브랜드 ownedDomains에 그 호스트가 있어야 한다). */
 export interface ScreenProfile {
   host: string
+  /**
+   * 한 호스트를 여러 업체가 경로로 나눠 쓰면(co.webforai.kr — WebforAI 고객 여럿) 이 브랜드의 경로 — 브랜드 페이지(brandPageUrl)가 이 호스트의
+   * 이 경로 아래일 때만 이 프로필이다(screenProfileFor). 같은 호스트의 다른 업체에 붙지 않게.
+   */
+  pathPrefix?: string
   screens: readonly ScreenDef[]
   /**
-   * 지도 자리에 앱이 그린 OSM 지도를 넣을 장소 목록의 출처 — 자사 사이트의 이 경로(div.map[data-points])에서 점만 읽는다
-   * (server/mapPoints.ts · src/lib/mapImage.ts). 동봉한 지도 데이터가 군산뿐이라 군산각 프로필에만 있다. 없으면 지도 자리는 지금처럼
-   * 카카오 지도 미리보기만 한다.
+   * 지도 자리에 앱이 그린 OSM 지도를 넣을 장소 목록의 출처(server/mapPoints.ts · src/lib/mapImage.ts). 동봉한 지도 데이터가 군산뿐이라 군산
+   * 브랜드에만 있다. 없으면 지도 자리는 지금처럼 카카오 지도 미리보기만 한다.
+   * - source site-map(기본): 자사 사이트의 이 경로(div.map[data-points])에서 점만 읽는다(군산각 /map/).
+   * - source own-geo: 자사 사이트 이 경로의 구조화 데이터 위치(geo) 한 곳(anchorId — 숙소)과 그 둘레 관광지의 관광공사 좌표(공공데이터)를
+   *   쓴다(2026-11-05 결정 D5(c) — 스테이,머뭄. 다른 고객 사이트의 장소 목록은 쓰지 않는다). 지도 자리에는 늘 그 한 곳을 맨 앞에 둔다.
    */
-  mapPoints?: { path: string }
+  mapPoints?: { path: string; source?: 'site-map' | 'own-geo'; anchorId?: string }
 }
 
 /** 찍은 화면 한 장 — server/screens.ts가 screens.json에 적는다. */
@@ -188,6 +199,8 @@ const GUNSAN_SOLO =
  */
 const GUNSAN_COUPLE =
   /연인(?!원)|커플|(?<!업)데이트|신혼|부부(?!터)|(?<!플러스\s?|(?:아이|어린이|자녀|아들|딸|꼬마|유아|초등학생)(?:의)?\s?)친구(?!\s?(?:같|처럼|추가|맺|신청|등록))|둘이서|둘만|둘이\s?(?:걷|걸|가|간|갈|떠나|여행|나란히|함께)|두\s?사람이?\s?(?:함께|나란히|걷|걸)|우정\s?여행/
+/** 자사 위치 한 곳(own-geo 장소 목록의 숙소 · 매장)의 장소 id — 지도 자리에 늘 맨 앞에 둔다(src/lib/mapImage.ts mapChoiceOf anchorId). */
+export const OWN_GEO_POINT_ID = 'own'
 /** 「아이와」 칸을 말하는 낱말 — 「아이」로 시작하지만 사람이 아닌 낱말(아이보리 · 아이콘 …)은 뺀다. */
 const GUNSAN_KIDS = /아이(?!보리|콘|디어|스|폰|템)|어린이|자녀/
 /** 군산각 날씨 카드 — 실시간 날씨 · 점수 · 밤에는 달이 그려져 오래 남는 블로그 그림에 맞지 않는다. */
@@ -302,6 +315,25 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
       },
     ],
   },
+  // 스테이,머뭄(2026-11-05 결정 D5(c)) — co.webforai.kr은 WebforAI 고객 여럿이 경로로 나눠 쓰는 호스트라 브랜드 페이지가 /s/stay 아래일 때만.
+  // 사이트에 찍을 지도 화면은 없고(「오시는 길」의 지도는 찍지 않는다), 지도 자리(휴대폰 지도 앱의 도보 경로 자리 포함 — screenKindOf)는 앱이
+  // 그린 OSM 지도로만 채운다 — 표지는 자사 페이지 구조화 데이터의 숙소 위치와 그 둘레 관광지의 관광공사 좌표. 「이용안내 및 예약」 · 「객실
+  // 안내」 화면은 두지 않는다 — 두 칸이 세로 4,500~6,400px라 잘라 찍기 상한(세로 2,000px)을 넘는다(2026-11-05 측정).
+  {
+    host: 'co.webforai.kr',
+    pathPrefix: '/s/stay',
+    mapPoints: { path: '/s/stay', source: 'own-geo', anchorId: OWN_GEO_POINT_ID },
+    screens: [
+      {
+        id: 'map',
+        kind: 'map',
+        label: '숙소 둘레 지도',
+        map: true,
+        drawOnly: true,
+        variants: [{ id: 'default', label: '숙소 둘레', path: '/s/stay' }],
+      },
+    ],
+  },
 ]
 
 /**
@@ -387,10 +419,25 @@ function ownedHost(raw: string): string {
   return raw.trim().toLowerCase().replace(/^https?:\/\//, '').split(/[/?#:]/)[0]!.replace(/^www\./, '').replace(/\.$/, '')
 }
 
-/** 브랜드의 화면 프로필 — 자사 사이트(ownedDomains)에 프로필 호스트가 그대로 있을 때만(하위 도메인으로 넓히지 않는다). 없으면 null. */
-export function screenProfileFor(ownedDomains: readonly string[] | undefined): ScreenProfile | null {
+/**
+ * 브랜드의 화면 프로필 — 자사 사이트(ownedDomains)에 프로필 호스트가 그대로 있을 때만(하위 도메인으로 넓히지 않는다). 경로로 나눠 쓰는
+ * 호스트의 프로필(pathPrefix)은 브랜드 페이지(brandPageUrl)가 그 경로 아래일 때만. 없으면 null.
+ */
+export function screenProfileFor(ownedDomains: readonly string[] | undefined, brandPageUrl?: string): ScreenProfile | null {
   const owned = new Set((ownedDomains ?? []).map(ownedHost).filter(Boolean))
-  return SCREEN_PROFILES.find((p) => owned.has(p.host)) ?? null
+  return SCREEN_PROFILES.find((p) => owned.has(p.host) && (!p.pathPrefix || pageUnder(brandPageUrl, p.host, p.pathPrefix))) ?? null
+}
+
+/** 브랜드 페이지가 그 호스트의 그 경로(또는 그 아래)인가. */
+function pageUnder(pageUrl: string | undefined, host: string, prefix: string): boolean {
+  if (!pageUrl) return false
+  try {
+    const u = new URL(pageUrl)
+    const path = u.pathname.replace(/\/+$/, '')
+    return ownedHost(u.host) === host && (path === prefix || path.startsWith(`${prefix}/`))
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -398,7 +445,8 @@ export function screenProfileFor(ownedDomains: readonly string[] | undefined): S
  * 찍기 전에 서버가 sitemap으로 본다(server/screens.ts). 없으면 null.
  */
 export function findScreenVariant(profile: ScreenProfile, screenId: unknown, variantId: unknown): { screen: ScreenDef; variant: ScreenVariant } | null {
-  const screen = profile.screens.find((s) => s.id === screenId)
+  // 찍지 않는 화면(drawOnly — 앱이 그린 지도로만 채운다)은 찍기 · 넣기 대상이 아니다.
+  const screen = profile.screens.find((s) => s.id === screenId && !s.drawOnly)
   if (!screen) return null
   const variant = screen.placePages ? placeVariantOfSlug(variantId) : screen.variants.find((v) => v.id === variantId)
   return variant ? { screen, variant } : null
@@ -566,6 +614,10 @@ const OTHER_SCREEN = /네이버|카카오|구글|티맵|인스타그램|유튜�
  * 선택한」 · 「조건 선택 화면」)은 주소로 미리 채우는 코스 화면이라 아니다.
  */
 const ACTION_SCREEN = /눌러|누른|누르|클릭|터치|(?<!조건을?\s?)선택(해|한|하면)|결과\s?화면|결과가|결과를/
+/** 지도 앱의 길 안내 자리 — 「지도 앱」과 경로 · 길 찾기 낱말, 이름이 있는 지도 앱(그 회사 화면)은 아니다(screenKindOf). */
+const MAP_APP = /지도\s?앱|지도\s?어플/
+const MAP_ROUTE = /경로|길\s?찾기|가는\s?길|동선/
+const NAMED_MAP_APP = /네이버|카카오|구글|티맵|T\s?맵|애플/i
 /**
  * 다른 기관 · 장소 자신의 사이트 — 흔한 이름의 화면(장소 안내 · 가이드, commonLabel) 자리가 브랜드를 말하지 않고 이것을 말하면 그 기관의
  * 화면이다(「근대역사박물관 공식 홈페이지의 관람시간 안내 화면」 · 「한국관광공사 구석구석 사이트」 · 「군산시 문화관광 홈페이지」).
@@ -626,6 +678,13 @@ export function screenKindOf(
   brandName?: string,
 ): { kind: ScreenSlotKind; screen?: ScreenDef; viaAction?: true } {
   const t = text.normalize('NFC')
+  // 이름 없는 지도 앱의 길 안내 자리(「지도 앱에 숙소에서 근처 명소까지 도보 경로가 표시된 휴대폰 화면」) — 장소 목록 출처가 있는 브랜드는
+  // 앱이 그린 OSM 지도로 대신한다(2026-11-05 결정 D5(c) — 경로선 없이 표지만, 늘 「확인 필요」). 네이버 · 카카오 같은 이름이 있는 앱은 그
+  // 회사 화면이라 그대로 다른 회사 화면이다.
+  if (profile?.mapPoints && MAP_APP.test(t) && MAP_ROUTE.test(t) && !NAMED_MAP_APP.test(t)) {
+    const map = profile.screens.find((s) => s.kind === 'map')
+    if (map) return { kind: 'map', screen: map }
+  }
   if (OTHER_SCREEN.test(t)) return { kind: 'other' }
   if (ACTION_SCREEN.test(t)) {
     // 2026-11-05 결정 D5(b) — 브랜드 사이트에서 장소를 눌러 이용시간 · 요금을 보는 자리(「군산각 지도에서 찾기 화면에서 근대역사박물관을

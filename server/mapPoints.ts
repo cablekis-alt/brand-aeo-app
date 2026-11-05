@@ -5,7 +5,8 @@ import { collectPage } from './aeo/collectPage.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { writeJsonAtomic } from './tenantWriteQueue.js';
 import { normalizeMapPoints, type MapPoint, type MapPointsFile } from '../src/lib/mapImage.js';
-import type { ScreenProfile } from '../src/lib/screenCapture.js';
+import { OWN_GEO_POINT_ID, type ScreenProfile } from '../src/lib/screenCapture.js';
+import { tourPlacesNear, type TourPlaceNear } from './tourPhotos.js';
 
 /**
  * 군산 지도 그림의 장소 목록 — 고객 자사 사이트 /map/ 페이지의 div.map[data-points](JSON {all:[{lat,lng,name,url,kind,r,id}]})를 GET으로 한 번
@@ -66,6 +67,58 @@ export function mapPointsFromHtml(html: string): unknown | null {
     }
   }
   return null;
+}
+
+/** own-geo 장소 목록에서 자사 위치 둘레의 관광지를 찾는 거리(미터) — 지도 자리의 둘레 묶음(src/lib/mapImage.ts NEAR_M)과 같다. */
+export const OWN_GEO_RADIUS_M = 2000;
+/** own-geo 장소 목록의 권역 이름 — 자사 위치 둘레 한 묶음뿐이다. */
+export const OWN_GEO_REGION = '둘레';
+
+/** 점 이름 · 출처 글자에 쓰지 않는 글자(src/lib/mapImage.ts BAD_TEXT와 같은 부류)를 걷고 40자까지. */
+function cleanPointName(t: string): string {
+  return t.replace(/[\p{Cc}*_`[\]\\<>|]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
+}
+
+/** JSON-LD 노드들 — @graph · 배열을 펼친다. */
+function jsonLdNodes(v: unknown, out: Record<string, unknown>[] = []): Record<string, unknown>[] {
+  if (Array.isArray(v)) for (const x of v) jsonLdNodes(x, out);
+  else if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    out.push(o);
+    if (o['@graph']) jsonLdNodes(o['@graph'], out);
+  }
+  return out;
+}
+
+/**
+ * 자사 페이지 구조화 데이터(application/ld+json)의 위치 한 곳 — geo(GeoCoordinates)의 위도 · 경도가 있는 첫 노드와 그 이름. 없으면 null.
+ * 다른 속성 · 페이지 HTML은 저장하지 않는다.
+ */
+export function ownGeoFromHtml(html: string): { name: string; lat: number; lng: number } | null {
+  for (const m of html.matchAll(/<script\b[^>]*type\s*=\s*["\x27]application\/ld\+json["\x27][^>]*>([\s\S]*?)<\/script>/gi)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(m[1]!);
+    } catch {
+      continue;
+    }
+    for (const node of jsonLdNodes(parsed)) {
+      const geo = node.geo && typeof node.geo === 'object' ? (node.geo as Record<string, unknown>) : null;
+      const lat = Number(geo?.latitude);
+      const lng = Number(geo?.longitude);
+      if (!geo || geo.latitude === undefined || geo.longitude === undefined || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+      return { name: (typeof node.name === 'string' ? cleanPointName(node.name) : '') || '자사 위치', lat, lng };
+    }
+  }
+  return null;
+}
+
+/** own-geo 장소 목록의 점들(normalizeMapPoints가 다시 검사한다) — 자사 위치(OWN_GEO_POINT_ID, 숙소) 하나와 둘레 관광지(관광공사 좌표). */
+export function ownGeoPoints(own: { name: string; lat: number; lng: number }, near: readonly TourPlaceNear[]): unknown[] {
+  return [
+    { id: OWN_GEO_POINT_ID, name: own.name, kind: 'stay', lat: own.lat, lng: own.lng, r: OWN_GEO_REGION },
+    ...near.map((p) => ({ id: `tour-${p.contentId}`, name: cleanPointName(p.title), kind: 'attraction', lat: p.lat, lng: p.lng, r: OWN_GEO_REGION })),
+  ];
 }
 
 function pointsDir(tenantId: string): string {
@@ -129,6 +182,8 @@ async function defaultFetchPage(url: string): Promise<FetchedPage> {
   return { status: page.status, html: page.html, fetchError: page.fetchError };
 }
 
+const defaultNearPlaces = (at: { lat: number; lng: number }, radiusM: number) => tourPlacesNear(at, radiusM);
+
 const inflight = new Map<string, Promise<{ file: MapPointsFile; fetched: boolean; stale: boolean; warning?: string }>>();
 
 /**
@@ -139,7 +194,13 @@ const inflight = new Map<string, Promise<{ file: MapPointsFile; fetched: boolean
 export function loadMapPoints(
   tenantId: string,
   profile: ScreenProfile,
-  opts: { now?: () => Date; fetchPage?: (url: string) => Promise<FetchedPage>; refresh?: boolean } = {},
+  opts: {
+    now?: () => Date;
+    fetchPage?: (url: string) => Promise<FetchedPage>;
+    /** own-geo 장소 목록의 둘레 관광지 — 확인 스크립트가 가짜를 넣는다(기본은 관광공사 TourAPI). */
+    nearPlaces?: (at: { lat: number; lng: number }, radiusM: number) => Promise<{ places: TourPlaceNear[] }>;
+    refresh?: boolean;
+  } = {},
 ): Promise<{ file: MapPointsFile; fetched: boolean; stale: boolean; warning?: string }> {
   const key = `${tenantId}\n${opts.refresh ? 'refresh' : ''}`;
   const running = inflight.get(key);
@@ -157,7 +218,12 @@ export function loadMapPoints(
       const page = await (opts.fetchPage ?? defaultFetchPage)(source);
       if (page.fetchError) failure = page.fetchError;
       else if (page.status >= 400 || page.status === 0) failure = `HTTP ${page.status}`;
-      else raw = mapPointsFromHtml(page.html);
+      else if (profile.mapPoints?.source === 'own-geo') {
+        // 자사 위치(구조화 데이터의 geo) 한 곳과 그 둘레 관광지의 관광공사 좌표 — 다른 고객 사이트의 장소 목록은 쓰지 않는다(2026-11-05 결정 D5(c)).
+        const own = ownGeoFromHtml(page.html);
+        if (!own) failure = '자사 페이지 구조화 데이터에 위치(geo)가 없음';
+        else raw = ownGeoPoints(own, (await (opts.nearPlaces ?? defaultNearPlaces)(own, OWN_GEO_RADIUS_M)).places);
+      } else raw = mapPointsFromHtml(page.html);
       if (!failure && raw === null) failure = '지도 장소 목록(div.map[data-points])을 찾지 못함';
     } catch (err) {
       failure = err instanceof Error ? err.message : String(err);

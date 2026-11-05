@@ -1261,6 +1261,8 @@ export function autoPickPhotos(input: {
   brandName?: string
   /** 브랜드 자사 사이트 — 그 주소의 사진은 공공 사진 호스트여도 홈페이지 사진이다(autoCandidateSkip). */
   ownedDomains?: readonly string[]
+  /** 브랜드 페이지(brandPageUrl) — 한 호스트를 경로로 나눠 쓰는 브랜드의 화면 프로필을 찾는다(src/lib/screenCapture.ts screenProfileFor). */
+  brandPageUrl?: string
   /** 사진 장면(열쇠는 canonicalPhotoSrc) — 주면 장면으로도 고른다. 비어 있어도 주면 장소 사진(②③)은 장면을 읽은 뒤에만 쓴다. */
   scenes?: ReadonlyMap<string, PhotoScene>
   /**
@@ -1469,7 +1471,7 @@ export function autoPickPhotos(input: {
   const used = (o: Option) => brandCount.get(o.candidate.src) ?? 0
 
   // 자사 화면 — 브랜드 프로필(자사 사이트에 프로필 호스트가 있을 때만)과 화면 · 변형마다 가장 늦게 찍은 화면(앱 주소 모양이 맞는 것만).
-  const screenProfile = screenProfileFor(input.ownedDomains)
+  const screenProfile = screenProfileFor(input.ownedDomains, input.brandPageUrl)
   const shotAt = new Map<string, AutoScreenShot>()
   for (const s of input.screens?.shots ?? []) {
     if (parseScreenAppSrc(s.src)?.shotId !== s.id) continue
@@ -1935,6 +1937,7 @@ export function autoPickPhotos(input: {
           { key: row.slot.key, caption: row.caption, heading: row.slot.heading, section: mapSectionText(lines, row.slot.line) },
           maps.points,
           mapRegions,
+          screenProfile?.mapPoints?.anchorId ? { anchorId: screenProfile.mapPoints.anchorId } : {},
         )
         if ('miss' in choice) {
           row.mapMiss = choice.miss
@@ -2001,7 +2004,8 @@ export function autoPickPhotos(input: {
         const screen = screenOfRow.get(row)
         if (row.state !== 'screen' || !screen) continue
         const asMap = Boolean(mapsIn) && screen.kind === 'map'
-        if (!asMap && !screens) continue
+        // 찍지 않는 화면(drawOnly)은 앱이 그린 지도로만 — 지도를 그리지 못하는 실행이면 비워 둔다.
+        if (!asMap && (!screens || screen.drawOnly)) continue
         if (left <= 0) {
           row.state = 'full'
           continue

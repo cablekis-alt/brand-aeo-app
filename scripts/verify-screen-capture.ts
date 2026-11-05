@@ -423,7 +423,17 @@ try {
   const allUrls = SCREEN_PROFILES.flatMap((p) => p.screens.flatMap((s) => s.variants.map((v) => screenUrl(p, v))))
   // 예전 기대값은 11(코스 5 + 지도 6)이었다 — 4단계에서 「아이와 함께」 가이드 변형 하나를 더했다(12), 2026-11-05 「아이 둘과」 코스 변형(13).
   // 장소 안내는 표에 변형이 없다(사이트 장소마다).
-  ok('모든 변형 주소는 https · 프로필 호스트', allUrls.length === 13 && allUrls.every((u) => new URL(u).protocol === 'https:' && new URL(u).host === 'gunsan.webforai.kr'))
+  // 2026-11-05 스테이,머뭄 프로필(co.webforai.kr/s/stay — 앱이 그린 지도만, 찍지 않는 변형 1)을 더해 14.
+  const urlsWithHost = SCREEN_PROFILES.flatMap((p) => p.screens.flatMap((s) => s.variants.map((v) => ({ url: screenUrl(p, v), host: p.host }))))
+  ok(
+    '모든 변형 주소는 https · 그 프로필 호스트',
+    allUrls.length === 14 && urlsWithHost.every(({ url, host }) => new URL(url).protocol === 'https:' && new URL(url).host === host),
+  )
+  const stayProfile = screenProfileFor(['co.webforai.kr'], 'https://co.webforai.kr/s/stay')
+  ok(
+    '찍지 않는 화면(drawOnly — 앱이 그린 지도만)은 찍기 · 넣기 대상이 아니다',
+    stayProfile?.screens.every((s) => s.drawOnly === true) === true && findScreenVariant(stayProfile!, 'map', 'default') === null,
+  )
   ok(
     '「아이 둘과」 — 아이 나이 목록(kids=4,9) · 어른 2 · 아이와의 둘째 변형(extra)',
     screenUrl(profile!, course!.variants.find((v) => v.id === 'kids2')!) === 'https://gunsan.webforai.kr/plan/?with=kids&adults=2&kids=4,9' &&
@@ -653,7 +663,14 @@ try {
     kindOf('지도에서 찾기 화면에서 박물관을 눌러 요금이 보이는 장면') === 'action' && kindOf("'지도에서 찾기' 화면에서 박물관을 선택해 이용시간이 보이는 모습") === 'action' &&
       kindOf('AI 코스 결과 화면') === 'action' && kindOf('가상각 웹사이트의 AI 코스 만들기 조건 선택 화면') === 'course' && kindOf('AI 코스 만들기 화면에서 조건을 선택한 모습') === 'course',
   )
-  ok('다른 회사 · 휴대폰 화면은 other', kindOf('지도 앱에서 숙소까지 도보 경로를 띄운 휴대폰 화면') === 'other' && kindOf('네이버 플레이스 예약 화면') === 'other')
+  // 예전 기대값은 「지도 앱에서 숙소까지 도보 경로를 띄운 휴대폰 화면」도 other였다 — 2026-11-05 결정 D5(c)로 장소 목록 출처가 있는 브랜드의
+  // 이름 없는 지도 앱 길 안내 자리는 앱이 그린 OSM 지도(map)로 대신한다. 이름이 있는 지도 앱(네이버 · 카카오)은 그대로 other.
+  ok(
+    '다른 회사 · 휴대폰 화면은 other — 이름 없는 지도 앱의 길 안내 자리는 지도(OSM으로 대신)',
+    kindOf('지도 앱에서 숙소까지 도보 경로를 띄운 휴대폰 화면') === 'map' && kindOf('네이버 지도 앱에서 숙소까지 도보 경로를 띄운 휴대폰 화면') === 'other' &&
+      kindOf('네이버 플레이스 예약 화면') === 'other' && kindOf('휴대폰으로 예약 확인 문자를 받은 화면') === 'other' &&
+      screenKindOf('지도 앱에서 숙소까지 도보 경로를 띄운 휴대폰 화면', null).kind === 'other',
+  )
   // 예전 기대값은 「'아이와 함께' 안내 화면」 · 「관광정보 사이트에서 한 장소의 요금이 표시된 화면」이 unrelated였다 — 4단계에서 그 둘이 찍는
   // 화면(가이드 · 장소 안내)이 되어, 목록에 없는 화면의 예를 첫 화면 · 행사 안내로 바꿨다.
   ok(

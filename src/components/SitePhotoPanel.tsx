@@ -197,7 +197,7 @@ export default function SitePhotoPanel({
   } | null>(null)
   /** 찍는 중인 화면 · 변형(「화면id:변형id」). */
   const [capturing, setCapturing] = useState<string | null>(null)
-  const screenProfile = useMemo(() => screenProfileFor(brand.ownedDomains), [brand.ownedDomains])
+  const screenProfile = useMemo(() => screenProfileFor(brand.ownedDomains, brand.brandPageUrl), [brand.ownedDomains, brand.brandPageUrl])
 
   useEffect(() => {
     let alive = true

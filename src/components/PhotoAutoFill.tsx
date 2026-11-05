@@ -273,7 +273,7 @@ export default function PhotoAutoFill({
       const regionCity = publicOk && scenes ? cityOf : null
       // 자사 화면 — 자사 사이트에 화면 프로필이 있는 브랜드만 이 PC에 찍어 둔 화면 목록을 받는다(웹은 목록이 없어 null — 화면 자리는
       // 비워 둔다). 찍기는 설치한 데스크톱 앱에서만(/api/health screens) — 아니면 찍어 둔 화면만 쓴다.
-      const screenProfile = screenProfileFor(brand.ownedDomains)
+      const screenProfile = screenProfileFor(brand.ownedDomains, brand.brandPageUrl)
       const screenNotes: string[] = []
       let screenWarn = false
       let screenList: ScreenList | null = null
@@ -329,6 +329,7 @@ export default function PhotoAutoFill({
           others: otherPhotoUses(drafts, ids, groupOf),
           brandName: brand.brandName,
           ownedDomains: brand.ownedDomains,
+          ...(brand.brandPageUrl ? { brandPageUrl: brand.brandPageUrl } : {}),
           ...(scenes ? { scenes, sceneFailed: sceneSum.failed } : { knownScenes: sceneMap }),
           ...(screenList ? { screens: { available: canCapture, shots: screenShots } } : {}),
           ...(mapsIn ? { maps: mapsIn } : {}),

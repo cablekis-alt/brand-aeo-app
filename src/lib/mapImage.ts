@@ -316,7 +316,7 @@ export interface MapRegion {
  * 표지를 고른 까닭 — named 자리 글자에 이름이 나온 장소 · named-nearby 이름이 나온 장소와 그 둘레(「주변」) · anchor 설명 줄 · 소제목 · 절
  * 글자에 나온 장소 둘레 · region 자리 글자가 말한 권역 · default-region 이름도 권역도 없어 장소가 가장 많은 권역.
  */
-export type MapChoiceBy = 'named' | 'named-nearby' | 'anchor' | 'region' | 'default-region'
+export type MapChoiceBy = 'named' | 'named-nearby' | 'anchor' | 'region' | 'default-region' | 'own'
 
 /**
  * 고른 표지 묶음 하나 — tier 0이 먼저, tier 1은 같은 작성자 · 글에 tier 0을 이미 썼거나 사람이 그 자리에서 뺐을 때 쓰는 넓힌 묶음(tier 0 틀
@@ -693,7 +693,12 @@ function kindText(k: MapPointKind, snack: boolean): string {
  * 변형은 tier 0(위 묶음)과 넓힌 tier 1 — tier 0의 기본 틀 밖에 있는 둘레 관광지를 WIDER_ADD곳까지 더한 것(같은 작성자 · 글에 tier 0을 이미
  * 썼거나 사람이 이 자리에서 뺐을 때 쓴다). 틀 밖 관광지가 없으면 tier 1은 없다 — 틀 안 장소만 더하면 같은 그림이 되기 때문이다.
  */
-export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regions: readonly MapRegion[] = []): MapChoiceResult {
+export function mapChoiceOf(
+  slot: MapSlotText,
+  points: readonly MapPoint[],
+  regions: readonly MapRegion[] = [],
+  opts: { anchorId?: string } = {},
+): MapChoiceResult {
   if (!points.length) return { miss: 'no-points', why: '자사 사이트 장소 목록이 비어 있음' }
   const names = new Set(points.map((p) => p.name))
   const negated = new Set([slot.key, slot.caption, slot.heading].flatMap((t) => (t ? negatedNamesIn(t, points) : [])).map((p) => p.id))
@@ -716,7 +721,22 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
   let snack = false
   let otherBundle: { list: MapPoint[]; region: string } | null = null
   const why: string[] = []
-  if (namedAll.length) {
+  // 자사 위치 한 곳(anchorId — 숙소)이 있는 장소 목록(own-geo): 그 한 곳을 늘 맨 앞에 두고, 장면 글자에 나온 장소가 있으면 그 장소들, 없으면
+  // 그 둘레(NEAR_M 안)의 관광지를 가까운 차례로(2026-11-05 결정 D5(c) — 「숙소에서 근처 명소까지 도보 경로」 자리).
+  const own = opts.anchorId ? usable.find((p) => p.id === opts.anchorId) : undefined
+  if (own) {
+    const others = named.filter((p) => p.id !== own.id)
+    kinds = ['attraction']
+    region = own.region
+    by = 'own'
+    list = others.length ? [own, ...others] : aroundCenter(usable, own, own.region, kinds, true, false)
+    why.push(
+      others.length
+        ? `자사 위치(${own.name}) · 장면 글자에 나온 장소 ${others.map((p) => p.name).join(' · ')}`
+        : `자사 위치(${own.name}) 둘레(${NEAR_M / 1000}km 안)의 관광지(관광공사 좌표, 가까운 차례)`,
+    )
+    if (list.length < 2) return { miss: 'no-markers', why: `${why.join(' · ')} — 둘레에 관광지가 없음` }
+  } else if (namedAll.length) {
     const nearby = NEARBY_WORDS.test(slot.key) || altKinds.length > 0
     list = [...named]
     by = 'named'

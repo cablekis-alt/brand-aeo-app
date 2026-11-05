@@ -1239,6 +1239,44 @@ const actionTwice = placeRun(
   [placeShotOf('가상박물관', 21)],
   { maps: { available: true, points: PLACE_POINTS, pointsVersion: MAP_VERSION, drawn: [] } },
 )
+// (3) 2026-11-05 결정 D5(c) — 숙소(경로로 나눠 쓰는 호스트) 프로필: 이름 없는 지도 앱의 도보 경로 자리는 숙소를 맨 앞에 둔 OSM 지도(확인 필요),
+//     이름이 있는 지도 앱(네이버)은 그대로 다른 회사 화면. 숙소 · 관광지 좌표는 가짜.
+const STAY_MP = [
+  MP('own', '가상스테이', 'stay', 126.7061, 35.9864, '둘레'),
+  MP('tour-111', '가상근대역사관', 'attraction', 126.7041, 35.9895, '둘레'),
+  MP('tour-222', '가상일본식가옥', 'attraction', 126.7087, 35.9862, '둘레'),
+  MP('tour-333', '가상먼섬', 'attraction', 126.5, 35.8, '둘레'),
+]
+const stayMapRun = (slot: string) =>
+  autoPickPhotos({
+    articles: [article('sm', ['## 1. 걸어서', '', `![${slot}](#image-slot)`], { group: 'w1' })],
+    candidates: [],
+    brandName: '가상스테이',
+    ownedDomains: ['co.webforai.kr'],
+    brandPageUrl: 'https://co.webforai.kr/s/stay',
+    screens: { available: true, shots: [] },
+    maps: { available: true, points: STAY_MP, pointsVersion: MAP_VERSION, drawn: [] },
+  }).articles[0]!.rows[0]!
+const routeNear = stayMapRun('지도 앱에 숙소에서 근처 명소까지 도보 경로가 표시된 휴대폰 화면')
+const routeNamed = stayMapRun('스마트폰 지도 앱에 숙소 주소에서 가상근대역사관까지 도보 경로가 표시된 화면')
+const naverRoute = stayMapRun('네이버 지도 앱에 숙소에서 가상근대역사관까지 도보 경로가 표시된 휴대폰 화면')
+ok(
+  '숙소 — 지도 앱 도보 경로 자리는 숙소를 맨 앞에 둔 OSM 지도(둘레 2km 관광지 · 먼 곳 뺌 · 확인 필요) · 이름 나온 장소면 숙소 + 그 장소',
+  routeNear.screenSlot === 'map' && routeNear.state === 'undrawn' && routeNear.review === true && routeNear.mapPick?.ids[0] === 'own' &&
+    routeNear.mapPick.by === 'own' && !routeNear.mapPick.ids.includes('tour-333') && routeNear.mapPick.ids.length === 3 &&
+    JSON.stringify(routeNamed.mapPick?.ids) === JSON.stringify(['own', 'tour-111']) &&
+    naverRoute.screenSlot === 'other' && !naverRoute.mapPick,
+)
+ok(
+  '숙소 프로필은 브랜드 페이지가 없으면 붙지 않는다(같은 호스트의 다른 업체 — 지도 앱 자리는 지도로 대신하지 않음)',
+  autoPickPhotos({
+    articles: [article('sm2', ['## 1. 걸어서', '', '![지도 앱에 숙소에서 근처 명소까지 도보 경로가 표시된 휴대폰 화면](#image-slot)'])],
+    candidates: [],
+    brandName: '가상스테이',
+    ownedDomains: ['co.webforai.kr'],
+    maps: { available: true, points: STAY_MP, pointsVersion: MAP_VERSION, drawn: [] },
+  }).articles[0]!.rows[0]!.screenSlot !== 'map',
+)
 const [act1, act2] = actionTwice.articles.map((a) => a.rows[0]!)
 ok(
   '누르기 화면 자리 — 첫 글은 그 장소 안내(확인 필요) · 같은 작성자의 둘째 글은 지도로 대신하지 않고 비워 둔다(used)',
