@@ -13,7 +13,8 @@ import { useTenant } from '../context/useTenant'
 import { channelStyleOf, sourceKeyOf, STYLE_LABEL } from '../prompts/b9d-channel-adapt'
 import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos, uniquePhotoFiles } from '../lib/sitePhotos'
 import type { AppliedPhoto } from '../lib/articlePhotos'
-import { richCopyWithScreens, screenPreviewHtml, screensDroppedText } from '../lib/screenExport'
+import { richCopyWithScreens, screensDroppedText } from '../lib/screenExport'
+import ArticlePreview from './ArticlePreview'
 
 /**
  * ② 올리기 목록 — 한 줄이 한 번 올리기다(상용화 UI 8차 시안). 줄 계산은 lib/publishPlan.ts.
@@ -411,9 +412,9 @@ export default function PublishList({
               {preview === row.key && text && (
                 <div className="publish-row-preview">
                   {a && <span className="chip">{STYLE_LABEL[a.style]}</span>}
-                  {/* markdownToHtml은 모든 글자를 이스케이프한다 — 판정 엔진이 쓴 글에 태그가 있어도 글자로 남는다. 자사 화면은
-                      「[화면: 이름]」 글자로 — 골라 복사해도 앱 주소 그림이 나가지 않게. */}
-                  <div className="channel-preview" dangerouslySetInnerHTML={{ __html: screenPreviewHtml(markdownToHtml(text.markdown)) }} />
+                  {/* markdownToHtml은 모든 글자를 이스케이프한다 — 판정 엔진이 쓴 글에 태그가 있어도 글자로 남는다. 자사 화면 · 지도 ·
+                      업주 사진은 받아서 문서 안 그림으로 — 골라 복사해도 앱 주소 그림이 나가지 않게. */}
+                  <ArticlePreview html={markdownToHtml(text.markdown)} />
                   {a?.notes && a.notes.length > 0 && (
                     <details className="draft-audit">
                       <summary>사실 대조에서 뺀 문장 {a.notes.length}건</summary>
