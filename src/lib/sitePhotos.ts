@@ -57,7 +57,11 @@ export interface SitePhotoResult {
   skippedHttp: number
 }
 
-const MAX_PHOTOS = 24
+/**
+ * 한 페이지에서 읽는 업체 사진 수(구조화 데이터 순서). 예전 24장은 스테이,머뭄 페이지에 업주 사진(바깥 15 · 실내 16)을 더하면 40장이라 뒤 사진이
+ * 빠져 48장으로 늘렸다(2026-11-05). 장면은 자리 낱말이 맞는 사진만 읽으므로(scenesToRead — 한 번에 SCENE_MAX_NEW장) 비용이 사진 수만큼 늘지 않는다.
+ */
+export const MAX_PHOTOS = 48
 /** 업체 노드 — 이 타입의 image · photo만 「이 업체의 사진」이다(관광지 · 행사 · 인물 · 후기 노드는 뺀다). */
 const BUSINESS_TYPE =
   /(Business|Organization|Corporation|Lodging|Hotel|Motel|Hostel|Resort|BedAndBreakfast|Campground|Room|Suite|Accommodation|Apartment|House|Restaurant|FoodEstablishment|CafeOrCoffeeShop|Bakery|Store|Clinic|Dentist|Physician|Hospital|Product|Service)$/

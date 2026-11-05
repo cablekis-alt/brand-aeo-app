@@ -87,7 +87,7 @@ ok('의료가 아닌 업종', ['펜션', '관광안내', '통신', '셋톱박스
 // 6) 홈페이지 사진 후보(src/lib/sitePhotos.ts) — 업체 노드의 사진만, 꼬리표가 아닌 장면 설명
 const dom = new JSDOM('<!doctype html><html><body></body></html>')
 ;(globalThis as unknown as Record<string, unknown>).DOMParser = dom.window.DOMParser
-const { extractSitePhotos, photoPageOf } = await import('../src/lib/sitePhotos')
+const { extractSitePhotos, photoPageOf, MAX_PHOTOS } = await import('../src/lib/sitePhotos')
 const ld = (v: unknown, type = 'application/ld+json') => `<script type="${type}">${JSON.stringify(v)}</script>`
 const tag = '체크인 · 가상스테이 사진'
 const page = [
@@ -287,6 +287,17 @@ ok(
 )
 ok('사이트 출처', siteRootOf('https://site.example/s/stay?x=1') === 'https://site.example/' && siteRootOf('site.example') === 'https://site.example/' && siteRootOf(undefined) === null)
 
+// 2026-11-05 — 한 페이지 사진 상한 48장(예전 24장 — 숙소 페이지에 업주 사진을 더하면 40장이라 뒤 사진이 빠졌다). 구조화 데이터 순서대로, 상한까지만.
+const manyImages = Array.from({ length: 50 }, (_, i) => `https://stay.example/img/p${i + 1}.jpg`)
+const many = extractSitePhotos(
+  ld({ '@type': 'LodgingBusiness', name: '가상스테이', image: manyImages }) + manyImages.map((u, i) => `<img src="${u}" alt="가상스테이 사진 장면 ${i + 1}번">`).join(''),
+  'https://stay.example/s/stay',
+)
+ok(
+  '한 페이지 사진 상한 — 40장은 모두, 50장이면 구조화 데이터 앞 48장만',
+  MAX_PHOTOS === 48 && many.photos.length === 48 && many.photos[47]?.src === manyImages[47] && !many.photos.some((p) => p.src === manyImages[48]) &&
+    extractSitePhotos(ld({ '@type': 'LodgingBusiness', image: manyImages.slice(0, 40) }), 'https://stay.example/s/stay').photos.length === 40,
+)
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)
