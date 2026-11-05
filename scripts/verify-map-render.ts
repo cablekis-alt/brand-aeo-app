@@ -356,6 +356,14 @@ const goodFrame = (pageSpec: Record<string, unknown>, extra: Record<string, unkn
     'electron-builder.yml — extraResources: 지도 데이터 → map/gunsan.pmtiles · 알림 → map/NOTICE-OSM.txt',
     /- from: map-data\/gunsan-20261103\.pmtiles\n\s+to: map\/gunsan\.pmtiles/.test(builder) && /- from: map-data\/NOTICE-OSM\.txt\n\s+to: map\/NOTICE-OSM\.txt/.test(builder),
   )
+  // 기본 키(electron/build/bundled.env)는 extraResources로 resources/bundled.env에만 넣는다 — files의 electron/**/*에 걸려 app.asar에
+  // 쓰지 않는 사본이 한 벌 더 들어가지 않게 그 파일만 뺀다. 같은 폴더의 icon.png는 main.cjs가 창 아이콘으로 쓰므로 폴더째 빼지 않는다.
+  ok(
+    'electron-builder.yml — files에서 electron/build/bundled.env만 뺀다(폴더째 빼지 않음) · extraResources로 bundled.env는 그대로',
+    /^\s+- '!electron\/build\/bundled\.env'(\s+#.*)?$/m.test(builder) &&
+      !/^\s+- '?!electron\/build\/\*\*/m.test(builder) &&
+      /- from: electron\/build\/bundled\.env\n\s+to: bundled\.env/.test(builder),
+  )
   const vercelIgnore = lf(readFileSync(path.join(ROOT, '.vercelignore'), 'utf8'))
   ok('.vercelignore — 지도 데이터는 웹 배포에 올리지 않는다', /^map-data\/?$/m.test(vercelIgnore))
   ok('Vite public/에 지도 파일을 두지 않는다', !existsSync(path.join(ROOT, 'public', 'gunsan.pmtiles')) && !existsSync(path.join(ROOT, 'public', 'map')))

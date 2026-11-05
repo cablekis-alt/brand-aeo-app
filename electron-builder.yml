@@ -10,6 +10,7 @@ directories:
 # 앱에 포함할 파일 — 프로덕션 node_modules는 electron-builder가 자동 포함한다.
 files:
   - electron/**/*
+  - '!electron/build/bundled.env' # 기본 키는 아래 extraResources(resources/bundled.env)로만 — app.asar에 쓰지 않는 사본을 넣지 않는다(icon.png는 창 아이콘이라 둔다)
   - dist/**/*
   - dist-electron/server.cjs
   - dist-electron/map-vendor/**/* # 지도 그리기 라이브러리(maplibre-gl · pmtiles) — scripts/build-electron-server.mjs가 복사
