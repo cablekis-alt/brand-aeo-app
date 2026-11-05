@@ -105,9 +105,12 @@ interface InspectResult {
 }
 
 type Rect = { x: number; y: number; width: number; height: number }
+type Box = { x: number; y: number; w: number; h: number }
 interface ClipState {
   missing: string[]
-  rects: { x: number; y: number; w: number; h: number }[]
+  rects: Box[]
+  /** 넣지 않는 보이는 요소의 잉크 상자(문서 좌표) — 잘라 찍을 사각형(여백 포함)에 걸친 것. */
+  obstacles?: (Box & { d?: string })[]
   text: string
   cover: number
   docWidth: number
@@ -117,12 +120,13 @@ interface CaptureModule {
   captureScreen: (url: string, options: Record<string, unknown>) => Promise<unknown>
   disposeCapture: () => void
   pageInspect: (ownHost: string, mapSelector: string | null, mapHosts: string[], region?: Rect | null, firstHeight?: number) => InspectResult
-  pageClipState: (selectors: string[], optional: string[], firstHeight: number) => ClipState
+  pageClipState: (selectors: string[], optional: string[], firstHeight: number, padding?: number) => ClipState
   pageClipCovers: (selectors: string[], optional: string[], region: Rect) => string[]
+  pageDecode: () => Promise<{ count: number; failed: number }>
   clipPlan: (
-    rects: { x: number; y: number; w: number; h: number }[],
+    rects: Box[],
     padding: number,
-    page: { docWidth: number; docHeight: number; viewWidth: number; viewHeight: number; scrollX: number; scrollY: number; cover: number },
+    page: { docWidth: number; docHeight: number; viewWidth: number; viewHeight: number; scrollX: number; scrollY: number; cover: number; obstacles?: Box[] },
   ) => { rect: Rect | null; scrollY: number; problem: string | null }
   requestBlockReason: (details: { url: string; method?: string; resourceType?: string }, ctx: Record<string, unknown>) => Promise<string | null>
   countClosedShadowRoots: (node: unknown) => number
@@ -206,6 +210,7 @@ interface FakeShot {
   width?: number
   height?: number
   scale?: number
+  viewWidth?: number
   clip?: Rect | null
 }
 
@@ -216,10 +221,11 @@ interface FakeShot {
  * 주면 찍은 뒤의 그림 검사가 그 값을 돌려준다(찍는 사이에 페이지가 바뀐 것). tree는 DOM.getDocument의 뿌리, DOM.getBoxModel은 늘
  * 「상자 없음」으로 실패한다(display:contents host와 같다). relay면 서버 요청 처리(handleCaptureRequest)로 찍고 그 답을 result로 준다.
  * page를 주면 잘라 찍기의 페이지 안 함수(pageClipState · pageClipCovers · pageInspect)를 정해 둔 값 대신 그 페이지(마지막 화면 흉내 크기)에서
- * 그대로 돌린다 — captureSteps가 넘기는 인자까지 시험한다.
+ * 그대로 돌린다 — captureSteps가 넘기는 인자까지 시험한다. clipOptions는 잘라 찍기 옵션({ selectors: ['h1'], padding: 16 })에 덧씌운다.
  */
 async function runFakePage(opts: {
   clip: boolean
+  clipOptions?: Record<string, unknown>
   tree?: unknown
   afterShot?: InspectResult
   rects?: { x: number; y: number; w: number; h: number }[]
@@ -335,7 +341,7 @@ async function runFakePage(opts: {
   dns.promises.lookup = (() => Promise.resolve([{ address: '93.184.216.34', family: 4 }])) as unknown as typeof dns.promises.lookup
   try {
     const url = 'https://gunsan.webforai.kr/places/x/'
-    const options = { host: 'gunsan.webforai.kr', ...(opts.clip ? { clip: { selectors: ['h1'], padding: 16 } } : {}) }
+    const options = { host: 'gunsan.webforai.kr', ...(opts.clip ? { clip: { selectors: ['h1'], padding: 16, ...opts.clipOptions } } : {}) }
     let result: FakeShot | null = null
     let code: string
     if (opts.relay) {
@@ -498,6 +504,14 @@ try {
     '화소 배율 — 잘라 찍는 화면(장소 안내 · 가이드)은 2배, 첫 화면 통째(코스 · 지도)는 1배',
     lib.SCREEN_CLIP_SCALE === 2 && lib.screenShotScale(placeInfo!) === 2 && lib.screenShotScale(kidsGuide!) === 2 && lib.screenShotScale(course!) === 1 && lib.screenShotScale(map!) === 1,
   )
+  // 장소 안내는 600 화면으로 잘라 찍는다(2026-11-05 결정 「600px (권장)」) — 사이트의 반응형 배치가 안내 카드를 한 줄 가득(한 줄에 칸 셋) 펴서
+  // 장소마다 578(CSS px) · 2배 1156 화소가 되고, 블로그 그림 줄(720)에서 글자가 사이트의 1.25배로 보인다(1280 화면의 425 카드는 세로가 길었다).
+  // 767 이하 화면에 생기는 아래 고정 줄(.pl-bar)은 숨긴다. 가이드 · 첫 화면 통째(코스 · 지도)는 1280 그대로.
+  ok(
+    '화면 가로 — 장소 안내는 600(좁은 화면의 아래 고정 줄 .pl-bar는 숨김), 가이드는 정하지 않음(1280) · 코스 · 지도는 잘라 찍지 않음',
+    placeInfo?.clip?.viewWidth === 600 && (placeInfo.hide ?? []).includes('.pl-bar') && kidsGuide?.clip !== undefined && kidsGuide.clip.viewWidth === undefined &&
+      !(kidsGuide.hide ?? []).includes('.pl-bar') && course?.clip === undefined && map?.clip === undefined && lib.SCREEN_VIEW_WIDTH === 1280,
+  )
   const kidsTarget = { profile: profile!, ...findScreenVariant(profile!, 'course', 'kids')! }
   const wondosim = { profile: profile!, ...findScreenVariant(profile!, 'map', 'r-원도심')! }
   ok('찾을 수 없는 화면 · 변형은 null', findScreenVariant(profile!, 'course', 'nope') === null && findScreenVariant(profile!, 'nope', 'default') === null && findScreenVariant(profile!, 1, 2) === null)
@@ -511,12 +525,18 @@ try {
   )
   const placeOpts = screenCaptureOptions({ profile: profile!, ...findScreenVariant(profile!, 'place-info', '가상박물관')! })
   const guideOpts = screenCaptureOptions({ profile: profile!, ...findScreenVariant(profile!, 'kids-guide', 'default')! })
+  // 예전 기대값은 장소 안내의 숨길 것이 '["[data-wx]"]'(날씨 카드)뿐이었다 — 600 화면(767 이하)에서는 사이트가 장소 페이지 아래에 고정 줄
+  // (.pl-bar)을 띄워 그것도 숨긴다(2026-11-05 실측 권고).
   ok(
     '찍기 옵션 — 장소 안내 · 가이드는 프로필의 잘라 찍기 · 자사 호스트만(지도 · 스크롤 없음)',
     JSON.stringify(placeOpts.clip?.selectors) === JSON.stringify(['article.place .pl-head h1', 'article.place dl.kf.kf-hero']) && placeOpts.clip?.padding === 16 &&
-      (placeOpts.clip?.optional ?? []).length === 3 && placeOpts.ownHostOnly === true && !placeOpts.map && !placeOpts.scrollTo && JSON.stringify(placeOpts.hide) === '["[data-wx]"]' &&
+      (placeOpts.clip?.optional ?? []).length === 3 && placeOpts.ownHostOnly === true && !placeOpts.map && !placeOpts.scrollTo && JSON.stringify(placeOpts.hide) === '["[data-wx]",".pl-bar"]' &&
       JSON.stringify(guideOpts.clip?.selectors) === JSON.stringify(['header.gd-head h1', 'header.gd-head figure.art-camp']) && guideOpts.ownHostOnly === true &&
       kidsOpts.clip === undefined && kidsOpts.ownHostOnly === undefined && mapOpts.clip === undefined,
+  )
+  ok(
+    '찍기 옵션 — 장소 안내는 화면 가로 600을 넘기고, 가이드는 넘기지 않는다(캡처 모듈 기본 1280)',
+    placeOpts.clip?.viewWidth === 600 && guideOpts.clip !== undefined && !('viewWidth' in guideOpts.clip),
   )
 
   // ── 2) id · 앱 주소 · 경로 ─────────────────────────────────────────────
@@ -871,6 +891,20 @@ try {
         (await scaleOf(2)) === 2 && (await scaleOf(undefined)) === undefined && (await scaleOf(1)) === undefined && (await scaleOf(2.5)) === undefined &&
           (await scaleOf('2')) === undefined && (await scaleOf(9)) === undefined,
       )
+      // 찍은 화면 가로(viewWidth) — 장소 안내는 600(2026-11-05). 없음 · 1280(기본)이면 없음, 360~1920의 정수가 아니면 없음(1280으로 본다).
+      const viewWidthOf = async (viewWidth: unknown) => {
+        const p = bridgeT.capture(req1)
+        await flush()
+        portT.emit({
+          type: 'screen-capture-result', id: portT.posted[portT.posted.length - 1]?.id, ok: true, png: pngA.toString('base64'), scale: 2, ...(viewWidth === undefined ? {} : { viewWidth }),
+        })
+        return ((await p) as { viewWidth?: unknown }).viewWidth
+      }
+      ok(
+        '찍은 화면 가로(viewWidth)를 받는다 — 600은 600, 없음 · 1280 · 360~1920의 정수가 아니면 없음(1280)',
+        (await viewWidthOf(600)) === 600 && (await viewWidthOf(undefined)) === undefined && (await viewWidthOf(1280)) === undefined &&
+          (await viewWidthOf(600.5)) === undefined && (await viewWidthOf('600')) === undefined && (await viewWidthOf(359)) === undefined && (await viewWidthOf(1921)) === undefined,
+      )
     }
     await flush()
     ok('앞 답이 오면 다음 요청을 보낸다', port.posted.length === 2)
@@ -972,11 +1006,11 @@ try {
     )
 
     // 잘라 찍기 — 요소마다 자리(data-r="x,y,w,h", 화면 좌표)를 주고 jsdom에서 페이지 안 함수를 그대로 돌린다(군산각 장소 페이지 실측 자리).
-    // 화면 높이는 800(1배 첫 화면), 잘라 찍기 화면을 흉내 낼 때는 2100.
-    const rectWindow = (html: string, height = 800) => {
+    // 화면 높이는 800(1배 첫 화면), 잘라 찍기 화면을 흉내 낼 때는 2100. 가로는 1280(장소 안내 600 화면을 흉내 낼 때는 600).
+    const rectWindow = (html: string, height = 800, width = 1280) => {
       const dom = new JSDOM(html, { url: 'https://gunsan.webforai.kr/places/x/', runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
       const w = dom.window
-      w.innerWidth = 1280
+      w.innerWidth = width
       w.innerHeight = height
       w.Element.prototype.getBoundingClientRect = function (this: Element) {
         const [x, y, width, height] = (this.getAttribute('data-r') ?? '0,0,0,0').split(',').map(Number) as [number, number, number, number]
@@ -1043,6 +1077,61 @@ try {
         capture.clipPlan([{ x: 364, y: 108, w: 393, h: 1969 }], 16, clipPage).problem === 'clip-too-large' &&
         capture.clipPlan([{ x: 364, y: 108, w: 393, h: 1969 }], 16, { ...clipPage, viewHeight: 2600 }).problem === 'clip-too-large',
     )
+    // 가장자리 규칙(잉크) — 넣지 않는 보이는 요소(obstacles — 잉크 상자: 테두리 상자 + 바깥 그림자 · drop-shadow · outline)가 사각형 가장자리를
+    // 지나면 그 가장자리를 잉크 상자 바로 밖으로 옮긴다. 넣을 요소들을 합친 사각형 안으로는 들이지 않는다. 600 화면에서는 여백 16이 카드 아래
+    // 「출처 · 확인 필요」 줄의 5~7줄(장치 화소)을 23곳 모두에서 찍었고, 분류 줄 위 아이콘(옛 배치)은 상자만 보면 그림자(drop-shadow 0 6px 8px)
+    // 7~10줄이 남았다(실측 2026-11-05).
+    const CARD600 = [{ x: 27, y: 124, w: 546, h: 569 }]
+    const page600 = { docWidth: 600, docHeight: 3000, viewWidth: 600, viewHeight: 2100, scrollX: 0, scrollY: 0, cover: 52 }
+    const rectWith = (obstacles: Box[], rects: Box[] = CARD600) => JSON.stringify(capture.clipPlan(rects, 16, { ...page600, obstacles }).rect)
+    const R600 = (y: number, height: number, x = 11, width = 578) => JSON.stringify({ x, y, width, height })
+    ok(
+      '가장자리 규칙 — 카드 아래 줄이 아래 가장자리를 지나면 아래를 그 줄 바로 위로(578×601 → 578×594) · 위 · 왼쪽 · 오른쪽은 그대로',
+      rectWith([]) === R600(108, 601) && rectWith([{ x: 27, y: 702, w: 546, h: 20 }]) === R600(108, 594),
+    )
+    const HEAD_RECTS = [{ x: 27, y: 202, w: 546, h: 491 }]
+    ok(
+      '가장자리 규칙 — 분류 줄 위 아이콘의 그림자(잉크 상자 144–204)가 위 가장자리(186)를 지나면 위를 넣을 요소의 위(202)까지 · 상자(150–186)만 보면 그대로 186',
+      rectWith([{ x: 15, y: 144, w: 88, h: 60 }], HEAD_RECTS) === R600(202, 507) && rectWith([{ x: 27, y: 150, w: 64, h: 36 }], HEAD_RECTS) === R600(186, 523),
+    )
+    ok(
+      '가장자리 규칙 — 넣을 요소에 겹친 요소면 가장자리는 넣을 요소의 끝(693)에서 멈춘다(그 안으로 들이지 않는다)',
+      rectWith([{ x: 27, y: 680, w: 546, h: 40 }]) === R600(108, 585) && rectWith([{ x: 27, y: 100, w: 546, h: 40 }]) === R600(124, 585),
+    )
+    ok(
+      '가장자리 규칙 — 왼쪽 · 오른쪽은 그대로: 화면 가로 가득한 아래 줄은 아래만 옮기고, 여백 안에만 있는 요소 · 사각형 밖 요소는 그대로',
+      rectWith([{ x: 0, y: 702, w: 600, h: 20 }]) === R600(108, 594) && rectWith([{ x: 27, y: 695, w: 546, h: 10 }]) === R600(108, 601) &&
+        rectWith([{ x: 0, y: 720, w: 600, h: 40 }, { x: 0, y: 0, w: 600, h: 100 }]) === R600(108, 601),
+    )
+    ok(
+      '가장자리 규칙 — 옆 요소가 왼쪽 가장자리만 지나면 왼쪽만 옮긴다(위 · 아래는 그대로)',
+      rectWith([{ x: 0, y: 300, w: 15, h: 100 }]) === R600(108, 601, 15, 574),
+    )
+    ok(
+      '가장자리 규칙 — 옮긴 가장자리에 걸리게 된 요소도 다시 본다(아이콘 그림 · 묶음이 차례로 — 108 → 110 → 114)',
+      rectWith([{ x: 27, y: 109, w: 64, h: 5 }, { x: 27, y: 100, w: 64, h: 10 }]) === R600(114, 595),
+    )
+    // 잉크 상자는 페이지 안(pageClipState)에서 잰다 — 넣을 요소 · 그 조상(배경을 칠한 article) · 그 안의 요소, 고정 · sticky 요소(가리는 고정
+    // 요소 검사가 따로 본다), 보이지 않는 요소는 빼고, 스스로 그리는 것(배경 · 테두리 · 그림자 · 필터 · outline · 글자 · 그림)만.
+    const INK_HTML = [
+      '<header class="top" style="position:sticky;background:#123" data-r="0,0,600,52">위 줄</header>',
+      '<article class="place" style="background:#fff" data-r="0,100,600,900">',
+      `<p class="pl-kpic" data-r="27,150,64,36" data-cs='${JSON.stringify({ filter: 'drop-shadow(rgba(0, 0, 0, 0.25) 0px 6px 8px)' })}'><img src="/assets/icons/k.webp" data-r="27,150,64,36"></p>`,
+      '<p class="kicker" data-r="27,202,200,20">관광지</p><h1 data-r="27,230,546,40">가상박물관</h1>',
+      '<dl class="kf" data-r="27,290,546,403"><dt data-r="43,306,100,20">이용시간</dt><dd data-r="43,330,200,20">09:00–18:00</dd></dl>',
+      '<p class="hidden-line" style="display:none" data-r="27,700,546,20">숨긴 줄</p>',
+      `<div class="note" data-r="27,712,546,30" data-cs='${JSON.stringify({ boxShadow: 'rgba(0, 0, 0, 0.2) 0px -2px 8px 0px' })}'></div>`,
+      '</article>',
+    ].join('')
+    const inkState = inPage<ClipState>(chromeLike(rectWindow(INK_HTML, 2100, 600)), capture.pageClipState, ['h1', 'dl.kf'], ['.kicker'], 800, 16)
+    const inkNames = (inkState.obstacles ?? []).map((o) => o.d ?? '').sort().join(',')
+    const inkPlan = capture.clipPlan(inkState.rects, 16, { ...page600, ...inkState })
+    ok(
+      `잉크 상자(페이지 안) — 아이콘의 drop-shadow · 아래 칸의 box-shadow까지, 조상 · 넣을 요소 안 · sticky · 숨긴 요소는 빼고(${inkNames}) → 위 202 · 아래 702`,
+      JSON.stringify((inkState.obstacles ?? []).find((o) => o.d === 'p.pl-kpic')) === JSON.stringify({ x: 15, y: 144, w: 88, h: 60, d: 'p.pl-kpic' }) &&
+        JSON.stringify((inkState.obstacles ?? []).find((o) => o.d === 'div.note')) === JSON.stringify({ x: 19, y: 702, w: 562, h: 46, d: 'div.note' }) &&
+        !/article|header|hidden-line|dt|dd|kicker|h1/.test(inkNames) && JSON.stringify(inkPlan.rect) === R600(202, 500),
+    )
     const clipInspect = (region?: Rect) =>
       inPage<InspectResult>(pw, capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region ?? null, 800)
     const inside = clipInspect(plan.rect!)
@@ -1103,13 +1192,30 @@ try {
     )
     // 위 두 경우를 찍기 순서 전체로(captureSteps가 넘기는 인자까지) — 페이지 안 함수를 잘라 찍기 화면(1280×2100)의 jsdom 페이지에서 돌린다.
     const CARD = (h: number) => `<header class="top" style="position:sticky;background:#123" data-r="0,0,1280,52">위 줄</header><h1 data-r="348,100,425,${h}">가짜 장소</h1>`
-    const pageOf = (html: string) => (view: { width: number; height: number }) => chromeLike(rectWindow(html, view.height))
+    const pageOf = (html: string) => (view: { width: number; height: number }) => chromeLike(rectWindow(html, view.height, view.width))
     const sidePage = await runFakePage({ clip: true, page: pageOf(`${CARD(540)}${SIDE_NAV}`) })
     const farPage = await runFakePage({ clip: true, page: pageOf(`${CARD(540)}${FAR_PSEUDO(1200)}`) })
     const nearPage = await runFakePage({ clip: true, page: pageOf(`${CARD(1300)}${FAR_PSEUDO(1200)}`) })
     ok(
       `잘라 찍기(1280×2100) — 높이 600 옆 칸 · 사각형 아래 먼 공공누리 칸이 있어도 1배처럼 찍고(914×1144), 긴 사각형 옆 공공누리 칸은 버린다(${sidePage.code} · ${farPage.code} · ${nearPage.code})`,
       sidePage.code === 'resolved' && sidePage.result?.width === 914 && sidePage.result.height === 1144 && farPage.code === 'resolved' && nearPage.code === 'kogl-image',
+    )
+    // 가장자리 규칙을 찍기 순서 전체로 — 600 화면(장소 안내)의 jsdom 페이지: 카드 아래 출처 줄은 아래를, 분류 줄 위 아이콘의 그림자는 위를 옮긴다.
+    const HEAD600 = '<header class="top" style="position:sticky;background:#123" data-r="0,0,600,52">위 줄</header>'
+    const CARD_PAGE = `${HEAD600}<h1 data-r="27,124,546,40">가짜 장소</h1><dl class="kf" data-r="27,180,546,513"><dt>이용시간</dt><dd>09:00–18:00</dd></dl><p class="kf-prov" data-r="27,702,546,20">출처 · 확인 필요</p>`
+    const ICON_PAGE = [
+      HEAD600,
+      `<p class="pl-kpic" data-r="27,150,64,36" data-cs='${JSON.stringify({ filter: 'drop-shadow(rgba(0, 0, 0, 0.25) 0px 6px 8px)' })}'><img src="/assets/icons/k.webp" data-r="27,150,64,36"></p>`,
+      '<p class="kicker" data-r="27,202,200,20">관광지</p><h1 data-r="27,230,546,40">가짜 장소</h1><dl class="kf" data-r="27,290,546,403"><dt>이용시간</dt></dl>',
+    ].join('')
+    const edgeOpts = { selectors: ['h1', 'dl.kf'], optional: ['.kicker'], viewWidth: 600 }
+    const provPage = await runFakePage({ clip: true, clipOptions: edgeOpts, page: pageOf(CARD_PAGE) })
+    const iconPage = await runFakePage({ clip: true, clipOptions: edgeOpts, page: pageOf(ICON_PAGE) })
+    ok(
+      `가장자리 규칙(찍기 순서 · 600 화면) — 출처 줄은 빼고 578×594(1156×1188), 아이콘 그림자는 빼고 578×507(${provPage.code} ${JSON.stringify(provPage.result?.clip)} · ${iconPage.code} ${JSON.stringify(iconPage.result?.clip)})`,
+      provPage.code === 'resolved' && JSON.stringify(provPage.result?.clip) === JSON.stringify({ x: 11, y: 108, width: 578, height: 594 }) &&
+        provPage.result?.width === 1156 && provPage.result.height === 1188 && iconPage.code === 'resolved' &&
+        JSON.stringify(iconPage.result?.clip) === JSON.stringify({ x: 11, y: 202, width: 578, height: 507 }) && iconPage.result?.width === 1156 && iconPage.result.height === 1014,
     )
     ok(
       '그림 검사 — SVG pattern 안의 <image> · <input type=image> · border-image의 공공누리 그림도 잡는다',
@@ -1144,6 +1250,63 @@ try {
       optCode({ ownHostOnly: 'yes' }),
     ])
     ok('잘라 찍기 옵션 검사 — 잘못된 선택자 · 여백 · 지도/스크롤과 함께 · ownHostOnly 모양은 invalid-options(창을 만들지 않는다)', badClips.every((c) => c === 'invalid-options') && capture.windowsCreated() === 0)
+    // 잘라 찍기 화면 가로(viewWidth) — 360~1920의 정수만. 검사를 지나면 주소를 확인하므로(DNS) 그동안은 가짜 주소로 답한다(밖으로 묻지 않는다).
+    {
+      const realLookup = dns.promises.lookup
+      dns.promises.lookup = (() => Promise.resolve([{ address: '93.184.216.34', family: 4 }])) as unknown as typeof dns.promises.lookup
+      try {
+        const badWidths = await Promise.all([359, 1921, 600.5, '600', null, 0].map((viewWidth) => optCode({ clip: { selectors: ['h1'], viewWidth } })))
+        ok(
+          `잘라 찍기 화면 가로(viewWidth) 검사 — 360~1920의 정수가 아니면 invalid-options(창을 만들지 않는다 — ${badWidths.join(',')})`,
+          badWidths.every((c) => c === 'invalid-options') && capture.windowsCreated() === 0,
+        )
+      } finally {
+        dns.promises.lookup = realLookup
+      }
+    }
+    // 그림 decode — 보이지 않는 그림(checkVisibility false — 닫힌 <details> 안의 메뉴 아이콘)은 기다리지 않고, 보이는 늦게 읽는(lazy) 그림은 끝까지
+    // 기다린다. 1023 이하 화면에서는 닫힌 모바일 메뉴(details.menu > nav.menu-panel)의 lazy 아이콘 둘이 끝내 읽히지 않아, 이것이 없으면 600 화면의
+    // 장소 안내가 모두 eval-timeout이었다(실측 2026-11-05).
+    {
+      const dw = chromeLike(
+        rectWindow(
+          '<details class="menu"><nav class="menu-panel" style="position:fixed"><img id="menu-icon" src="/assets/icons/btn-plan-64.webp" data-r="530,127,24,24"></nav></details>' +
+            '<img id="lazy-icon" src="/assets/icons/fact-hours-64.webp" data-r="43,330,32,32"><img id="done-icon" src="/assets/icons/fact-fee-64.webp" data-r="43,380,32,32">',
+          2100,
+          600,
+        ),
+      )
+      const doc = dw.document
+      const menuIcon = doc.getElementById('menu-icon')!
+      const lazyIcon = doc.getElementById('lazy-icon')!
+      const doneIcon = doc.getElementById('done-icon')!
+      let lazyLoaded = false
+      Object.defineProperty(menuIcon, 'complete', { get: () => false })
+      Object.defineProperty(lazyIcon, 'complete', { get: () => lazyLoaded })
+      Object.defineProperty(doneIcon, 'complete', { get: () => true })
+      for (const img of [menuIcon, lazyIcon, doneIcon]) Object.assign(img, { decode: () => Promise.resolve() })
+      Object.assign(menuIcon, { checkVisibility: () => false })
+      const started = Date.now()
+      setTimeout(() => {
+        lazyLoaded = true
+        lazyIcon.dispatchEvent(new dw.Event('load'))
+      }, 300)
+      let decodeResult: { count: number; failed: number } | null = null
+      let decodeError = ''
+      try {
+        decodeResult = await Promise.race([
+          dw.eval(`(${String(capture.pageDecode)})()`) as Promise<{ count: number; failed: number }>,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+        ])
+      } catch (err) {
+        decodeError = String(err).slice(0, 80)
+      }
+      const decodeMs = Date.now() - started
+      ok(
+        `그림 decode — 보이지 않는 메뉴 아이콘은 기다리지 않고, 보이는 늦게 읽는 그림은 읽힐 때까지 기다린다(${decodeError || JSON.stringify(decodeResult)} · ${decodeMs}ms)`,
+        decodeResult !== null && decodeResult.count === 2 && decodeResult.failed === 0 && decodeMs >= 280,
+      )
+    }
     const relay = capture as unknown as { handleCaptureRequest: (m: unknown) => Promise<{ ok: boolean; code?: string; message?: string } | null> }
     const viaRelay = await relay.handleCaptureRequest({ type: 'screen-capture', id: 'clip-1', url: 'https://gunsan.webforai.kr/places/x/', options: { host: 'gunsan.webforai.kr', clip: { selectors: [] }, ownHostOnly: true } })
     const unknownKey = await relay.handleCaptureRequest({ type: 'screen-capture', id: 'clip-2', url: 'https://gunsan.webforai.kr/places/x/', options: { host: 'gunsan.webforai.kr', bogus: 1 } })
@@ -1236,6 +1399,24 @@ try {
         JSON.stringify(full.log.shots) === JSON.stringify([{ format: 'png', fromSurface: true, captureBeyondViewport: false }]) &&
         full.result?.width === 1280 && full.result.height === 800 && full.result.scale === 1 && full.result.clip === null,
     )
+    // 장소 안내는 600 화면(clip.viewWidth 600)으로 찍는다 — 사이트를 열기 전(빈 페이지)에 화면 흉내 600×2100 · 배율 2(screenWidth도 600 — 사이트의
+    // 반응형 배치가 그 폭을 본다). 창은 그대로 1280×800. 가로를 정하지 않은 잘라 찍기(가이드)와 첫 화면 통째(코스 · 지도)는 1280 그대로.
+    const NARROW_RECTS = [{ x: 27, y: 2300, w: 546, h: 300 }]
+    const narrow = await runFakePage({ clip: true, clipOptions: { viewWidth: 600 }, rects: NARROW_RECTS })
+    ok(
+      `장소 안내(가로 600) — 사이트를 열기 전에 화면 흉내 600×2100 · 배율 2 · screenWidth 600, 창은 1280×800 · 찍은 그림은 사각형(578×332)의 2배 · 결과에 viewWidth 600(${narrow.code})`,
+      narrow.code === 'resolved' &&
+        JSON.stringify(narrow.log.metrics) === JSON.stringify([{ width: 600, height: 2100, deviceScaleFactor: 2, mobile: false, screenWidth: 600, screenHeight: 2100 }]) &&
+        narrow.log.steps.indexOf('metrics') < narrow.log.steps.indexOf(`load:${PAGE_URL}`) && narrow.log.windows[0]?.width === 1280 && narrow.log.windows[0]?.height === 800 &&
+        narrow.result?.width === 1156 && narrow.result.height === 664 && narrow.result.scale === 2 && narrow.result.viewWidth === 600,
+    )
+    const narrowRelay = await runFakePage({ clip: true, clipOptions: { viewWidth: 600 }, rects: NARROW_RECTS, relay: true })
+    ok('장소 안내(가로 600) — 서버로 보내는 답에도 viewWidth 600', narrowRelay.code === 'resolved' && narrowRelay.result?.viewWidth === 600 && narrowRelay.result.scale === 2)
+    ok(
+      '가로를 정하지 않은 잘라 찍기(가이드) · 첫 화면 통째는 1280 그대로 — 화면 흉내 1280(screenWidth 1280) · 결과 viewWidth 1280',
+      JSON.stringify(clip2x.log.metrics) === JSON.stringify([{ width: 1280, height: 2100, deviceScaleFactor: 2, mobile: false, screenWidth: 1280, screenHeight: 2100 }]) &&
+        clip2x.result?.viewWidth === 1280 && relay2x.result?.viewWidth === 1280 && full.result?.viewWidth === 1280,
+    )
   }
 
   // ── 7) 저장 · 같은 날 다시 쓰기 ─────────────────────────────────────────
@@ -1244,6 +1425,7 @@ try {
     const pngs: Buffer[] = []
     const texts: string[] = []
     // 답의 화소 배율 — 잘라 찍기(장소 안내 · 가이드)는 메인이 2배로 찍어 scale 2를 보낸다(2026-11-05). 넣지 않은 찍기는 scale 없음(1배).
+    // 화면 가로 — 메인은 찍은 화면 가로(viewWidth)를 돌려준다: 잘라 찍기 옵션의 viewWidth(장소 안내 600), 없으면 1280.
     const scales: number[] = []
     let calls = 0
     let delayMs = 0
@@ -1252,12 +1434,13 @@ try {
       calls += 1
       const png = pngs.shift()
       const text = texts.shift()
-      const scale = (msg.options as { clip?: unknown } | undefined)?.clip ? scales.shift() : undefined
+      const clip = (msg.options as { clip?: { viewWidth?: number } } | undefined)?.clip
+      const scale = clip ? scales.shift() : undefined
       setTimeout(
         () =>
           port.emit({
             type: 'screen-capture-result', id: msg.id, ok: true, png: png ? png.toString('base64') : '', ...(text !== undefined ? { text } : {}),
-            ...(scale !== undefined ? { scale } : {}),
+            ...(scale !== undefined ? { scale } : {}), viewWidth: clip?.viewWidth ?? 1280,
           }),
         delayMs,
       )
@@ -1360,6 +1543,7 @@ try {
       !placeShot.reused && calls === callsBefore + 1 && placeRow?.variantId === '가상박물관' && placeRow.text === '가상박물관\n이용시간\n09:00–18:00' &&
         placeRow.width === 850 && placeRow.height === 1354 && placeRow.scale === 2 && placeRow.url === screenUrl(profile!, placeTarget.variant),
     )
+    ok('장소 안내 — 찍은 화면 가로 600을 기록에 적는다(viewWidth 600)', (placeRow as { viewWidth?: unknown } | undefined)?.viewWidth === 600)
     const listedBefore = listedCalls
     const placeAgain = await captureScreenShot(T, placeTarget, { bridge, now: () => day3, listedPlaces: listed(['가상박물관']) })
     ok('장소 안내 — 같은 날 다시 청하면 목록도 보지 않고 찍어 둔 것을 준다', placeAgain.reused && placeAgain.shot.sha16 === sha16(pngP) && listedCalls === listedBefore && calls === callsBefore + 1)
@@ -1369,6 +1553,20 @@ try {
     ok('글자(text)가 글자가 아닌 줄은 목록에서 뺀다', !(await readScreenShots(T)).some((x) => x.sha16 === 'dddddddddddddddd'))
     writeFileSync(path.join(dir, 'screens.json'), JSON.stringify({ shots: [...(await readScreenShots(T)), { ...placeRow, sha16: 'eeeeeeeeeeeeeeee', scale: 2.5 }] }))
     ok('배율(scale)이 1~4의 정수가 아닌 줄은 목록에서 뺀다', !(await readScreenShots(T)).some((x) => x.sha16 === 'eeeeeeeeeeeeeeee'))
+    writeFileSync(
+      path.join(dir, 'screens.json'),
+      JSON.stringify({
+        shots: [
+          ...(await readScreenShots(T)), { ...placeRow, sha16: 'ffffffffffff0001', viewWidth: 600.5 }, { ...placeRow, sha16: 'ffffffffffff0002', viewWidth: 100 },
+          { ...placeRow, sha16: 'ffffffffffff0003', viewWidth: '600' }, { ...placeRow, sha16: 'ffffffffffff0004', viewWidth: 600 },
+        ],
+      }),
+    )
+    const widthRows = (await readScreenShots(T)).map((x) => x.sha16)
+    ok(
+      '화면 가로(viewWidth)가 360~1920의 정수가 아닌 줄은 목록에서 뺀다(600은 그대로)',
+      !widthRows.includes('ffffffffffff0001') && !widthRows.includes('ffffffffffff0002') && !widthRows.includes('ffffffffffff0003') && widthRows.includes('ffffffffffff0004'),
+    )
 
     // 옛 1배 기록 — 2배로 바꾸기 전(2026-11-05 전)에 찍은 잘라 찍기(scale 없음 · 425×677). 목록 · 사진 받기는 그대로 쓰고, 같은 날 다시 청하면
     // 1배 그림을 다시 주지 않고 2배로 다시 찍는다. 첫 화면 통째(코스)의 1배 기록은 같은 날 그대로 다시 쓴다(위 「같은 날 …」).
@@ -1392,6 +1590,37 @@ try {
       !again2x.reused && calls === callsOld + 1 && again2x.shot.sha16 === sha16(pngNew) && again2x.shot.scale === 2 && again2x.shot.width === 850 &&
         (await captureScreenShot(T, oldTarget, { bridge, now: () => day3, listedPlaces: listed(['옛박물관']) })).reused && calls === callsOld + 1,
     )
+    // 600으로 바꾸기 전(2026-11-05 오전)에 1280 화면 · 2배로 찍은 장소 안내(scale 2 · viewWidth 없음 · 850 화소) — 목록 · 사진 받기는 그대로
+    // 쓰고, 같은 날 다시 청하면 1280 그림을 다시 주지 않고 600으로 다시 찍는다. 가이드(1280)의 같은 날 2배 기록은 그대로 다시 쓴다.
+    const wideTarget = { profile: profile!, ...findScreenVariant(profile!, 'place-info', '넓은박물관')! }
+    const wideUrl = screenUrl(profile!, wideTarget.variant)
+    const png1280 = fakePng(24, 850, 1354)
+    const wideShot = await storeScreenShot(T, wideTarget, wideUrl, png1280, day3, '넓은박물관\n이용시간\n10:00–17:00', 2)
+    const wideRow = (await readScreenShots(T)).find((x) => x.sha16 === sha16(png1280))
+    const wideFile = await screenFileForPick(T, owned, pickOfShot(sha16(png1280), 'place-info', '넓은박물관'))
+    ok(
+      '1280 화면 · 2배 기록(viewWidth 없음)도 목록 · 사진 받기에 그대로(850×1354)',
+      (wideShot as { viewWidth?: unknown }).viewWidth === undefined && wideRow !== undefined && !('viewWidth' in wideRow) && wideRow.scale === 2 && wideRow.width === 850 &&
+        Buffer.isBuffer(wideFile) && wideFile.equals(png1280),
+    )
+    pngs.push(fakePng(25, 1156, 1188))
+    texts.push('넓은박물관\n이용시간\n10:00–17:00')
+    scales.push(2)
+    const callsWide = calls
+    const again600 = await captureScreenShot(T, wideTarget, { bridge, now: () => day3, listedPlaces: listed(['넓은박물관']) })
+    ok(
+      '같은 날이라도 1280 화면으로 찍은 장소 안내는 다시 쓰지 않고 600으로 다시 찍는다 — 그다음은 그 600 기록을 다시 쓴다',
+      !again600.reused && calls === callsWide + 1 && (again600.shot as { viewWidth?: unknown }).viewWidth === 600 && again600.shot.width === 1156 && again600.shot.scale === 2 &&
+        (await captureScreenShot(T, wideTarget, { bridge, now: () => day3, listedPlaces: listed(['넓은박물관']) })).reused && calls === callsWide + 1,
+    )
+    const guideTarget = { profile: profile!, ...findScreenVariant(profile!, 'kids-guide', 'default')! }
+    const pngGuide = fakePng(26, 1648, 728)
+    await storeScreenShot(T, guideTarget, screenUrl(profile!, guideTarget.variant), pngGuide, day3, '아이와 함께', 2)
+    const guideAgain = await captureScreenShot(T, guideTarget, { bridge, now: () => day3 })
+    ok('가이드(1280)는 같은 날 2배 기록(viewWidth 없음)을 그대로 다시 쓴다', guideAgain.reused && guideAgain.shot.sha16 === sha16(pngGuide) && calls === callsWide + 1)
+    const storedWidth = async (seed: number, viewWidth?: number) =>
+      ((await storeScreenShot(T, wideTarget, wideUrl, fakePng(seed, 1156, 1188), day3, 'x', 2, viewWidth)) as { viewWidth?: unknown }).viewWidth
+    ok('기록의 화면 가로 — 600은 적고, 1280 · 없음이면 적지 않는다(예전 줄과 같은 모양)', (await storedWidth(27, 600)) === 600 && (await storedWidth(28, 1280)) === undefined && (await storedWidth(29)) === undefined)
 
     const C = 'fake-corrupt'
     mkdirSync(screensDir(C), { recursive: true })

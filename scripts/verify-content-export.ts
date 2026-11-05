@@ -232,6 +232,8 @@ ok(
   (await shown(850)).includes(FIGURE_SIZE) && (await shown(1648)).includes(FIGURE_SIZE) &&
     (await shown(600)).includes('width="600" style="width:100%;max-width:600px;height:auto"'),
 )
+// 600 화면 장소 안내(2026-11-05 — 카드 578 CSS px · 2배 1156 화소)도 그림 줄 폭 720(내보내기는 그대로 — 그림 화소만 본다).
+ok('600 화면 장소 안내(1156 화소)도 그림 줄 폭 720', (await shown(1156)).includes(FIGURE_SIZE))
 const inlineDrop = await inlineScreens(markdownToHtml(`문장 속 ![가상 여행 웹사이트 'AI 코스 만들기' 화면](${SCREEN_SRC}) 그림`), failFetch)
 ok('문장 속 화면도 받지 못하면 글자로', inlineDrop.html === '<p>문장 속 [화면: AI 코스 만들기] 그림</p>' && exportLeaks(inlineDrop.html).length === 0)
 ok('화면이 없는 문서는 그대로(받지 않는다)', (await inlineScreens(bothDoc.replace(/<img src="\/api\/screens\/[^>]*>/, ''), failFetch)).html === bothDoc.replace(/<img src="\/api\/screens\/[^>]*>/, ''))

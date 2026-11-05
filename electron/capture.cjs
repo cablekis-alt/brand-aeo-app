@@ -6,7 +6,7 @@
 //
 // 지키는 것
 //   - 한 번에 한 장(줄 세우기 — 지도 그리기 mapRender.cjs도 같은 줄에 선다). 한 장마다 창을 새로 만들고 끝나면 destroy. 앱 종료 때 disposeCapture().
-//   - 크기 1280×800 · 배율 1 고정(CDP Emulation) — Windows 125/150% 배율과 상관없이 같은 그림. 잘라 찍기만 1280×2100 · 배율 2(아래).
+//   - 크기 1280×800 · 배율 1 고정(CDP Emulation) — Windows 125/150% 배율과 상관없이 같은 그림. 잘라 찍기만 (clip.viewWidth)×2100 · 배율 2(아래).
 //   - capturePage()+toPNG()는 쓰지 않는다(메인에서 동기 인코딩 → 큰 그림이면 앱 창이 멈춘다). CDP
 //     Page.captureScreenshot은 렌더러가 인코딩한다.
 //   - 자사 호스트 밖으로 이동 · 새 창 · 권한 요청 · 내려받기를 거절한다.
@@ -23,6 +23,11 @@
 //     사이트를 열기 전에 정해 사이트가 고해상도 그림(srcset)을 고르고 글자도 2배로 그린다(clip.scale로 키우면 1배 그림을 늘린다). 화면이 길어
 //     첫 화면(800)보다 긴 안내 카드(근대역사박물관 425×920)도 통째로 찍는다 — 세로 CLIP_MAX_HEIGHT까지. 사각형 · 그림 검사는 CSS px, 찍은
 //     그림은 그 2배(장치 px)다. 위에 붙은 머리 · 자리를 어림할 수 없는 가상 요소를 볼 범위는 1배 첫 화면(VIEW_HEIGHT) 기준 그대로다.
+//     화면 가로는 clip.viewWidth(360~1920, 기본 1280)다 — 장소 안내는 600(2026-11-05 결정: 사이트가 안내 카드를 한 줄 가득 펴 578 폭이 된다).
+//     가로도 사이트를 열기 전에 정하고(반응형 배치가 처음부터 그 폭), 창은 그대로 1280×800이다.
+//   - 잘라 찍기의 가장자리: 넣지 않는 보이는 요소의 잉크(테두리 상자 + 바깥 그림자 · drop-shadow · outline)가 사각형 가장자리를 지나면 그
+//     가장자리를 잉크 밖으로 옮긴다(넣을 요소들을 합친 사각형 안으로는 들이지 않는다) — 여백(16)이 카드 아래 「출처 · 확인 필요」 줄 · 위 아이콘의
+//     그림자를 조각으로 찍지 않게(clipPlan).
 //   - ownHostOnly: 자사 호스트 밖의 요청을 모두 막는다(관광공사 사진 · 지도 SDK · 동영상 썸네일 — 잘라 찍는 부분에 필요 없다).
 'use strict'
 
@@ -100,6 +105,9 @@ const CLIP_MIN_HEIGHT = 120
 const CLIP_MAX_HEIGHT = 2000
 const CLIP_MAX_SELECTORS = 8
 const CLIP_TEXT_MAX = 2000
+/** 잘라 찍기 화면 가로(clip.viewWidth)의 범위(CSS px) — 정하지 않으면 VIEW_WIDTH. */
+const CLIP_MIN_VIEW_WIDTH = 360
+const CLIP_MAX_VIEW_WIDTH = 1920
 
 function captureError(code, message, extra) {
   const err = new Error(message)
@@ -252,6 +260,7 @@ function normalizeOptions(options) {
     const selectors = c && Array.isArray(c.selectors) ? c.selectors : null
     const optional = c && c.optional !== undefined ? c.optional : []
     const padding = c && c.padding !== undefined ? c.padding : CLIP_DEFAULT_PADDING
+    const viewWidth = c && c.viewWidth !== undefined ? c.viewWidth : VIEW_WIDTH
     if (!selectors || selectors.length === 0 || selectors.length > CLIP_MAX_SELECTORS || !selectors.every(safeSelector)) {
       throw captureError('invalid-options', '잘라 찍을 선택자가 올바르지 않습니다.')
     }
@@ -259,8 +268,11 @@ function normalizeOptions(options) {
       throw captureError('invalid-options', '함께 넣을 선택자가 올바르지 않습니다.')
     }
     if (!Number.isInteger(padding) || padding < 0 || padding > CLIP_MAX_PADDING) throw captureError('invalid-options', '잘라 찍기 여백이 올바르지 않습니다.')
+    if (!Number.isInteger(viewWidth) || viewWidth < CLIP_MIN_VIEW_WIDTH || viewWidth > CLIP_MAX_VIEW_WIDTH) {
+      throw captureError('invalid-options', `잘라 찍기 화면 가로가 올바르지 않습니다(${CLIP_MIN_VIEW_WIDTH}~${CLIP_MAX_VIEW_WIDTH}의 정수).`)
+    }
     if (map || o.scrollTo !== undefined) throw captureError('invalid-options', '잘라 찍기는 지도 · 스크롤 선택자와 함께 쓰지 않습니다.')
-    clip = { selectors: [...selectors], optional: [...optional], padding }
+    clip = { selectors: [...selectors], optional: [...optional], padding, viewWidth }
   }
   if (o.ownHostOnly !== undefined && typeof o.ownHostOnly !== 'boolean') throw captureError('invalid-options', 'ownHostOnly가 올바르지 않습니다.')
   const asked = Number(o.timeoutMs)
@@ -393,12 +405,17 @@ function pageMapState(selector, tileHosts) {
   }
 }
 
+/**
+ * 화면 안의 보이는 그림이 다 읽혀 decode될 때까지 기다린다. 보이지 않는 그림(checkVisibility false — display:none 안, 닫힌 <details> 안)은
+ * 그려지지 않으므로 기다리지 않는다: 1023 이하 화면에서는 닫힌 모바일 메뉴(details.menu > nav.menu-panel — 고정이라 상자는 화면 안)의 늦게
+ * 읽는(lazy) 아이콘 둘이 끝내 읽히지 않아, 600 화면의 장소 안내가 모두 eval-timeout이었다(실측 2026-11-05).
+ */
 async function pageDecode() {
   const vw = innerWidth
   const vh = innerHeight
   const imgs = [...document.images].filter((i) => {
     const r = i.getBoundingClientRect()
-    return r.width > 1 && r.height > 1 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw
+    return r.width > 1 && r.height > 1 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw && (!i.checkVisibility || i.checkVisibility())
   })
   const failed = []
   await Promise.all(
@@ -425,8 +442,12 @@ async function pageDecode() {
  * 요소가 없으면 missing에 적는다(optional은 없어도 된다). 화면 맨 위에 붙은 고정 · sticky 머리의 높이(cover), 문서 · 화면 크기, 스크롤도 준다.
  * 머리는 1배 첫 화면 높이(firstHeight)의 절반 위에서 끝나는 것만이다 — 잘라 찍기 화면(2100)의 절반으로 보면 위에 붙은 긴 옆 칸(높이 600)까지
  * 머리로 쳐 1배에서 찍히던 페이지가 clip-covered가 된다.
+ * 가장자리 규칙(clipPlan)에 쓸 걸림돌(obstacles)도 준다 — 넣을 요소도, 그 조상 · 자손도 아닌 보이는 요소 가운데 스스로 그리는 것(배경 ·
+ * 테두리 · 그림자 · 필터 · outline · 직접 든 글자 · 그림)의 잉크 상자(문서 좌표 { x, y, w, h } — 테두리 상자 + 바깥 box-shadow(번짐 + 퍼짐 ±
+ * 어긋남) · filter drop-shadow(어긋남 + 번짐 × 1.5) · blur() · outline)가 넣을 요소들을 합친 사각형 + 여백(padding)에 걸치고 합친 사각형 안에
+ * 다 들지는 않는 것. 고정 · sticky 요소는 스크롤에 따라 자리가 바뀌어 빼고 pageClipCovers가 따로 본다.
  */
-function pageClipState(selectors, optional, firstHeight) {
+function pageClipState(selectors, optional, firstHeight, padding) {
   const shown = (el) => {
     const r = el.getBoundingClientRect()
     return r.width > 0 && r.height > 0 && (el.checkVisibility ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true)
@@ -464,11 +485,101 @@ function pageClipState(selectors, optional, firstHeight) {
     const r = el.getBoundingClientRect()
     if (r.top <= 2 && r.bottom > 0 && r.bottom < firstHeight / 2 && shown(el)) cover = Math.max(cover, r.bottom)
   }
+  const obstacles = []
+  if (rects.length) {
+    const pad = Number.isFinite(padding) ? padding : 0
+    const union = {
+      x0: Math.min(...rects.map((r) => r.x)),
+      y0: Math.min(...rects.map((r) => r.y)),
+      x1: Math.max(...rects.map((r) => r.x + r.w)),
+      y1: Math.max(...rects.map((r) => r.y + r.h)),
+    }
+    const clear = (v) => !v || v === 'transparent' || /^rgba\([^)]*,\s*0(?:\.0+)?\)$/.test(v)
+    const none = (v) => !v || v === 'none'
+    const outlined = (cs) => cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0
+    const paints = (el, cs) => {
+      const border = ['Top', 'Right', 'Bottom', 'Left'].some(
+        (s) => parseFloat(cs[`border${s}Width`]) > 0 && cs[`border${s}Style`] !== 'none' && !clear(cs[`border${s}Color`]),
+      )
+      const ownText = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
+      return (
+        !clear(cs.backgroundColor) || !none(cs.backgroundImage) || border || !none(cs.boxShadow) || !none(cs.filter) || outlined(cs) || ownText ||
+        /^(img|svg|video|canvas|iframe|embed|object|input|button|select|textarea|picture)$/i.test(el.tagName)
+      )
+    }
+    /** 쉼표로 나눈 목록(괄호 안 쉼표는 그대로) — 그림자 여럿. */
+    const split = (v) => {
+      const out = []
+      let depth = 0
+      let cur = ''
+      for (const ch of v) {
+        if (ch === '(') depth += 1
+        if (ch === ')') depth -= 1
+        if (ch === ',' && depth === 0) {
+          out.push(cur)
+          cur = ''
+        } else cur += ch
+      }
+      if (cur.trim()) out.push(cur)
+      return out
+    }
+    /** 색(rgba() · #…)을 걷고 남은 px 길이들. */
+    const lengths = (s) =>
+      [...s.replace(/(?:rgba?|hsla?|hwb|color|lab|lch|oklab|oklch)\([^)]*\)|#[0-9a-f]+/gi, '').matchAll(/(-?\d+(?:\.\d+)?)px/g)].map((m) => parseFloat(m[1]))
+    /** 테두리 상자 밖으로 번지는 잉크(위 · 오른쪽 · 아래 · 왼쪽 px). */
+    const inkOf = (cs) => {
+      const e = { t: 0, r: 0, b: 0, l: 0 }
+      const add = (ox, oy, ext) => {
+        e.t = Math.max(e.t, ext - oy)
+        e.b = Math.max(e.b, ext + oy)
+        e.l = Math.max(e.l, ext - ox)
+        e.r = Math.max(e.r, ext + ox)
+      }
+      if (!none(cs.boxShadow)) {
+        for (const part of split(cs.boxShadow)) {
+          if (/\binset\b/.test(part)) continue
+          const [ox = 0, oy = 0, blur = 0, spread = 0] = lengths(part)
+          add(ox, oy, blur + spread)
+        }
+      }
+      if (!none(cs.filter)) {
+        for (const m of cs.filter.matchAll(/drop-shadow\(((?:[^()]|\([^()]*\))*)\)/g)) {
+          const [ox = 0, oy = 0, blur = 0] = lengths(m[1])
+          add(ox, oy, blur * 1.5)
+        }
+        const blurred = /(?:^|\s)blur\(([^)]*)\)/.exec(cs.filter)
+        if (blurred) add(0, 0, (lengths(blurred[1])[0] || 0) * 1.5)
+      }
+      if (outlined(cs)) add(0, 0, parseFloat(cs.outlineWidth) + Math.max(0, parseFloat(cs.outlineOffset) || 0))
+      return e
+    }
+    const desc = (el) => {
+      const cls = typeof el.className === 'string' && el.className.trim() ? `.${el.className.trim().split(/\s+/).join('.')}` : ''
+      return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${cls}`.slice(0, 80)
+    }
+    for (const el of document.querySelectorAll('body *')) {
+      if (els.some((c) => c === el || c.contains(el) || el.contains(c))) continue
+      const cs = getComputedStyle(el)
+      if (cs.position === 'fixed' || cs.position === 'sticky') continue
+      const b = el.getBoundingClientRect()
+      const ink = inkOf(cs)
+      const x0 = b.left + scrollX - ink.l
+      const y0 = b.top + scrollY - ink.t
+      const x1 = b.right + scrollX + ink.r
+      const y1 = b.bottom + scrollY + ink.b
+      if (!(x1 > x0 && y1 > y0)) continue
+      if (!(x1 > union.x0 - pad && x0 < union.x1 + pad && y1 > union.y0 - pad && y0 < union.y1 + pad)) continue
+      if (x0 >= union.x0 && y0 >= union.y0 && x1 <= union.x1 && y1 <= union.y1) continue
+      if (!shown(el) || !paints(el, cs)) continue
+      obstacles.push({ x: x0, y: y0, w: x1 - x0, h: y1 - y0, d: desc(el) })
+    }
+  }
   const root = document.documentElement
   const body = document.body
   return {
     missing,
     rects,
+    obstacles,
     text,
     docWidth: Math.max(root.scrollWidth, body ? body.scrollWidth : 0, innerWidth),
     docHeight: Math.max(root.scrollHeight, body ? body.scrollHeight : 0, innerHeight),
@@ -672,18 +783,72 @@ function countClosedShadowRoots(root) {
 // ── 잘라 찍기 계획 ────────────────────────────────────────────────────────
 
 /**
+ * 가장자리 규칙 — 걸림돌(obstacles: 넣지 않는 요소의 잉크 상자, 문서 좌표 { x, y, w, h })이 사각형 가장자리(edges { x0, y0, x1, y1 })를 지나면
+ * 그 조각이 그림 가장자리에 남지 않게 가장자리를 옮긴다. 한 쪽 가장자리만 옮겨 그 걸림돌을 다 뺄 수 있으면(걸림돌이 넣을 요소들을 합친
+ * 사각형 union의 위 · 아래 · 왼쪽 · 오른쪽에 통째로 있으면) 덜 잘리는 쪽 하나만 잉크 바로 밖으로 옮긴다(가로 가득한 아래 줄은 아래만, 옆 칸은
+ * 그 옆만). 뺄 수 없으면(합친 사각형에 겹친 걸림돌) 지나는 가장자리를 합친 사각형 끝까지만 옮긴다 — 합친 사각형 안으로는 들이지 않는다.
+ * 가장자리를 지나지 않는 걸림돌(여백 안에 통째로 든 것)은 그대로 둔다. 옮긴 가장자리에 새로 걸린 걸림돌도 다시 본다.
+ */
+function trimClipEdges(edges, union, obstacles) {
+  const e = { ...edges }
+  for (let pass = 0; pass <= obstacles.length; pass += 1) {
+    let moved = false
+    for (const o of obstacles) {
+      const ox0 = o.x
+      const oy0 = o.y
+      const ox1 = o.x + o.w
+      const oy1 = o.y + o.h
+      if (!(ox1 > e.x0 && ox0 < e.x1 && oy1 > e.y0 && oy0 < e.y1)) continue
+      const crossed = [
+        oy0 < e.y0 && oy1 > e.y0 && { side: 'y0', to: Math.min(Math.ceil(oy1), union.y0) },
+        oy0 < e.y1 && oy1 > e.y1 && { side: 'y1', to: Math.max(Math.floor(oy0), union.y1) },
+        ox0 < e.x0 && ox1 > e.x0 && { side: 'x0', to: Math.min(Math.ceil(ox1), union.x0) },
+        ox0 < e.x1 && ox1 > e.x1 && { side: 'x1', to: Math.max(Math.floor(ox0), union.x1) },
+      ].filter(Boolean)
+      if (!crossed.length) continue
+      const clearing = [
+        oy1 <= union.y0 && { side: 'y0', to: Math.ceil(oy1) },
+        oy0 >= union.y1 && { side: 'y1', to: Math.floor(oy0) },
+        ox1 <= union.x0 && { side: 'x0', to: Math.ceil(ox1) },
+        ox0 >= union.x1 && { side: 'x1', to: Math.floor(ox0) },
+      ].filter(Boolean)
+      const loss = (m) => Math.abs(m.to - e[m.side]) * (m.side[0] === 'y' ? e.x1 - e.x0 : e.y1 - e.y0)
+      const moves = clearing.length ? [clearing.reduce((best, m) => (loss(m) < loss(best) ? m : best))] : crossed
+      for (const m of moves) {
+        const shrinks = m.side === 'y0' || m.side === 'x0' ? m.to > e[m.side] : m.to < e[m.side]
+        if (!shrinks) continue
+        e[m.side] = m.to
+        moved = true
+      }
+    }
+    if (!moved) break
+  }
+  return e
+}
+
+/**
  * 잘라 찍을 사각형과 스크롤 — 요소 자리(문서 좌표 { x, y, w, h })를 합쳐 여백을 두르고 문서 안으로 자른 사각형(정수, 문서 좌표)과, 그
  * 사각형이 화면 안(위에 붙은 머리 cover 아래)에 들어오는 스크롤 가운데 지금 자리에서 가장 덜 움직이는 값. 가로로는 스크롤하지 않는다.
+ * 넣지 않는 요소의 잉크(page.obstacles — pageClipState)가 가장자리를 지나면 그 가장자리를 옮긴다(trimClipEdges).
  * 모두 CSS px다(찍은 그림의 화소는 이것의 배율배).
  * problem: clip-missing 요소 없음 · clip-too-small 블로그 그림으로 너무 작음 · clip-too-large 화면(머리를 뺀 높이)보다 크거나 세로가
  * CLIP_MAX_HEIGHT를 넘음 · clip-covered 어떤 스크롤로도 머리 아래에 다 들어오지 않음(문서 맨 위가 머리에 가림). 문제가 없으면 null.
  */
 function clipPlan(rects, padding, page) {
   if (!rects.length) return { rect: null, scrollY: page.scrollY, problem: 'clip-missing' }
-  const x0 = Math.max(0, Math.floor(Math.min(...rects.map((r) => r.x)) - padding))
-  const y0 = Math.max(0, Math.floor(Math.min(...rects.map((r) => r.y)) - padding))
-  const x1 = Math.min(page.docWidth, Math.ceil(Math.max(...rects.map((r) => r.x + r.w)) + padding))
-  const y1 = Math.min(page.docHeight, Math.ceil(Math.max(...rects.map((r) => r.y + r.h)) + padding))
+  const union = {
+    x0: Math.floor(Math.min(...rects.map((r) => r.x))),
+    y0: Math.floor(Math.min(...rects.map((r) => r.y))),
+    x1: Math.ceil(Math.max(...rects.map((r) => r.x + r.w))),
+    y1: Math.ceil(Math.max(...rects.map((r) => r.y + r.h))),
+  }
+  const padded = {
+    x0: Math.max(0, union.x0 - padding),
+    y0: Math.max(0, union.y0 - padding),
+    x1: Math.min(page.docWidth, union.x1 + padding),
+    y1: Math.min(page.docHeight, union.y1 + padding),
+  }
+  const { x0, y0, x1, y1 } = trimClipEdges(padded, union, Array.isArray(page.obstacles) ? page.obstacles : [])
   const rect = { x: x0, y: y0, width: Math.max(0, x1 - x0), height: Math.max(0, y1 - y0) }
   const keep = { rect, scrollY: page.scrollY }
   if (rect.width < CLIP_MIN_WIDTH || rect.height < CLIP_MIN_HEIGHT) return { ...keep, problem: 'clip-too-small' }
@@ -699,7 +864,7 @@ function clipPlan(rects, padding, page) {
 const CLIP_PROBLEM_TEXT = {
   'clip-missing': '잘라 찍을 요소가 페이지에 없습니다',
   'clip-too-small': `잘라 찍을 부분이 너무 작습니다(최소 ${CLIP_MIN_WIDTH}×${CLIP_MIN_HEIGHT})`,
-  'clip-too-large': `잘라 찍을 부분이 너무 큽니다(가로는 화면 ${VIEW_WIDTH} 안, 세로는 위에 붙은 머리 아래 ${CLIP_MAX_HEIGHT}까지)`,
+  'clip-too-large': `잘라 찍을 부분이 너무 큽니다(가로는 화면 안, 세로는 위에 붙은 머리 아래 ${CLIP_MAX_HEIGHT}까지)`,
   'clip-covered': '잘라 찍을 부분이 위에 붙은 머리에 가립니다',
 }
 
@@ -934,9 +1099,11 @@ async function captureSteps(url, opts, ctx) {
   // 오프스크린 렌더링(offscreen) 창. 보통의 숨긴 창은 Windows에서 합성기가 프레임을 내지 않아 CDP
   // Page.captureScreenshot이 응답하지 않는다(실측 2026-11-04: 4번 중 3번 15초 무응답, 나머지도 3.5초).
   // capturePage({stayHidden})는 프레임은 받지만 화면 배율(125%)대로 1600×1000이 나온다. 오프스크린 창은
-  // 화면에 그려지지 않고 늘 '보이는' 상태라 CDP가 0.2초 안팎에 1280×800을 돌려준다. 창은 늘 1280×800이다 — 잘라 찍기 화면(1280×2100 ·
+  // 화면에 그려지지 않고 늘 '보이는' 상태라 CDP가 0.2초 안팎에 1280×800을 돌려준다. 창은 늘 1280×800이다 — 잘라 찍기 화면((clip.viewWidth)×2100 ·
   // 배율 2)은 CDP Emulation이 정한다(창을 2100으로 만들어도 Windows가 화면 높이로 줄였다 — 실측 1281×912, 찍힌 그림은 같다).
-  const view = opts.clip ? { height: CLIP_VIEW_HEIGHT, scale: CLIP_SCALE } : { height: VIEW_HEIGHT, scale: 1 }
+  const view = opts.clip
+    ? { width: opts.clip.viewWidth, height: CLIP_VIEW_HEIGHT, scale: CLIP_SCALE }
+    : { width: VIEW_WIDTH, height: VIEW_HEIGHT, scale: 1 }
   const win = new BrowserWindow({
     show: false,
     width: VIEW_WIDTH,
@@ -1029,13 +1196,13 @@ async function captureSteps(url, opts, ctx) {
     if (!ctx.done) ctx.warnings.add('debugger-detached')
   })
   await cdp(ctx, 'Network.enable')
-  // 배율은 사이트를 열기 전(빈 페이지)에 정한다 — 사이트가 처음부터 그 배율의 그림(srcset)을 고른다.
+  // 가로 · 배율은 사이트를 열기 전(빈 페이지)에 정한다 — 사이트가 처음부터 그 폭의 배치 · 그 배율의 그림(srcset)을 고른다.
   await cdp(ctx, 'Emulation.setDeviceMetricsOverride', {
-    width: VIEW_WIDTH,
+    width: view.width,
     height: view.height,
     deviceScaleFactor: view.scale,
     mobile: false,
-    screenWidth: VIEW_WIDTH,
+    screenWidth: view.width,
     screenHeight: view.height,
   })
   await cdp(ctx, 'Emulation.setEmulatedMedia', {
@@ -1141,7 +1308,7 @@ async function captureSteps(url, opts, ctx) {
   if (opts.clip) {
     const { selectors, optional, padding } = opts.clip
     const measure = async () => {
-      const state = await evalIn(ctx, pageCall(pageClipState, selectors, optional, VIEW_HEIGHT))
+      const state = await evalIn(ctx, pageCall(pageClipState, selectors, optional, VIEW_HEIGHT, padding))
       if (state.missing.length) {
         throw captureError('clip-missing', `잘라 찍을 요소가 페이지에 없습니다(${state.missing.join(', ')}).`, { clipState: { missing: state.missing } })
       }
@@ -1233,6 +1400,7 @@ async function captureSteps(url, opts, ctx) {
     width: size.width,
     height: size.height,
     scale: view.scale,
+    viewWidth: view.width,
     waitedMs: ctx.timings.totalMs,
     url,
     finalUrl: wc.getURL(),
@@ -1323,17 +1491,19 @@ async function runJob(rawUrl, options) {
  *   scrollTo   이 선택자의 요소가 화면 맨 위(고정 머리 아래)에 오게 스크롤한다. 없으면 주소의 #조각.
  *   hide       더 숨길 선택자 목록(최대 20).
  *   activateFragmentLink  true면 주소의 #조각을 가리키는 페이지 안 링크를 한 번 누른다(지도면 지도 준비 뒤).
- *   clip       { selectors, optional?, padding? } — 선택자들(필수 1~8개 · 있으면 넣는 optional 0~8개)의 요소를 합친 사각형에 여백
- *              (기본 16, 최대 48)을 둘러 그 부분만 찍는다. 그림 검사도 그 사각형에 걸친 것만 본다. map · scrollTo와 함께 쓰지 않는다.
- *              화면 1280×2100 · 배율 2로 찍는다(세로 2000 CSS px까지).
+ *   clip       { selectors, optional?, padding?, viewWidth? } — 선택자들(필수 1~8개 · 있으면 넣는 optional 0~8개)의 요소를 합친 사각형에 여백
+ *              (기본 16, 최대 48)을 둘러 그 부분만 찍는다(넣지 않는 요소의 잉크가 가장자리를 지나면 그 가장자리를 옮긴다). 그림 검사도 그
+ *              사각형에 걸친 것만 본다. map · scrollTo와 함께 쓰지 않는다. 화면 (viewWidth — 360~1920, 기본 1280)×2100 · 배율 2로 찍는다
+ *              (세로 2000 CSS px까지).
  *   ownHostOnly  true면 자사 호스트 밖의 요청을 모두 막는다.
  *   timeoutMs  기다리는 한도(기본 25초, 최대 45초). 찍기 · 검사에 12초를 더 준다.
- * @returns {Promise<{png: Buffer, width: number, height: number, scale: number, waitedMs: number, url: string,
+ * @returns {Promise<{png: Buffer, width: number, height: number, scale: number, viewWidth: number, waitedMs: number, url: string,
  *   finalUrl: string, warnings: string[], timings: object, blocked: object[], inspect: object,
  *   pixels: object, mapPixels: object|null, mapTiles: number, memoryPeakKB: number|null,
  *   clip: {x: number, y: number, width: number, height: number}|null, clipText: string|null}>}
- *   width · height는 PNG 화소, scale은 화면 배율(첫 화면 1 · 잘라 찍기 2 — width = 사각형 가로 × scale). clip은 찍은 사각형(문서 좌표 ·
- *   CSS px), clipText는 잘라 찍은 요소들의 글자(CLIP_TEXT_MAX자까지 — 서버가 설명 줄의 사실과 견준다).
+ *   width · height는 PNG 화소, scale은 화면 배율(첫 화면 1 · 잘라 찍기 2 — width = 사각형 가로 × scale), viewWidth는 화면 가로(CSS px — 첫
+ *   화면 1280 · 잘라 찍기는 clip.viewWidth). clip은 찍은 사각형(문서 좌표 · CSS px), clipText는 잘라 찍은 요소들의 글자(CLIP_TEXT_MAX자까지 —
+ *   서버가 설명 줄의 사실과 견준다).
  *   실패하면 code가 붙은 Error로 거부한다: invalid-url · off-host · private-address · invalid-options · busy ·
  *   disposed · timeout · load-failed · map-not-ready · clip-missing · clip-too-large · clip-too-small · clip-covered · kogl-image ·
  *   foreign-image · closed-shadow · bad-size · blank · map-blank · renderer-gone · aborted · eval-timeout · cdp-timeout.
@@ -1378,7 +1548,7 @@ function captureStatus() {
 // ── 서버(utilityProcess)와 주고받는 메시지 ──────────────────────────────────
 // 서버(server/screens.ts)가 process.parentPort로 찍기를 청하면 main.cjs가 여기로 넘기고, 돌려준 답을 서버로 보낸다.
 //   요청 { type: 'screen-capture', id, url, options: { host, map?, scrollTo?, hide?, activateFragmentLink?, clip?, ownHostOnly?, timeoutMs? } }
-//   답   { type: 'screen-capture-result', id, ok: true, png(base64), width, height, scale, url, finalUrl, waitedMs, warnings, text? }
+//   답   { type: 'screen-capture-result', id, ok: true, png(base64), width, height, scale, viewWidth, url, finalUrl, waitedMs, warnings, text? }
 //        { type: 'screen-capture-result', id, ok: false, code, message }
 // 지도 그리기 요청 { type: 'map-render', id, spec }은 mapRender.cjs handleMapRequest로 넘기고 'map-render-result'로 답한다(같은 줄에 선다).
 const REQUEST_TYPE = 'screen-capture'
@@ -1411,6 +1581,7 @@ async function handleCaptureRequest(msg) {
       width: shot.width,
       height: shot.height,
       scale: shot.scale,
+      viewWidth: shot.viewWidth,
       url: shot.url,
       finalUrl: shot.finalUrl,
       waitedMs: shot.waitedMs,
@@ -1461,6 +1632,7 @@ module.exports = {
   pageInspect,
   pageClipState,
   pageClipCovers,
+  pageDecode,
   clipPlan,
   requestBlockReason,
   countClosedShadowRoots,

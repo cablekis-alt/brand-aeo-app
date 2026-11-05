@@ -27,6 +27,11 @@ export interface ScreenClip {
   selectors: readonly string[]
   optional?: readonly string[]
   padding?: number
+  /**
+   * 잘라 찍는 화면의 가로(CSS px, 360~1920의 정수) — 사이트를 이 폭의 화면으로 열어 반응형 배치가 그 폭에 맞춘다. 없으면 SCREEN_VIEW_WIDTH
+   * (1280). 창은 그대로 1280×800이고 화면 흉내(CDP)만 이 폭이다.
+   */
+  viewWidth?: number
 }
 
 /** 한 화면의 변형 하나 — 같은 페이지를 다른 조건 · 권역으로 연 것. 「화면 + 변형」이 한 장의 단위다. */
@@ -119,6 +124,11 @@ export interface ScreenShot {
    * 그 전에 1배로 찍은 잘라 찍기(옛 기록 — 목록 · 내보내기는 그대로 쓴다).
    */
   scale?: number
+  /**
+   * 찍은 화면의 가로(CSS px) — 장소 안내는 600(2026-11-05부터 — ScreenClip.viewWidth). 없으면 1280(SCREEN_VIEW_WIDTH): 첫 화면 통째 · 가이드와
+   * 그 전에 1280 화면으로 찍은 장소 안내(옛 기록 — 목록 · 내보내기는 그대로 쓴다).
+   */
+  viewWidth?: number
 }
 
 /** 찍은 부분 글자의 최대 길이. */
@@ -133,6 +143,14 @@ export const SCREEN_CLIP_SCALE = 2
 /** 이 화면을 찍는 화소 배율 — 잘라 찍는 화면은 SCREEN_CLIP_SCALE, 첫 화면 통째는 1. */
 export function screenShotScale(screen: Pick<ScreenDef, 'clip'>): number {
   return screen.clip ? SCREEN_CLIP_SCALE : 1
+}
+
+/** 찍는 화면의 기본 가로(CSS px) — electron/capture.cjs VIEW_WIDTH와 같다. 첫 화면 통째(코스 · 지도)는 늘 이 폭이다. */
+export const SCREEN_VIEW_WIDTH = 1280
+
+/** 이 화면을 찍는 화면 가로 — 잘라 찍기의 viewWidth(장소 안내 600), 없으면 SCREEN_VIEW_WIDTH. */
+export function screenShotViewWidth(screen: Pick<ScreenDef, 'clip'>): number {
+  return screen.clip?.viewWidth ?? SCREEN_VIEW_WIDTH
 }
 
 /** 목록 · 찍기 응답에 나가는 한 장 — id(= sha16)와 앱 주소(src)를 붙인다. */
@@ -195,6 +213,11 @@ const GUNSAN_REGION_PLACES = {
  * 제3유형)이 있어 첫 화면을 통째로 찍을 수 없다. 장소 페이지는 왼쪽 칸의 분류 · 이름 · 소개 · 안내 카드(dl.kf-hero — 자사 아이콘뿐)까지,
  * 가이드는 분류 · 제목 · 자사 일러스트(/assets/art/camp-kids) · 첫 줄까지다. 장소 페이지의 공공누리 사진(figure.pv)은 오른쪽 칸이라 잘라 낸
  * 사각형 밖이고, 가이드의 장소 카드 줄(공공누리 사진)은 캡처 모듈이 늘 숨기는 캐러셀([data-gallery])이며 첫 줄 아래다(숨긴 창 실측).
+ *
+ * 장소 안내는 600 화면으로 찍는다(2026-11-05 결정 「600px (권장)」) — 1280에서는 안내 카드가 왼쪽 칸(425 폭)에 세로로 길게(994까지) 들어가
+ * 블로그 그림 줄(720)에서 720×1684까지 길었다. 600에서는 사이트의 반응형 배치가 카드를 한 줄 가득(한 줄에 칸 셋) 펴 23곳 모두 578(CSS px) ·
+ * 2배 1156 화소가 되고, 그림 줄에서 글자가 사이트의 1.25배 · 세로 338~793이다(숨긴 창 실측). 공공누리 사진(figure.pv)은 600에서도 잘라 낸
+ * 사각형 밖이다(23곳 그림 검사 모두 공공누리 0). 767 이하 화면에 생기는 아래 고정 줄(.pl-bar)은 숨긴다. 가이드는 1280 그대로.
  */
 export const SCREEN_PROFILES: readonly ScreenProfile[] = [
   {
@@ -237,11 +260,12 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
         ownHostOnly: true,
         slotWords: PLACE_INFO_WORDS,
         commonLabel: true,
-        hide: [GUNSAN_WEATHER],
+        hide: [GUNSAN_WEATHER, '.pl-bar'],
         clip: {
           selectors: ['article.place .pl-head h1', 'article.place dl.kf.kf-hero'],
           optional: ['article.place .pl-head .kicker', 'article.place .pl-head .pl-alt', 'article.place .pl-head .summary'],
           padding: 16,
+          viewWidth: 600,
         },
         variants: [],
       },
