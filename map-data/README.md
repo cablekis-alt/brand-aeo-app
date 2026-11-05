@@ -9,7 +9,7 @@
 |---|---|
 | `gunsan-20261103.pmtiles` | PMTiles v3 벡터 타일(17,723,203바이트). 설치본에는 `resources/map/gunsan.pmtiles`로 들어갑니다(asar 밖 — Range로 읽습니다). |
 | `NOTICE-OSM.txt` | ODbL 알림 + 지도 라이브러리(maplibre-gl · pmtiles · fflate) 라이선스 글, 끝에 maplibre-gl에 함께 묶인 의존 라이브러리 24개의 라이선스 원문(`[BEGIN …]` ~ `[END …]`, 손으로 고치지 않음). 설치본 `resources/map/NOTICE-OSM.txt`. |
-| `pmtiles.LICENSE.txt` | pmtiles 라이선스 글(npm 묶음에 LICENSE 파일이 없어 따로 둠). 설치본 `dist-electron/map-vendor/pmtiles.LICENSE.txt`에도 복사합니다. 저작권자 줄은 아직 TODO입니다 — 채우기 전에는 설치본을 만들 수 없습니다(아래 「라이선스」). |
+| `pmtiles.LICENSE.txt` | pmtiles 라이선스 글(npm 묶음에 LICENSE 파일이 없어 따로 둠). 설치본 `dist-electron/map-vendor/pmtiles.LICENSE.txt`에도 복사합니다. pmtiles 저장소 LICENSE 원문(Copyright 2021 Protomaps LLC)을 옮겼습니다(아래 「라이선스」). |
 
 ## 어떻게 만들었나
 
@@ -39,7 +39,7 @@ node scripts/map-data/verify-extract.mjs map-data/gunsan-20261103.pmtiles <원�
 ## 라이선스
 
 - `scripts/build-electron-server.mjs`(설치본 재료 만들기 — `electron:pack`)는 먼저 `scripts/map-data/notice.mjs`로 알림을 검사합니다. 자리 글자(「<저작권자 확인 필요>」 · `TODO(`)가 `NOTICE-OSM.txt` · `pmtiles.LICENSE.txt`에 남았거나 의존 라이브러리 글이 `node_modules`와 다르면 멈춥니다.
-- pmtiles 저작권자 줄: pmtiles 저장소(https://github.com/protomaps/pmtiles)의 LICENSE에서 Copyright 줄을 확인해 두 파일의 「Copyright (c) <저작권자 확인 필요>」 줄을 그대로 바꾸고, TODO 안내 두 줄을 지웁니다(두 파일의 pmtiles 글은 같아야 합니다 — `scripts/verify-map-render.ts`).
+- pmtiles 라이선스: npm 묶음에 LICENSE 파일이 없어, pmtiles 저장소의 LICENSE(https://github.com/protomaps/PMTiles/blob/main/LICENSE) 원문을 2026-11-05에 확인해 두 파일에 그대로 옮겼습니다(Copyright 2021 Protomaps LLC). pmtiles 판을 올리면 저장소 LICENSE를 다시 확인하고 두 파일을 같이 고칩니다(두 파일의 pmtiles 글은 같아야 합니다 — `scripts/verify-map-render.ts`).
 - maplibre-gl 판을 올리면 `node scripts/map-data/notice.mjs --write`로 의존 라이브러리 글을 다시 만듭니다.
 
 Map data © OpenStreetMap contributors, available under the Open Database License (ODbL) 1.0 — https://www.openstreetmap.org/copyright
