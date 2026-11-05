@@ -183,6 +183,24 @@ try {
   ok('출처 없는 공공 사진은 받지 않는다(409)', legacyFile.status === 409 && String(legacyFile.body.error).includes('출처'))
   const publicFile = await photoFile('가상섬 바닷가', '섬')
   ok('출처가 맞는 공공 사진은 확인 뒤 받기로 넘어간다(가짜 주소 — 502)', publicFile.status === 502)
+
+  // 7) 2026-11-05 결정 D5(d) — 「이 자리 빼기」(drop)는 그 자리의 사진을 빼고 뺀 자리로 적는다(본문은 그대로), 「다시 넣기」(undrop)는 표시만 지운다.
+  type Cleared = { slot: string; nth: number; heading: string; removed?: string[]; drop?: true }
+  const clearedOf = (id: string) => (stored()[id] as { photoCleared?: Cleared[] } | undefined)?.photoCleared ?? []
+  const drop = await photos({ actionId: 'content:a', generatedAt: AT, op: 'drop', place: place('가상 지도 화면', '지도') })
+  const dropRec = clearedOf('content:a').find((c) => c.slot === '가상 지도 화면')
+  ok(
+    '이 자리 빼기 — 그 자리의 사진을 빼고 뺀 사진 주소와 drop을 적는다',
+    drop.status === 200 && !stored()['content:a']?.photos?.some((p) => p.src === LEGACY_SRC) && dropRec?.drop === true && (dropRec.removed ?? []).includes(LEGACY_SRC),
+  )
+  const emptyDrop = await photos({ actionId: 'content:b', generatedAt: AT, op: 'drop', place: place('가상 예약 화면', '예약') })
+  ok('사진이 없는 자리도 뺄 수 있다(뺀 사진 없이 drop만)', emptyDrop.status === 200 && clearedOf('content:b').some((c) => c.slot === '가상 예약 화면' && c.drop === true && !c.removed))
+  await photos({ actionId: 'content:a', generatedAt: AT, op: 'undrop', place: place('가상 지도 화면', '지도') })
+  const undone = clearedOf('content:a').find((c) => c.slot === '가상 지도 화면')
+  ok('다시 넣기 — drop만 지우고 뺀 사진 기록은 남긴다(사람이 뺀 자리)', undone !== undefined && !undone.drop && (undone.removed ?? []).includes(LEGACY_SRC))
+  await photos({ actionId: 'content:b', generatedAt: AT, op: 'undrop', place: place('가상 예약 화면', '예약') })
+  ok('뺀 사진이 없던 자리는 다시 넣기로 기록이 없어진다', !clearedOf('content:b').some((c) => c.slot === '가상 예약 화면'))
+  ok('자리가 없으면 400', (await photos({ actionId: 'content:a', generatedAt: AT, op: 'drop' })).status === 400)
 } finally {
   server.kill()
   await new Promise((r) => setTimeout(r, 800))

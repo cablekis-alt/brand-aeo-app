@@ -27,6 +27,7 @@ export default function PublishSettingsPanel({
   const [category, setCategory] = useState(settings.category ?? '')
   const [blogUrl, setBlogUrl] = useState(settings.blogUrl ?? '')
   const [siteUrl, setSiteUrl] = useState(settings.siteUrl ?? '')
+  const [dropEmpty, setDropEmpty] = useState(Boolean(settings.dropEmptyPhotoSlots))
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -34,7 +35,7 @@ export default function PublishSettingsPanel({
   let draft: PublishSettings | null = null
   let invalid: string | null = null
   try {
-    draft = normalizePublishSettings({ ctaText, inquiryUrl, tags, category, blogUrl, siteUrl })
+    draft = normalizePublishSettings({ ctaText, inquiryUrl, tags, category, blogUrl, siteUrl, dropEmptyPhotoSlots: dropEmpty })
   } catch (e) {
     invalid = e instanceof Error ? e.message : String(e)
   }
@@ -46,6 +47,7 @@ export default function PublishSettingsPanel({
     settings.category && '카테고리',
     settings.blogUrl && '블로그',
     settings.siteUrl && '공식 사이트',
+    settings.dropEmptyPhotoSlots && '빈 사진 자리 뺌',
   ]
     .filter(Boolean)
     .join(' · ')
@@ -111,6 +113,21 @@ export default function PublishSettingsPanel({
             onChange={edit(setSiteUrl)}
             placeholder={brandSiteUrl(brand) ? `비우면 ${brandSiteUrl(brand)}` : '예: https://example.com/'}
           />
+        </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={dropEmpty}
+            onChange={(e) => {
+              setDropEmpty(e.target.checked)
+              setMessage(null)
+            }}
+          />{' '}
+          빈 사진 자리 빼고 내보내기{' '}
+          <span className="muted">
+            (복사 · .html · 작성자 묶음에서 사진을 넣지 못한 자리의 「[사진 넣을 자리]」 줄을 뺍니다 — 켜면 작성자가 직접 사진을 넣을 자리 안내도
+            사라져요. 「이 자리 빼기」로 뺀 자리는 늘 뺍니다)
+          </span>
         </label>
         {invalid && (
           <p className="error" role="alert">

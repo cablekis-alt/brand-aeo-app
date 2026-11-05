@@ -1041,7 +1041,13 @@ function PreviewRow({ title, row, brandName }: { title: string | null; row: Auto
   // 앱이 그린 군산 지도 — 그렸으면 썸네일(16:10), 아직이면 빈 자리. 늘 「확인 필요」 칩과 출처 줄.
   const map = row.mapPick ? <MapPickBrief {...(row.mapPick.drawn ? { src: row.mapPick.drawn.src } : {})} alt={row.mapPick.alt} caption={row.mapPick.caption} /> : null
   const warn = row.state === 'replace' || row.state === 'remove' || row.recheck === 'similar' || (row.state === 'filled' && row.review)
-  const status = row.recheck ? RECHECK_TEXT[row.recheck] : row.state === 'filled' && row.review ? '확인 필요' : AUTO_SLOT_STATE_TEXT[row.state]
+  const status = row.recheck
+    ? RECHECK_TEXT[row.recheck]
+    : row.state === 'filled' && row.review
+      ? '확인 필요'
+      : row.dropped
+        ? '뺀 자리(내보낼 때 뺌)'
+        : AUTO_SLOT_STATE_TEXT[row.state]
   const pill = warn
     ? 'st-warn'
     : row.state === 'filled'

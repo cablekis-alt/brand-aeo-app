@@ -531,7 +531,7 @@ function WriterRuns({
   // 브랜드 전부 단추는 사진 자리가 하나라도 있을 때만(배정에 없는 자사 글 포함).
   const { photoStats, brandPhotoSlots } = useMemo(() => {
     const out = new Map<string, ReturnType<typeof photoSlotStats>>()
-    const statsOf = (ids: string[]) => photoSlotStats(ids.map((id) => ({ markdown: publishMarkdownOf(drafts[id]!), picks: drafts[id]!.photos })))
+    const statsOf = (ids: string[]) => photoSlotStats(ids.map((id) => ({ markdown: publishMarkdownOf(drafts[id]!), picks: drafts[id]!.photos, cleared: drafts[id]!.photoCleared })))
     let slots = 0
     for (const w of planWriters(writerPlan)) {
       const stats = statsOf(writerPlan.articles.filter((a) => a.writer.key === w.key && drafts[a.id]).map((a) => a.id))

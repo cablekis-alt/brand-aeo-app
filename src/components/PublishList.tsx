@@ -129,7 +129,7 @@ export default function PublishList({
     // 고른 사진은 이 다듬은 글을 만든 원문이 지금 원문일 때만 넣는다(옛 판이면 아래 경고 줄에서 다시 만든다).
     const source = sourceOf(row)
     const fresh = a.sourceKey === sourceKeyOf(source)
-    const parts = tenant ? channelArticleParts(a, { brand: tenant, settings }, fresh ? { markdown: source, picks: d.photos } : undefined) : { markdown: a.markdown, photos: [] }
+    const parts = tenant ? channelArticleParts(a, { brand: tenant, settings }, fresh ? { markdown: source, picks: d.photos, cleared: d.photoCleared } : undefined) : { markdown: a.markdown, photos: [] }
     return { markdown: parts.markdown, html: markdownToHtml(parts.markdown), photos: uniquePhotoFiles(parts.photos) }
   }
 

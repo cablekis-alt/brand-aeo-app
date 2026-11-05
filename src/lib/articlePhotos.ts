@@ -77,6 +77,22 @@ export type PhotoPlace = Pick<PhotoPick, 'slot' | 'nth' | 'heading'>
  */
 export interface ClearedPhotoPlace extends PhotoPlace {
   removed?: string[]
+  /**
+   * 사람이 「이 자리 빼기」로 사진 없이 내보내기로 한 자리(2026-11-05 결정 D5(d)) — 내보낼 때 사진 자리 줄을 빼고(본문은 고치지 않는다 — 채널
+   * 글이 「원문 바뀜」이 되지 않게), 자동 채우기는 「사람이 뺀 자리도 다시 채우기」를 켜도 채우지 않는다. 바로 아랫줄 설명은 글로 남는다.
+   */
+  drop?: true
+}
+
+/** 내보내기에서 뺄 사진 자리 — 사람이 뺀 자리(dropped — ClearedPhotoPlace.drop)와, empty면 사진을 넣지 못한 모든 자리. */
+export interface PhotoSlotDrops {
+  dropped?: readonly ClearedPhotoPlace[]
+  empty?: boolean
+}
+
+/** 이 자리가 사람이 「이 자리 빼기」로 뺀 자리인가(clearedMatches — 넉넉하게). */
+export function slotDropped(slot: PhotoPlace, cleared: readonly ClearedPhotoPlace[] | undefined): boolean {
+  return Boolean(cleared?.some((c) => c.drop && clearedMatches(c, slot)))
 }
 
 /** 한 자리에 적어 두는 뺀 사진 주소의 최대 수. */
@@ -372,9 +388,34 @@ export function matchPhotos(markdown: string, picks: readonly PhotoPick[]): Phot
  * 발행 원고에 고른 사진을 넣는다 — 짝지은 자리 줄만 `![사진 설명](https 주소)`로 바꾸고 바로 아랫줄 `*설명*`은 그대로 둔다
  * (htmlFile.ts가 figure · figcaption으로 낸다). 넣은 사진이 없으면 원고를 그대로(바이트까지 같게) 돌려준다.
  */
-export function withPhotos(markdown: string, picks: readonly PhotoPick[] | undefined): { markdown: string; applied: AppliedPhoto[] } {
-  if (!picks?.length) return { markdown, applied: [] }
-  return placePhotos(markdown, matchPhotos(markdown, picks).applied)
+export function withPhotos(
+  markdown: string,
+  picks: readonly PhotoPick[] | undefined,
+  drops: PhotoSlotDrops = {},
+): { markdown: string; applied: AppliedPhoto[] } {
+  const applied = picks?.length ? matchPhotos(markdown, picks).applied : []
+  return placePhotos(markdown, applied, dropSlots(photoSlotsOf(markdown), applied, drops))
+}
+
+/**
+ * 뺄 사진 자리 — 사진을 넣지 않는 자리 가운데 사람이 뺀 자리(drops.dropped)와, drops.empty면 나머지 빈 자리 모두. slotKey는 그 자리를 뺀 기록과
+ * 견줄 자리 열쇠(다듬은 글의 자리는 원문 자리의 열쇠 — withPhotosFromSource).
+ */
+function dropSlots(
+  slots: readonly PhotoSlot[],
+  applied: readonly { pick: PhotoPick; slot: PhotoSlot }[],
+  drops: PhotoSlotDrops,
+  placeOf: (s: PhotoSlot) => PhotoPlace | null = (s) => ({ slot: s.key, nth: s.nth, heading: s.heading }),
+): PhotoSlot[] {
+  if (!drops.empty && !drops.dropped?.some((c) => c.drop)) return []
+  // 넣는 사진(placePhotos가 실제로 넣는 것 — 주소가 있고 출처가 맞는 사진)의 자리만 빼지 않는다.
+  const filled = new Set(applied.filter((a) => photoPickSrc(a.pick) && photoCreditState(a.pick) !== 'missing').map((a) => a.slot.line))
+  return slots.filter((s) => {
+    if (filled.has(s.line)) return false
+    if (drops.empty) return true
+    const place = placeOf(s)
+    return place !== null && slotDropped(place, drops.dropped)
+  })
 }
 
 /** 사진 자리 줄 바로 아랫줄의 설명(`*설명*`) — 없으면 ''. */
@@ -392,22 +433,36 @@ export function withPhotosFromSource(
   markdown: string,
   sourceMarkdown: string,
   picks: readonly PhotoPick[] | undefined,
+  drops: PhotoSlotDrops = {},
 ): { markdown: string; applied: AppliedPhoto[] } {
-  if (!picks?.length) return { markdown, applied: [] }
+  if (!picks?.length && !drops.empty && !drops.dropped?.some((c) => c.drop)) return { markdown, applied: [] }
   const sourceLines = sourceMarkdown.split('\n')
   const lines = markdown.split('\n')
   const sourceSlots = photoSlotsOf(sourceMarkdown)
   const slots = photoSlotsOf(markdown)
-  const placements: { pick: PhotoPick; slot: PhotoSlot }[] = []
-  for (const { pick, slot: from } of matchPhotos(sourceMarkdown, picks).applied) {
-    const to = mapSlots(
+  /** 원문 자리 → 다듬은 글의 자리(확실하지 않으면 undefined). */
+  const mapTo = (from: PhotoSlot) =>
+    mapSlots(
       sourceSlots.filter((s) => s.key === from.key).map((s) => captionAfter(sourceLines, s)),
       slots.filter((s) => s.key === from.key),
       (s) => captionAfter(lines, s),
     )?.[from.nth - 1]
+  const placements: { pick: PhotoPick; slot: PhotoSlot }[] = []
+  for (const { pick, slot: from } of picks?.length ? matchPhotos(sourceMarkdown, picks).applied : []) {
+    const to = mapTo(from)
     if (to) placements.push({ pick, slot: to })
   }
-  return placePhotos(markdown, placements)
+  // 뺄 자리 — 다듬은 글의 자리를 원문 자리로 되짚어 그 자리 열쇠로 뺀 기록과 견준다(되짚지 못하면 사람이 뺀 자리로 보지 않는다).
+  const back = new Map<number, PhotoSlot>()
+  for (const from of sourceSlots) {
+    const to = mapTo(from)
+    if (to) back.set(to.line, from)
+  }
+  const drop = dropSlots(slots, placements, drops, (s) => {
+    const from = back.get(s.line)
+    return from ? { slot: from.key, nth: from.nth, heading: from.heading } : null
+  })
+  return placePhotos(markdown, placements, drop)
 }
 
 /**
@@ -434,12 +489,29 @@ function mapSlots(sourceCaptions: readonly string[], targets: readonly PhotoSlot
  * 그림 바로 아래 줄에 OSM 출처 줄, 그다음 줄에 지도의 위치 문장을 둔다 — 바로 아랫줄 설명(사이트 기능 문장)을 이 두 줄로 바꾸고, 설명 줄이
  * 없으면 두 줄을 끼운다. 출처 줄이 그림 바로 아래에 붙어 모든 내보내기(서식째 복사 · .html · 작성자 묶음 · 글자)에 따라간다.
  */
-function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot: PhotoSlot }[]): { markdown: string; applied: AppliedPhoto[] } {
-  if (!applied.length) return { markdown, applied: [] }
+function placePhotos(
+  markdown: string,
+  applied: readonly { pick: PhotoPick; slot: PhotoSlot }[],
+  drop: readonly PhotoSlot[] = [],
+): { markdown: string; applied: AppliedPhoto[] } {
+  if (!applied.length && !drop.length) return { markdown, applied: [] }
   const lines = markdown.split('\n')
   const crlf = markdown.includes('\r\n')
   const out: AppliedPhoto[] = []
-  for (const { pick, slot } of [...applied].sort((a, b) => b.slot.line - a.slot.line)) {
+  // 뺄 자리 줄과 넣을 사진을 뒤 줄부터 — 줄 번호가 밀리지 않게. 뺄 자리는 그 줄만 지운다(바로 아랫줄 설명은 글로 남는다). 앞뒤가 빈 줄이면
+  // 빈 줄 하나도 함께 지워 빈 줄이 겹치지 않게 한다.
+  const ops = [...applied.map((a) => ({ ...a, drop: false })), ...drop.map((slot) => ({ slot, pick: null, drop: true }))].sort((a, b) => b.slot.line - a.slot.line)
+  let dropped = 0
+  for (const op of ops) {
+    if (op.drop) {
+      const at = op.slot.line
+      const blank = (i: number) => i >= 0 && i < lines.length && lines[i]!.trim() === ''
+      lines.splice(at, blank(at - 1) && (blank(at + 1) || at + 1 >= lines.length) ? 2 : 1)
+      if (blank(at - 1) && at - 1 === lines.length - 1) lines.splice(at - 1, 1)
+      dropped += 1
+      continue
+    }
+    const { pick, slot } = op as { pick: PhotoPick; slot: PhotoSlot }
     const src = photoPickSrc(pick)
     const state = photoCreditState(pick)
     if (!src || state === 'missing') continue
@@ -484,7 +556,7 @@ function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot
     })
   }
   out.reverse()
-  return out.length ? { markdown: lines.join('\n'), applied: out } : { markdown, applied: [] }
+  return out.length || dropped ? { markdown: lines.join('\n'), applied: out } : { markdown, applied: [] }
 }
 
 /**

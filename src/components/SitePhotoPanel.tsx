@@ -24,6 +24,7 @@ import {
   photoSlotsOf,
   publicPhotoFields,
   publicPhotosAllowed,
+  slotDropped,
   type PhotoPick,
   type PhotoSlot,
   type PublicPhotoFields,
@@ -601,6 +602,9 @@ export default function SitePhotoPanel({
     return putPhoto(slot, pick.src, pick.alt, pick.pageUrl, pick, pubOf(pick))
   }
   const remove = (p: PhotoPick) => save({ actionId: stored.actionId, generatedAt: stored.generatedAt, op: 'remove', place: placeOf(p) })
+  /** 「이 자리 빼기」 — 사진 없이 내보낼 자리로 적는다(그 자리의 사진도 뺀다). 「다시 넣기」는 그 표시를 지운다. */
+  const dropSlot = (slot: PhotoSlot, undo = false) =>
+    save({ actionId: stored.actionId, generatedAt: stored.generatedAt, op: undo ? 'undrop' : 'drop', place: { slot: slot.key, nth: slot.nth, heading: slot.heading } })
   const off = disabled || busy
 
   /** 한 자리의 「화면 고르기」 — 화면 · 변형마다 썸네일 · 찍은 날, 고르면 크게 보이고 코스 화면만 넣는다(지도는 미리보기만). */
@@ -842,6 +846,7 @@ export default function SitePhotoPanel({
         const isScreen = picked?.origin === 'screen'
         const isMap = picked?.origin === 'osm-map'
         const canScreen = screenable(slot, picked)
+        const dropped = !picked && slotDropped({ slot: slot.key, nth: slot.nth, heading: slot.heading }, stored.photoCleared)
         // 고른 사진 · 화면 · 지도에 함께 두는 단추 — 빼기 · 바꾸기 · 화면 고르기.
         const actions = picked ? (
           <>
@@ -871,8 +876,30 @@ export default function SitePhotoPanel({
             <p className="doc-meta" style={{ margin: 0 }}>
               {slot.heading && <b>{slot.heading}</b>}
               {slot.heading && ' · '}사진 자리: {slot.alt}
+              {!picked && (
+                <>
+                  {' · '}
+                  <button
+                    type="button"
+                    className="link-btn"
+                    disabled={off}
+                    title={
+                      dropped
+                        ? '이 자리를 다시 사진 자리로 둡니다 — 내보낼 때 「[사진 넣을 자리]」 안내가 다시 나가요.'
+                        : '사진으로 채울 수 없는 자리(다른 회사 앱 화면 · 실시간 정보)를 내보낼 때 뺍니다 — 본문은 고치지 않아요.'
+                    }
+                    onClick={() => void dropSlot(slot, dropped)}
+                  >
+                    {dropped ? '다시 넣기' : '이 자리 빼기'}
+                  </button>
+                </>
+              )}
             </p>
-            {picked && isMap ? (
+            {dropped ? (
+              <p className="hint" style={{ margin: 0 }}>
+                뺀 자리 — 복사 · .html · 작성자 묶음에서 이 사진 자리 줄을 빼고 내보내요. 자동 채우기도 채우지 않아요.
+              </p>
+            ) : picked && isMap ? (
               <MapPickBrief className="photo-picked" src={picked.src} alt={picked.alt || slot.alt} {...(picked.caption ? { caption: picked.caption } : {})} auto={Boolean(picked.auto)}>
                 <span className="doc-meta" style={{ display: 'block' }}>
                   장소 목록: {picked.pageUrl} · {actions}

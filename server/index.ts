@@ -914,7 +914,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
   const b = (req.body ?? {}) as Record<string, unknown>;
   const actionId = typeof b.actionId === 'string' ? b.actionId : '';
   const generatedAt = typeof b.generatedAt === 'string' ? b.generatedAt : '';
-  const op = b.op === 'pick' || b.op === 'remove' || b.op === 'auto' || b.op === 'credit' ? b.op : null;
+  const op = b.op === 'pick' || b.op === 'remove' || b.op === 'drop' || b.op === 'undrop' || b.op === 'auto' || b.op === 'credit' ? b.op : null;
   const text = (v: unknown, max: number) => (typeof v === 'string' ? normSlotAlt(v).slice(0, max) : '');
   const count = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 20 ? v : 0);
   // 사진 자리 하나 — 장면 글자 · 몇 번째 · 소제목. 빼기와 옮기기(replaces)가 이것으로 고른 사진을 찾는다.
@@ -1010,10 +1010,39 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     return { place, src, fields: pub, pageUrl };
   };
   if (!op || (op !== 'auto' && (!actionId || !generatedAt))) {
-    res.status(400).json({ error: 'actionId · generatedAt · op(pick · remove · credit)가 필요합니다(op auto는 articles).' });
+    res.status(400).json({ error: 'actionId · generatedAt · op(pick · remove · drop · undrop · credit)가 필요합니다(op auto는 articles).' });
     return;
   }
   try {
+    // 「이 자리 빼기」(drop) — 사진 없이 내보낼 자리로 적는다(본문은 고치지 않는다 — 2026-11-05 결정 D5(d)). 그 자리의 사진도 뺀다(뺀 사진
+    // 주소를 removed에 더한다). 「다시 넣기」(undrop)는 표시만 지운다 — 뺀 사진 기록이 있으면 사람이 뺀 자리로 남고, 없으면 기록을 지운다.
+    if (op === 'drop' || op === 'undrop') {
+      const place = placeOf(b.place);
+      if (!place) {
+        res.status(400).json({ error: '뺄 사진 자리(place)가 필요합니다.' });
+        return;
+      }
+      res.json(
+        await savePhotoPicks(
+          tenant.tenantId,
+          actionId,
+          generatedAt,
+          (cur) => (op === 'drop' ? cur.filter((p) => !samePlace(p, place)) : cur),
+          (cleared, before) => {
+            const had = cleared.find((c) => samePlace(c, place));
+            const rest = cleared.filter((c) => !samePlace(c, place));
+            if (op === 'undrop') {
+              const removed = had?.removed ?? [];
+              return removed.length ? [...rest, { ...place, removed }] : rest;
+            }
+            const gone = before.filter((p) => samePlace(p, place)).map(photoRepeatKey);
+            const removed = [...new Set([...(had?.removed ?? []).filter((s) => !gone.includes(s)), ...gone])].slice(-MAX_REMOVED_SRCS);
+            return [...rest, { ...place, ...(removed.length ? { removed } : {}), drop: true as const }];
+          },
+        ),
+      );
+      return;
+    }
     if (op === 'remove') {
       const place = placeOf(b.place);
       if (!place) {

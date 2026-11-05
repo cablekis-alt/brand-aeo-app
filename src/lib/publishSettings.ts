@@ -23,6 +23,12 @@ export interface PublishSettings {
    */
   siteUrl?: string
   /**
+   * 빈 사진 자리 빼고 내보내기(2026-11-05 결정 D5(d)) — 켜면 복사 · .html · 작성자 묶음에서 사진을 넣지 못한 사진 자리 줄(「[사진 넣을 자리]
+   * …」 · 「[사진: …]」)을 뺀다. 바로 아랫줄 설명은 글로 남는다. 기본은 끔 — 켜면 작성자가 블로그에서 직접 사진을 넣을 자리 안내가 사라진다.
+   * 사람이 「이 자리 빼기」로 뺀 자리(ClearedPhotoPlace.drop)는 이 값과 상관없이 늘 뺀다.
+   */
+  dropEmptyPhotoSlots?: true
+  /**
    * 홈페이지 사진을 글에 써도 된다는 확인(브랜드별 한 번, src/lib/articlePhotos.ts). 서버만 찍는다(PUT photo-rights) — 설정 패널
    * 저장(PUT publish-settings)은 이 값을 받지 않고 저장된 값을 이어받는다.
    */
@@ -117,6 +123,7 @@ export function normalizePublishSettings(input: unknown): PublishSettings {
   if (category) out.category = category
   if (blogUrl) out.blogUrl = blogUrl
   if (siteUrl) out.siteUrl = siteUrl
+  if (raw.dropEmptyPhotoSlots === true) out.dropEmptyPhotoSlots = true
   const photoRights = photoRightsOf(raw.photoRights)
   if (photoRights) out.photoRights = photoRights
   return out

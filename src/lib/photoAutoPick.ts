@@ -36,6 +36,7 @@ import {
   canonicalPhotoSrc,
   cleanPhotoAlt,
   clearedMatches,
+  slotDropped,
   matchPhotos,
   needsPhotoCredit,
   normSlotAlt,
@@ -1018,6 +1019,8 @@ export interface AutoSlotRow {
   regionSlot?: true
   /** 자기 시설 자리에 홈페이지 사진을 비슷한 말(OWN_SYNONYMS — 「내부」 ↔ 「거실」)로만 맞춰 넣었다 — 늘 「확인 필요」. */
   synonym?: true
+  /** 사람이 「이 자리 빼기」로 사진 없이 내보내기로 한 자리(ClearedPhotoPlace.drop — state cleared). 다시 채우지 않는다. */
+  dropped?: true
   /** 화면 자리(state screen으로 시작한 자리)의 종류(src/lib/screenCapture.ts screenKindOf) — 찍는 종류(SCREEN_KINDS)가 아니면 찍지 않는 까닭. */
   screenSlot?: ScreenSlotKind
   /**
@@ -1129,6 +1132,8 @@ function clearedAt(slot: PhotoSlot, cleared: readonly ClearedPhotoPlace[] | unde
  * 입력에서 v0.4.52가 넣었던(사람이 뺀) 그 사진을 다시 고른다.
  */
 function refills(cleared: readonly ClearedPhotoPlace[], refillCleared: boolean, withScenes: boolean): boolean {
+  // 「이 자리 빼기」로 사진 없이 내보내기로 한 자리(drop)는 다시 채우지 않는다.
+  if (cleared.some((c) => c.drop)) return false
   return refillCleared && (withScenes || cleared.every((c) => (c.removed?.length ?? 0) > 0))
 }
 
@@ -1562,6 +1567,7 @@ export function autoPickPhotos(input: {
         ...(old ? { old } : {}),
         ...(screenKind ? { screenSlot: screenKind.kind } : {}),
         ...(screenKind?.viaAction ? { viaAction: true as const } : {}),
+        ...(state === 'cleared' && cleared.some((c) => c.drop) ? { dropped: true as const } : {}),
       }
       // 사람이 뺀 사진(자사 화면은 「화면 + 변형」 열쇠 — photoRepeatKey)은 다시 채우는 그 자리에 고르지 않는다.
       const gone = cleared.flatMap((c) => (c.removed ?? []).map((s) => canonicalPhotoSrc(s) ?? s))
@@ -2285,22 +2291,29 @@ export function photoStateKey(
  * — 출처 없는 공공 사진(photoCreditState missing)은 내보내지 않으므로 채움에 세지 않고 noCredit으로 따로 센다. 글을 고쳐 제안 자리로
  * 밀린(「이 자리로 옮기기」를 기다리는) 출처 없는 공공 사진도 noCredit에 센다 — 옮기기 전에 출처부터 붙여야 한다.
  */
-export function photoSlotStats(articles: readonly { markdown: string; picks?: readonly PhotoPick[] }[]): {
+export function photoSlotStats(articles: readonly { markdown: string; picks?: readonly PhotoPick[]; cleared?: readonly ClearedPhotoPlace[] }[]): {
   slots: number
   filled: number
   auto: number
   public: number
   noCredit: number
   empty: number
+  /** 사람이 「이 자리 빼기」로 뺀 자리 — 사진 자리 · 빈자리에 세지 않는다(내보낼 때 빠진다). */
+  dropped: number
 } {
   let slots = 0
   let filled = 0
   let auto = 0
   let pub = 0
   let noCredit = 0
+  let dropped = 0
   for (const a of articles) {
-    slots += photoSlotsOf(a.markdown).length
+    const all = photoSlotsOf(a.markdown)
     const match = matchPhotos(a.markdown, a.picks ?? [])
+    const placed = new Set(match.applied.map((m) => m.slot.line))
+    const gone = all.filter((s) => !placed.has(s.line) && slotDropped({ slot: s.key, nth: s.nth, heading: s.heading }, a.cleared)).length
+    dropped += gone
+    slots += all.length - gone
     noCredit += match.suggested.filter(({ pick }) => photoCreditState(pick) === 'missing').length
     for (const { pick } of match.applied) {
       const state = photoCreditState(pick)
@@ -2313,5 +2326,5 @@ export function photoSlotStats(articles: readonly { markdown: string; picks?: re
       if (state === 'public') pub += 1
     }
   }
-  return { slots, filled, auto, public: pub, noCredit, empty: slots - filled }
+  return { slots, filled, auto, public: pub, noCredit, empty: slots - filled, dropped }
 }

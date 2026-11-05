@@ -1,6 +1,6 @@
 import type { StoredDraft, TenantSummary } from './api'
 import { renderEvidenceMarkdown } from './answerEvidence'
-import { exportPhotoPicks, withPhotos, withPhotosFromSource, type AppliedPhoto } from './articlePhotos'
+import { exportPhotoPicks, withPhotos, withPhotosFromSource, type AppliedPhoto, type PhotoSlotDrops } from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
 import type { PublishSettings } from './publishSettings'
 
@@ -76,15 +76,31 @@ export function channelCopyOf(adapted: { markdown: string; style: string }, ctx:
 export function channelArticleParts(
   adapted: { markdown: string; style: string },
   ctx: ArticleContext,
-  source?: { markdown: string; picks: StoredDraft['photos'] },
+  source?: { markdown: string; picks: StoredDraft['photos']; cleared?: StoredDraft['photoCleared'] },
 ): { markdown: string; photos: AppliedPhoto[] } {
   if (adapted.style !== 'blog') return { markdown: adapted.markdown, photos: [] }
   // 글 끝은 사진을 넣기 전 글로 센다(publishArticleParts와 같은 이유).
   const tail = articleTailMarkdown(adapted.markdown, ctx)
   const { markdown: shown, applied } = source
-    ? withPhotosFromSource(adapted.markdown, source.markdown, exportPhotoPicks(ctx.settings, ctx.brand.industry, source.picks))
+    ? withPhotosFromSource(
+        adapted.markdown,
+        source.markdown,
+        exportPhotoPicks(ctx.settings, ctx.brand.industry, source.picks),
+        photoSlotDropsOf({ photoCleared: source.cleared }, ctx.settings),
+      )
     : { markdown: adapted.markdown, applied: [] }
   return { markdown: tail ? `${shown.trimEnd()}\n\n${tail}\n` : shown, photos: applied }
+}
+
+/**
+ * 내보내기에서 뺄 사진 자리 — 사람이 「이 자리 빼기」로 뺀 자리(늘)와, 발행 설정 「빈 사진 자리 빼고 내보내기」를 켰으면 사진을 넣지 못한
+ * 자리 모두. 블로그 문체로 다듬은 글(channelArticleParts)도 같다. 다듬지 않은 채널 글(위키 · 커뮤니티 …)은 사진을 넣지 않으므로 그대로다.
+ */
+export function photoSlotDropsOf(stored: Pick<StoredDraft, 'photoCleared'>, settings: PublishSettings | null | undefined): PhotoSlotDrops {
+  return {
+    ...(stored.photoCleared?.some((c) => c.drop) ? { dropped: stored.photoCleared } : {}),
+    ...(settings?.dropEmptyPhotoSlots ? { empty: true } : {}),
+  }
 }
 
 export function publishArticleOf(stored: StoredDraft, ctx: ArticleContext): string {
@@ -98,8 +114,8 @@ export function publishArticleParts(stored: StoredDraft, ctx: ArticleContext): {
   // 글 끝은 사진을 넣기 전 본문으로 센다 — 브랜드 사이트의 사진 주소가 「본문에 이미 공식 사이트 링크가 있다」로 잡히지 않게.
   const tail = articleTailMarkdown(`${body}\n${evidence}`, ctx)
   // 사진 사용 확인(의료 업종은 의료광고 확인까지)이 없으면 고른 사진도 넣지 않는다 — 서버의 사진 받기와 같은 기준. 출처 없는 공공 사진 ·
-  // 공공 사진 사용 확인 전의 공공 사진도 뺀다(exportPhotoPicks).
-  const { markdown: shown, applied } = withPhotos(body, exportPhotoPicks(ctx.settings, ctx.brand.industry, stored.photos))
+  // 공공 사진 사용 확인 전의 공공 사진도 뺀다(exportPhotoPicks). 사람이 뺀 자리 · (설정을 켰으면) 빈 사진 자리 줄은 뺀다(photoSlotDropsOf).
+  const { markdown: shown, applied } = withPhotos(body, exportPhotoPicks(ctx.settings, ctx.brand.industry, stored.photos), photoSlotDropsOf(stored, ctx.settings))
   const extra = [evidence, tail].filter(Boolean)
   return { markdown: extra.length ? `${[shown.trimEnd(), ...extra].join('\n\n')}\n` : shown, photos: applied }
 }

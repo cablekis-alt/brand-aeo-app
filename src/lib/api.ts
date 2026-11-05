@@ -1693,7 +1693,7 @@ export async function saveDraftPhoto(
   tenantId: string,
   body:
     | { actionId: string; generatedAt: string; op: 'pick'; pick: PhotoPickInput; replaces?: PhotoPlace }
-    | { actionId: string; generatedAt: string; op: 'remove'; place: PhotoPlace }
+    | { actionId: string; generatedAt: string; op: 'remove' | 'drop' | 'undrop'; place: PhotoPlace }
     | ({ actionId: string; generatedAt: string; op: 'credit' } & PhotoCreditInput),
 ): Promise<StoredDraft & { photoNote?: string }> {
   const res = await fetch(`/api/content-draft/${encodeURIComponent(tenantId)}/photos`, {
