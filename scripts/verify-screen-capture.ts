@@ -416,12 +416,19 @@ try {
   const profile = screenProfileFor(['gunsan.webforai.kr', 'all-about-gunsan.vercel.app'])
   const course = profile?.screens.find((s) => s.id === 'course')
   const map = profile?.screens.find((s) => s.id === 'map')
-  ok('자사 사이트에 프로필 호스트가 있으면 그 프로필(코스 5 · 지도 6)', profile?.host === 'gunsan.webforai.kr' && course?.variants.length === 5 && map?.variants.length === 6)
+  // 예전 기대값은 코스 5였다 — 2026-11-05 결정 D5(b)로 「아이 둘과」(kids2 — 아이와의 둘째 변형)를 더했다.
+  ok('자사 사이트에 프로필 호스트가 있으면 그 프로필(코스 6 · 지도 6)', profile?.host === 'gunsan.webforai.kr' && course?.variants.length === 6 && map?.variants.length === 6)
   ok('ownedDomains의 https:// · www. · 끝 / 를 걷고 찾는다', screenProfileFor(['https://www.gunsan.webforai.kr/']) === profile)
   ok('상위 도메인 · 다른 사이트 · 없음이면 프로필이 없다', screenProfileFor(['webforai.kr']) === null && screenProfileFor(['stay.example']) === null && screenProfileFor(undefined) === null)
   const allUrls = SCREEN_PROFILES.flatMap((p) => p.screens.flatMap((s) => s.variants.map((v) => screenUrl(p, v))))
-  // 예전 기대값은 11(코스 5 + 지도 6)이었다 — 4단계에서 「아이와 함께」 가이드 변형 하나를 더했다. 장소 안내는 표에 변형이 없다(사이트 장소마다).
-  ok('모든 변형 주소는 https · 프로필 호스트', allUrls.length === 12 && allUrls.every((u) => new URL(u).protocol === 'https:' && new URL(u).host === 'gunsan.webforai.kr'))
+  // 예전 기대값은 11(코스 5 + 지도 6)이었다 — 4단계에서 「아이와 함께」 가이드 변형 하나를 더했다(12), 2026-11-05 「아이 둘과」 코스 변형(13).
+  // 장소 안내는 표에 변형이 없다(사이트 장소마다).
+  ok('모든 변형 주소는 https · 프로필 호스트', allUrls.length === 13 && allUrls.every((u) => new URL(u).protocol === 'https:' && new URL(u).host === 'gunsan.webforai.kr'))
+  ok(
+    '「아이 둘과」 — 아이 나이 목록(kids=4,9) · 어른 2 · 아이와의 둘째 변형(extra)',
+    screenUrl(profile!, course!.variants.find((v) => v.id === 'kids2')!) === 'https://gunsan.webforai.kr/plan/?with=kids&adults=2&kids=4,9' &&
+      course!.variants.find((v) => v.id === 'kids2')!.extra === true,
+  )
   ok(
     '코스 변형은 /plan/ 미리 채우기 쿼리만(보내는 값 없음)',
     (course?.variants ?? []).every((v) => v.path.startsWith('/plan/')) &&
@@ -665,11 +672,15 @@ try {
     screenKindOf("가상각 웹사이트의 '아이와 함께' 안내 화면", profile, '가상각').screen?.id === 'kids-guide' && kindOf('가상각 웹사이트의 아이와 함께 안내 화면') === 'guide' &&
       kindOf("가상각 사이트의 '아이와 함께' 안내 메뉴 화면") === 'guide',
   )
+  // 예전 기대값은 브랜드 지도에서 장소를 누르는 두 자리도 action이었다 — 2026-11-05 결정 D5(b)로 그 장소의 장소 안내(viaAction, 확인 필요)로 대신한다.
+  const viaActionOf = (t: string) => screenKindOf(t, profile, '가상각')
   ok(
-    '장소 안내 낱말이 있어도 다른 종류를 뺏지 않는다 — 누르기 · 결과 화면은 action, 화면 이름이 있으면 그 화면, 다른 회사는 other',
-    kindOf("가상각 '지도에서 찾기' 화면에서 가상박물관을 선택해 이용시간과 입장료가 보이는 모습") === 'action' &&
+    '장소 안내 낱말이 있어도 다른 종류를 뺏지 않는다 — 브랜드 지도에서 장소를 누르는 자리는 장소 안내(viaAction), 브랜드 없는 결과 화면은 action, 화면 이름이 있으면 그 화면, 다른 회사는 other',
+    viaActionOf("가상각 '지도에서 찾기' 화면에서 가상박물관을 선택해 이용시간과 입장료가 보이는 모습").kind === 'place' &&
+      viaActionOf("가상각 '지도에서 찾기' 화면에서 가상박물관을 선택해 이용시간과 입장료가 보이는 모습").viaAction === true &&
       kindOf('코스 결과 화면에서 한 장소를 눌러 여는 시간과 요금, 가는 길이 함께 표시된 모습') === 'action' &&
-      kindOf('가상각 웹사이트의 지도에서 찾기 화면에서 가상박물관을 눌러 여는 시간과 요금이 함께 보이는 장면') === 'action' &&
+      viaActionOf('가상각 웹사이트의 지도에서 찾기 화면에서 가상박물관을 눌러 여는 시간과 요금이 함께 보이는 장면').viaAction === true &&
+      kindOf('가상각 웹사이트의 지도에서 찾기 화면에서 가상박물관 위치를 눌러 보는 모습') === 'action' &&
       kindOf('가상각 웹사이트의 지도에서 찾기 화면에 가상박물관의 이용시간이 표시된 모습') === 'map' &&
       kindOf('가상각 웹사이트의 AI 코스 만들기 화면에서 입장료가 없는 곳을 고르는 모습') === 'course' &&
       kindOf('네이버 플레이스 화면에서 가상박물관 이용시간이 보이는 모습') === 'other' && kindOf('가상각 웹사이트의 지도에서 찾기 화면') === 'map',
@@ -742,7 +753,7 @@ try {
   // 연인·친구를 더했다).
   ok(
     '아이 · 부모님 코스 자리는 그 조건 다음 기본 — 다른 조건은 쓰지 않는다(「아이콘」은 아이가 아니다) · 조건을 말하지 않으면 기본 다음 조건',
-    tiersOf(course!, '아이와 함께 AI 코스 만들기 조건을 고르는 모습') === 'kids | default (prefer)' && tiersOf(course!, '부모님과 가는 여행의 AI 코스 만들기 화면') === 'parents | default (prefer)' &&
+    tiersOf(course!, '아이와 함께 AI 코스 만들기 조건을 고르는 모습') === 'kids | kids2 | default (prefer)' && tiersOf(course!, '부모님과 가는 여행의 AI 코스 만들기 화면') === 'parents | default (prefer)' &&
       tiersOf(course!, 'AI 코스 만들기 화면에서 조건을 고르는 모습') === 'default | kids,parents,solo,couple (general)' &&
       tiersOf(course!, '아이콘이 보이는 AI 코스 만들기 화면') === 'default | kids,parents,solo,couple (general)',
   )
@@ -752,7 +763,7 @@ try {
   // 동행의 변형이 먼저고, 쓸 수 없으면 기본이다(다른 동행의 변형은 쓰지 않는다).
   ok(
     '코스 조건은 소제목 · 설명 줄도 본다 — 「아이와 함께」 · 「부모님」 · 「혼자」 · 「연인 · 친구 · 커플」은 그 조건 다음 기본',
-    tiersOf(course!, COURSE_TEXT, [], "가상각 '아이와 함께' 안내로 시간표를 짜면 어떻게 되나요?") === 'kids | default (prefer)' &&
+    tiersOf(course!, COURSE_TEXT, [], "가상각 '아이와 함께' 안내로 시간표를 짜면 어떻게 되나요?") === 'kids | kids2 | default (prefer)' &&
       tiersOf(course!, COURSE_TEXT, [], '1박 2일 일정\n부모님과 함께라면 어르신 인원을 넣어 보세요.') === 'parents | default (prefer)' &&
       tiersOf(course!, COURSE_TEXT, [], '가상각으로 계절별 혼자 코스 짜기') === 'solo | default (prefer)' &&
       tiersOf(course!, COURSE_TEXT, [], '가상각으로 커플·무장애 동선 짜기') === 'couple | default (prefer)' &&
@@ -772,8 +783,8 @@ try {
   // 「혼자 하는 · 하기 좋은 · 해도 좋은」 뒤에 여행 · 코스 · 일정이 오면 혼자다(「혼자 하기 어려운 일정 짜기」는 아니다)(검토 2026-11-04).
   ok(
     '「어린이 친구들」 · 「아이 친구」는 아이와만 · 「혼자 하는 여행」 · 「혼자 하기 좋은 여행」 · 「혼자 해도 좋은 1박」은 혼자',
-    companionOf('어린이 친구들이 좋아하는 체험 코스') === 'kids | default (prefer)' && companionOf('아이 친구 가족과 함께 가는 군산') === 'kids | default (prefer)' &&
-      companionOf('아이의 친구와 함께') === 'kids | default (prefer)' &&
+    companionOf('어린이 친구들이 좋아하는 체험 코스') === 'kids | kids2 | default (prefer)' && companionOf('아이 친구 가족과 함께 가는 군산') === 'kids | kids2 | default (prefer)' &&
+      companionOf('아이의 친구와 함께') === 'kids | kids2 | default (prefer)' &&
       ['혼자 하는 군산 여행 코스', '혼자 하기 좋은 군산 여행', '혼자 해도 좋은 군산 1박 2일'].every((t) => companionOf(t) === 'solo | default (prefer)') &&
       companionOf('혼자 하기 어려운 일정 짜기') === 'default | kids,parents,solo,couple (general)',
   )
@@ -799,8 +810,11 @@ try {
     companionCases.every(([context, named]) => {
       const c = screenVariantChoice(course!, COURSE_TEXT, [], context)
       const used = c.tiers.flat().map((v) => v.id)
-      return c.by === 'prefer' && used.every((id) => id === 'default' || named.includes(id)) && named.every((id) => c.tiers[0]!.some((v) => v.id === id))
-    }) && course!.variants.filter((v) => v.prefer).length === 4,
+      // 같은 동행의 둘째 변형(kids2 — extra)은 그 동행의 변형이다.
+      const companion = (id: string) => course!.variants.find((v) => v.id === id && !v.extra) ?? course!.variants.find((v) => v.id === id)
+      const sameAs = (id: string) => (id === 'kids2' ? 'kids' : companion(id)?.id)
+      return c.by === 'prefer' && used.every((id) => id === 'default' || named.includes(sameAs(id) ?? id)) && named.every((id) => c.tiers[0]!.some((v) => v.id === id))
+    }) && course!.variants.filter((v) => v.prefer && !v.extra).length === 4,
   )
   ok('지도 권역은 소제목 · 설명 줄을 보지 않는다(장면 글자만)', tiersOf(map!, '지도에서 찾기 화면에 관광지 위치가 표시된 모습', [], '선유도 가는 길') === 'default,r-원도심,r-은파,r-고군산,r-금강,r-새만금-비응')
   const exportPick = { src: appSrc, origin: 'screen' as const, screenId: 'course', variantId: 'kids' }

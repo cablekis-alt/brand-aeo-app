@@ -734,6 +734,35 @@ ok(
   '숙소 · 브랜드 「근처」 골목 자리와 설명 줄만 숙소를 말하는 골목 자리 — 동네 자리라 지역 사진을 견준다(작성자마다 골목 사진)',
   nearSlots.every((_, i) => rowsOf(nearRun, `nr${i}`)[0]!.regionSlot === true && rowsOf(nearRun, `nr${i}`)[0]!.pick?.src === alley.src),
 )
+// (1-c) 2026-11-05 결정 D5(b) — 자기 시설 자리는 비슷한 말로 홈페이지 사진을 맞춘다(장면 종류가 맞을 때만 · 확인 필요).
+const STAY_PAGE = 'https://stay.example/'
+const living: AutoCandidate = { src: 'https://stay.example/img/living.jpg', alt: '목재 서까래 천장과 미닫이창, 테이블이 있는 거실 공간', pageUrl: STAY_PAGE }
+const nightGarden: AutoCandidate = { src: 'https://stay.example/img/night.jpg', alt: '창밖으로 조명을 비춘 정원 나무와 석등이 보이는 풍경', pageUrl: STAY_PAGE }
+const stayScenes = freshScenes([
+  [living, S({ setting: 'interior', time: 'unknown', text: '서까래 천장 아래 거실', tags: ['거실', '서까래'] })],
+  [nightGarden, S({ setting: 'interior', time: 'dusk', text: '창밖으로 보이는 조명 켠 정원', tags: ['정원', '창'] })],
+])
+const stayDoc = (id: string, slot: string, caption = '', group = id) => doc(id, ['## 1. 머무는 곳', '', `![${slot}](#image-slot)`, ...(caption ? [`*${caption}*`] : [])], { group })
+const synRun = (articles: AutoArticle[], sceneMap: Map<string, PhotoScene> | undefined = stayScenes) =>
+  autoPickPhotos({ articles, candidates: [living, nightGarden], brandName: '스테이,머뭄', places: [], ...(sceneMap ? { scenes: sceneMap } : {}) })
+const syn = synRun([
+  stayDoc('sy1', '스테이,머뭄 독채 내부 공간 모습'),
+  stayDoc('sy2', '오래된 일본식 가옥의 목조 창호와 실내가 보이는 장면', '스테이,머뭄 독채는 1920년대 가옥을 고쳤습니다.'),
+  stayDoc('sy3', '스테이,머뭄 독채 앞의 아담한 정원 풍경'),
+])
+ok(
+  '자기 시설 자리 — 「독채 내부」 · 「목조 창호와 실내」 자리에 거실 사진(비슷한 말 · 장면 실내 · 확인 필요)',
+  rowsOf(syn, 'sy1')[0]!.pick?.src === living.src && rowsOf(syn, 'sy1')[0]!.synonym === true && rowsOf(syn, 'sy1')[0]!.review === true &&
+    rowsOf(syn, 'sy2')[0]!.pick?.src === living.src && rowsOf(syn, 'sy2')[0]!.synonym === true,
+)
+ok('자기 시설 정원(바깥) 자리에 창 너머 정원(실내 · 해 질 무렵) 사진은 넣지 않는다 — 장면 종류가 다르다', rowsOf(syn, 'sy3')[0]!.state !== 'filled')
+const synUnread = synRun([stayDoc('su1', '스테이,머뭄 독채 내부 공간 모습')], new Map())
+ok(
+  '장면을 아직 읽지 않은 사진은 비슷한 말로 넣지 않고 읽기를 청한다',
+  rowsOf(synUnread, 'su1')[0]!.state !== 'filled' && synUnread.sceneWanted.some((w) => w.src === living.src),
+)
+const notOwn = synRun([stayDoc('no1', '군산 구도심 카페 내부 공간 모습')])
+ok('자기 시설 자리가 아니면 비슷한 말을 쓰지 않는다(다른 곳의 「내부」 자리에 숙소 거실 사진 안 넣음)', rowsOf(notOwn, 'no1')[0]!.state !== 'filled')
 const frontAlley = regionRun([captioned('fa1', '스테이,머뭄 독채 앞 골목', '대문을 나서면 바로 골목입니다.')], { brandName: '스테이,머뭄', places: ['근대역사박물관'], regionCandidates: [alley], scenes: namedScenes })
 ok('「독채 앞 골목」은 숙소 앞이라 자기 시설 그대로(근처 · 주변만 동네 자리)', !rowsOf(frontAlley, 'fa1')[0]!.regionSlot && rowsOf(frontAlley, 'fa1')[0]!.state !== 'filled')
 // (2) 장면을 아직 읽지 않은 후보가 남으면 비슷한 사진을 넣지 않는다 — 맞는 사진이 있는지 모른다.

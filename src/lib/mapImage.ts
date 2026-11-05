@@ -327,6 +327,11 @@ export interface MapVariant {
   ids: string[]
   markers: MapMarker[]
   tier: number
+  /**
+   * 다른 권역 묶음(tier 2)의 권역 — 장면 글자에 장소 이름이 없는 자리에만, tier 0 · 1을 이 글 · 작성자에게 모두 썼을 때 쓴다(2026-11-05
+   * 결정 D5(b) — 같은 작성자가 지도 자리를 여러 번 써서 비던 자리).
+   */
+  region?: string
 }
 
 export interface MapChoice {
@@ -538,9 +543,46 @@ function regionIn(text: string, regions: readonly MapRegion[]): string | null {
 
 /** 장소가 가장 많은 권역(관광지 수) — 이름도 권역도 없는 자리의 권역. */
 function busiestRegion(points: readonly MapPoint[]): string | null {
+  return regionsByAttractions(points)[0] ?? null
+}
+
+/** 권역들 — 공군기지 상자 밖 관광지가 많은 차례(같으면 목록에 먼저 나온 권역). */
+function regionsByAttractions(points: readonly MapPoint[]): string[] {
   const count = new Map<string, number>()
   for (const p of points) if (p.kind === 'attraction' && !inMapAvoid(p)) count.set(p.region, (count.get(p.region) ?? 0) + 1)
-  return [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+  return [...count.entries()].sort((a, b) => b[1] - a[1]).map(([r]) => r)
+}
+
+/**
+ * 이름이 없는 자리의 묶음 — 기준점(center)을 맨 앞에, 종류마다 PER_KIND곳. 기준점이 설명 줄 · 소제목 · 절 글자의 장소가 아니면(anchored
+ * false) 관광지는 사이트 목록 순서로 그 권역 · NEAR_M 안에서, 아니면 가까운 차례.
+ */
+function aroundCenter(
+  usable: readonly MapPoint[],
+  center: MapPoint,
+  region: string | null,
+  kinds: readonly MapPointKind[],
+  anchored: boolean,
+  snack: boolean,
+): MapPoint[] {
+  const list = [center]
+  const skip = new Set<string>([center.id])
+  const per = PER_KIND[kinds.length] ?? 3
+  for (const k of kinds) {
+    const room = center.kind === k ? per - 1 : per
+    const picked: MapPoint[] = []
+    if (!anchored && k === 'attraction') {
+      for (const p of usable) {
+        if (picked.length >= room) break
+        if (p.kind === 'attraction' && p.region === region && !inMapAvoid(p) && !skip.has(p.id) && mapDistanceM(center, p) <= NEAR_M && !sameSpotIn(list, p) && !sameSpotIn(picked, p)) picked.push(p)
+      }
+    } else picked.push(...nearest(usable, center, k, region, skip, room, list, k === 'food' && snack ? (q) => SNACK_NAME.test(q.name) : undefined))
+    for (const p of picked) {
+      list.push(p)
+      skip.add(p.id)
+    }
+  }
+  return list
 }
 
 /**
@@ -655,6 +697,7 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
   let anchor: MapChoice['anchor']
   let region: string | null = null
   let snack = false
+  let otherBundle: { list: MapPoint[]; region: string } | null = null
   const why: string[] = []
   if (namedAll.length) {
     const nearby = NEARBY_WORDS.test(slot.key) || altKinds.length > 0
@@ -710,21 +753,17 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
     }
     if (!center) return { miss: 'no-markers', why: `${why.join(' · ')} — 기준 장소가 없음` }
     // 기준점은 표지 맨 앞 — 둘레를 고른 기준이 지도와 까닭에 보이게(관광지 자리면 사이트 목록의 첫 관광지라 예전과 같은 묶음이다).
-    list = [center]
-    const skip = new Set<string>([center.id])
-    const per = PER_KIND[kinds.length] ?? 3
-    for (const k of kinds) {
-      const room = center.kind === k ? per - 1 : per
-      const picked: MapPoint[] = []
-      if (!anchor && k === 'attraction') {
-        for (const p of usable) {
-          if (picked.length >= room) break
-          if (p.kind === 'attraction' && p.region === region && !inMapAvoid(p) && !skip.has(p.id) && mapDistanceM(center, p) <= NEAR_M && !sameSpotIn(list, p) && !sameSpotIn(picked, p)) picked.push(p)
-        }
-      } else picked.push(...nearest(usable, center, k, region, skip, room, list, k === 'food' && snack ? (q) => SNACK_NAME.test(q.name) : undefined))
-      for (const p of picked) {
-        list.push(p)
-        skip.add(p.id)
+    list = aroundCenter(usable, center, region, kinds, Boolean(anchor), snack)
+    // 다른 권역 묶음(tier 2) — 이름이 없는 자리라 다른 권역의 기본 묶음(관광지가 많은 권역부터, 그 권역의 첫 관광지 둘레)도 쓸 수 있다.
+    // 글자가 권역을 말한 자리(by region)는 그 권역만.
+    for (const other of by === 'region' ? [] : regionsByAttractions(usable)) {
+      if (other === region) continue
+      const c = usable.find((p) => p.region === other && p.kind === 'attraction' && !inMapAvoid(p))
+      if (!c) continue
+      const alt = aroundCenter(usable, c, other, kinds, false, snack)
+      if (kinds.some((k) => alt.some((p) => p.kind === k))) {
+        otherBundle = { list: alt, region: other }
+        break
       }
     }
     why.push(`${kinds.map((k) => kindText(k, snack)).join(' · ')} ${!anchor && kinds.includes('attraction') ? '(관광지는 사이트 목록 순서)' : '(가까운 차례)'}`)
@@ -743,6 +782,10 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
     const skip = new Set(list.map((p) => p.id))
     const more = nearest(usable, centroid(list), 'attraction', region ?? list[0]!.region, skip, WIDER_ADD, list, (p) => !inFrame(p))
     if (more.length) variants.push(variantOf([...list, ...more], 1, names))
+  }
+  if (otherBundle) {
+    const v = variantOf(otherBundle.list, 2, names)
+    if (!variants.some((x) => x.key === v.key)) variants.push({ ...v, region: otherBundle.region })
   }
   return {
     by,

@@ -997,8 +997,12 @@ const notStolen = placeRun(
   [placeShotOf('가상박물관', 21)],
 ).articles[0]!.rows
 ok(
-  '지도에서 고르기 · 코스 결과 자리는 장소 안내가 아니다(action — 비워 둠), 코스 자리는 그대로 코스',
-  notStolen[0]!.screenSlot === 'action' && notStolen[0]!.state === 'screen' && notStolen[1]!.screenSlot === 'action' && notStolen[1]!.state === 'screen' &&
+  // 2026-11-05 결정 D5(b) — 브랜드 사이트에서 장소를 고르는(누르는) 자리는 그 장소 안내로 대신한다(늘 「확인 필요」). 브랜드를 말하지 않는
+  // 코스 결과 자리는 전처럼 비워 둔다.
+  '브랜드 지도에서 장소를 고르는 자리는 그 장소 안내(확인 필요) · 브랜드를 말하지 않는 코스 결과 자리는 비워 둠(action) · 코스 자리는 그대로 코스',
+  notStolen[0]!.screenSlot === 'place' && notStolen[0]!.viaAction === true && notStolen[0]!.state === 'filled' && notStolen[0]!.review === true &&
+    notStolen[0]!.pick?.screenId === 'place-info' &&
+    notStolen[1]!.screenSlot === 'action' && notStolen[1]!.state === 'screen' &&
     notStolen[2]!.screenSlot === 'course' && notStolen[2]!.pick?.screenId === 'course',
 )
 // 다른 기관 사이트를 말하는 화면 자리 · 사이트를 말하지 않는 장소 안내 자리에 자사 화면을 넣지 않는다 — 예전에는 안내 낱말(관람시간 · 입장료)만
@@ -1200,6 +1204,42 @@ ok(
   '장소 사전을 주어도 코스 · 지도 · 목록에 없는 화면 자리의 결과는 같다',
   JSON.stringify(screenRun([article('s1', mdScreen)], { available: true, shots: ALL_SHOTS }, { places: PLACE_PAGES.map((p) => p.name), placePages: PLACE_PAGES }).articles) ===
     JSON.stringify(screenRun([article('s1', mdScreen)], { available: true, shots: ALL_SHOTS }, { places: PLACE_PAGES.map((p) => p.name) }).articles),
+)
+
+// 19) 2026-11-05 결정 D5(b) — 군산각 남은 자리.
+// (1) 장면 글자에 장소 이름이 없는 지도 자리 — 같은 작성자가 처음 · 넓힌 묶음을 모두 썼으면 다른 권역의 기본 묶음(tier 2, 확인 필요).
+const OTHER_POINTS = [...MAP_POINTS, MP('m8', '가상호수공원', 'attraction', 126.735, 35.958, '은파'), MP('m9', '가상물빛다리', 'attraction', 126.738, 35.956, '은파')]
+const UNNAMED_MAP = `${SB} 웹사이트의 지도에서 찾기 화면에 장소 위치가 표시된 모습`
+const mdUnnamed = ['## 1. 지도', '', `![${UNNAMED_MAP}](#image-slot)`, '*지도에서 찾기로 장소 위치를 보고 동선을 묶어 봅니다.*']
+const thrice = mapRun(['a', 'b', 'c', 'd'].map((x) => article(`un-${x}`, mdUnnamed, { group: 'w1' })), { available: true, drawn: [], points: OTHER_POINTS })
+const tiers = thrice.articles.map((a) => a.rows[0]!.mapPick?.tier ?? null)
+const tier2 = thrice.articles.map((a) => a.rows[0]!).find((r) => r.mapPick?.tier === 2)
+ok(
+  '이름 없는 지도 자리 — 같은 작성자가 같은 권역 묶음을 다 썼으면 다른 권역(은파) 묶음 · 까닭 줄 · 그다음은 비워 둠(used)',
+  tiers[0] === 0 && tiers.includes(2) && tier2?.mapPick?.otherRegion === '은파' && tier2.review === true &&
+    tier2.mapPick.ids.every((id) => OTHER_POINTS.find((p) => p.id === id)?.region === '은파') &&
+    mapPickReason(tier2.mapPick).some((l) => l.includes('다른 권역(은파) 묶음')) && thrice.articles[3]!.rows[0]!.state === 'used',
+)
+const saidRegion = mapRun(['a', 'b', 'c'].map((x) => article(`sr-${x}`, ['## 1. 지도', '', `![${SB} 웹사이트의 지도에서 찾기 화면에 원도심 장소 위치가 표시된 모습](#image-slot)`], { group: 'w1' })), {
+  available: true,
+  drawn: [],
+  points: OTHER_POINTS,
+})
+ok('글자가 권역을 말한 지도 자리(원도심)는 다른 권역 묶음을 쓰지 않는다', saidRegion.articles.every((a) => a.rows[0]!.mapPick?.tier !== 2))
+// (2) 브랜드 지도에서 장소를 눌러 이용시간 · 요금을 보는 자리 — 장소 안내(확인 필요), 같은 작성자가 그 장소 안내를 이미 썼으면 그 장소 한 곳의 지도.
+const ACTION_SLOT = `${SB} 웹사이트의 지도에서 찾기 화면에서 가상박물관을 눌러 여는 시간과 요금이 함께 보이는 장면`
+const PLACE_POINTS = [...MAP_POINTS, MP('m10', '가상박물관', 'attraction', 126.7131, 35.9901)]
+const actionTwice = placeRun(
+  ['x1', 'x2'].map((id) => article(id, ['## 1. 요금', '', `![${ACTION_SLOT}](#image-slot)`, PLACE_CAPTION], { group: 'w1' })),
+  [placeShotOf('가상박물관', 21)],
+  { maps: { available: true, points: PLACE_POINTS, pointsVersion: MAP_VERSION, drawn: [] } },
+)
+const [act1, act2] = actionTwice.articles.map((a) => a.rows[0]!)
+ok(
+  '누르기 화면 자리 — 첫 글은 그 장소 안내(확인 필요) · 같은 작성자의 둘째 글은 그 장소 한 곳을 그린 지도(viaAction · 확인 필요)',
+  act1!.state === 'filled' && act1!.viaAction === true && act1!.review === true && act1!.pick?.variantId === '가상박물관' &&
+    act2!.state === 'undrawn' && act2!.mapPick?.viaAction === true && act2!.mapPick.ids[0] === 'm10' && act2!.review === true &&
+    mapPickReason(act2!.mapPick).some((l) => l.includes('장소를 눌러 보는 화면 자리')),
 )
 
 let failed = 0

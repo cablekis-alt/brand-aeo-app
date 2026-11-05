@@ -56,6 +56,11 @@ export interface ScreenVariant {
   places?: readonly string[]
   /** 자리 글자가 이 조건을 말하면(「아이」 · 「부모님」 · 「혼자」 · 「연인」) 이 변형을 먼저 쓴다(코스 조건 변형 — screenVariantChoice). */
   prefer?: RegExp
+  /**
+   * 같은 조건의 둘째 변형 — 그 조건의 첫 변형(extra가 없는 것)을 이 글 · 작성자에게 이미 썼을 때만 쓴다(두 번째 묶음이라 「확인 필요」).
+   * 조건을 말하지 않는 자리에는 쓰지 않는다(2026-11-05 결정 D5(b) — 「아이와」 코스 자리가 같은 작성자에게 둘째로 나와 비던 자리).
+   */
+  extra?: true
 }
 
 /** 찍을 화면 하나. */
@@ -183,6 +188,8 @@ const GUNSAN_SOLO =
  */
 const GUNSAN_COUPLE =
   /연인(?!원)|커플|(?<!업)데이트|신혼|부부(?!터)|(?<!플러스\s?|(?:아이|어린이|자녀|아들|딸|꼬마|유아|초등학생)(?:의)?\s?)친구(?!\s?(?:같|처럼|추가|맺|신청|등록))|둘이서|둘만|둘이\s?(?:걷|걸|가|간|갈|떠나|여행|나란히|함께)|두\s?사람이?\s?(?:함께|나란히|걷|걸)|우정\s?여행/
+/** 「아이와」 칸을 말하는 낱말 — 「아이」로 시작하지만 사람이 아닌 낱말(아이보리 · 아이콘 …)은 뺀다. */
+const GUNSAN_KIDS = /아이(?!보리|콘|디어|스|폰|템)|어린이|자녀/
 /** 군산각 날씨 카드 — 실시간 날씨 · 점수 · 밤에는 달이 그려져 오래 남는 블로그 그림에 맞지 않는다. */
 const GUNSAN_WEATHER = '[data-wx]'
 /**
@@ -239,7 +246,9 @@ export const SCREEN_PROFILES: readonly ScreenProfile[] = [
         hide: ['.trp-handed-w', GUNSAN_WEATHER],
         variants: [
           { id: 'default', label: '기본', path: '/plan/', scrollTo: '#trp-form' },
-          { id: 'kids', label: '아이와', path: '/plan/?with=kids&kids=7', scrollTo: GUNSAN_COURSE_STEP, prefer: /아이(?!보리|콘|디어|스|폰|템)|어린이|자녀/ },
+          { id: 'kids', label: '아이와', path: '/plan/?with=kids&kids=7', scrollTo: GUNSAN_COURSE_STEP, prefer: GUNSAN_KIDS },
+          // 사이트의 kids는 아이 나이 목록이다(plan.js — 쉼표로, 6명 · 17세까지, 2026-11-05 확인). 어른 2 · 아이 둘(4 · 9세).
+          { id: 'kids2', label: '아이 둘과', path: '/plan/?with=kids&adults=2&kids=4,9', scrollTo: GUNSAN_COURSE_STEP, prefer: GUNSAN_KIDS, extra: true },
           { id: 'parents', label: '부모님', path: '/plan/?with=parents&adults=3&seniors=2', scrollTo: GUNSAN_COURSE_STEP, prefer: /부모님|어르신|효도/ },
           { id: 'solo', label: '혼자', path: '/plan/?with=solo&adults=1', scrollTo: GUNSAN_COURSE_STEP, prefer: GUNSAN_SOLO },
           { id: 'couple', label: '연인·친구', path: '/plan/?with=couple&adults=2', scrollTo: GUNSAN_COURSE_STEP, prefer: GUNSAN_COUPLE },
@@ -611,10 +620,23 @@ export const SCREEN_SLOT_KIND_TEXT: Record<ScreenSlotKind, string> = {
  * profile은 브랜드의 화면 프로필(screenProfileFor) — 없으면 none. 흔한 이름의 화면(commonLabel — 장소 안내 · 가이드)은 장면 글자가 브랜드
  * 이름(brandName)이나 프로필 호스트를 말할 때만 그 화면이고, 아니면 다른 기관 사이트 낱말(OTHER_SITE)이 있으면 other, 없으면 unowned다.
  */
-export function screenKindOf(text: string, profile: ScreenProfile | null, brandName?: string): { kind: ScreenSlotKind; screen?: ScreenDef } {
+export function screenKindOf(
+  text: string,
+  profile: ScreenProfile | null,
+  brandName?: string,
+): { kind: ScreenSlotKind; screen?: ScreenDef; viaAction?: true } {
   const t = text.normalize('NFC')
   if (OTHER_SCREEN.test(t)) return { kind: 'other' }
-  if (ACTION_SCREEN.test(t)) return { kind: 'action' }
+  if (ACTION_SCREEN.test(t)) {
+    // 2026-11-05 결정 D5(b) — 브랜드 사이트에서 장소를 눌러 이용시간 · 요금을 보는 자리(「군산각 지도에서 찾기 화면에서 근대역사박물관을
+    // 눌러 여는 시간과 요금」)는 그 장소의 장소 안내 화면으로 대신한다(늘 「확인 필요」 — 누른 화면 그대로는 아니다). 장소는
+    // src/lib/photoAutoPick.ts가 사이트 장소 사전에서 찾고, 없으면 비워 둔다. 브랜드를 말하지 않는 자리(「코스 결과 화면에서 한 장소를
+    // 눌러」)는 그대로 누르기 화면이다.
+    const place = profile?.screens.find((s) => s.placePages && s.slotWords?.test(t))
+    const brandKey = brandName ? textKey(brandName) : ''
+    const own = Boolean(profile) && ((brandKey !== '' && textKey(t).includes(brandKey)) || t.toLowerCase().includes(profile!.host))
+    return place && own ? { kind: place.kind, screen: place, viaAction: true } : { kind: 'action' }
+  }
   if (!profile) return { kind: 'none' }
   const found = labelsIn(t, [profile])
   if (found.length > 1) return { kind: 'ambiguous' }
@@ -665,9 +687,13 @@ export function screenVariantChoice(screen: ScreenDef, text: string, namedPlaces
   const conditional = screen.variants.filter((v) => v.prefer)
   if (!conditional.length) return { tiers: [[...screen.variants]] }
   const said = `${text}\n${context}`.normalize('NFC')
-  const preferred = conditional.filter((v) => v.prefer!.test(said))
-  if (preferred.length) return { tiers: [preferred, base.filter((v) => !preferred.includes(v))].filter((tier) => tier.length > 0), by: 'prefer' }
-  return { tiers: [base, conditional.filter((v) => !base.includes(v))].filter((tier) => tier.length > 0), by: 'general' }
+  const preferred = conditional.filter((v) => !v.extra && v.prefer!.test(said))
+  if (preferred.length) {
+    // 같은 조건의 둘째 변형(extra)은 그 조건의 첫 변형 다음, 기본 변형 앞.
+    const extras = conditional.filter((v) => v.extra && v.prefer!.test(said))
+    return { tiers: [preferred, extras, base.filter((v) => !preferred.includes(v))].filter((tier) => tier.length > 0), by: 'prefer' }
+  }
+  return { tiers: [base, conditional.filter((v) => !base.includes(v) && !v.extra)].filter((tier) => tier.length > 0), by: 'general' }
 }
 
 // ── 잘라 찍은 화면의 사실 확인 ─────────────────────────────────────────────

@@ -985,7 +985,8 @@ function screenWhy(row: AutoSlotRow): string {
   if (!sp && row.screenMiss === 'no-directory') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 사이트 장소 목록(sitemap.xml)을 읽지 못해 찍을 장소를 정하지 못했어요`
   if (!sp) return isScreenKind(kind) ? SCREEN_SLOT_KIND_TEXT[kind] : `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요)`
   const facts = row.factGaps?.length ? ` · 자리 글자의 ${row.factGaps.map((g) => `「${g}」`).join(' ')}이(가) 찍은 화면에 없어요(맞는지 확인)` : ''
-  return `${SCREEN_SLOT_KIND_TEXT[kind]} · ${screenByText(row, sp)}${facts}`
+  const via = row.viaAction ? ' · 장소를 눌러 보는 화면 자리라 그 장소의 장소 안내로 대신해요(맞는지 확인)' : ''
+  return `${SCREEN_SLOT_KIND_TEXT[kind]} · ${screenByText(row, sp)}${via}${facts}`
 }
 
 /** 자사 화면의 변형을 고른 까닭 — 장소 안내는 자리 글자 · 소제목의 장소, 가이드는 그 이름, 코스 · 지도는 조건 · 권역. */
@@ -1089,7 +1090,7 @@ function PreviewRow({ title, row, brandName }: { title: string | null; row: Auto
         ) : c?.origin === 'public' && row.place ? (
           `장소: ${row.place}${c.tour && c.alt !== row.place ? ` → 관광공사 「${c.alt}」` : ''}`
         ) : row.score ? (
-          `${row.score.words.join(' · ')} · ${row.score.score}`
+          `${row.score.words.join(' · ')} · ${row.score.score}${row.synonym ? ' · 비슷한 말로 맞춘 자기 시설 사진(맞는지 확인)' : ''}`
         ) : row.place ? (
           <span className="muted">장소: {row.place}</span>
         ) : (

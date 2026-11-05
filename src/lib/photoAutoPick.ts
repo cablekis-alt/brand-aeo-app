@@ -625,6 +625,29 @@ const OWN_FACILITY = /객실|침실|욕실|주방|로비|독채|숙소|숙박|�
  */
 const PLACE_NAME_END = /(공원|박물관|미술관|기념관|전시관|체험관|과학관|문학관|도서관|해수욕장|시장|호수|저수지|성당|교회|사찰|타워|대교|가옥|고택|마을|해변|폭포|계곡|항|역|산|섬|궁)$/
 
+/**
+ * 자기 시설 자리의 비슷한 말(2026-11-05 결정 D5(b)) — 홈페이지 사진 설명에 앞 낱말이 있으면 뒤 낱말도 있는 것으로 본다(「독채 내부」 자리 ↔
+ * 「거실 공간」 사진, 「목조 창호와 실내」 ↔ 「목재 서까래 · 미닫이창」, 「독채 앞 정원」 ↔ 「디딤돌 마당」). 자기 시설 자리에 홈페이지
+ * 사진을 고를 때만 쓰고, 장면을 읽은 사진만(장면 종류가 자리와 맞아야 — 실내 사진이 정원 자리에 들어가지 않게), 늘 「확인 필요」.
+ */
+const OWN_SYNONYMS: readonly [RegExp, string][] = [
+  [/거실|객실|침실|주방|욕실|다이닝|서까래|천장|침구|이불/, '내부 실내'],
+  [/미닫이|창문|창살|문살|격자창/, '창호'],
+  [/목재|서까래|원목/, '목조'],
+  [/마당|디딤돌|툇마루|잔디|석등|정원수/, '정원'],
+  [/정면|대문|처마|기와|지붕|담장|현관/, '외관'],
+]
+
+/**
+ * 자기 시설 자리에 견줄 홈페이지 사진 설명 — 비슷한 말(OWN_SYNONYMS)과 자리 글자의 자기 시설 낱말(「독채」 · 「숙소」 — 브랜드 자사 사이트의
+ * 사진은 그 시설의 사진이다)을 덧붙인다. 덧붙인 것이 없으면 null.
+ */
+function ownSynonymAlt(alt: string, slotKey: string): string | null {
+  const add = OWN_SYNONYMS.filter(([re]) => re.test(alt)).map(([, w]) => w)
+  const own = normSlotAlt(slotKey).match(new RegExp(OWN_FACILITY.source, 'g')) ?? []
+  return add.length ? [alt, ...add, ...own].join(' ') : null
+}
+
 /** 글자에 고유한 장소 이름(PLACE_NAME_END 앞에 두 글자 이상)이 있는가 — stop(브랜드 · 브랜드 도시 낱말)은 보지 않는다. */
 function namesPlace(text: string, stop: ReadonlySet<string>): boolean {
   return normSlotAlt(text)
@@ -845,13 +868,20 @@ export interface AutoMapPick {
   key: string
   /** 표지 장소 id(고른 차례 — 자리에 이름이 나온 장소가 앞). */
   ids: string[]
-  /** 0 고른 묶음 · 1 넓힌 묶음(같은 작성자 · 글에 0을 이미 썼거나 사람이 이 자리에서 0을 뺐다). */
+  /**
+   * 0 고른 묶음 · 1 넓힌 묶음(같은 작성자 · 글에 0을 이미 썼거나 사람이 이 자리에서 0을 뺐다) · 2 다른 권역 묶음(장면 글자에 장소 이름이
+   * 없는 자리 — 0 · 1을 모두 이 글 · 작성자에게 이미 썼거나 사람이 뺐다, src/lib/mapImage.ts mapChoiceOf).
+   */
   tier: number
   /**
    * 넓힌 묶음을 쓴 까닭 — used 같은 작성자 · 글에 tier 0을 이미 썼다, removed 사람이 이 자리에서 tier 0을 뺐다, drawn 그릴 수 없는 실행에서
    * tier 0은 아직 그리지 않았고 넓힌 묶음은 그려 두었다.
    */
   widerWhy?: 'used' | 'removed' | 'drawn'
+  /** 다른 권역 묶음(tier 2)의 권역 이름. */
+  otherRegion?: string
+  /** 누르기 화면 자리(AutoSlotRow.viaAction)에 장소 안내 대신 넣은 그 장소의 지도. */
+  viaAction?: true
   by: MapChoiceBy
   /** 사람이 읽는 까닭. */
   why: string
@@ -877,7 +907,18 @@ export interface AutoMapWant {
  */
 export function mapPickReason(pick: AutoMapPick): string[] {
   const lines = [pick.why]
-  if (pick.tier > 0) {
+  if (pick.viaAction) lines.push('장소를 눌러 보는 화면 자리 — 그 장소 안내를 이 글 · 작성자에게 이미 써서 그 장소의 지도')
+  if (pick.tier === 2) {
+    lines.push(
+      `${
+        pick.widerWhy === 'removed'
+          ? '사람이 이 자리에서 같은 권역 지도를 빼서'
+          : pick.widerWhy === 'drawn'
+            ? '같은 권역 묶음은 아직 그리지 않아 그려 둔'
+            : '같은 권역 묶음(처음 · 넓힌 묶음)을 이 글 · 작성자에게 이미 써서'
+      } 다른 권역(${pick.otherRegion ?? '—'}) 묶음 — 글과 맞는지 확인`,
+    )
+  } else if (pick.tier > 0) {
     lines.push(
       pick.widerWhy === 'removed'
         ? '사람이 이 자리에서 뺀 지도 대신 둘레 관광지를 더한 넓은 묶음'
@@ -975,8 +1016,15 @@ export interface AutoSlotRow {
    * (브랜드 이름 · 객실 · 독채 · 매장 · 메뉴)이나 고유한 장소 이름이 나온 자리가 아니다. 화면은 이런 자리가 있을 때만 지역 사진을 부른다.
    */
   regionSlot?: true
+  /** 자기 시설 자리에 홈페이지 사진을 비슷한 말(OWN_SYNONYMS — 「내부」 ↔ 「거실」)로만 맞춰 넣었다 — 늘 「확인 필요」. */
+  synonym?: true
   /** 화면 자리(state screen으로 시작한 자리)의 종류(src/lib/screenCapture.ts screenKindOf) — 찍는 종류(SCREEN_KINDS)가 아니면 찍지 않는 까닭. */
   screenSlot?: ScreenSlotKind
+  /**
+   * 브랜드 사이트에서 장소를 눌러 이용시간 · 요금을 보는 자리(누르기 화면)를 그 장소의 장소 안내 화면으로 대신한다(screenKindOf viaAction,
+   * 2026-11-05) — 늘 「확인 필요」. 그 장소 안내를 이 글 · 작성자에게 이미 썼으면 그 장소 한 곳을 그린 지도로 채운다(maps를 줄 때).
+   */
+  viaAction?: true
   /** 화면 자리에 고른 자사 화면 · 변형(filled · preview · uncaptured). */
   screenPick?: AutoScreenPick
   /**
@@ -1399,7 +1447,8 @@ export function autoPickPhotos(input: {
     return { brand: later.length, group: group === undefined ? 0 : later.filter((r) => r.group === group).length }
   }
 
-  type Pair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore; rank: number; scene?: PhotoScene; fit?: SceneFit }
+  /** synonym — 자기 시설 자리에 비슷한 말(OWN_SYNONYMS)로만 맞은 짝(늘 「확인 필요」). */
+  type Pair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore; rank: number; scene?: PhotoScene; fit?: SceneFit; synonym?: true }
   type Option = { candidate: AutoCandidate; order: number; scene?: PhotoScene; fit?: SceneFit }
   /** 자리 · 장소 하나의 후보 — fit 장면이 맞는 것(장면을 모르면 장면 없이 고를 때만), soft 시간만 다른 것(비슷한 사진). */
   type Options = { fit: Option[]; soft: Option[] }
@@ -1512,6 +1561,7 @@ export function autoPickPhotos(input: {
         ...((state === 'nomatch' || state === 'screen') && cleared.length ? { refill: true as const } : {}),
         ...(old ? { old } : {}),
         ...(screenKind ? { screenSlot: screenKind.kind } : {}),
+        ...(screenKind?.viaAction ? { viaAction: true as const } : {}),
       }
       // 사람이 뺀 사진(자사 화면은 「화면 + 변형」 열쇠 — photoRepeatKey)은 다시 채우는 그 자리에 고르지 않는다.
       const gone = cleared.flatMap((c) => (c.removed ?? []).map((s) => canonicalPhotoSrc(s) ?? s))
@@ -1656,14 +1706,39 @@ export function autoPickPhotos(input: {
       // ① 홈페이지 사진 — 점수(설명 낱말 + 장면)가 높은 짝부터. 장면이 자리와 어긋나면 짝으로 두지 않는다.
       for (const row of rows) {
         if (row.state !== 'nomatch') continue
+        const slotText = { key: row.slot.key, caption: row.caption, heading: row.slot.heading }
+        const own = ownFacility({ key: row.slot.key, caption: row.caption }, brandKey)
         for (const candidate of usable) {
           if (removed(row, candidate.src)) continue
-          const score = scoreSlot({ key: row.slot.key, caption: row.caption, heading: row.slot.heading }, candidate.alt, stop)
+          let score = scoreSlot(slotText, candidate.alt, stop)
+          let synonym = false
+          if (!score.pass && own) {
+            // 자기 시설 자리 — 비슷한 말로 맞추되 장면을 읽은 사진만(장면 종류가 자리와 맞아야). 장면을 아직 모르면 읽기를 청하고 넘긴다.
+            const alt = ownSynonymAlt(candidate.alt, row.slot.key)
+            const s2 = alt ? scoreSlot(slotText, alt, stop) : null
+            if (s2?.pass) {
+              want(candidate, 'site')
+              if (!sceneOf(candidate.src)) {
+                if (scenes) skipScene(row, input.sceneFailed?.has(candidate.src) ? 'failed' : 'unread')
+                continue
+              }
+              score = s2
+              synonym = true
+            }
+          }
           if (!score.pass) continue
           want(candidate, 'site')
           const scene = sceneOf(candidate.src)
           const fit = scene ? sceneFit(wantsOf(row), scene) : undefined
-          const pair = { row, candidate, score, rank: score.score + (fit?.score ?? 0), ...(scene ? { scene } : {}), ...(fit ? { fit } : {}) }
+          const pair = {
+            row,
+            candidate,
+            score,
+            rank: score.score + (fit?.score ?? 0) - (synonym ? 100 : 0),
+            ...(scene ? { scene } : {}),
+            ...(fit ? { fit } : {}),
+            ...(synonym ? { synonym: true as const } : {}),
+          }
           if (fit && !fit.ok) {
             skipScene(row, fit.miss!)
             if (fit.soft) softPairs.push(pair)
@@ -1677,6 +1752,7 @@ export function autoPickPhotos(input: {
         if (!open.length) break
         const best = open.sort(better)[0]!
         fill(best.row, best.candidate, best.score, best)
+        if (best.synonym) Object.assign(best.row, { review: true, synonym: true })
       }
 
       for (const row of rows) {
@@ -1882,6 +1958,8 @@ export function autoPickPhotos(input: {
           ids: variant.ids,
           tier: variant.tier,
           ...(variant.tier > 0 ? { widerWhy: removed(row, mapKey(first)) ? ('removed' as const) : blocked(mapKey(first)) ? ('used' as const) : ('drawn' as const) } : {}),
+          ...(variant.region ? { otherRegion: variant.region } : {}),
+          ...(row.viaAction ? { viaAction: true as const } : {}),
           by: choice.by,
           why: choice.why,
           markers: variant.markers,
@@ -1952,6 +2030,11 @@ export function autoPickPhotos(input: {
         }
         const any = choose(open)
         if (!any) {
+          // 누르기 화면 자리 — 그 장소 안내를 이 글 · 작성자에게 이미 썼으면 그 장소 한 곳을 그린 지도로(자리 글자에 장소 이름이 있다).
+          if (row.viaAction && mapsIn && screenProfile.mapPoints) {
+            mapRow(row, mapsIn)
+            continue
+          }
           row.state = 'used'
           continue
         }
@@ -2000,7 +2083,7 @@ export function autoPickPhotos(input: {
         // 잘라 찍은 화면은 자리 글자(장면 · 설명 줄)가 말한 사실이 찍은 부분의 글자에 있는지 본다 — 없으면 「확인 필요」(막지 않는다).
         const gaps = screen.clip ? screenFactGaps(`${row.slot.key}\n${row.caption}`, shot.text ?? '') : []
         if (gaps.length) row.factGaps = gaps
-        const review = screen.kind === 'map' || chosen.tier > 0 || placeReview || gaps.length > 0
+        const review = screen.kind === 'map' || chosen.tier > 0 || placeReview || gaps.length > 0 || Boolean(row.viaAction)
         Object.assign(row, { state: saveAllowed ? 'filled' : 'preview', pick, ...(review ? { review: true } : {}) })
         if (saveAllowed) out.push(pick)
       }
