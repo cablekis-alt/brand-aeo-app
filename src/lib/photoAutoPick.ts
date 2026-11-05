@@ -813,8 +813,13 @@ export interface AutoMapPick {
   key: string
   /** 표지 장소 id(고른 차례 — 자리에 이름이 나온 장소가 앞). */
   ids: string[]
-  /** 0 고른 묶음 · 1 넓힌 묶음(같은 작성자 · 글에 0을 이미 썼다). */
+  /** 0 고른 묶음 · 1 넓힌 묶음(같은 작성자 · 글에 0을 이미 썼거나 사람이 이 자리에서 0을 뺐다). */
   tier: number
+  /**
+   * 넓힌 묶음을 쓴 까닭 — used 같은 작성자 · 글에 tier 0을 이미 썼다, removed 사람이 이 자리에서 tier 0을 뺐다, drawn 그릴 수 없는 실행에서
+   * tier 0은 아직 그리지 않았고 넓힌 묶음은 그려 두었다.
+   */
+  widerWhy?: 'used' | 'removed' | 'drawn'
   by: MapChoiceBy
   /** 사람이 읽는 까닭. */
   why: string
@@ -840,7 +845,15 @@ export interface AutoMapWant {
  */
 export function mapPickReason(pick: AutoMapPick): string[] {
   const lines = [pick.why]
-  if (pick.tier > 0) lines.push('같은 장소 묶음을 이 글 · 작성자에게 이미 써서 둘레 관광지를 더한 묶음')
+  if (pick.tier > 0) {
+    lines.push(
+      pick.widerWhy === 'removed'
+        ? '사람이 이 자리에서 뺀 지도 대신 둘레 관광지를 더한 넓은 묶음'
+        : pick.widerWhy === 'drawn'
+          ? '처음 묶음은 아직 그리지 않아 그려 둔 넓은 묶음(둘레 관광지를 더함)'
+          : '같은 장소 묶음을 이 글 · 작성자에게 이미 써서 둘레 관광지를 더한 넓은 묶음',
+    )
+  }
   const markers = pick.drawn?.markers ?? pick.markers
   lines.push(`표지 ${markers.length}곳: ${markers.map((m) => m.label).join(' · ')}`)
   const avoided = new Set(pick.avoided ?? [])
@@ -853,9 +866,19 @@ export function mapPickReason(pick: AutoMapPick): string[] {
   return lines
 }
 
-/** 지도 자리에 표지를 고르지 못한 까닭(미리보기) — 장소 목록이 비었거나 넣을 장소가 없다(까닭은 중립 글자). */
+/**
+ * 지도 자리를 비워 둔 까닭(미리보기) — 장소 목록이 비었거나 넣을 장소가 없다(까닭은 중립 글자), 고른 묶음(넓힌 묶음 포함)을 이 글 · 작성자에게
+ * 이미 썼다(used), 사람이 이 자리에서 그 묶음을 뺐다(removed). used · removed는 그 묶음의 표지를 함께 적는다.
+ */
 export function mapMissText(row: Pick<AutoSlotRow, 'mapMiss' | 'mapMissWhy'>): string {
-  const head = row.mapMiss === 'no-points' ? '자사 사이트 장소 목록이 비어 지도 표지를 고르지 못했어요' : '지도에 넣을 장소가 없어 비워 둬요'
+  const head =
+    row.mapMiss === 'no-points'
+      ? '자사 사이트 장소 목록이 비어 지도 표지를 고르지 못했어요'
+      : row.mapMiss === 'used'
+        ? '이 장소 묶음을 이 글 · 작성자에게 이미 써서 비워 둬요'
+        : row.mapMiss === 'removed'
+          ? '사람이 이 자리에서 뺀 지도 묶음이라 다시 넣지 않아요'
+          : '지도에 넣을 장소가 없어 비워 둬요'
   return row.mapMissWhy ? `${head} — ${row.mapMissWhy}` : head
 }
 
@@ -938,9 +961,12 @@ export interface AutoSlotRow {
   screenPlaces?: string[]
   /** 지도 자리에 고른 장소 묶음(앱이 그린 지도 — filled · undrawn). */
   mapPick?: AutoMapPick
-  /** 지도 자리에 표지를 고르지 못했다 — no-points 장소 목록이 비었음, no-markers 넣을 장소가 없음(공군기지 상자 안뿐 · 기준 장소 없음). */
-  mapMiss?: 'no-points' | 'no-markers'
-  /** 표지를 고르지 못한 까닭(mapChoiceOf why — 중립 글자). */
+  /**
+   * 지도 자리를 비워 둔 까닭 — no-points 장소 목록이 비었음, no-markers 넣을 장소가 없음(공군기지 상자 안뿐 · 기준 장소 없음 · 말한 종류가
+   * 없음), used 고른 묶음(넓힌 묶음 포함)을 이 글 · 작성자에게 이미 썼음(state used), removed 사람이 이 자리에서 그 묶음을 뺐음(state used).
+   */
+  mapMiss?: 'no-points' | 'no-markers' | 'used' | 'removed'
+  /** 비워 둔 까닭의 덧말 — 표지를 고르지 못한 까닭(mapChoiceOf why — 중립 글자), used · removed는 그 묶음의 표지. */
   mapMissWhy?: string
 }
 
@@ -1798,8 +1824,16 @@ export function autoPickPhotos(input: {
         }
         const open = choice.variants.filter((v) => !blocked(mapKey(v)) && !removed(row, mapKey(v)))
         const variant = maps.available ? open[0] : (open.find((v) => drawnAt.has(v.key)) ?? open[0])
+        const first = choice.variants[0]!
         if (!variant) {
+          // 쓸 묶음이 없다 — 까닭(이미 씀 · 사람이 뺌)과 그 묶음의 표지를 남긴다(미리보기가 「지도 화면」만 보이지 않게). 까닭은 tier 0으로,
+          // 넓힌 묶음의 까닭은 괄호로.
+          const gone = (v: MapVariant) => removed(row, mapKey(v))
+          const wider = choice.variants[1]
           row.state = 'used'
+          row.mapMiss = gone(first) ? 'removed' : 'used'
+          const widerNote = !wider ? '' : gone(wider) === gone(first) ? (gone(first) ? ' (넓힌 묶음도 뺌)' : ' (넓힌 묶음도 이미 씀)') : gone(wider) ? ' (넓힌 묶음은 사람이 이 자리에서 뺌)' : ' (넓힌 묶음은 이 글 · 작성자에게 이미 씀)'
+          row.mapMissWhy = `표지: ${first.markers.map((m) => m.label).join(' · ')}${widerNote}`
           return
         }
         inArticle.add(mapKey(variant))
@@ -1811,6 +1845,7 @@ export function autoPickPhotos(input: {
           key: variant.key,
           ids: variant.ids,
           tier: variant.tier,
+          ...(variant.tier > 0 ? { widerWhy: removed(row, mapKey(first)) ? ('removed' as const) : blocked(mapKey(first)) ? ('used' as const) : ('drawn' as const) } : {}),
           by: choice.by,
           why: choice.why,
           markers: variant.markers,

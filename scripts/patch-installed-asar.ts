@@ -21,8 +21,12 @@
  *
  * 주의: exe의 파일 속성·Windows 프로그램 목록 버전은 옛 값으로 남는다(PE 리소스에 박혀 있다).
  * 앱 화면과 업데이터가 쓰는 버전은 asar의 package.json이므로 동작에는 영향이 없다.
+ *
+ * asar 밖 파일도 함께 옮긴다: bundled.env(기본 키)와 지도 데이터(resources/map/gunsan.pmtiles · NOTICE-OSM.txt — electron/mapRender.cjs가
+ * 읽는다). 지도 파일은 asar보다 먼저 옮기고, 옮기지 못하면 asar를 바꾸지 않고 멈춘다(새 앱만 깔리고 지도 데이터가 없는 상태를 만들지 않게).
  */
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import {
   closeSync,
   copyFileSync,
@@ -140,6 +144,16 @@ function asarVersion(file: string): string | null {
   }
 }
 
+/** asar 밖 지도 데이터(extraResources map/) — zip의 resources/map/<이름> → 설치 폴더 resources/map/<이름>. */
+const MAP_FILES = ['gunsan.pmtiles', 'NOTICE-OSM.txt']
+const mapDir = path.join(path.dirname(asarPath), 'map')
+
+function sameFile(a: string, b: string): boolean {
+  if (!existsSync(a) || !existsSync(b) || statSync(a).size !== statSync(b).size) return false
+  const hash = (f: string) => createHash('sha256').update(readFileSync(f)).digest('hex')
+  return hash(a) === hash(b)
+}
+
 const backupsOf = (): { file: string; version: string }[] =>
   readdirSync(path.dirname(asarPath))
     .map((n) => /^app\.asar\.v(\d+\.\d+\.\d+)\.bak$/.exec(n))
@@ -168,6 +182,13 @@ if (restore) {
   if (existsSync(envBackup)) {
     copyFileSync(envBackup, path.join(path.dirname(asarPath), 'bundled.env'))
     console.log(`bundled.env도 v${pick.version}로 되돌렸습니다.`)
+  }
+  // 지도 데이터도 그 버전의 백업이 있으면 되돌린다(그 버전 뒤에 지도 파일이 바뀐 때만 백업이 있다).
+  for (const name of MAP_FILES) {
+    const mapBackup = path.join(mapDir, `${name}.v${pick.version}.bak`)
+    if (!existsSync(mapBackup)) continue
+    copyFileSync(mapBackup, path.join(mapDir, name))
+    console.log(`지도 데이터 ${name}도 v${pick.version}로 되돌렸습니다.`)
   }
   console.log(`✓ 되돌림 완료 — 현재 ${asarVersion(asarPath) ?? '?'}`)
   process.exit(0)
@@ -274,6 +295,20 @@ try {
     // 이 릴리스 zip에 없을 수 있다(키 없이 빌드된 경우) — 그러면 기존 파일을 그대로 둔다.
   }
 
+  // 지도 데이터(resources/map/*)도 꺼낸다 — asar 밖(extraResources)이라 asar만 바꾸면 새 앱이 지도 파일을 찾지 못한다(지도 그리기가
+  // 모두 실패했다, 2026-11-05 검토). zip 목록에 있는 것만 꺼내고, 목록에 있는데 꺼내지 못하면 멈춘다.
+  const listed = new Set(
+    execFileSync(bsdtar, ['-tf', zip], { cwd: tmpDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+      .split(/\r?\n/)
+      .map((l) => l.trim()),
+  )
+  const mapEntries = MAP_FILES.filter((name) => listed.has(`resources/map/${name}`))
+  if (mapEntries.length) {
+    execFileSync(bsdtar, ['-xf', zip, '-C', out, ...mapEntries.map((name) => `resources/map/${name}`)], { cwd: tmpDir, stdio: 'pipe' })
+    const lost = mapEntries.filter((name) => !existsSync(path.join(out, 'resources', 'map', name)))
+    if (lost.length) fail(`zip에서 지도 데이터(resources/map/${lost.join(', ')})를 꺼내지 못했습니다.`)
+  }
+
   // 3) 꺼낸 asar이 정말 목표 버전인지 확인한다(엉뚱한 zip을 넣는 사고 방지).
   const newVersion = asarVersion(newAsar)
   if (newVersion !== targetVersion && !force) {
@@ -283,6 +318,31 @@ try {
 
   // 4) 앱이 닫혀 있어야 한다. 백업은 버전별로 하나만 남긴다(첫 백업이 원본).
   assertAppClosed()
+
+  // 지도 데이터를 asar보다 먼저 옮긴다 — 옛 앱은 이 파일을 읽지 않으므로 먼저 놓아도 괜찮고, 옮기지 못하면 asar를 바꾸지 않고 멈춘다.
+  // 다른 파일만 바꾸고(크기 · sha256), 덮어쓸 옛 파일은 「<이름>.v<현재 버전>.bak」으로 남긴다(--restore가 되돌린다).
+  if (mapEntries.length) {
+    for (const name of mapEntries) {
+      const from = path.join(out, 'resources', 'map', name)
+      const to = path.join(mapDir, name)
+      try {
+        if (sameFile(from, to)) {
+          console.log(`지도 데이터 ${name} 같음 — 그대로`)
+          continue
+        }
+        mkdirSync(mapDir, { recursive: true })
+        const mapBackup = `${to}.v${installedVersion}.bak`
+        if (existsSync(to) && !existsSync(mapBackup)) copyFileSync(to, mapBackup)
+        copyFileSync(from, to)
+      } catch (err) {
+        fail(`지도 데이터 ${name}을(를) ${mapDir}에 옮기지 못했습니다 — asar는 바꾸지 않았습니다: ${err instanceof Error ? err.message : String(err)}`)
+      }
+      if (!sameFile(from, to)) fail(`지도 데이터 ${name}을(를) 옮긴 뒤 내용이 다릅니다 — asar는 바꾸지 않았습니다.`)
+      console.log(`지도 데이터 ${name} 교체 (${statSync(to).size}바이트)`)
+    }
+  } else {
+    console.log('지도 데이터 zip에 없음 — 기존 파일 유지')
+  }
   const backup = path.join(path.dirname(asarPath), `app.asar.v${installedVersion}.bak`)
   if (existsSync(backup)) {
     console.log(`백업        이미 존재 — 유지 (${path.basename(backup)})`)

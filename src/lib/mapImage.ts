@@ -142,19 +142,21 @@ export function normalizeMapPoints(raw: unknown): { points: MapPoint[]; skipped:
 
 /**
  * 줄 이름 — 「긴 이름(짧은 이름)」 꼴이고 10자를 넘으면 괄호 안 · 밖 가운데 짧은 쪽(「군산신흥동일본식가옥(히로쓰가옥)」 → 「히로쓰가옥」).
- * 아니면 이름 그대로(electron/map/render.js가 그림에 쓰는 이름 · 대체 텍스트의 이름).
+ * 아니면 이름 그대로(electron/map/render.js가 그림에 쓰는 이름 · 대체 텍스트의 이름). names(장소 목록의 이름들)를 주면, 줄인 이름이 다른
+ * 장소의 이름과 같을 때는 줄이지 않는다(「군산 제1수원지제방 (월명호수)」과 「월명호수」가 한 지도에 「월명호수」 둘로 나오지 않게).
  */
-export function mapLabelOf(name: string): string {
+export function mapLabelOf(name: string, names?: ReadonlySet<string>): string {
   const m = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(name)
   if (!m || name.length <= 10) return name
   const outer = m[1]!.trim()
   const inner = m[2]!.trim()
-  return inner.length <= outer.length ? inner : outer
+  const short = inner.length <= outer.length ? inner : outer
+  return names?.has(short) ? name : short
 }
 
-/** 장소의 표지. */
-export function mapMarkerOf(p: MapPoint): MapMarker {
-  return { id: p.id, name: p.name, label: mapLabelOf(p.name), kind: p.kind, lng: p.lng, lat: p.lat }
+/** 장소의 표지 — names는 mapLabelOf와 같다(장소 목록 전체의 이름). */
+export function mapMarkerOf(p: MapPoint, names?: ReadonlySet<string>): MapMarker {
+  return { id: p.id, name: p.name, label: mapLabelOf(p.name, names), kind: p.kind, lng: p.lng, lat: p.lat }
 }
 
 /**
@@ -285,6 +287,7 @@ export function mapDrawFailText(code: string, message: string): string {
   if (code === 'out-of-cover' || code === 'too-wide') return '장소가 넓게 퍼져 동봉한 지도 데이터 한 장에 담지 못했어요'
   if (code === 'unavailable' || code === 'disposed') return '이 실행에서는 지도를 그릴 수 없어요 — 설치한 데스크톱 앱에서만 그려요'
   if (code === 'timeout') return '그리는 동안 시간이 다 됐어요 — 다시 눌러 주세요'
+  if (code === 'no-map-data') return '지도 데이터 파일(resources/map/gunsan.pmtiles)이 없어 그리지 못했어요 — 설치본으로 다시 설치하거나 patch:asar를 다시 실행해 주세요'
   return message || '지도를 그리지 못했어요'
 }
 
@@ -315,7 +318,10 @@ export interface MapRegion {
  */
 export type MapChoiceBy = 'named' | 'named-nearby' | 'anchor' | 'region' | 'default-region'
 
-/** 고른 표지 묶음 하나 — tier 0이 먼저, tier 1은 같은 작성자 · 글에 tier 0을 이미 쓴 때 쓰는 넓힌 묶음(둘레 관광지를 더함). */
+/**
+ * 고른 표지 묶음 하나 — tier 0이 먼저, tier 1은 같은 작성자 · 글에 tier 0을 이미 썼거나 사람이 그 자리에서 뺐을 때 쓰는 넓힌 묶음(tier 0 틀
+ * 밖의 둘레 관광지를 더해 틀이 달라진다).
+ */
 export interface MapVariant {
   key: string
   ids: string[]
@@ -405,10 +411,13 @@ interface NameHit {
 }
 
 /**
- * 글자에 나온 장소들(나온 차례) — 띄어쓰기는 무시하고, 같은 자리에서는 긴 이름이 먼저(「은파호수공원 물빛다리」의 「은파호수공원」은 묻힌다),
- * 같은 자리 · 같은 길이면 이름 그대로 맞은 장소가 줄인 이름으로 맞은 장소보다 먼저(같음 → 포함), 그다음 목록 순서. 한 자리에는 한 장소.
+ * 이름 바로 뒤(띄어쓰기 · 문장부호를 걷은 글자)에 오면 그 이름을 빼라는 말 — 「이성당 말고」 · 「이성당을 제외하고」 · 「이성당이 아닌」 ·
+ * 「이성당 대신」. 「이성당 외에도」처럼 더하는 말은 넣지 않는다.
  */
-export function mapNamesIn(text: string, points: readonly MapPoint[]): MapPoint[] {
+const NEGATED_AFTER = /^(?:이|가|은|는|을|를|도)?(?:말고|말구|말곤|빼고|제외|대신|아닌|아니라)/u
+
+/** 글자에 나온 장소 이름 자리(나온 차례) — 한 자리에는 한 장소(mapNamesIn의 순서 규칙), negated는 뒤에 빼라는 말이 온 자리. */
+function nameHitsIn(text: string, points: readonly MapPoint[]): (NameHit & { negated: boolean })[] {
   const { hay, starts } = hayOf(text)
   if (!hay) return []
   const hits: NameHit[] = []
@@ -427,9 +436,25 @@ export function mapNamesIn(text: string, points: readonly MapPoint[]): MapPoint[
     taken.push(h)
   }
   taken.sort((a, b) => a.at - b.at)
+  return taken.map((h) => ({ ...h, negated: NEGATED_AFTER.test(hay.slice(h.at + h.len)) }))
+}
+
+/**
+ * 글자에 나온 장소들(나온 차례) — 띄어쓰기는 무시하고, 같은 자리에서는 긴 이름이 먼저(「은파호수공원 물빛다리」의 「은파호수공원」은 묻힌다),
+ * 같은 자리 · 같은 길이면 이름 그대로 맞은 장소가 줄인 이름으로 맞은 장소보다 먼저(같음 → 포함), 그다음 목록 순서. 한 자리에는 한 장소.
+ * 「○○ 말고 · 빼고 · 대신 · 아닌」처럼 빼라고 한 이름은 넣지 않는다(NEGATED_AFTER).
+ */
+export function mapNamesIn(text: string, points: readonly MapPoint[]): MapPoint[] {
   const out: MapPoint[] = []
-  for (const h of taken) if (!out.includes(h.point)) out.push(h.point)
+  for (const h of nameHitsIn(text, points)) if (!h.negated && !out.includes(h.point)) out.push(h.point)
   return out
+}
+
+/** 글자가 빼라고 한 장소(「○○ 말고」의 ○○) — 그 자리의 기준점 · 표지로 쓰지 않는다. */
+function negatedNamesIn(text: string, points: readonly MapPoint[]): MapPoint[] {
+  return nameHitsIn(text, points)
+    .filter((h) => h.negated)
+    .map((h) => h.point)
 }
 
 /** 자리 글자가 말한 종류 — 관광지 · 음식점 · 숙소 낱말. 서비스 소개 문구(「관광지·음식점·숙소의 여는 시간과 요금」)는 빼고 본다. */
@@ -447,6 +472,37 @@ export function mapKindsIn(text: string): MapPointKind[] {
   return MAP_POINT_KINDS.filter((k) => KIND_WORDS[k].test(t))
 }
 
+/**
+ * 빵집 · 간식 · 카페 자리 — 종류를 정한 글자가 이 갈래만 말하면(식사 낱말 없이) 음식점은 이름이 그 갈래인 곳만 고른다(「빵집·간식 동선」에
+ * 갈비집 · 횟집을 넣지 않는다, 2026-11-05 검토). 장소 목록에는 갈래가 없어 이름으로만 가른다 — 맞는 이름이 없으면 비운다.
+ */
+const SNACK_WORDS = /빵|베이커리|제과|호떡|간식|디저트|카페|커피/
+const MEAL_WORDS = /식당|음식점|맛집|먹거리|밥집|식사|먹을\s?곳/
+const SNACK_NAME = /빵|베이커리|제과|호떡|카페|커피|디저트|도넛|케이크|젤라또|아이스크림/
+
+function snackOnlyIn(text: string): boolean {
+  const t = text.normalize('NFC').replace(SERVICE_BLURB, ' ')
+  return SNACK_WORDS.test(t) && !MEAL_WORDS.test(t)
+}
+
+/**
+ * 같은 자리로 보는 거리(m) — 사이트 목록에는 같은 건물이 두 이름으로 있다(「호남관세박물관」 = 「구 군산세관 본관」 0m, 같은 건물의 두 가게
+ * 5m). 이 안의 장소는 한 지도에 하나만 넣는다(한 점에 이름 둘 · 표지 칸 낭비). 12~17m 떨어진 다른 곳(갤러리와 옆 카페)은 따로 둔다.
+ */
+const SAME_SPOT_M = 10
+
+/** list에 같은 자리 장소가 이미 있는가. */
+function sameSpotIn(list: readonly MapPoint[], p: MapPoint): boolean {
+  return list.some((q) => mapDistanceM(p, q) <= SAME_SPOT_M)
+}
+
+/** 같은 자리 장소는 앞의 것만 남긴다(자리 글자에 나온 차례 · 사이트 목록 순서). */
+function onePerSpot(list: readonly MapPoint[]): MapPoint[] {
+  const out: MapPoint[] = []
+  for (const p of list) if (!sameSpotIn(out, p)) out.push(p)
+  return out
+}
+
 /** 두 점 사이 거리(m) — 하버사인. */
 export function mapDistanceM(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const R = 6371000
@@ -461,7 +517,7 @@ export function mapDistanceM(a: { lat: number; lng: number }, b: { lat: number; 
 const NEAR_M = 2000
 /** 종류마다 넣는 둘레 장소 수 — 종류가 하나 · 둘 · 셋일 때(「식당과 주변 관광지」 → 음식점 4 · 관광지 4). */
 const PER_KIND: Record<number, number> = { 1: 6, 2: 4, 3: 3 }
-/** 이름이 나온 장소의 「주변」으로 더하는 장소 수 · 넓힌 묶음(tier 1)에 더하는 관광지 수. */
+/** 이름이 나온 장소의 「주변」으로 더하는 장소 수 · 넓힌 묶음(tier 1)에 더하는 관광지 수(tier 0 틀 밖의 것만). */
 const NEARBY_ADD = 5
 const WIDER_ADD = 3
 
@@ -487,14 +543,64 @@ function busiestRegion(points: readonly MapPoint[]): string | null {
   return [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
 }
 
-/** 둘레 장소 — 기준점(center)에서 NEAR_M 안의 그 종류 장소, 가까운 차례(같으면 목록 순서). 같은 권역(region)만, 공군기지 상자 밖만. */
-function nearest(points: readonly MapPoint[], center: MapPoint | { lat: number; lng: number }, kind: MapPointKind, region: string | null, skip: ReadonlySet<string>, n: number): MapPoint[] {
-  return points
+/**
+ * 둘레 장소 — 기준점(center)에서 NEAR_M 안의 그 종류 장소, 가까운 차례(같으면 목록 순서). 같은 권역(region)만, 공군기지 상자 밖만,
+ * taken(이미 고른 장소)과 같은 자리(SAME_SPOT_M 안)는 빼고, where를 주면 그것이 참인 장소만.
+ */
+function nearest(
+  points: readonly MapPoint[],
+  center: MapPoint | { lat: number; lng: number },
+  kind: MapPointKind,
+  region: string | null,
+  skip: ReadonlySet<string>,
+  n: number,
+  taken: readonly MapPoint[],
+  where?: (p: MapPoint) => boolean,
+): MapPoint[] {
+  const out: MapPoint[] = []
+  const sorted = points
     .map((p, i) => ({ p, i, d: mapDistanceM(center, p) }))
-    .filter(({ p, d }) => p.kind === kind && !skip.has(p.id) && !inMapAvoid(p) && d <= NEAR_M && (!region || p.region === region))
+    .filter(({ p, d }) => p.kind === kind && !skip.has(p.id) && !inMapAvoid(p) && d <= NEAR_M && (!region || p.region === region) && (!where || where(p)))
     .sort((a, b) => a.d - b.d || a.i - b.i)
-    .slice(0, n)
-    .map(({ p }) => p)
+  for (const { p } of sorted) {
+    if (out.length >= n) break
+    if (!sameSpotIn(taken, p) && !sameSpotIn(out, p)) out.push(p)
+  }
+  return out
+}
+
+/**
+ * 지도 그림의 틀 — server/mapFrame.ts(frameFor)와 같은 값: 1280×800, 기본 여백 위아래 120 · 좌우 170px, 가장 크게 볼 줌 16.3, 512px 타일
+ * 웹 메르카토르. scripts/verify-map-image.ts가 frameFor의 기본 여백 줌(fitZoom)과 견준다.
+ */
+const FRAME_W = 1280
+const FRAME_H = 800
+const FRAME_PAD_X = 170
+const FRAME_PAD_Y = 120
+const FRAME_MAX_ZOOM = 16.3
+const FRAME_TILE = 512
+const mercX = (lng: number) => (lng + 180) / 360
+const mercY = (lat: number) => {
+  const s = Math.sin((lat * Math.PI) / 180)
+  return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)
+}
+
+/** 장소들이 기본 여백 안에 드는 줌(frameFor의 fitZoom과 같은 계산, 반올림 없음). */
+export function mapFitZoom(list: readonly { lng: number; lat: number }[]): number {
+  const xs = list.map((p) => mercX(p.lng))
+  const ys = list.map((p) => mercY(p.lat))
+  const span = (v: number[]) => Math.max(Math.max(...v) - Math.min(...v), 1e-9)
+  return Math.min(FRAME_MAX_ZOOM, Math.log2(Math.min((FRAME_W - 2 * FRAME_PAD_X) / (span(xs) * FRAME_TILE), (FRAME_H - 2 * FRAME_PAD_Y) / (span(ys) * FRAME_TILE))))
+}
+
+/** 장소들의 기본 틀(가운데 · mapFitZoom)이 덮는 상자 — 이 밖의 장소를 더해야 틀이 달라진다. */
+function fitFrameBox(list: readonly { lng: number; lat: number }[]): (p: { lng: number; lat: number }) => boolean {
+  const s = FRAME_TILE * 2 ** mapFitZoom(list)
+  const xs = list.map((p) => mercX(p.lng))
+  const ys = list.map((p) => mercY(p.lat))
+  const cx = ((Math.min(...xs) + Math.max(...xs)) / 2) * s
+  const cy = ((Math.min(...ys) + Math.max(...ys)) / 2) * s
+  return (p) => Math.abs(mercX(p.lng) * s - cx) <= FRAME_W / 2 && Math.abs(mercY(p.lat) * s - cy) <= FRAME_H / 2
 }
 
 /** 장소 묶음의 무게중심. */
@@ -502,25 +608,37 @@ function centroid(list: readonly MapPoint[]): { lat: number; lng: number } {
   return { lat: list.reduce((s, p) => s + p.lat, 0) / list.length, lng: list.reduce((s, p) => s + p.lng, 0) / list.length }
 }
 
-function variantOf(list: readonly MapPoint[], tier: number): MapVariant {
-  const markers = list.slice(0, MAP_MAX_MARKERS).map(mapMarkerOf)
+function variantOf(list: readonly MapPoint[], tier: number, names: ReadonlySet<string>): MapVariant {
+  const markers = list.slice(0, MAP_MAX_MARKERS).map((p) => mapMarkerOf(p, names))
   const ids = markers.map((m) => m.id)
   return { key: mapVariantKey(ids), ids, markers, tier }
 }
 
+/** 종류 이름(까닭 글자) — 빵집 · 간식 자리의 음식점은 그 갈래 이름만 골랐다고 적는다. */
+function kindText(k: MapPointKind, snack: boolean): string {
+  return k === 'food' && snack ? '음식점(빵집 · 카페 · 간식 이름)' : MAP_KIND_TEXT[k]
+}
+
 /**
- * 지도 자리 하나의 표지 — 자사 사이트 장소 목록(points)에서만 고른다. 공군기지 상자 안의 장소는 빼고(avoided), 한 장에 MAP_MAX_MARKERS곳까지.
+ * 지도 자리 하나의 표지 — 자사 사이트 장소 목록(points)에서만 고른다. 공군기지 상자 안의 장소는 빼고(avoided), 한 장에 MAP_MAX_MARKERS곳까지,
+ * 같은 자리(SAME_SPOT_M 안)의 장소는 하나만. 자리 글자 · 설명 줄 · 소제목이 「○○ 말고」처럼 빼라고 한 장소는 어디에도 넣지 않는다.
  * 1. 장면 글자에 장소 이름이 나오면(띄어쓰기 무시, 같음 → 포함) 그 장소들(named). 「주변」 · 「근처」를 말하거나 종류 낱말(관광지 · 음식점 ·
  *    숙소)이 함께 있으면 그 장소들의 둘레(NEAR_M 안)에서 그 종류(없으면 관광지)를 NEARBY_ADD곳까지 더한다(named-nearby).
  * 2. 이름이 없으면 설명 줄 · 소제목 · 절 글자 차례로 처음 나온 장소를 기준점(anchor)으로, 그 장소의 권역에서 자리 글자가 말한 종류(장면 글자,
  *    없으면 설명 줄 · 소제목 — 서비스 소개 문구는 빼고)를 기준점 가까운 차례로 고른다(종류마다 PER_KIND곳, 기준점 포함). 종류를 말하지
  *    않으면 관광지.
- * 3. 기준점도 없으면 글자가 말한 권역(region), 그것도 없으면 관광지가 가장 많은 권역(default-region)의 관광지를 사이트 목록 순서대로(사이트가
- *    앞에 둔 곳 — 이름난 곳) 기준으로 같은 방식.
- * 변형은 tier 0(위 묶음)과, 넓힌 tier 1(무게중심 둘레 관광지 WIDER_ADD곳을 더한 것 — 같은 작성자 · 글에 tier 0을 이미 썼을 때 쓴다).
+ * 3. 기준점도 없으면 글자가 말한 권역(region), 그것도 없으면 관광지가 가장 많은 권역(default-region)의 첫 관광지(사이트 목록 순서 — 사이트가
+ *    앞에 둔 이름난 곳)를 기준점으로 같은 방식. 관광지는 사이트 목록 순서대로.
+ * 기준점은 늘 표지 맨 앞에 넣고 까닭에 「○○ 둘레」로 적는다(보이지 않는 기준으로 고른 업소만 지도에 나오지 않게). 종류를 정한 글자가 빵집 ·
+ * 간식 · 카페만 말하면 음식점은 그 갈래 이름만(SNACK_NAME). 이름이 없는 자리에서 말한 종류의 장소를 하나도 고르지 못하면 비운다(no-markers).
+ * 변형은 tier 0(위 묶음)과 넓힌 tier 1 — tier 0의 기본 틀 밖에 있는 둘레 관광지를 WIDER_ADD곳까지 더한 것(같은 작성자 · 글에 tier 0을 이미
+ * 썼거나 사람이 이 자리에서 뺐을 때 쓴다). 틀 밖 관광지가 없으면 tier 1은 없다 — 틀 안 장소만 더하면 같은 그림이 되기 때문이다.
  */
 export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regions: readonly MapRegion[] = []): MapChoiceResult {
   if (!points.length) return { miss: 'no-points', why: '자사 사이트 장소 목록이 비어 있음' }
+  const names = new Set(points.map((p) => p.name))
+  const negated = new Set([slot.key, slot.caption, slot.heading].flatMap((t) => (t ? negatedNamesIn(t, points) : [])).map((p) => p.id))
+  const usable = negated.size ? points.filter((p) => !negated.has(p.id)) : points
   const avoided: string[] = []
   const safe = (list: readonly MapPoint[]) =>
     list.filter((p) => {
@@ -528,14 +646,15 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
       if (!avoided.includes(p.name)) avoided.push(p.name)
       return false
     })
-  const namedAll = mapNamesIn(slot.key, points)
-  const named = safe(namedAll)
+  const namedAll = mapNamesIn(slot.key, usable)
+  const named = onePerSpot(safe(namedAll))
   const altKinds = mapKindsIn(slot.key)
   let kinds = altKinds
   let by: MapChoiceBy
   let list: MapPoint[]
   let anchor: MapChoice['anchor']
   let region: string | null = null
+  let snack = false
   const why: string[] = []
   if (namedAll.length) {
     const nearby = NEARBY_WORDS.test(slot.key) || altKinds.length > 0
@@ -545,29 +664,32 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
     if (nearby && named.length) {
       const want = altKinds.length ? altKinds : (['attraction'] as MapPointKind[])
       kinds = want
+      snack = want.includes('food') && snackOnlyIn(slot.key)
       const at = centroid(named)
       region = named[0]!.region
       const skip = new Set(list.map((p) => p.id))
       const per = Math.max(1, Math.floor(NEARBY_ADD / want.length))
       for (const k of want) {
-        for (const p of nearest(points, at, k, region, skip, per)) {
+        for (const p of nearest(usable, at, k, region, skip, per, list, k === 'food' && snack ? (q) => SNACK_NAME.test(q.name) : undefined)) {
           list.push(p)
           skip.add(p.id)
         }
       }
       by = 'named-nearby'
-      why.push(`그 둘레(${NEAR_M / 1000}km 안 · ${region})의 ${want.map((k) => MAP_KIND_TEXT[k]).join(' · ')}`)
+      why.push(`그 둘레(${NEAR_M / 1000}km 안 · ${region})의 ${want.map((k) => kindText(k, snack)).join(' · ')}`)
     }
   } else {
-    if (!kinds.length) kinds = mapKindsIn(`${slot.caption}\n${slot.heading}`)
+    const kindFrom = kinds.length ? slot.key : `${slot.caption}\n${slot.heading}`
+    if (!kinds.length) kinds = mapKindsIn(kindFrom)
     if (!kinds.length) kinds = ['attraction']
+    snack = kinds.includes('food') && snackOnlyIn(kindFrom)
     let center: MapPoint | undefined
     for (const [text, from] of [
       [slot.caption, 'caption'],
       [slot.heading, 'heading'],
       [slot.section, 'section'],
     ] as const) {
-      const found = text ? safe(mapNamesIn(text, points))[0] : undefined
+      const found = text ? safe(mapNamesIn(text, usable))[0] : undefined
       if (found) {
         anchor = { name: found.name, from }
         region = found.region
@@ -580,39 +702,47 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
       why.push(`이름이 없는 자리 — ${{ caption: '설명 줄', heading: '소제목', section: '절 글자' }[anchor.from]}에 처음 나온 ${anchor.name} 둘레(${region})`)
     } else {
       const said = regionIn(`${slot.key}\n${slot.caption}\n${slot.heading}\n${slot.section}`, regions)
-      region = said ?? busiestRegion(points)
+      region = said ?? busiestRegion(usable)
       by = said ? 'region' : 'default-region'
-      center = points.find((p) => p.region === region && p.kind === 'attraction' && !inMapAvoid(p))
-      why.push(said ? `이름이 없는 자리 — 글자가 말한 권역 ${region}` : `이름도 권역도 없는 자리 — 관광지가 가장 많은 권역 ${region ?? '(없음)'}`)
+      center = usable.find((p) => p.region === region && p.kind === 'attraction' && !inMapAvoid(p))
+      const base = center ? ` · 기준 ${center.name} 둘레` : ''
+      why.push(said ? `이름이 없는 자리 — 글자가 말한 권역 ${region}${base}` : `이름도 권역도 없는 자리 — 관광지가 가장 많은 권역 ${region ?? '(없음)'}${base}`)
     }
     if (!center) return { miss: 'no-markers', why: `${why.join(' · ')} — 기준 장소가 없음` }
-    list = []
-    const skip = new Set<string>()
+    // 기준점은 표지 맨 앞 — 둘레를 고른 기준이 지도와 까닭에 보이게(관광지 자리면 사이트 목록의 첫 관광지라 예전과 같은 묶음이다).
+    list = [center]
+    const skip = new Set<string>([center.id])
     const per = PER_KIND[kinds.length] ?? 3
-    if (anchor) {
-      list.push(center)
-      skip.add(center.id)
-    }
     for (const k of kinds) {
-      const room = anchor && center.kind === k ? per - 1 : per
-      const picked =
-        !anchor && k === 'attraction'
-          ? points.filter((p) => p.kind === 'attraction' && p.region === region && !inMapAvoid(p) && !skip.has(p.id) && mapDistanceM(center!, p) <= NEAR_M).slice(0, room)
-          : nearest(points, center, k, region, skip, room)
+      const room = center.kind === k ? per - 1 : per
+      const picked: MapPoint[] = []
+      if (!anchor && k === 'attraction') {
+        for (const p of usable) {
+          if (picked.length >= room) break
+          if (p.kind === 'attraction' && p.region === region && !inMapAvoid(p) && !skip.has(p.id) && mapDistanceM(center, p) <= NEAR_M && !sameSpotIn(list, p) && !sameSpotIn(picked, p)) picked.push(p)
+        }
+      } else picked.push(...nearest(usable, center, k, region, skip, room, list, k === 'food' && snack ? (q) => SNACK_NAME.test(q.name) : undefined))
       for (const p of picked) {
         list.push(p)
         skip.add(p.id)
       }
     }
-    why.push(`${kinds.map((k) => MAP_KIND_TEXT[k]).join(' · ')} ${!anchor && kinds.includes('attraction') ? '(관광지는 사이트 목록 순서)' : '(가까운 차례)'}`)
+    why.push(`${kinds.map((k) => kindText(k, snack)).join(' · ')} ${!anchor && kinds.includes('attraction') ? '(관광지는 사이트 목록 순서)' : '(가까운 차례)'}`)
+    if (!kinds.some((k) => list.some((p) => p.kind === k))) {
+      if (avoided.length) why.push(mapLeftOutText(avoided))
+      const wanted = kinds.map((k) => MAP_KIND_TEXT[k]).join(' · ')
+      return { miss: 'no-markers', why: `${why.join(' · ')} — ${snack ? '빵집 · 카페 · 간식 이름의 음식점이 없음' : `둘레에 ${wanted}${hasBatchim(wanted) ? '이' : '가'} 없음`}` }
+    }
   }
   if (avoided.length) why.push(mapLeftOutText(avoided))
   if (!list.length) return { miss: 'no-markers', why: `${why.join(' · ')} — 넣을 장소가 없음` }
-  const variants = [variantOf(list, 0)]
+  const variants = [variantOf(list, 0, names)]
   if (list.length < MAP_MAX_MARKERS) {
+    // 넓힌 묶음은 tier 0 기본 틀 밖의 관광지만 더한다 — 틀 안 장소만 더하면 줌 · 중심이 그대로라 거의 같은 그림이다.
+    const inFrame = fitFrameBox(list)
     const skip = new Set(list.map((p) => p.id))
-    const more = nearest(points, centroid(list), 'attraction', region ?? list[0]!.region, skip, WIDER_ADD)
-    if (more.length) variants.push(variantOf([...list, ...more], 1))
+    const more = nearest(usable, centroid(list), 'attraction', region ?? list[0]!.region, skip, WIDER_ADD, list, (p) => !inFrame(p))
+    if (more.length) variants.push(variantOf([...list, ...more], 1, names))
   }
   return {
     by,

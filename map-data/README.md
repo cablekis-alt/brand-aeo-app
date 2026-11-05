@@ -8,8 +8,8 @@
 | 파일 | 내용 |
 |---|---|
 | `gunsan-20261103.pmtiles` | PMTiles v3 벡터 타일(17,723,203바이트). 설치본에는 `resources/map/gunsan.pmtiles`로 들어갑니다(asar 밖 — Range로 읽습니다). |
-| `NOTICE-OSM.txt` | ODbL 알림 + 지도 라이브러리(maplibre-gl · pmtiles · fflate) 라이선스 글. 설치본 `resources/map/NOTICE-OSM.txt`. |
-| `pmtiles.LICENSE.txt` | pmtiles 라이선스 글(npm 묶음에 LICENSE 파일이 없어 따로 둠). 설치본 `dist-electron/map-vendor/pmtiles.LICENSE.txt`에도 복사합니다. 저작권자 줄은 아직 TODO입니다. |
+| `NOTICE-OSM.txt` | ODbL 알림 + 지도 라이브러리(maplibre-gl · pmtiles · fflate) 라이선스 글, 끝에 maplibre-gl에 함께 묶인 의존 라이브러리 24개의 라이선스 원문(`[BEGIN …]` ~ `[END …]`, 손으로 고치지 않음). 설치본 `resources/map/NOTICE-OSM.txt`. |
+| `pmtiles.LICENSE.txt` | pmtiles 라이선스 글(npm 묶음에 LICENSE 파일이 없어 따로 둠). 설치본 `dist-electron/map-vendor/pmtiles.LICENSE.txt`에도 복사합니다. 저작권자 줄은 아직 TODO입니다 — 채우기 전에는 설치본을 만들 수 없습니다(아래 「라이선스」). |
 
 ## 어떻게 만들었나
 
@@ -32,11 +32,15 @@ node scripts/map-data/verify-extract.mjs map-data/gunsan-20261103.pmtiles <원�
 
 ## 바꿀 때
 
-- 지도 데이터는 `extraResources`라 `patch:asar`로는 바꿀 수 없습니다. 바꾸려면 설치본을 새로 냅니다(CI `release-desktop`).
+- 지도 데이터는 `extraResources`(asar 밖)입니다. 설치본(CI `release-desktop`)에 들어가고, `patch:asar`(`scripts/patch-installed-asar.ts`)도 포터블 zip의 `resources/map/`을 asar보다 먼저 옮깁니다(바뀐 파일만, 옛 파일은 `<이름>.v<옛 버전>.bak`, 옮기지 못하면 asar를 바꾸지 않고 멈춤 — `scripts/verify-patch-asar.ts`). 지도 데이터 파일이 없는 설치본은 지도를 그리지 않고 「지도 데이터 파일이 없어요」로 알립니다(`no-map-data`).
 - 파일 이름(빌드 날짜)을 바꾸면 `electron-builder.yml`의 `extraResources`, `electron/mapRender.cjs`(개발 경로), `NOTICE-OSM.txt`, `scripts/verify-map-render.ts`(크기 · sha256)도 함께 고칩니다.
 - 공군기지 상자(AVOID)와 데이터 범위(COVER)는 `electron/mapRender.cjs`에 있습니다. 범위를 넓히면 COVER도 맞춥니다.
 
 ## 라이선스
+
+- `scripts/build-electron-server.mjs`(설치본 재료 만들기 — `electron:pack`)는 먼저 `scripts/map-data/notice.mjs`로 알림을 검사합니다. 자리 글자(「<저작권자 확인 필요>」 · `TODO(`)가 `NOTICE-OSM.txt` · `pmtiles.LICENSE.txt`에 남았거나 의존 라이브러리 글이 `node_modules`와 다르면 멈춥니다.
+- pmtiles 저작권자 줄: pmtiles 저장소(https://github.com/protomaps/pmtiles)의 LICENSE에서 Copyright 줄을 확인해 두 파일의 「Copyright (c) <저작권자 확인 필요>」 줄을 그대로 바꾸고, TODO 안내 두 줄을 지웁니다(두 파일의 pmtiles 글은 같아야 합니다 — `scripts/verify-map-render.ts`).
+- maplibre-gl 판을 올리면 `node scripts/map-data/notice.mjs --write`로 의존 라이브러리 글을 다시 만듭니다.
 
 Map data © OpenStreetMap contributors, available under the Open Database License (ODbL) 1.0 — https://www.openstreetmap.org/copyright
 이 파일은 원본을 상자로 잘라 낸 것이며 내용은 바꾸지 않았습니다. ODbL 1.0으로 이용할 수 있습니다.

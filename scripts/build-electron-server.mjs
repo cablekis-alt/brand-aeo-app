@@ -6,6 +6,16 @@ import { build } from 'esbuild'
 import { copyFileSync, mkdirSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { noticeProblems } from './map-data/notice.mjs'
+
+// 지도 알림(map-data/NOTICE-OSM.txt · pmtiles.LICENSE.txt)이 완성되지 않았으면 설치본 재료를 만들지 않는다 — 자리 글자(「<저작권자 확인
+// 필요>」 · TODO)가 든 라이선스 글이나 node_modules와 다른 의존 라이브러리 글이 설치본에 나가지 않게(map-data/README.md 「라이선스」).
+const noticeIssues = noticeProblems(process.cwd())
+if (noticeIssues.length) {
+  for (const p of noticeIssues) console.error(`[build-electron-server] ${p.file}: ${p.detail}`)
+  console.error('[build-electron-server] 지도 알림 파일이 완성되지 않아 멈춥니다 — 자리 글자를 채우거나 node scripts/map-data/notice.mjs --write로 다시 만드세요.')
+  process.exit(1)
+}
 
 mkdirSync('dist-electron', { recursive: true })
 

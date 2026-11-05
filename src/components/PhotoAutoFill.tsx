@@ -647,8 +647,8 @@ export default function PhotoAutoFill({
           code = typeof (e as { code?: unknown }).code === 'string' ? (e as { code: string }).code : 'failed'
           failed.push(`${name}(${mapDrawFailText(code, e instanceof Error ? e.message : String(e))})`)
         }
-        // 그리기 자체를 쓸 수 없거나(앱 종료 중) 줄이 찼으면 남은 지도도 그리지 못한다.
-        if (code === 'unavailable' || code === 'disposed' || code === 'busy') break
+        // 그리기 자체를 쓸 수 없거나(앱 종료 중 · 설치본에 지도 데이터 파일이 없음) 줄이 찼으면 남은 지도도 그리지 못한다.
+        if (code === 'unavailable' || code === 'disposed' || code === 'busy' || code === 'no-map-data') break
       }
       if (again.run !== runSeq.current) return
       setDrawing('그린 지도로 다시 맞추는 중…')

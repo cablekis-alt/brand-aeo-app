@@ -387,13 +387,24 @@ export async function drawMapVariant(
   const job = (async () => {
     const records = await readMapImages(tenantId);
     const dir = mapsDir(tenantId);
+    // 줄 이름은 장소 목록 전체의 이름으로 정한다(화면의 표지 고르기 src/lib/mapImage.ts mapChoiceOf와 같은 이름 — 다른 장소 이름과 같아지면
+    // 줄이지 않는다). 그려 둔 그림의 줄 이름이 지금과 다르면(이름 규칙이 바뀜) 다시 그린다.
+    const names = new Set(pointsFile.points.map((p) => p.name));
+    const markers = order.map((id) => mapMarkerOf(byId.get(id)!, names));
+    const labelOf = new Map(markers.map((m) => [m.id, m.label]));
+    const sameLabels = (r: MapImageRecord) => r.markers.every((m) => !labelOf.has(m.id) || labelOf.get(m.id) === m.label);
     for (const r of [...records].reverse()) {
-      if (r.variant === variant && r.pointsVersion === pointsFile.version && r.styleVersion === MAP_STYLE_VERSION && (await fileExists(path.join(dir, `${r.id}.png`)))) {
+      if (
+        r.variant === variant &&
+        r.pointsVersion === pointsFile.version &&
+        r.styleVersion === MAP_STYLE_VERSION &&
+        sameLabels(r) &&
+        (await fileExists(path.join(dir, `${r.id}.png`)))
+      ) {
         return { record: r, reused: true };
       }
     }
     const bridge = opts.bridge ?? mapBridge();
-    const markers = order.map((id) => mapMarkerOf(byId.get(id)!));
     const frame = frameFor(markers);
     const dropped = frame.dropped.map((d) => ({ id: d.marker.id, name: d.marker.name, why: d.why }));
     if (!frame.ok) {

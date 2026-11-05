@@ -12,6 +12,9 @@
  * - .pmtiles는 Range로만 읽는다 — 잘못된 Range에 파일 통째(17.7MB)를 주지 않는다.
  * - 그리기와 화면 찍기가 함께 돌면 숨긴 창이 둘 뜨고 GPU · 메모리를 같이 쓴다 — 같은 줄에 선다.
  * - 지도 데이터 파일이 줄 끝 바꾸기 등으로 바뀌면 지도가 깨진다 — 바이트(sha256)와 머리말 범위를 본다.
+ * - 맞춤법 사전 받기는 webRequest 검사기를 거치지 않는다 — 지도 세션은 사전 언어를 비운다.
+ * - 지도 데이터 파일이 없는 설치본은 페이지 오류(500)만 보인다 — 창을 열기 전에 no-map-data로 까닭을 알린다.
+ * - maplibre-gl 묶음에 든 의존 라이브러리 · pmtiles의 라이선스 글이 설치본에 따라가야 한다 — 자리 글자가 남으면 묶음 스크립트가 멈춘다.
  *
  *   npx tsx scripts/verify-map-render.ts
  */
@@ -114,6 +117,7 @@ function fakeElectron(opts: { packaged?: boolean; page?: FakePage; size?: { widt
     windows: [] as { options: Record<string, unknown>; destroyed: boolean; frameRate: number | null; openHandler: (() => unknown) | null; events: Map<string, (...a: unknown[]) => void>; createdAt: number; scripts: string[] }[],
     partitions: [] as { name: string; options: unknown }[],
     spellcheck: [] as boolean[],
+    spellLanguages: [] as unknown[],
     proxy: [] as unknown[],
     sessionSchemes: [] as string[],
     schemeHandler: null as null | ((request: { url: string; method: string; headers: Headers }) => Response),
@@ -128,6 +132,7 @@ function fakeElectron(opts: { packaged?: boolean; page?: FakePage; size?: { widt
   const page = opts.page ?? {}
   const fakeSession = {
     setSpellCheckerEnabled: (v: boolean) => log.spellcheck.push(v),
+    setSpellCheckerLanguages: (langs: unknown) => log.spellLanguages.push(langs),
     setPermissionRequestHandler: (fn: typeof log.permissionRequest) => {
       log.permissionRequest = fn
     },
@@ -299,6 +304,52 @@ const goodFrame = (pageSpec: Record<string, unknown>, extra: Record<string, unkn
       notice.includes('20261103'),
   )
   ok('알림 파일 — maplibre-gl LICENSE.txt 원문 · pmtiles 라이선스 글(fflate 포함)을 그대로 담는다', notice.includes(maplibreLicense) && notice.includes(pmtilesLicense) && pmtilesLicense.includes('fflate'))
+  // maplibre-gl.mjs · worker.mjs는 의존 라이브러리(kdbush · pbf · earcut · gl-matrix …)를 함께 묶은 한 덩어리다 — 그 라이브러리들의 저작권 ·
+  // 허가 글도 설치본에 따라가야 한다(BSD · ISC · MIT 모두 바이너리 사본에도 싣게 한다). 의존 트리(설치된 node_modules)를 직접 따라가 본다.
+  const deps = new Map<string, { version: string; license: string; text: string | null }>()
+  // package.json을 exports로 막은 패키지가 있어 require.resolve 대신 node_modules를 위로 올라가며 찾는다(Node 찾기 순서와 같다).
+  const findPkg = (name: string, from: string): string => {
+    for (let d = from; ; d = path.dirname(d)) {
+      const p = path.join(d, 'node_modules', name, 'package.json')
+      if (existsSync(p)) return p
+      if (path.dirname(d) === d) throw new Error(`${name}을 node_modules에서 찾지 못했습니다`)
+    }
+  }
+  const walk = (name: string, from: string) => {
+    if (deps.has(name)) return
+    const pkgJson = findPkg(name, from)
+    const dir = path.dirname(pkgJson)
+    const pj = JSON.parse(readFileSync(pkgJson, 'utf8')) as { version: string; license?: string; dependencies?: Record<string, string> }
+    const licenseFile = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'license', 'LICENCE'].map((f) => path.join(dir, f)).find((f) => existsSync(f))
+    deps.set(name, { version: pj.version, license: pj.license ?? '', text: licenseFile ? lf(readFileSync(licenseFile, 'utf8')).trim() : null })
+    for (const d of Object.keys(pj.dependencies ?? {})) walk(d, dir)
+  }
+  const maplibreDir = path.dirname(req.resolve('maplibre-gl/package.json'))
+  const direct = Object.keys((JSON.parse(readFileSync(path.join(maplibreDir, 'package.json'), 'utf8')) as { dependencies: Record<string, string> }).dependencies)
+  for (const d of direct) walk(d, maplibreDir)
+  const missingDeps = [...deps.entries()].filter(([name, d]) => !notice.includes(`\n${name} ${d.version} — `) || (d.text !== null && !notice.includes(d.text)) || (d.text === null && !notice.includes('Copyright')))
+  ok(
+    `알림 파일 — maplibre-gl에 함께 묶인 의존 라이브러리 ${deps.size}개(직접 ${direct.length}개)의 이름 · 판 · 라이선스 글을 담는다${missingDeps.length ? ` — 빠짐: ${missingDeps.slice(0, 4).map(([n]) => n).join(', ')}` : ''}`,
+    direct.length === 18 && missingDeps.length === 0,
+  )
+  // 알림 · 라이선스 파일에 자리 글자(「<저작권자 확인 필요>」 · TODO)가 남은 채로 설치본을 만들지 않는다 — 묶음 스크립트가 막는다.
+  const noticeMod = (await import('./map-data/notice.mjs').catch(() => null)) as null | {
+    placeholderProblems: (text: string) => string[]
+    noticeProblems: (root: string) => { kind: string; file: string; detail: string }[]
+  }
+  ok(
+    '알림 검사 — 자리 글자(「<저작권자 확인 필요>」 · TODO)를 찾고, 채운 글은 통과',
+    Boolean(noticeMod) &&
+      noticeMod!.placeholderProblems('Copyright (c) <저작권자 확인 필요>\nAll rights reserved.').length > 0 &&
+      noticeMod!.placeholderProblems('TODO(저작권자 확인 — 사용자가 채울 것): …').length > 0 &&
+      noticeMod!.placeholderProblems('Copyright (c) 2026, 가상 저작권자\nAll rights reserved.').length === 0,
+  )
+  ok('알림 검사 — 의존 라이브러리 글은 설치된 node_modules와 같다(판이 바뀌면 다시 만든다)', Boolean(noticeMod) && noticeMod!.noticeProblems(ROOT).every((p) => p.kind !== 'deps'))
+  ok(
+    '묶음 스크립트 — 알림 검사에 걸리면(자리 글자 · 의존 라이브러리 글이 낡음) 설치본 재료를 만들지 않고 멈춘다',
+    /import \{[^}]*noticeProblems[^}]*\} from '\.\/map-data\/notice\.mjs'/.test(readFileSync(path.join(ROOT, 'scripts', 'build-electron-server.mjs'), 'utf8')) &&
+      /noticeProblems\(process\.cwd\(\)\)[\s\S]{0,400}process\.exit\(1\)/.test(readFileSync(path.join(ROOT, 'scripts', 'build-electron-server.mjs'), 'utf8')),
+  )
   const builder = lf(readFileSync(path.join(ROOT, 'electron-builder.yml'), 'utf8'))
   ok('electron-builder.yml — files에 dist-electron/map-vendor/**/*', /^\s+- dist-electron\/map-vendor\/\*\*\/\*(\s+#.*)?$/m.test(builder))
   ok(
@@ -494,6 +545,18 @@ const goodFrame = (pageSpec: Record<string, unknown>, extra: Record<string, unkn
     await codeOf(pair.map.renderMap(validSpec()))
     const missing = fake.log.schemeHandler?.({ url: 'osmmap://app/gunsan.pmtiles', method: 'GET', headers: new Headers({ range: 'bytes=0-99' }) })
     ok('파일이 없으면 osmmap 처리기는 500(던지지 않는다)', missing?.status === 500)
+    // 지도 데이터가 없는 설치본(patch:asar는 예전에 resources/map을 옮기지 않았다) — 창을 열지 않고 까닭이 드러나는 code · 글로 끝낸다.
+    const noData = fakeElectron({ packaged: true, page: { load: () => Promise.resolve(), frame: (s) => goodFrame(s) } })
+    let noDataErr: { code?: string; message?: string } = {}
+    await loadPair(noData.electron).map.renderMap(validSpec()).catch((err: { code?: string; message?: string }) => {
+      noDataErr = err
+    })
+    ok(
+      '지도 데이터 파일이 없으면 창을 열지 않고 no-map-data — 글에 파일 자리와 다시 설치 · patch:asar 안내',
+      noDataErr.code === 'no-map-data' && noData.log.windows.length === 0 && String(noDataErr.message).includes('resources/map/gunsan.pmtiles') && String(noDataErr.message).includes('patch:asar'),
+    )
+    const viaBridge = await loadPair(fakeElectron({ packaged: true }).electron).map.handleMapRequest({ type: 'map-render', id: 'nd-1', spec: validSpec() })
+    ok('서버 다리 — 지도 데이터가 없으면 ok false · no-map-data 답', viaBridge?.ok === false && viaBridge?.code === 'no-map-data')
   } finally {
     proc.resourcesPath = before
   }
@@ -543,6 +606,9 @@ const goodFrame = (pageSpec: Record<string, unknown>, extra: Record<string, unkn
     'partition — 메모리 전용 map-render · 맞춤법 끔 · 프록시 direct · osmmap 처리기는 이 세션에만',
     fake.log.partitions.length === 1 && fake.log.partitions[0].name === map.PARTITION && map.PARTITION === 'map-render' && fake.log.spellcheck.includes(false) && JSON.stringify(fake.log.proxy) === '[{"mode":"direct"}]' && JSON.stringify(fake.log.sessionSchemes) === '["osmmap"]' && fake.log.globalHandled.length === 0,
   )
+  // 맞춤법을 꺼도(setSpellCheckerEnabled false · spellcheck false) 세션의 사전 언어가 남으면 Chromium이 그 사전(ko-3-0.bdic)을 Google에서
+  // 받으려 한다 — 이 요청은 webRequest 검사기를 거치지 않는다(2026-11-05 하니스 실측). 언어를 비워 받을 사전을 없앤다.
+  ok('partition — 사전 언어를 비운다(맞춤법 사전을 받으러 바깥에 나가지 않는다)', JSON.stringify(fake.log.spellLanguages) === '[[]]')
   let granted: boolean | null = null
   fake.log.permissionRequest?.(null, 'geolocation', (v) => {
     granted = v

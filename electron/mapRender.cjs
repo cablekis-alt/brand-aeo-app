@@ -7,8 +7,10 @@
 //
 // 지키는 것
 //   - 바깥 요청 0: 메모리 전용 partition 'map-render'에서 osmmap:// · data: · blob:의 GET만 통과시키고 나머지(http · https · ws · file …)는
-//     막고 센다. osmmap:// 처리기는 이 partition에만 건다(본 창은 열 수 없다). 프록시 direct, 맞춤법 검사 끔, 권한 · 내려받기 · 새 창 ·
-//     osmmap://app 밖 이동 거절. 스타일에 글꼴(glyphs) · 스프라이트가 없어 글꼴 서버도 부르지 않는다.
+//     막고 센다. osmmap:// 처리기는 이 partition에만 건다(본 창은 열 수 없다). 프록시 direct, 맞춤법 검사 끔 · 사전 언어 비움(사전 받기는
+//     webRequest를 거치지 않는다), 권한 · 내려받기 · 새 창 · osmmap://app 밖 이동 거절. 스타일에 글꼴(glyphs) · 스프라이트가 없어 글꼴 서버도
+//     부르지 않는다.
+//   - 지도 데이터 파일이 없으면 창을 열지 않고 'no-map-data'로 끝낸다(까닭과 다시 설치 · patch:asar 안내).
 //   - 파일은 허용 목록만 GET으로 준다. .pmtiles는 Range(bytes=a-b · bytes=a-)로만 읽는다 — 206, Range가 없거나 틀리거나 너무 크면 416.
 //   - CDP 찍기를 쓰지 않는다: 오프스크린 + GPU에서 CDP는 WebGL · 가속 캔버스 층을 빼고 찍는다(실측). 렌더러가 toBlob으로 PNG를 만든다.
 //   - 공군기지 상자(AVOID)와 겹치는 틀, 데이터 범위(COVER) 밖 틀은 그리지 않는다 — 그리기 전(center · zoom · 크기로 계산)과 그린 뒤
@@ -322,6 +324,9 @@ function ensureSession() {
   if (sessionReady) return sessionReady
   const ses = session.fromPartition(PARTITION, { cache: false })
   ses.setSpellCheckerEnabled(false)
+  // 맞춤법을 꺼도 세션의 사전 언어(OS 언어 — ko)가 남으면 사전 파일(userData/Dictionaries/ko-3-0.bdic)이 없을 때 Chromium이 Google에서 받으려
+  // 한다. 이 요청은 아래 webRequest 검사기를 거치지 않는다(2026-11-05 하니스 실측) — 언어를 비워 받을 사전을 없앤다. 기본 세션은 건드리지 않는다.
+  ses.setSpellCheckerLanguages([])
   ses.setPermissionRequestHandler((_wc, _permission, callback) => callback(false))
   ses.setPermissionCheckHandler(() => false)
   ses.setDevicePermissionHandler(() => false)
@@ -387,6 +392,12 @@ async function renderSteps(spec, job) {
   }
   const ses = await ensureSession()
   checkAlive(job)
+  // 지도 데이터가 없으면 창을 열지 않는다 — 페이지에서는 「Bad response code: 500」만 보여 까닭을 알 수 없다(patch:asar가 예전에
+  // resources/map을 옮기지 않았다). 라이브러리 · 페이지 파일은 asar 안이라 asar와 함께 온다.
+  if (!fs.existsSync(mapPaths().pmtiles)) {
+    const where = app && app.isPackaged ? 'resources/map/gunsan.pmtiles' : 'map-data/gunsan-20261103.pmtiles'
+    throw mapError('no-map-data', `지도 데이터 파일이 없어요(${where}) — 설치본으로 다시 설치하거나 patch:asar를 다시 실행해 주세요.`)
+  }
   const win = new BrowserWindow({
     show: false,
     width: WIDTH,
@@ -546,8 +557,8 @@ function captureModule() {
  *   areaLabels: string[], renderer: string, timings: object, blockedRequests: number, blockedSamples: string[], rangeRequests: number,
  *   rangeBytes: number, refusedRequests: number}>}
  *   refusedRequests는 osmmap://에서 거절한 요청 수(허용 목록 밖 404 · 틀린 Range 416).
- *   실패하면 code가 붙은 Error로 거부한다: bad-spec · avoid-area · out-of-cover · busy · disposed · timeout · load-failed · webgl-unavailable ·
- *   render-failed · map-error · marker-outside · blank · bad-size · renderer-gone.
+ *   실패하면 code가 붙은 Error로 거부한다: bad-spec · avoid-area · out-of-cover · busy · disposed · timeout · no-map-data · load-failed ·
+ *   webgl-unavailable · render-failed · map-error · marker-outside · blank · bad-size · renderer-gone.
  */
 function renderMap(spec) {
   let clean

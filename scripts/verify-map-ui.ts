@@ -11,6 +11,8 @@
  *
  *   npx tsx scripts/verify-map-ui.ts
  */
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import * as React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import MapPickBrief, { MapDraftFigure } from '../src/components/MapPickBrief'
@@ -137,6 +139,15 @@ ok(
     mapDrawFailText('unavailable', 'x').includes('데스크톱 앱') && mapDrawFailText('bad-png', '그린 지도가 1280×800 PNG가 아니에요.') === '그린 지도가 1280×800 PNG가 아니에요.',
 )
 ok('출처 안내 — 지도 파일을 직접 올리면 지도 바로 아래에 적을 출처 줄', mapCreditNote(2).includes('군산 지도 2장') && mapCreditNote(2).includes(MAP_CREDIT))
+// 지도 데이터 파일이 없는 설치본(patch:asar가 resources/map을 옮기지 않았던 때) — 까닭과 고칠 길을 보이고, 남은 지도는 그리지 않는다
+// (31장을 모두 같은 까닭으로 실패시키지 않게).
+const noData = mapDrawFailText('no-map-data', '지도 오류: Bad response code: 500')
+ok('그리지 못한 까닭 — 지도 데이터 파일이 없으면 파일 자리 · 다시 설치 · patch:asar를 말한다', noData.includes('resources/map/gunsan.pmtiles') && noData.includes('patch:asar') && !noData.includes('Bad response'))
+const autoFillSrc = readFileSync(path.join(process.cwd(), 'src', 'components', 'PhotoAutoFill.tsx'), 'utf8')
+ok(
+  '「군산 지도 그리기」 — 지도 데이터가 없으면(no-map-data) 남은 지도는 그리지 않고 멈춘다',
+  /if \(code === 'unavailable' \|\| code === 'disposed' \|\| code === 'busy' \|\| code === 'no-map-data'\) break/.test(autoFillSrc),
+)
 
 // ── 화면이 부르는 지도 API(가짜 fetch) ───────────────────────────────────────
 const g = globalThis as Record<string, unknown>

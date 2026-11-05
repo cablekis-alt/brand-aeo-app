@@ -168,6 +168,32 @@ ok(
 const listed = await maps.readMapImages(TENANT)
 ok('maps.json — 그린 것만(세 장)', listed.length === 3 && listed.every((x) => existsSync(path.join(tenantDir, 'maps', `${x.id}.png`))))
 ok('그림 파일 읽기 — 목록에 있는 id만', (await maps.readMapFile(TENANT, rec.id))?.length === 40 && (await maps.readMapFile(TENANT, 'ffffffffffffffff')) === null && (await maps.readMapFile(TENANT, '../x')) === null)
+// 줄 이름 — 줄인 이름(「가상호수」)이 다른 장소 이름과 같으면 줄이지 않는다(화면의 표지 고르기 src/lib/mapImage.ts와 같은 이름). 다른 브랜드
+// 폴더에 그려 위 maps.json 셈을 건드리지 않는다.
+const LAKE_TENANT = 'vmap-lake'
+const lakeFile = {
+  ...pointsFile,
+  version: 'lake00000001',
+  points: [
+    { id: '가상호수', name: '가상호수', kind: 'attraction' as const, lng: 126.7172, lat: 35.9781, region: '원도심' },
+    { id: '가상제방', name: '군산 제1수원지제방 (가상호수)', kind: 'attraction' as const, lng: 126.7186, lat: 35.9752, region: '원도심' },
+  ],
+}
+const lakeRenders: { markers: { label: string }[] }[] = []
+const lakeBridge = { available: true, render: async (s: unknown) => (lakeRenders.push(s as { markers: { label: string }[] }), { png: png(), labelsDropped: [], areaLabels: [], renderer: 'fake' }) }
+const lakeDrawn = await maps.drawMapVariant(LAKE_TENANT, profile, lakeFile, ['가상호수', '가상제방'], { bridge: lakeBridge, now: () => t0 })
+ok(
+  '줄 이름 — 다른 장소 이름과 같아지면 줄이지 않는다(그림 · 기록 · 대체 텍스트)',
+  lakeRenders[0]?.markers.map((m) => m.label).join() === '가상호수,군산 제1수원지제방 (가상호수)' &&
+    maps.mapImageView(LAKE_TENANT, lakeDrawn.record).alt === '군산 지도 — 가상호수 · 군산 제1수원지제방 (가상호수) 위치',
+)
+// 그려 둔 그림의 줄 이름이 지금 이름 규칙과 다르면(같은 묶음 · 같은 판이어도) 다시 그린다 — 옛 이름이 든 그림을 다시 쓰지 않는다.
+const oldRule = await maps.drawMapVariant(LAKE_TENANT, profile, { ...lakeFile, points: [lakeFile.points[1]!] }, ['가상제방'], { bridge: lakeBridge, now: () => t0 })
+const newRule = await maps.drawMapVariant(LAKE_TENANT, profile, lakeFile, ['가상제방'], { bridge: lakeBridge, now: () => t0 })
+ok(
+  '줄 이름이 바뀐 묶음은 다시 그린다(reused 아님)',
+  oldRule.record.markers[0]?.label === '가상호수' && !newRule.reused && newRule.record.markers[0]?.label === '군산 제1수원지제방 (가상호수)' && lakeRenders.length === 3,
+)
 
 // ── 임시 서버(라우트 · 사진 PUT · 사진 받기) ─────────────────────────────────
 const PORT = 4121

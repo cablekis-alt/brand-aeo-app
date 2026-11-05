@@ -26,12 +26,15 @@ import {
   MAP_MAX_MARKERS,
   MAP_STYLE_VERSION,
   inMapAvoid,
+  inMapBox,
   isMapImageId,
   mapAltOf,
   mapAppSrc,
   mapCaptionLines,
   mapCaptionOf,
   mapChoiceOf,
+  mapDistanceM,
+  mapFitZoom,
   mapKindsIn,
   mapLabelOf,
   mapNamesIn,
@@ -42,6 +45,7 @@ import {
   parseMapAppSrc,
   type MapPoint,
 } from '../src/lib/mapImage'
+import { frameFor } from '../server/mapFrame'
 import { photoRepeatKey, brandRepeatExempt, mapRegionsOf, screenProfileFor } from '../src/lib/screenCapture'
 import { exportLeaks, inlineScreens, screenPlainText, screenPreviewHtml } from '../src/lib/screenExport'
 import { photoCreditsTable } from '../src/lib/sitePhotos'
@@ -224,6 +228,90 @@ ok(
   Boolean(gunsan?.mapPoints?.path === '/map/') && regions.map((r) => r.name).join() === '원도심,은파,고군산,금강,새만금·비응' && regions[0]!.words.includes('근대역사박물관'),
 )
 ok('프로필이 없는 브랜드는 장소 목록 출처가 없다', screenProfileFor(['stay.example']) === null)
+
+// ── 넓힌 묶음(tier 1)은 틀이 달라야 한다 ────────────────────────────────────
+// 넓힌 묶음이 tier 0 틀 안의 장소만 더하면 줌 · 중심이 그대로라 같은 작성자의 두 글에 거의 같은 그림이 들어간다(2026-11-05 검토 — 다른
+// 픽셀 3%). 넓힌 묶음은 tier 0 틀 밖의 둘레 관광지를 더할 때만 만든다.
+const ring: MapPoint[] = [
+  P('가상북문', 'attraction', 126.73, 36.0, '성곽'),
+  P('가상남문', 'attraction', 126.73, 35.994, '성곽'),
+  P('가상안뜰', 'attraction', 126.7302, 35.997, '성곽'),
+  P('가상우물', 'attraction', 126.7298, 35.9965, '성곽'),
+  P('가상정자', 'attraction', 126.7305, 35.9975, '성곽'),
+  P('가상먼탑', 'attraction', 126.745, 35.997, '성곽'),
+]
+const ringPick = mapChoiceOf(slot('지도에서 찾기 화면에 가상북문·가상남문 위치가 표시된 모습'), ring, REGIONS)
+const f0 = 'miss' in ringPick ? null : frameFor(ringPick.variants[0]!.markers)
+const f1 = 'miss' in ringPick || !ringPick.variants[1] ? null : frameFor(ringPick.variants[1].markers)
+const ringAdded = 'miss' in ringPick || !ringPick.variants[1] ? [] : ringPick.variants[1].markers.filter((m) => !ringPick.variants[0]!.ids.includes(m.id))
+ok(
+  '넓힌 묶음 — tier 0 틀 안의 장소(가상안뜰 · 가상우물 · 가상정자)는 더하지 않고 틀 밖 둘레 관광지(가상먼탑)를 더해 틀이 달라진다',
+  Boolean(f0?.ok && f1?.ok) && ringAdded.length > 0 && ringAdded.every((m) => f0!.ok && !inMapBox(m, f0.bounds)) &&
+    !ringAdded.some((m) => ['가상안뜰', '가상우물', '가상정자'].includes(m.label)) && f0!.ok && f1!.ok && f1.zoom < f0.zoom,
+)
+const ringInside = mapChoiceOf(slot('지도에서 찾기 화면에 가상북문·가상남문 위치가 표시된 모습'), ring.filter((p) => p.name !== '가상먼탑'), REGIONS)
+ok('넓힌 묶음 — 틀 밖에 더할 둘레 관광지가 없으면 넓힌 묶음을 만들지 않는다(같은 그림을 두 번 쓰지 않는다)', !('miss' in ringInside) && ringInside.variants.length === 1)
+const fitSets = [ring.slice(0, 2), ring, [ring[0]!], POINTS.slice(0, 5), POINTS.filter((p) => p.region === '고군산')]
+ok(
+  '틀 줌 어림(mapFitZoom)이 서버 틀 정하기(frameFor)의 기본 여백 줌과 같다',
+  fitSets.every((s) => {
+    const f = frameFor(s.map((p) => ({ lng: p.lng, lat: p.lat })), { avoid: null })
+    return f.ok && Math.abs(mapFitZoom(s) - f.fitZoom) < 0.006
+  }),
+)
+
+// ── 이름 없는 음식 · 숙소 자리 ─────────────────────────────────────────────
+// 「빵집·간식 동선」에 갈비집 · 횟집이 들어가고, 고른 기준 관광지는 지도에도 까닭에도 없었다(2026-11-05 검토).
+const SNACKS: MapPoint[] = [P('가상빵공방', 'food', 126.7045, 35.99), P('가상호떡', 'food', 126.705, 35.989), P('가상카페', 'food', 126.703, 35.9895)]
+const WITH_SNACKS = [...POINTS, ...SNACKS]
+const snackPick = mapChoiceOf(slot('지도에서 찾기 화면', { caption: '지도에서 찾기 화면', heading: '이 기준을 적용하면 빵집·간식 동선은 어떻게 짜나요?' }), WITH_SNACKS, REGIONS)
+ok(
+  '빵집 · 간식 자리 — 이름이 그 갈래(빵 · 호떡 · 카페 …)인 음식점만, 기준 관광지(가상공원)는 표지와 까닭에',
+  !('miss' in snackPick) && snackPick.by === 'default-region' && snackPick.variants[0]!.markers[0]!.label === '가상공원' &&
+    snackPick.variants[0]!.markers.filter((m) => m.kind === 'food').map((m) => m.label).sort().join() === '가상빵공방,가상카페,가상호떡' && snackPick.why.includes('가상공원 둘레'),
+)
+const mealPick = mapChoiceOf(slot('지도에서 찾기 화면', { heading: '커플 먹거리 동선은 어떻게 찾나요?' }), WITH_SNACKS, REGIONS)
+ok(
+  '이름 없는 먹거리 자리 — 기준 관광지를 표지 맨 앞에 넣고 까닭에 「가상공원 둘레」',
+  !('miss' in mealPick) && mealPick.variants[0]!.markers[0]!.label === '가상공원' && mealPick.variants[0]!.markers.slice(1).every((m) => m.kind === 'food') && mealPick.why.includes('가상공원 둘레'),
+)
+const noSnack = mapChoiceOf(slot('지도에서 찾기 화면', { heading: '빵집·간식 동선은 어떻게 짜나요?' }), POINTS, REGIONS)
+ok('빵집 · 간식 자리인데 그 갈래 이름의 음식점이 없으면 비운다(no-markers — 다른 음식점으로 채우지 않는다)', 'miss' in noSnack && noSnack.miss === 'no-markers' && noSnack.why.includes('빵'))
+const nearbyCafe = mapChoiceOf(slot('지도에서 찾기 화면에 가상공원 주변 카페가 표시된 모습'), WITH_SNACKS, REGIONS)
+ok(
+  '「○○ 주변 카페」 — 둘레 음식점도 그 갈래 이름만',
+  !('miss' in nearbyCafe) && nearbyCafe.by === 'named-nearby' && nearbyCafe.variants[0]!.markers.filter((m) => m.kind === 'food').length > 0 &&
+    nearbyCafe.variants[0]!.markers.filter((m) => m.kind === 'food').every((m) => SNACKS.some((s) => s.name === m.label)),
+)
+// 「이성당 말고 …」 — 소제목이 빼라고 한 장소를 기준점 · 표지로 쓰지 않는다.
+ok(
+  '이름 맞추기 — 「○○ 말고 · 빼고 · 대신 · 아닌」의 ○○는 빼고, 그냥 이어진 이름은 그대로',
+  names(mapNamesIn('이성당 말고 가상분식', POINTS)) === '가상분식' && mapNamesIn('이성당이 아닌 곳', POINTS).length === 0 && mapNamesIn('이성당 대신 갈 곳', POINTS).length === 0 &&
+    names(mapNamesIn('이성당과 가상분식', POINTS)) === '이성당,가상분식',
+)
+const notThis = mapChoiceOf(slot('지도에서 찾기 화면', { heading: '이성당 말고 길거리 간식은 어떻게 찾나요?', section: '이성당 앞 줄이 길면 가상공원 쪽으로 걸어 보세요.' }), WITH_SNACKS, REGIONS)
+ok(
+  '「이성당 말고 … 간식」 — 이성당은 기준점 · 표지에 넣지 않는다',
+  !('miss' in notThis) && notThis.anchor?.name !== '이성당' && notThis.variants.every((v) => v.markers.every((m) => m.label !== '이성당')),
+)
+
+// ── 같은 자리의 장소 · 겹치는 줄 이름 ───────────────────────────────────────
+// 사이트 목록에는 같은 건물이 두 이름으로 있다(「호남관세박물관」 = 「구 군산세관 본관」, 0m) — 한 점에 이름 둘 · 표지 칸 낭비.
+const SAME_SPOT = [...POINTS, P('가상세관 본관', 'attraction', 126.7121, 35.9908)]
+const spot = mapChoiceOf(slot('지도에서 찾기 화면에 가상역사박물관과 주변 관광지 위치가 표시된 모습'), SAME_SPOT, REGIONS)
+const spotMarkers = 'miss' in spot ? [] : spot.variants.flatMap((v) => v.markers)
+ok(
+  '같은 자리(10m 안)의 장소는 하나만 — 자리 글자에 나온 장소를 남긴다',
+  !('miss' in spot) && spot.variants.every((v) => v.markers.every((a, i) => v.markers.every((b, j) => i === j || mapDistanceM(a, b) > 10))) &&
+    spotMarkers.some((m) => m.label === '가상역사박물관') && !spotMarkers.some((m) => m.label === '가상세관 본관'),
+)
+const lake = mapChoiceOf(slot('지도에서 찾기 화면에 가상호수 주변 관광지가 표시된 모습'), POINTS, REGIONS)
+const lakeLabels = 'miss' in lake ? [] : lake.variants[0]!.markers.map((m) => m.label)
+ok(
+  '줄 이름 — 줄인 이름이 다른 장소 이름과 같으면 줄이지 않는다(대체 텍스트에 「가상호수 · 가상호수」가 생기지 않게)',
+  lakeLabels.includes('가상호수') && lakeLabels.includes('군산 제1수원지제방 (가상호수)') && new Set(lakeLabels).size === lakeLabels.length &&
+    mapLabelOf('군산 제1수원지제방 (가상호수)', new Set(['가상호수'])) === '군산 제1수원지제방 (가상호수)',
+)
 
 // ── 반복 열쇠 · 글에 넣기 · 내보내기 ─────────────────────────────────────────
 const VARIANT = mapVariantKey(['p2', 'p3'])

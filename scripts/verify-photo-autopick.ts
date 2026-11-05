@@ -25,6 +25,8 @@ import {
   contentWords,
   isPeopleScene,
   isScreenSlot,
+  mapMissText,
+  mapPickReason,
   needsPhotoCredit,
   otherPhotoUses,
   photoSlotStats,
@@ -1104,6 +1106,27 @@ const clearedMap = mapRun(
   { refillCleared: true },
 ).articles[0]!.rows[0]!
 ok('사람이 그 자리에서 뺀 지도(osm-map 열쇠)는 다시 고르지 않는다 — 넓힌 묶음으로', clearedMap.refill === true && clearedMap.mapPick?.tier === 1 && clearedMap.mapPick.key !== D12.variant)
+const clearedLines = clearedMap.mapPick ? mapPickReason(clearedMap.mapPick) : []
+ok(
+  '사람이 뺀 자리를 넓힌 묶음으로 채우면 까닭도 그렇게 — 「이미 써서」라고 하지 않는다',
+  clearedLines.some((l) => l.includes('사람이 이 자리에서 뺀 지도')) && !clearedLines.some((l) => l.includes('이미 써서')),
+)
+const usedLines = mapPickReason(tier1.mapPick!)
+ok('같은 작성자에게 이미 써서 넓힌 묶음이면 까닭은 「이미 써서」', usedLines.some((l) => l.includes('이미 써서')) && !usedLines.some((l) => l.includes('사람이 이 자리에서 뺀')))
+const thirdRow = twoSame.articles[2]!.rows[0]!
+ok(
+  '묶음을 모두 이미 쓴 자리(used) — 까닭에 「이미 써서 비워 둬요」와 그 표지(「지도 화면」만 보이지 않게)',
+  thirdRow.state === 'used' && thirdRow.mapMiss === 'used' && mapMissText(thirdRow).includes('이미 써서') && mapMissText(thirdRow).includes('표지: 가상역사관 · 가상바다공원'),
+)
+const allRemoved = mapRun(
+  [article('mr', mdMap(), { group: 'w1', cleared: [{ slot: MSLOT, nth: 1, heading: '지도', removed: [`osm-map:${D12.variant}`, `osm-map:${tier1.mapPick!.key}`] }] })],
+  { available: true, drawn: [D12] },
+  { refillCleared: true },
+).articles[0]!.rows[0]!
+ok(
+  '사람이 묶음을 모두 뺀 자리 — 비워 두고 까닭은 「사람이 이 자리에서 뺀 지도」',
+  allRemoved.state === 'used' && allRemoved.mapMiss === 'removed' && mapMissText(allRemoved).includes('사람이 이 자리에서 뺀') && !allRemoved.pick,
+)
 ok(
   '다른 글의 지도는 「osm-map:변형」으로 센다(otherPhotoUses)',
   JSON.stringify(otherPhotoUses({ x: { photos: [{ ...illustration, src: D12.src, origin: 'osm-map', mapId: D12.id, mapVariant: D12.variant, credit: MAP_CREDIT }] } }, new Set(), () => 'w1')) ===
