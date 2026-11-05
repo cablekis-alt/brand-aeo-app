@@ -1207,26 +1207,31 @@ ok(
 )
 
 // 19) 2026-11-05 결정 D5(b) — 군산각 남은 자리.
-// (1) 장면 글자에 장소 이름이 없는 지도 자리 — 같은 작성자가 처음 · 넓힌 묶음을 모두 썼으면 다른 권역의 기본 묶음(tier 2, 확인 필요).
+// (1) 장면 글자에 장소 이름이 없는 지도 자리 — 같은 작성자가 처음 · 넓힌 묶음을 모두 썼으면, 그 절이 말한 다른 권역의 기본 묶음만(tier 2,
+//     확인 필요). 절이 다른 권역을 말하지 않으면 비워 둔다(2026-11-05 실데이터 사본 점검 — 원도심 동선 글에 고군산 섬 지도가 들어갔다).
 const OTHER_POINTS = [...MAP_POINTS, MP('m8', '가상호수공원', 'attraction', 126.735, 35.958, '은파'), MP('m9', '가상물빛다리', 'attraction', 126.738, 35.956, '은파')]
 const UNNAMED_MAP = `${SB} 웹사이트의 지도에서 찾기 화면에 장소 위치가 표시된 모습`
-const mdUnnamed = ['## 1. 지도', '', `![${UNNAMED_MAP}](#image-slot)`, '*지도에서 찾기로 장소 위치를 보고 동선을 묶어 봅니다.*']
-const thrice = mapRun(['a', 'b', 'c', 'd'].map((x) => article(`un-${x}`, mdUnnamed, { group: 'w1' })), { available: true, drawn: [], points: OTHER_POINTS })
-const tiers = thrice.articles.map((a) => a.rows[0]!.mapPick?.tier ?? null)
-const tier2 = thrice.articles.map((a) => a.rows[0]!).find((r) => r.mapPick?.tier === 2)
+const mdUnnamed = (heading: string) => [`## 1. ${heading}`, '', `![${UNNAMED_MAP}](#image-slot)`, '*지도에서 찾기로 장소 위치를 보고 동선을 묶어 봅니다.*']
+const fourOf = (heading: string, tag: string) =>
+  mapRun(['a', 'b', 'c', 'd'].map((x) => article(`${tag}-${x}`, mdUnnamed(heading), { group: 'w1' })), { available: true, drawn: [], points: OTHER_POINTS })
+const withEunpa = fourOf('원도심과 은파를 하루에 잇는 동선', 'ep')
+const tier2 = withEunpa.articles.map((a) => a.rows[0]!).find((r) => r.mapPick?.tier === 2)
 ok(
-  '이름 없는 지도 자리 — 같은 작성자가 같은 권역 묶음을 다 썼으면 다른 권역(은파) 묶음 · 까닭 줄 · 그다음은 비워 둠(used)',
-  tiers[0] === 0 && tiers.includes(2) && tier2?.mapPick?.otherRegion === '은파' && tier2.review === true &&
+  '이름 없는 지도 자리 — 절이 은파를 말하면, 같은 권역 묶음을 다 쓴 뒤 은파 묶음(까닭 줄 · 확인 필요) · 그다음은 비워 둠(used)',
+  withEunpa.articles[0]!.rows[0]!.mapPick?.tier === 0 && tier2?.mapPick?.otherRegion === '은파' && tier2.review === true &&
     tier2.mapPick.ids.every((id) => OTHER_POINTS.find((p) => p.id === id)?.region === '은파') &&
-    mapPickReason(tier2.mapPick).some((l) => l.includes('다른 권역(은파) 묶음')) && thrice.articles[3]!.rows[0]!.state === 'used',
+    mapPickReason(tier2.mapPick).some((l) => l.includes('다른 권역(은파) 묶음')) && withEunpa.articles[3]!.rows[0]!.state === 'used',
 )
-const saidRegion = mapRun(['a', 'b', 'c'].map((x) => article(`sr-${x}`, ['## 1. 지도', '', `![${SB} 웹사이트의 지도에서 찾기 화면에 원도심 장소 위치가 표시된 모습](#image-slot)`], { group: 'w1' })), {
+const noOther = fourOf('커플 사진 · 야경 동선', 'no')
+ok('절이 다른 권역을 말하지 않으면 다른 권역 묶음을 쓰지 않고 비워 둔다', noOther.articles.every((a) => a.rows[0]!.mapPick?.tier !== 2) && noOther.articles.some((a) => a.rows[0]!.state === 'used'))
+const saidRegion = mapRun(['a', 'b', 'c'].map((x) => article(`sr-${x}`, ['## 1. 은파도 들르는 동선', '', `![${SB} 웹사이트의 지도에서 찾기 화면에 원도심 장소 위치가 표시된 모습](#image-slot)`], { group: 'w1' })), {
   available: true,
   drawn: [],
   points: OTHER_POINTS,
 })
-ok('글자가 권역을 말한 지도 자리(원도심)는 다른 권역 묶음을 쓰지 않는다', saidRegion.articles.every((a) => a.rows[0]!.mapPick?.tier !== 2))
-// (2) 브랜드 지도에서 장소를 눌러 이용시간 · 요금을 보는 자리 — 장소 안내(확인 필요), 같은 작성자가 그 장소 안내를 이미 썼으면 그 장소 한 곳의 지도.
+ok('장면 글자가 권역을 말한 지도 자리(원도심)는 절이 다른 권역을 말해도 다른 권역 묶음을 쓰지 않는다', saidRegion.articles.every((a) => a.rows[0]!.mapPick?.tier !== 2))
+// (2) 브랜드 지도에서 장소를 눌러 이용시간 · 요금을 보는 자리 — 장소 안내(확인 필요), 같은 작성자가 그 장소 안내를 이미 썼으면 비워 둔다
+//     (위치만 보이는 지도로는 설명 줄의 이용시간 · 요금을 보여 주지 못한다 — 2026-11-05 실데이터 사본 점검).
 const ACTION_SLOT = `${SB} 웹사이트의 지도에서 찾기 화면에서 가상박물관을 눌러 여는 시간과 요금이 함께 보이는 장면`
 const PLACE_POINTS = [...MAP_POINTS, MP('m10', '가상박물관', 'attraction', 126.7131, 35.9901)]
 const actionTwice = placeRun(
@@ -1236,10 +1241,9 @@ const actionTwice = placeRun(
 )
 const [act1, act2] = actionTwice.articles.map((a) => a.rows[0]!)
 ok(
-  '누르기 화면 자리 — 첫 글은 그 장소 안내(확인 필요) · 같은 작성자의 둘째 글은 그 장소 한 곳을 그린 지도(viaAction · 확인 필요)',
+  '누르기 화면 자리 — 첫 글은 그 장소 안내(확인 필요) · 같은 작성자의 둘째 글은 지도로 대신하지 않고 비워 둔다(used)',
   act1!.state === 'filled' && act1!.viaAction === true && act1!.review === true && act1!.pick?.variantId === '가상박물관' &&
-    act2!.state === 'undrawn' && act2!.mapPick?.viaAction === true && act2!.mapPick.ids[0] === 'm10' && act2!.review === true &&
-    mapPickReason(act2!.mapPick).some((l) => l.includes('장소를 눌러 보는 화면 자리')),
+    act2!.state === 'used' && !act2!.mapPick && !act2!.pick,
 )
 
 let failed = 0

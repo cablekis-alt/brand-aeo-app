@@ -761,6 +761,19 @@ ok(
   '장면을 아직 읽지 않은 사진은 비슷한 말로 넣지 않고 읽기를 청한다',
   rowsOf(synUnread, 'su1')[0]!.state !== 'filled' && synUnread.sceneWanted.some((w) => w.src === living.src),
 )
+// 2026-11-05 실데이터 사본 점검 — 「독채 내부」 자리에 창밖 정원(실내 장면) 사진이 덧붙인 「독채」만으로 들어갔다. 비슷한 말이 장면 글자와
+// 맞아야 한다(창밖 정원의 비슷한 말 「정원」은 「독채 내부」에 없다). 「창 너머로 정원이 보이는」 실내 자리에는 그 사진이 맞다.
+const gardenOnly = autoPickPhotos({
+  articles: [stayDoc('go1', '스테이,머뭄 독채 내부 공간 모습'), stayDoc('go2', '독채 실내에서 창 너머로 정원이 보이는 앉을 자리')],
+  candidates: [nightGarden],
+  brandName: '스테이,머뭄',
+  places: [],
+  scenes: stayScenes,
+})
+ok(
+  '덧붙인 「독채」만으로는 맞추지 않는다 — 「독채 내부」 자리에 창밖 정원 사진 없음 · 「창 너머 정원이 보이는 실내」 자리에는 넣음(확인 필요)',
+  rowsOf(gardenOnly, 'go1')[0]!.state !== 'filled' && rowsOf(gardenOnly, 'go2')[0]!.pick?.src === nightGarden.src && rowsOf(gardenOnly, 'go2')[0]!.review === true,
+)
 const notOwn = synRun([stayDoc('no1', '군산 구도심 카페 내부 공간 모습')])
 ok('자기 시설 자리가 아니면 비슷한 말을 쓰지 않는다(다른 곳의 「내부」 자리에 숙소 거실 사진 안 넣음)', rowsOf(notOwn, 'no1')[0]!.state !== 'filled')
 const frontAlley = regionRun([captioned('fa1', '스테이,머뭄 독채 앞 골목', '대문을 나서면 바로 골목입니다.')], { brandName: '스테이,머뭄', places: ['근대역사박물관'], regionCandidates: [alley], scenes: namedScenes })

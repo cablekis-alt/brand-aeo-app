@@ -546,6 +546,23 @@ function busiestRegion(points: readonly MapPoint[]): string | null {
   return regionsByAttractions(points)[0] ?? null
 }
 
+/** 글자가 말한 권역들 — 권역 낱말(이름 · 그 권역의 장소 낱말)이 처음 나온 차례. */
+function regionsIn(text: string, regions: readonly MapRegion[]): string[] {
+  const t = textKey(text)
+  const found: { name: string; at: number }[] = []
+  for (const r of regions) {
+    let at = -1
+    for (const w of [r.name, ...r.words]) {
+      const k = textKey(w)
+      if (k.length < 2) continue
+      const i = t.indexOf(k)
+      if (i >= 0 && (at < 0 || i < at)) at = i
+    }
+    if (at >= 0) found.push({ name: r.name, at })
+  }
+  return found.sort((a, b) => a.at - b.at).map((f) => f.name)
+}
+
 /** 권역들 — 공군기지 상자 밖 관광지가 많은 차례(같으면 목록에 먼저 나온 권역). */
 function regionsByAttractions(points: readonly MapPoint[]): string[] {
   const count = new Map<string, number>()
@@ -754,9 +771,11 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
     if (!center) return { miss: 'no-markers', why: `${why.join(' · ')} — 기준 장소가 없음` }
     // 기준점은 표지 맨 앞 — 둘레를 고른 기준이 지도와 까닭에 보이게(관광지 자리면 사이트 목록의 첫 관광지라 예전과 같은 묶음이다).
     list = aroundCenter(usable, center, region, kinds, Boolean(anchor), snack)
-    // 다른 권역 묶음(tier 2) — 이름이 없는 자리라 다른 권역의 기본 묶음(관광지가 많은 권역부터, 그 권역의 첫 관광지 둘레)도 쓸 수 있다.
-    // 글자가 권역을 말한 자리(by region)는 그 권역만.
-    for (const other of by === 'region' ? [] : regionsByAttractions(usable)) {
+    // 다른 권역 묶음(tier 2) — 이름이 없는 자리라도 그 절(설명 줄 · 소제목 · 절 글자)이 말한 다른 권역만(그 권역의 첫 관광지 둘레). 글과
+    // 상관없는 권역 지도는 넣지 않는다(2026-11-05 실데이터 사본 점검 — 원도심 동선 글에 고군산 섬 지도가 들어갔다). 장면 글자가 권역을 말한
+    // 자리(「원도심 장소 위치」)는 그 권역만.
+    const said = regionIn(slot.key, regions) ? [] : regionsIn(`${slot.caption}\n${slot.heading}\n${slot.section}`, regions)
+    for (const other of said) {
       if (other === region) continue
       const c = usable.find((p) => p.region === other && p.kind === 'attraction' && !inMapAvoid(p))
       if (!c) continue
