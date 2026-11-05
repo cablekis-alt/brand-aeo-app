@@ -64,7 +64,7 @@ import {
   type PlaceEntry,
   type SitePhotoResult,
 } from '../lib/sitePhotos'
-import { isTourSourcePage, TOUR_SOURCES, type TourSource } from '../lib/tourPhotos'
+import { isTourSourcePage, regionPhotoCity, TOUR_SOURCES, type TourSource } from '../lib/tourPhotos'
 import MapPickBrief from './MapPickBrief'
 import PhotoAutoFill from './PhotoAutoFill'
 
@@ -247,7 +247,8 @@ export default function SitePhotoPanel({
   }, [siteRoot, wantPlaces])
 
   const publicOk = publicPhotosAllowed(settings, brand.industry)
-  const wantTour = publicOk && (places?.length ?? 0) > 0 && slots.length > 0
+  // 관광공사 키 상태 — 장소 페이지가 있는 브랜드의 관광공사 사진 단추, 그리고 지역형 브랜드의 공공 사진 사용 확인 상자(regionTour)에 쓴다.
+  const wantTour = slots.length > 0 && ((publicOk && (places?.length ?? 0) > 0) || regionPhotoCity(brand) !== null)
   useEffect(() => {
     if (!wantTour) return
     let alive = true
@@ -289,7 +290,11 @@ export default function SitePhotoPanel({
   if (!hasPhotoWork) return null
 
   const noCredit = (stored.photos ?? []).filter((p) => photoCreditState(p) === 'missing')
-  const showPublic = allowed && ((places?.length ?? 0) > 0 || noCredit.length > 0)
+  // 공공 사진 사용 확인 상자 — 장소 페이지(sitemap의 /places/)가 있거나 출처 없는 공공 사진이 있을 때, 그리고 장소 페이지가 없어도 지역형
+  // 브랜드(도시가 정해진 지역)에 관광공사 키가 있으면(장소 없는 자리에 지역 사진을 쓴다 — 자동 채우기와 같은 기준 regionPhotoCity). 예전에는
+  // 장소 페이지가 없는 브랜드(스테이,머뭄)는 상자가 나오지 않아 켤 수 없었다(2026-11-05).
+  const regionTour = Boolean(tourOn) && regionPhotoCity(brand) !== null
+  const showPublic = allowed && ((places?.length ?? 0) > 0 || noCredit.length > 0 || regionTour)
   // 홈페이지 사진 가운데 출처 표시가 필요한 사진(공공누리 표시 · 공공 사진 호스트)은 여기서 고르지 않는다 — 공공 사진으로 출처와 함께.
   // 자사 사이트 주소의 사진은 공공 사진 호스트여도 홈페이지 사진이다(자사 사이트가 visitkorea.or.kr · go.kr인 브랜드).
   const siteOptions: PhotoOption[] = (found?.photos ?? [])
@@ -779,7 +784,8 @@ export default function SitePhotoPanel({
             <div className="fact-sheet">
               <p className="hint" style={{ margin: 0 }}>
                 공공 사진 — 자사 사이트 장소 페이지의 공공누리 제1유형 사진(예: 한국관광공사)과, 이 PC에 키가 있으면 한국관광공사 TourAPI(국문
-                관광정보 · 관광사진 정보 「포토코리아」)의 공공누리 제1유형 사진을 출처와 함께 쓸 수 있어요. 브랜드마다 한 번 확인해 주세요.
+                관광정보 · 관광사진 정보 「포토코리아」)의 공공누리 제1유형 사진을 출처와 함께 쓸 수 있어요. 장소 이름이 없는 자리(골목 · 거리 ·
+                산책로 등)에는 브랜드 도시의 관광사진을 자동 채우기가 찾아요(자기 시설 자리에는 넣지 않아요). 브랜드마다 한 번 확인해 주세요.
               </p>
               <label>
                 <input type="checkbox" checked={agreePublic} onChange={(e) => setAgreePublic(e.target.checked)} /> 공공 사진 사용 확인 — 공공누리

@@ -65,7 +65,7 @@ import {
   type PublicPhotoPage,
   type SitePhotoResult,
 } from '../lib/sitePhotos'
-import { TOUR_PLACE_LIMIT, TOUR_SOURCES, tourRegionOf, tourSourceOf, type TourSource } from '../lib/tourPhotos'
+import { regionPhotoCity, TOUR_PLACE_LIMIT, TOUR_SOURCES, tourSourceOf, type TourSource } from '../lib/tourPhotos'
 import MapPickBrief from './MapPickBrief'
 
 /**
@@ -269,7 +269,7 @@ export default function PhotoAutoFill({
       let tourCandidates: AutoCandidate[] = []
       let regionCandidates: AutoCandidate[] | null = null
       // 장소 없는 자리의 지역 사진 — 지역형 브랜드(도시가 정해진 지역) · 공공 사진 사용 확인 · 장면을 읽을 수 있을 때만.
-      const cityOf = brand.marketScope === 'national' || brand.marketScope === 'b2b' ? null : (tourRegionOf(brand.region)?.city ?? null)
+      const cityOf = regionPhotoCity(brand)
       const regionCity = publicOk && scenes ? cityOf : null
       // 자사 화면 — 자사 사이트에 화면 프로필이 있는 브랜드만 이 PC에 찍어 둔 화면 목록을 받는다(웹은 목록이 없어 null — 화면 자리는
       // 비워 둔다). 찍기는 설치한 데스크톱 앱에서만(/api/health screens) — 아니면 찍어 둔 화면만 쓴다.

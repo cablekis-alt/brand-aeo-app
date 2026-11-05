@@ -156,6 +156,16 @@ export function tourRegionOf(text: string | undefined): TourRegion | null {
   return province ? { province, city: null } : null
 }
 
+/**
+ * 장소 없는 자리에 견줄 지역 사진(관광사진 정보를 브랜드 도시로 찾은 사진)의 도시 — 지역형 브랜드(전국형 · B2B형이 아님)이고 지역 글자에서
+ * 도시를 읽었을 때만, 아니면 null. 자동 채우기(src/components/PhotoAutoFill.tsx)와 글의 「홈페이지 사진」 칸의 공공 사진 사용 확인 상자
+ * (SitePhotoPanel — 장소 페이지가 없는 지역형 브랜드도 지역 사진을 쓰려면 확인해야 한다, 2026-11-05)가 같은 기준을 쓴다.
+ */
+export function regionPhotoCity(brand: { marketScope?: string; region?: string }): string | null {
+  if (brand.marketScope === 'national' || brand.marketScope === 'b2b') return null
+  return tourRegionOf(brand.region)?.city ?? null
+}
+
 /** 어느 곳인지 정해지는 지역인가 — 광역시 · 도나 시 · 군 · 구가 있고, 여러 곳에 있는 구 · 군 이름이면 광역시 · 도도 있어야 한다. */
 export function knownRegion(r: TourRegion | null): r is TourRegion {
   if (!r) return false

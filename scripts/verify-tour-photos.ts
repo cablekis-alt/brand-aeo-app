@@ -30,6 +30,7 @@ import {
   TOUR_SOURCES,
   tourCreditOf,
   tourItems,
+  regionPhotoCity,
   TOUR_PLACE_LIMIT,
   tourPhotoSrc,
   type TourPhotoResult,
@@ -595,6 +596,14 @@ try {
   rmSync(dir, { recursive: true, force: true })
 }
 
+// 2026-11-05 — 지역 사진의 도시(regionPhotoCity): 자동 채우기와 글의 공공 사진 사용 확인 상자가 같은 기준을 쓴다(장소 페이지가 없는 지역형
+// 브랜드 — 스테이,머뭄 — 도 확인 상자가 나와야 지역 사진을 쓸 수 있다).
+ok(
+  '지역 사진 도시 — 지역형 브랜드는 지역 글자의 도시, 전국형 · B2B형 · 도시를 못 읽으면 없음',
+  regionPhotoCity({ region: '전북 군산' }) === '군산' && regionPhotoCity({ region: '전북 군산', marketScope: 'local' }) === '군산' &&
+    regionPhotoCity({ region: '전북 군산', marketScope: 'national' }) === null && regionPhotoCity({ region: '서울', marketScope: 'b2b' }) === null &&
+    regionPhotoCity({ region: '국내' }) === null && regionPhotoCity({}) === null,
+)
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)
