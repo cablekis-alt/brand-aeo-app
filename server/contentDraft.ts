@@ -643,13 +643,14 @@ export interface AutoPhotoSaveResult {
  * 받는다). 사람이 고른 사진 · 뺀 기록은 건드리지 않는다.
  * 「같은 사진」은 반복 열쇠(src/lib/screenCapture.ts photoRepeatKey)로 센다 — 사진은 주소, 자사 화면은 「화면 + 변형」(다른 날 다시 찍은
  * 파일도 같은 화면). 자사 화면은 브랜드 상한(brandRepeat)을 받지 않고 글 하나에 한 번 · 같은 작성자에게 한 번만 지킨다(2026-11-04 결정 3).
+ * opts.ownExempt(자기 시설(업주) 사진 — src/lib/photoAutoPick.ts ownPhotoExempt)가 참인 사진도 브랜드 상한을 받지 않는다(2026-11-05 결정 D3).
  */
 export async function saveAutoPhotoPicks(
   tenantId: string,
   entries: AutoPhotoEntry[],
   brandRepeat: number,
   groupOf: (actionId: string) => string | undefined = () => undefined,
-  opts: { refillCleared?: boolean } = {},
+  opts: { refillCleared?: boolean; ownExempt?: (p: PhotoPick) => boolean } = {},
 ): Promise<AutoPhotoSaveResult> {
   return updateDrafts(tenantId, (map) => {
     const result: AutoPhotoSaveResult = { drafts: [], saved: 0, credited: 0, skipped: 0, changed: [], missing: [], replaced: 0, removed: 0, stale: [] };
@@ -668,7 +669,7 @@ export async function saveAutoPhotoPicks(
       for (const p of d.photos ?? []) count(group, p, 1);
     }
     const groupHas = (group: string | undefined, p: PhotoPick) => group !== undefined && (groupUsed.get(group)?.get(photoRepeatKey(p)) ?? 0) > 0;
-    const overBrand = (p: PhotoPick) => !brandRepeatExempt(p) && (brandCount.get(photoRepeatKey(p)) ?? 0) >= brandRepeat;
+    const overBrand = (p: PhotoPick) => !brandRepeatExempt(p) && !opts.ownExempt?.(p) && (brandCount.get(photoRepeatKey(p)) ?? 0) >= brandRepeat;
     const sameKey = (a: PhotoPick, b: PhotoPick) => photoRepeatKey(a) === photoRepeatKey(b);
     for (const entry of entries) {
       const current = map[entry.actionId];

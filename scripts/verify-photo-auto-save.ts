@@ -70,6 +70,27 @@ try {
   const r4 = await saveAutoPhotoPicks(TENANT, [{ actionId: 'a2', generatedAt: AT, picks: [pick(P)] }], 3)
   ok('작성자를 모르면 다른 글의 같은 사진도 넣는다(브랜드 상한 안)', r4.saved === 1 && readMap().a2?.photos?.[0]?.src === P)
 
+  // 3-a) 2026-11-05 결정 D3 — 자기 시설(업주) 사진은 브랜드 상한을 받지 않는다(서버도 ownPhotoExempt로 본다). 같은 작성자에게 한 번은 그대로.
+  const { ownPhotoExempt } = await import('../src/lib/photoAutoPick')
+  const OWN = '가상스테이 독채 앞 정원'
+  const ownExempt = (p: { origin?: string; slot: string }) => ownPhotoExempt(p as Parameters<typeof ownPhotoExempt>[0], '가상스테이')
+  const ownGroups: Record<string, string> = { o1: 'A', o2: 'B', o3: 'C', o4: 'D', o5: 'D' }
+  writeDrafts({ o1: draft('o1', [pick(P, OWN)]), o2: draft('o2', [pick(P, OWN)]), o3: draft('o3', [pick(P, OWN)]), o4: draft('o4'), o5: draft('o5') })
+  const rOwn = await saveAutoPhotoPicks(
+    TENANT,
+    [
+      { actionId: 'o4', generatedAt: AT, picks: [pick(P, OWN)] },
+      { actionId: 'o5', generatedAt: AT, picks: [pick(P, OWN)] },
+    ],
+    3,
+    (id) => ownGroups[id],
+    { ownExempt },
+  )
+  ok('자기 시설 자리 사진은 브랜드에서 넷째도 저장한다 — 같은 작성자의 둘째 글은 막는다', rOwn.saved === 1 && rOwn.skipped === 1 && readMap().o4?.photos?.[0]?.src === P && !readMap().o5?.photos)
+  writeDrafts({ o1: draft('o1', [pick(P)]), o2: draft('o2', [pick(P)]), o3: draft('o3', [pick(P)]), o4: draft('o4') })
+  const rNotOwn = await saveAutoPhotoPicks(TENANT, [{ actionId: 'o4', generatedAt: AT, picks: [pick(P)] }], 3, (id) => ownGroups[id], { ownExempt })
+  ok('자기 시설 자리가 아니면 브랜드 상한 3 그대로', rNotOwn.saved === 0 && rNotOwn.skipped === 1 && !readMap().o4?.photos)
+
   // 배정 파일이 없으면 서버는 작성자를 모른다(글 · 브랜드 상한만).
   const { writerGroupOf } = await import('../server/probePlanStore')
   ok('배정 파일이 없으면 작성자 상한을 두지 않는다', (await writerGroupOf(TENANT))('a1') === undefined)

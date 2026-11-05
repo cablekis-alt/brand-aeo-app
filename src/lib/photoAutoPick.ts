@@ -19,7 +19,8 @@
  * - 후보: 설명 없는 사진 · 일러스트 · 사람이 찍힌 사진(초상권) · 출처를 확인하지 못한 공공 사진 · 공공누리 제1유형이 아닌 공공 사진.
  * 사람이 나오는 장면 자리(가족 · 둘이 · 여행자 …)에는 풍경이 맞으면 넣되 「확인 필요」로 표시한다.
  *
- * 같은 사진은 한 글에 한 번, 한 작성자(group)의 글 사이에 한 번, 브랜드 전체에서 AUTO_PICK_RULES.brandRepeat번까지.
+ * 같은 사진은 한 글에 한 번, 한 작성자(group)의 글 사이에 한 번, 브랜드 전체에서 AUTO_PICK_RULES.brandRepeat번까지. 자기 시설(업주)
+ * 사진 — 홈페이지 사진을 브랜드 자기 시설 자리에 넣을 때(ownPhotoExempt) — 은 브랜드 상한을 받지 않는다(2026-11-05 결정 D3).
  * 서버(server/index.ts op auto)도 이 파일의 후보 검사를 다시 하므로 DOM을 쓰지 않는다.
  *
  * 자사 화면(src/lib/screenCapture.ts — 2026-11-04) — 사진을 다 고른 뒤 화면 자리(웹사이트 화면 자리 가운데 프로필 표의 화면 이름이 정확히
@@ -637,12 +638,43 @@ function namesPlace(text: string, stop: ReadonlySet<string>): boolean {
 }
 
 /**
- * 자리 글자가 브랜드 자기 시설을 가리키는가 — 장면 글자나 설명 줄에 브랜드 이름(띄어쓰기 · 문장부호 무시, MIN_PLACE_KEY자 이상)이 있거나
- * 장면 글자에 자기 시설 낱말(OWN_FACILITY)이 있다.
+ * 브랜드 바깥 동네 장면 낱말 — 장면 글자에 이 낱말이 있고 자기 시설 낱말이 「근처 · 주변」 앞에만 나오면(NEAR_OWN) 자기 시설이 아니라
+ * 동네 자리다(「스테이,머뭄 근처 … 구도심 골목」 · 「숙소 근처 … 옛 골목을 걷는 장면」). 「정원」 · 「조명」은 자기 시설에도 있어 넣지 않는다.
+ */
+const NEIGHBORHOOD = /골목|거리|명소|구도심|원도심|동네|산책로|산책길|둘레길|바닷가|해변|해안|바다|호수|강변|시장|항구|포구|등대|공원|광장|철길|갈대|갯벌|방파제|선착장|건축물|야경|노을|일몰/
+/** 「근처 · 주변」 앞의 자기 시설 낱말(placeKey 글자 — 띄어쓰기 없음). 「앞 골목」은 숙소 앞이라 자기 시설 그대로 둔다. */
+const NEAR_WORDS = '(?:의|에서)?(?:근처|주변|인근|주위|가까이|가까운|이웃)'
+const NEAR_OWN_FACILITY = new RegExp(`(?:${OWN_FACILITY.source})${NEAR_WORDS}`, 'g')
+
+/** 글자(placeKey 글자)에 브랜드 이름(MIN_PLACE_KEY자 이상)이나 자기 시설 낱말이 있는가. */
+function namesOwn(key: string, brandKey: string): boolean {
+  return (brandKey.length >= MIN_PLACE_KEY && key.includes(brandKey)) || OWN_FACILITY.test(key)
+}
+
+/**
+ * 자리 글자가 브랜드 자기 시설을 가리키는가 — 장면 글자나 설명 줄에 브랜드 이름(띄어쓰기 · 문장부호 무시, MIN_PLACE_KEY자 이상)이나 자기
+ * 시설 낱말(OWN_FACILITY)이 있다. 설명 줄도 본다(2026-11-05 — 「일본식 가옥 앞 … 정원과 툇마루」 자리의 설명 줄이 독채를 말했는데 관광공사
+ * 히로쓰가옥 사진이 들어갔다). 다만 장면 글자에 동네 장면 낱말(NEIGHBORHOOD — 골목 · 거리 · 명소 …)이 있고 브랜드 · 자기 시설 낱말이
+ * 「근처 · 주변」 앞에만 나오면(또는 장면 글자에 없으면) 동네 자리다 — 「숙소 근처 골목」 · 설명 줄이 「숙소에서 걸어서 5분」인 골목 자리.
  */
 function ownFacility(slot: { key: string; caption: string }, brandKey: string): boolean {
-  if (brandKey.length >= MIN_PLACE_KEY && (placeKey(slot.key).includes(brandKey) || placeKey(slot.caption).includes(brandKey))) return true
-  return OWN_FACILITY.test(normSlotAlt(slot.key))
+  const key = placeKey(slot.key)
+  const near = brandKey.length >= MIN_PLACE_KEY ? new RegExp(`${brandKey}${NEAR_WORDS}`, 'g') : null
+  const rest = (near ? key.replace(near, ' ') : key).replace(NEAR_OWN_FACILITY, ' ')
+  const street = NEIGHBORHOOD.test(normSlotAlt(slot.key).replace(DISTANCE_GEORI, ' '))
+  if (street && !namesOwn(rest, brandKey)) return false
+  return namesOwn(key, brandKey) || namesOwn(placeKey(slot.caption), brandKey)
+}
+
+/**
+ * 자기 시설(업주) 사진인가 — 홈페이지 사진(공공 사진 · 화면 · 지도가 아닌 사진)을 브랜드 자기 시설 자리(장면 글자만 본다 — 서버도 같은
+ * 판정을 해야 해서 설명 줄은 보지 않는다)에 넣었다. 브랜드 전체 반복 상한(AUTO_PICK_RULES.brandRepeat)을 받지 않고 글 하나에 한 번 ·
+ * 작성자 한 사람에게 한 번만 지킨다(2026-11-05 결정 D3 — 8명이 같은 숙소를 쓰니 같은 건물 사진이 서로 다른 블로그에 나오는 것은
+ * 자연스럽다). 서버(server/contentDraft.ts saveAutoPhotoPicks)도 이 함수로 본다.
+ */
+export function ownPhotoExempt(p: Pick<PhotoPick, 'origin' | 'slot'>, brandName: string | undefined): boolean {
+  if (p.origin !== undefined && p.origin !== 'site') return false
+  return ownFacility({ key: p.slot, caption: '' }, placeKey(brandName ?? ''))
 }
 
 /** 글자의 지역 사진 견주기 낱말 — 내용어(stop 제외)와 글자 안의 장면 낱말(REGION_SCENE_WORDS). */
@@ -1489,14 +1521,18 @@ export function autoPickPhotos(input: {
       return row
     })
     const removed = (row: AutoSlotRow, src: string) => Boolean(removedAt.get(row)?.has(src))
-    const isBlocked = (src: string) => {
+    /** own — 자기 시설(업주) 사진(ownPhotoExempt)이라 브랜드 상한을 받지 않는다(글 하나 · 작성자 한 사람에게 한 번은 그대로). */
+    const isBlocked = (src: string, own = false) => {
       const later = heldLater(src, index, article.group)
       return (
         inArticle.has(src) ||
         (article.group !== undefined && (groupUsed.get(article.group)?.get(src) ?? 0) + later.group > 0) ||
-        (brandCount.get(src) ?? 0) + later.brand >= AUTO_PICK_RULES.brandRepeat
+        (!own && (brandCount.get(src) ?? 0) + later.brand >= AUTO_PICK_RULES.brandRepeat)
       )
     }
+    /** 이 자리에 넣는 이 후보가 자기 시설(업주) 사진인가 — 공공 사진(②③③b)은 아니다. */
+    const ownPick = (row: AutoSlotRow, c: Pick<AutoCandidate, 'origin'>) =>
+      c.origin !== 'public' && ownPhotoExempt({ slot: row.slot.key }, input.brandName)
     /** 사진을 넣을 자리가 남았나 — 다시 보는 자동 사진의 자리는 그 사진을 바꾸는 것이라 글의 사진 수 상한에 세지 않는다. */
     const hasRoom = (row: AutoSlotRow) => Boolean(row.old) || room > 0
     // 장면 — 자리가 바라는 장면(자리마다 한 번)과 장면 때문에 뺀 후보 수.
@@ -1637,7 +1673,7 @@ export function autoPickPhotos(input: {
         }
       }
       for (;;) {
-        const open = pairs.filter((p) => p.row.state === 'nomatch' && hasRoom(p.row) && !isBlocked(p.candidate.src))
+        const open = pairs.filter((p) => p.row.state === 'nomatch' && hasRoom(p.row) && !isBlocked(p.candidate.src, ownPick(p.row, p.candidate)))
         if (!open.length) break
         const best = open.sort(better)[0]!
         fill(best.row, best.candidate, best.score, best)
@@ -1776,7 +1812,7 @@ export function autoPickPhotos(input: {
           ...(tourOk(row) ? fromPlace(tourOpts, 2) : []),
           ...(regionOpts.get(row)?.soft ?? []).map((o): Similar => ({ ...o, fit: o.fit!, score: regionScore(o), region: true, rank: [-sceneScore(o), 3, 0, 0, o.order] })),
         ]
-        const best = list.filter((o) => !isBlocked(o.candidate.src)).sort(byRank)[0]
+        const best = list.filter((o) => !isBlocked(o.candidate.src, ownPick(row, o.candidate))).sort(byRank)[0]
         if (!best?.scene) continue
         fill(row, best.candidate, best.score, best, similarWhy(wantsOf(row), best.scene))
         if (best.place) row.place = best.place

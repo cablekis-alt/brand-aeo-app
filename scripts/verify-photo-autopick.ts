@@ -29,6 +29,7 @@ import {
   mapPickReason,
   needsPhotoCredit,
   otherPhotoUses,
+  ownPhotoExempt,
   photoSlotStats,
   photoStateKey,
   scoreSlot,
@@ -152,8 +153,8 @@ const lost = (n: number): PhotoPick => ({ ...human, slot: `없어진 자리 ${n}
 const r3 = autoPickPhotos({ articles: [article('a1', md1, { picks: [lost(1), lost(2)] })], candidates: all, brandName: '가상스테이' })
 ok('사진이 이미 2장이면 한 장만 더 넣고 나머지는 「다 참」', r3.articles[0]!.picks.length === 1 && r3.articles[0]!.rows.some((r) => r.state === 'full'))
 
-// 같은 작성자 글 사이에 한 번, 다른 작성자는 다시 쓸 수 있다, 브랜드 전체 3번까지
-const one = ['## 1. 정원', '', '![가상스테이 독채 앞의 아담한 정원 풍경](#image-slot)', '*독립된 정원*']
+// 같은 작성자 글 사이에 한 번, 다른 작성자는 다시 쓸 수 있다, 브랜드 전체 3번까지 — 브랜드 자기 시설 자리가 아닌 자리(자기 시설 자리는 아래 D3).
+const one = ['## 1. 정원', '', '![정원 나무와 석등이 보이는 아담한 정원 풍경](#image-slot)', '*독립된 정원*']
 const r4 = autoPickPhotos({
   articles: [
     article('w1-a', one, { group: 'w1' }),
@@ -185,6 +186,37 @@ const r6 = autoPickPhotos({
   brandName: '가상스테이',
 })
 ok('같은 작성자의 다른 글(이번에 돌지 않는 글)에 있는 사진도 피한다', r6.articles[0]!.rows[0]!.state === 'used')
+
+// 2026-11-05 결정 D3 — 자기 시설(업주) 사진은 브랜드 상한 3을 받지 않는다(작성자 한 사람에게 한 번 · 글 하나에 한 번은 그대로).
+const ownSlot = ['## 1. 정원', '', '![가상스테이 독채 앞의 아담한 정원 풍경](#image-slot)', '*독립된 정원*']
+const r4own = autoPickPhotos({
+  articles: ['w1', 'w1', 'w2', 'w3', 'w4', 'w5'].map((g, i) => article(`${g}-${i}`, ownSlot, { group: g })),
+  candidates: [C.garden],
+  brandName: '가상스테이',
+})
+ok(
+  '자기 시설 자리의 홈페이지 사진 — 다른 작성자에게는 넷째 · 다섯째도 넣고(브랜드 상한 면제), 같은 작성자 둘째 글에는 넣지 않는다',
+  r4own.articles.map((a) => a.rows[0]!.state).join(',') === 'filled,used,filled,filled,filled,filled',
+)
+const r5own = autoPickPhotos({
+  articles: [article('x', ownSlot)],
+  candidates: [C.garden],
+  others: otherPhotoUses(
+    { o1: { photos: [{ ...human, src: C.garden.src }] }, o2: { photos: [{ ...human, src: C.garden.src }] }, o3: { photos: [{ ...human, src: C.garden.src }] }, x: { photos: [] } },
+    new Set(['x']),
+  ),
+  brandName: '가상스테이',
+})
+ok('자기 시설 자리 — 다른 글에서 이미 3번 쓴 홈페이지 사진도 넣는다', r5own.articles[0]!.rows[0]!.state === 'filled')
+ok(
+  '자기 시설 사진 판정 — 홈페이지 사진 · 장면 글자의 브랜드 · 독채만(공공 사진 · 화면 · 「숙소 근처 골목」은 아님)',
+  ownPhotoExempt({ slot: '가상스테이 독채 앞 정원' }, '가상스테이') &&
+    ownPhotoExempt({ slot: '객실 침실과 욕실', origin: 'site' }, '가상스테이') &&
+    !ownPhotoExempt({ slot: '가상스테이 독채 앞 정원', origin: 'public' }, '가상스테이') &&
+    !ownPhotoExempt({ slot: '가상스테이 독채 앞 정원', origin: 'screen' }, '가상스테이') &&
+    !ownPhotoExempt({ slot: '숙소 근처 옛 골목을 걷는 장면' }, '가상스테이') &&
+    !ownPhotoExempt({ slot: '정원 나무와 석등' }, '가상스테이'),
+)
 
 // 같은 글 안에서 한 사진은 한 번
 const twice = ['## 1. 정원', '', '![정원 석등 풍경](#image-slot)', '', '## 2. 또 정원', '', '![정원 나무와 석등](#image-slot)']

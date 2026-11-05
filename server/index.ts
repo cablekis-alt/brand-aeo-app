@@ -71,7 +71,7 @@ import {
   type PhotoPick,
   type PublicPhotoFields,
 } from '../src/lib/articlePhotos.js';
-import { AUTO_PICK_RULES, autoCandidateSkip, placeKey } from '../src/lib/photoAutoPick.js';
+import { AUTO_PICK_RULES, autoCandidateSkip, ownPhotoExempt, placeKey } from '../src/lib/photoAutoPick.js';
 import {
   findScreenVariant,
   isScreenShotId,
@@ -1188,6 +1188,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       // refillCleared(「사람이 뺀 자리도 다시 채우기」)면 사람이 뺀 자리에도 넣되, 그 자리에서 뺀 사진은 넣지 않는다.
       const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat, await writerGroupOf(tenant.tenantId), {
         refillCleared: b.refillCleared === true,
+        ownExempt: (p) => ownPhotoExempt(p, tenant.brandName),
       });
       res.json({ ...saved, skipped: saved.skipped + rejected });
       return;

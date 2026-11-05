@@ -715,6 +715,27 @@ ok(
   '브랜드 자기 시설 자리(브랜드 이름 · 독채 · 객실) — 장소 사전이 있어도 다른 숙소 · 장소의 지역 사진을 넣지 않는다',
   staySlots.every((_, i) => rowsOf(stayRun, `st${i}`)[0]!.state !== 'filled' && !rowsOf(stayRun, `st${i}`)[0]!.regionSlot) && regionRowsWanted(stayRun) === 0,
 )
+// (1-b) 2026-11-05 결정 D4 — 설명 줄의 자기 시설 낱말도 본다, 「숙소 · 브랜드 근처 골목」은 동네 자리다.
+const captioned = (id: string, slot: string, caption: string) => doc(id, ['## 1. 머무는 곳', '', `![${slot}](#image-slot)`, `*${caption}*`], { group: id })
+const ownCaption = regionRun([captioned('oc1', '일본식 가옥 앞에 펼쳐진 아담한 정원과 툇마루가 보이는 장면', '독채의 툇마루에 앉으면 정원이 보입니다.')], {
+  brandName: '스테이,머뭄', places: ['근대역사박물관'], regionCandidates: [hiroGarden], scenes: namedScenes,
+})
+ok(
+  '설명 줄만 독채를 말하는 자리 — 장면 글자에 자기 시설 낱말이 없어도 다른 건물(히로쓰가옥) 지역 사진을 넣지 않는다',
+  rowsOf(ownCaption, 'oc1')[0]!.state !== 'filled' && !rowsOf(ownCaption, 'oc1')[0]!.regionSlot && regionRowsWanted(ownCaption) === 0,
+)
+const nearSlots = [
+  ['스테이,머뭄 근처 히로쓰 가옥으로 이어지는 구도심 골목', '숙소에서 걸어서 5분이면 닿습니다.'],
+  ['숙소 근처 근대 건축물이 늘어선 군산 옛 골목을 걷는 장면', '스테이,머뭄 독채에서 나와 골목을 걷습니다.'],
+  ['한옥과 일본식 가옥이 이어진 조용한 골목을 걷는 여행자의 뒷모습', '숙소에서 걸어서 10분 거리입니다.'],
+] as const
+const nearRun = regionRun(nearSlots.map(([s, c], i) => captioned(`nr${i}`, s, c)), { brandName: '스테이,머뭄', places: ['근대역사박물관'], regionCandidates: [alley], scenes: namedScenes })
+ok(
+  '숙소 · 브랜드 「근처」 골목 자리와 설명 줄만 숙소를 말하는 골목 자리 — 동네 자리라 지역 사진을 견준다(작성자마다 골목 사진)',
+  nearSlots.every((_, i) => rowsOf(nearRun, `nr${i}`)[0]!.regionSlot === true && rowsOf(nearRun, `nr${i}`)[0]!.pick?.src === alley.src),
+)
+const frontAlley = regionRun([captioned('fa1', '스테이,머뭄 독채 앞 골목', '대문을 나서면 바로 골목입니다.')], { brandName: '스테이,머뭄', places: ['근대역사박물관'], regionCandidates: [alley], scenes: namedScenes })
+ok('「독채 앞 골목」은 숙소 앞이라 자기 시설 그대로(근처 · 주변만 동네 자리)', !rowsOf(frontAlley, 'fa1')[0]!.regionSlot && rowsOf(frontAlley, 'fa1')[0]!.state !== 'filled')
 // (2) 장면을 아직 읽지 않은 후보가 남으면 비슷한 사진을 넣지 않는다 — 맞는 사진이 있는지 모른다.
 const dayRead = jt(40)
 const notRead = jt(41)
