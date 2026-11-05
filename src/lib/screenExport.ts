@@ -13,20 +13,23 @@
  * DOM을 쓰지 않는다(검증 스크립트가 Node에서 부른다).
  */
 import { MAP_AREA_NAME, MAP_CREDIT, mapPlainLine } from './mapImage'
+import { OWNER_PHOTO_MAX_BYTES, ownerPhotoSize, sniffOwnerPhotoType } from './ownerPhotos'
 
 /** 앱 주소의 화면 그림을 받는다 — 앱에서는 src/lib/api.ts fetchScreenFile. 실패하면 throw. */
 export type ScreenFetcher = (src: string) => Promise<Blob>
 
 /** 앱 밖으로 나간 글에 남으면 안 되는 앱 주소 — 자사 화면(/api/screens/)과 앱이 그린 지도(/api/maps/ — src/lib/mapImage.ts). */
-const APP_PATH = /\/api\/(?:screens|maps)\//
+const APP_PATH = /\/api\/(?:screens|maps|owner-photos)\//
 /** 본문 HTML(src/lib/htmlFile.ts markdownToHtml)의 화면 · 지도 그림 — 그림 줄(figure)은 img가 figure 바로 안에 있다. */
-const FIGURE_IMG = /<figure><img src="(\/api\/(?:screens|maps)\/[^"]*)" alt="([^"]*)"[^>]*>/g
-const ANY_IMG = /<img src="(\/api\/(?:screens|maps)\/[^"]*)" alt="([^"]*)"([^>]*)>/g
+const FIGURE_IMG = /<figure><img src="(\/api\/(?:screens|maps|owner-photos)\/[^"]*)" alt="([^"]*)"[^>]*>/g
+const ANY_IMG = /<img src="(\/api\/(?:screens|maps|owner-photos)\/[^"]*)" alt="([^"]*)"([^>]*)>/g
 /** 마크다운의 화면 · 지도 그림 — `![이름](앱 주소)`. */
-const MD_IMG = /!\[([^\]]*)\]\((\/api\/(?:screens|maps)\/[^)\s]*)\)/g
+const MD_IMG = /!\[([^\]]*)\]\((\/api\/(?:screens|maps|owner-photos)\/[^)\s]*)\)/g
 /** 마크다운의 지도 그림과 그 바로 아래 출처 줄(src/lib/articlePhotos.ts placePhotos가 붙인 `*출처 줄*` — 있으면). */
 const MD_MAP_WITH_CREDIT = new RegExp(`!\\[([^\\]]*)\\]\\((\\/api\\/maps\\/[^)\\s]*)\\)(?:(\\r?\\n)[ \\t]*\\*${MAP_CREDIT.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}\\*[ \\t]*(?=\\r?\\n|$))?`, 'g')
 const MAP_PATH = /^\/api\/maps\//
+/** 업주 사진의 앱 주소(src/lib/ownerPhotos.ts, 2026-11-06) — 자사 화면 · 지도처럼 내보낼 때 문서 안에 넣는다(jpg · png · webp). */
+const OWNER_PATH = /^\/api\/owner-photos\//
 const PNG_SIG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 /** 한 장의 최대 크기 — 서버 저장 상한(server/screens.ts MAX_SCREEN_PNG_BYTES)과 같다. */
 const MAX_SCREEN_BYTES = 8 * 1024 * 1024
@@ -50,6 +53,7 @@ export function screenPlaceholder(alt: string): string {
  * 남는다), 자사 화면이면 「[화면: 이름]」.
  */
 function appImagePlaceholder(src: string, alt: string): string {
+  if (OWNER_PATH.test(src)) return `[사진: ${alt.trim() || '업주 사진'}]`
   return MAP_PATH.test(src) ? `[지도: ${alt.trim() || '지도'}]` : screenPlaceholder(alt)
 }
 
@@ -76,8 +80,18 @@ function pngWidth(bytes: Uint8Array): number | null {
   return w > 0 ? w : null
 }
 
-/** 받은 화면 그림을 data:image/png로(그림의 가로와 함께) — PNG가 아니거나 비었거나 너무 크면 throw. */
-async function dataUrlOf(blob: Blob): Promise<{ url: string; width: number | null }> {
+/**
+ * 받은 그림을 data:로(그림의 가로와 함께) — 자사 화면 · 지도는 PNG만, 업주 사진(owner)은 jpg · png · webp(앞 바이트로 가린다). 형식이 맞지
+ * 않거나 비었거나 너무 크면 throw.
+ */
+async function dataUrlOf(blob: Blob, owner = false): Promise<{ url: string; width: number | null }> {
+  if (owner) {
+    if (!blob.size || blob.size > OWNER_PHOTO_MAX_BYTES) throw new Error(`업주 사진 크기가 맞지 않아요(${blob.size}바이트).`)
+    const bytes = new Uint8Array(await blob.arrayBuffer())
+    const mime = sniffOwnerPhotoType(bytes)
+    if (!mime) throw new Error('jpg · png · webp가 아닌 그림이에요.')
+    return { url: `data:${mime};base64,${base64Of(bytes)}`, width: ownerPhotoSize(bytes, mime)?.width ?? null }
+  }
   if (blob.type && blob.type !== 'image/png') throw new Error(`PNG가 아닌 응답이에요(${blob.type}).`)
   if (!blob.size || blob.size > MAX_SCREEN_BYTES) throw new Error(`화면 그림 크기가 맞지 않아요(${blob.size}바이트).`)
   const bytes = new Uint8Array(await blob.arrayBuffer())
@@ -124,7 +138,7 @@ export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promi
   for (const src of srcs) {
     try {
       // HTML 속성 안의 주소라 &amp;가 있을 수 있다(앱 주소에는 없지만 되돌려 받는다).
-      data.set(src, await dataUrlOf(await fetcher(src.replace(/&amp;/g, '&'))))
+      data.set(src, await dataUrlOf(await fetcher(src.replace(/&amp;/g, '&')), OWNER_PATH.test(src)))
     } catch (err) {
       console.warn(`[screenExport] 그림 ${src}을 받지 못해 「[화면: …]」 · 「[지도: …]」 글자로 둡니다`, err)
       data.set(src, null)
@@ -207,5 +221,5 @@ export function screensDroppedText(dropped: number, droppedMaps = 0, from = '「
  * 검증 스크립트가 내보낸 결과를 이것으로 확인한다.
  */
 export function exportLeaks(text: string): string[] {
-  return [...new Set(text.match(/\/api\/(?:screens|maps)\/|127\.0\.0\.1|localhost/gi) ?? [])]
+  return [...new Set(text.match(/\/api\/(?:screens|maps|owner-photos)\/|127\.0\.0\.1|localhost/gi) ?? [])]
 }

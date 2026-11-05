@@ -109,7 +109,18 @@ import {
   type MapImageRecord,
 } from './maps.js';
 import { findRegionTourPhotos, findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
-import { describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
+import { describeLocalPhoto, describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
+import {
+  addOwnerPhoto,
+  OwnerPhotoError,
+  ownerPhotoView,
+  readOwnerPhotoFile,
+  readOwnerPhotos,
+  removeOwnerPhoto,
+  setOwnerPhotoScene,
+  updateOwnerPhotoAlt,
+} from './ownerPhotos.js';
+import { isOwnerPhotoId, OWNER_PHOTO_MAX_BYTES, ownerPhotoAppSrc, type OwnerPhotoRecord } from '../src/lib/ownerPhotos.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
@@ -967,6 +978,23 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       map: { fields: { origin: 'osm-map' as const, mapId: rec.id, mapVariant: rec.variant, caption: text.caption, credit: MAP_CREDIT } },
     };
   };
+  // 업주 사진(origin owner — src/lib/ownerPhotos.ts) — 화면이 보낸 src · pageUrl · alt는 쓰지 않는다. id(ownerPhotoId)로 이 PC의 업주 사진
+  // 목록에서 찾아 서버가 앱 주소 · 설명(사실 가드를 거친다) · 브랜드 페이지를 단다. 목록은 넣기 · 자동 채우기 앞에서 읽는다(ownerRecords).
+  let ownerRecords: OwnerPhotoRecord[] = [];
+  const ownerPageUrl = tenant.brandPageUrl || (owned[0] ? `https://${owned[0].replace(/^https?:\/\//, '').replace(/\/.*$/, '')}/` : '');
+  const ownerPickOf = (raw: Record<string, unknown>) => {
+    const rec = isOwnerPhotoId(raw.ownerPhotoId) ? ownerRecords.find((r) => r.id === raw.ownerPhotoId) : undefined;
+    if (!rec) return null;
+    const siteAlt = cleanPhotoAlt(rec.alt);
+    const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
+    return {
+      src: ownerPhotoAppSrc(tenant.tenantId, rec.id, rec.ext),
+      pageUrl: ownerPageUrl,
+      siteAlt,
+      alt,
+      owner: { fields: { origin: 'owner' as const, ownerPhotoId: rec.id } },
+    };
+  };
   // 고른 사진 하나 — 자리 · https 사진 주소 · 페이지 주소가 맞지 않으면 null. 설명은 사실 가드를 거친다(걸리면 '' — siteAlt로 알린다).
   // 자사 화면이면 screenPickOf로, 앱이 그린 지도면 mapPickOf로 찾고(못 찾으면 null), screen · map에 저장할 표시를 싣는다.
   const pickOf = (v: unknown) => {
@@ -976,18 +1004,22 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     if (!place || !same || same < place.nth) return null;
     if (raw.origin === 'screen') {
       const found = screenPickOf(raw);
-      return found ? { place, same, siteAlt: '', pub: null, map: null, ...found } : null;
+      return found ? { place, same, siteAlt: '', pub: null, map: null, owner: null, ...found } : null;
     }
     if (raw.origin === 'osm-map') {
       const found = mapPickOf(raw);
-      return found ? { place, same, siteAlt: '', pub: null, screen: null, ...found } : null;
+      return found ? { place, same, siteAlt: '', pub: null, screen: null, owner: null, ...found } : null;
+    }
+    if (raw.origin === 'owner') {
+      const found = ownerPickOf(raw);
+      return found ? { place, same, pub: null, screen: null, map: null, ...found } : null;
     }
     const src = typeof raw.src === 'string' ? canonicalPhotoSrc(raw.src) : null;
     const pageUrl = typeof raw.pageUrl === 'string' && /^https?:\/\/\S+$/i.test(raw.pageUrl) && raw.pageUrl.length <= PHOTO_LIMITS.src ? raw.pageUrl : null;
     if (!src || !pageUrl) return null;
     const siteAlt = cleanPhotoAlt(typeof raw.alt === 'string' ? raw.alt : '');
     const alt = siteAlt && guard.guardSentence(siteAlt) ? siteAlt : '';
-    return { place, same, src, pageUrl, siteAlt, alt, pub: publicOf(raw), screen: null, map: null };
+    return { place, same, src, pageUrl, siteAlt, alt, pub: publicOf(raw), screen: null, map: null, owner: null };
   };
   // 공공 사진 표시 — 홈페이지 사진이면 null, 맞지 않으면 이유(글자). 출처 글자도 사실 가드를 거친다(브랜드 사실에 없는 숫자).
   function publicOf(raw: Record<string, unknown>): PublicPhotoFields | string | null {
@@ -1080,6 +1112,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
     const PUBLIC_NEEDED = '먼저 이 브랜드의 공공 사진(공공누리) 사용 확인을 해 주세요 — 글의 「홈페이지 사진」 칸에 있습니다.';
     if (screenProfile && (op === 'pick' || op === 'auto')) screenShots = await readScreenShots(tenant.tenantId);
     if (screenProfile?.mapPoints && (op === 'pick' || op === 'auto')) mapRecords = await readMapImages(tenant.tenantId);
+    if (op === 'pick' || op === 'auto') ownerRecords = await readOwnerPhotos(tenant.tenantId);
     if (op === 'credit') {
       const patch = creditOf(b);
       if (typeof patch === 'string') {
@@ -1126,6 +1159,8 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         }
         // 앱이 그린 지도 — 사진 후보 검사는 보지 않는다(서버가 그린 그림이고 대체 텍스트 · 위치 문장 · 출처 줄은 서버가 단다).
         if (p?.map) return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.map.fields };
+        // 업주 사진 — 이 PC에 올린 사진(권리 확인을 받고 올렸다). 사진 후보 검사(사람 낱말 · 일러스트)는 화면이 설명으로 한다.
+        if (p?.owner) return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.owner.fields };
         const pub = p?.pub && typeof p.pub === 'object' ? p.pub : null;
         if (pub && !publicAt) {
           needPublic = true;
@@ -1231,6 +1266,8 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
             ? '화면 자리(slot · nth · same · heading)와 이 PC에 찍어 둔 자사 화면(screenId · variantId · shotId)이 필요합니다.'
             : asked === 'osm-map'
               ? '지도 자리(slot · nth · same · heading)와 이 PC에 그려 둔 지도(mapId)가 필요합니다.'
+              : asked === 'owner'
+                ? '사진 자리(slot · nth · same · heading)와 이 PC의 업주 사진(ownerPhotoId)이 필요합니다.'
               : '사진 자리(slot · nth · same · heading)와 https 사진 주소 · http(s) 페이지 주소가 필요합니다.',
       });
       return;
@@ -1257,7 +1294,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       return;
     }
     const replaces = placeOf(b.replaces);
-    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(p.screen?.fields ?? p.map?.fields ?? pub ?? ownSite(src)) };
+    const pick: PhotoPick = { ...place, same, src, alt, pageUrl, confirmedAt: new Date().toISOString(), ...(p.screen?.fields ?? p.map?.fields ?? p.owner?.fields ?? pub ?? ownSite(src)) };
     const stored = await savePhotoPicks(
       tenant.tenantId,
       actionId,
@@ -1442,6 +1479,26 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
     }
     return;
   }
+  // 업주 사진 — 이 PC에 올린 파일을 그대로 보낸다.
+  if (pick.origin === 'owner') {
+    try {
+      const file = isOwnerPhotoId(pick.ownerPhotoId) ? await readOwnerPhotoFile(tenant.tenantId, pick.ownerPhotoId) : null;
+      if (!file) {
+        res.status(404).json({ error: '그 업주 사진 파일이 이 PC에 없어요 — 업주 사진 보관함에 다시 올려 넣어 주세요.' });
+        return;
+      }
+      res.setHeader('Content-Type', file.record.mime);
+      res.setHeader('Content-Disposition', `attachment; filename="photo.${file.record.ext}"`);
+      res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Cache-Control', 'no-store');
+      res.send(file.bytes);
+    } catch (err) {
+      console.warn(`[photo-file] ${tenant.tenantId} 업주 사진 ${pick.src} 읽기 실패:`, err);
+      res.status(500).json({ error: '업주 사진 파일을 읽지 못했어요.' });
+    }
+    return;
+  }
   // 앱이 그린 지도 — 이 PC에 그려 둔 파일을 그대로 보낸다(출처 줄은 함께 받는 「사진 출처」 파일 · 글의 설명 줄에 있다).
   if (pick.origin === 'osm-map') {
     try {
@@ -1474,6 +1531,124 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
     console.warn(`[photo-file] ${tenant.tenantId} ${pick.src} 받기 실패:`, err);
     res.status(502).json({ error: publicCollectorError(err).message });
   }
+});
+
+// 업주 사진 보관함(src/lib/ownerPhotos.ts · server/ownerPhotos.ts, 2026-11-06) — 업주(자기 시설) 사진을 브랜드 홈페이지에 올리지 않고 이 PC에만
+// 두고 글의 사진 자리에 쓴다. 올리기는 사진 바이트 그대로(Content-Type image/*), 설명 · 권리는 쿼리(alt · holder · note · confirmed=1). 권리
+// 확인(confirmed)이 없으면 400. 올린 뒤 장면을 한 번 읽는다(키가 없으면 sceneError — 설명 글자로만 맞춘다). Express 전용(Vercel 함수 12/12 —
+// 웹은 업주 사진이 없다).
+const ownerPhotoErrorStatus = (err: unknown) => (err instanceof OwnerPhotoError ? (err.code === 'not-found' ? 404 : 400) : err instanceof RangeError ? 400 : 500);
+async function readOwnerScene(tenantId: string, rec: OwnerPhotoRecord, bytes: Buffer): Promise<{ record: OwnerPhotoRecord; calls: number }> {
+  try {
+    const { scene, calls } = await describeLocalPhoto(bytes, rec.mime, { id: rec.id });
+    return { record: (await setOwnerPhotoScene(tenantId, rec.id, scene)) ?? rec, calls };
+  } catch (err) {
+    const message = scrubSceneKey(err instanceof Error ? err.message : String(err));
+    return { record: (await setOwnerPhotoScene(tenantId, rec.id, null, message)) ?? rec, calls: 0 };
+  }
+}
+
+app.get('/api/owner-photos/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ photos: (await readOwnerPhotos(tenant.tenantId)).map((r) => ownerPhotoView(tenant.tenantId, r)), scenesAvailable: photoScenesConfigured() });
+});
+
+app.post(
+  '/api/owner-photos/:tenantId',
+  express.raw({ type: ['image/jpeg', 'image/png', 'image/webp', 'application/octet-stream'], limit: OWNER_PHOTO_MAX_BYTES }),
+  async (req, res) => {
+    const tenant = await findTenant(req.params.tenantId);
+    if (!tenant) {
+      res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+      return;
+    }
+    const q = req.query as Record<string, unknown>;
+    if (q.confirmed !== '1') {
+      res.status(400).json({ error: '업주(촬영자)에게 홈페이지 · 블로그 게시 허락을 받았는지 먼저 확인해 주세요.' });
+      return;
+    }
+    const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    try {
+      const { record, existed } = await addOwnerPhoto(tenant.tenantId, bytes, {
+        alt: typeof q.alt === 'string' ? q.alt : '',
+        holder: q.holder,
+        note: q.note,
+      });
+      const read = record.scene ? { record, calls: 0 } : await readOwnerScene(tenant.tenantId, record, bytes);
+      res.status(existed ? 200 : 201).json({ photo: ownerPhotoView(tenant.tenantId, read.record), existed, sceneCalls: read.calls });
+    } catch (err) {
+      res.status(ownerPhotoErrorStatus(err)).json({ error: err instanceof Error ? err.message : String(err) });
+    }
+  },
+);
+
+app.patch('/api/owner-photos/:tenantId/:id', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant || !isOwnerPhotoId(req.params.id)) {
+    res.status(404).json({ error: '그 업주 사진이 없어요.' });
+    return;
+  }
+  const alt = (req.body as Record<string, unknown> | undefined)?.alt;
+  if (typeof alt !== 'string') {
+    res.status(400).json({ error: '설명(alt)이 필요합니다.' });
+    return;
+  }
+  try {
+    res.json({ photo: ownerPhotoView(tenant.tenantId, await updateOwnerPhotoAlt(tenant.tenantId, req.params.id, alt)) });
+  } catch (err) {
+    res.status(ownerPhotoErrorStatus(err)).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.post('/api/owner-photos/:tenantId/:id/scene', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  const file = tenant ? await readOwnerPhotoFile(tenant.tenantId, req.params.id) : null;
+  if (!tenant || !file) {
+    res.status(404).json({ error: '그 업주 사진이 없어요.' });
+    return;
+  }
+  const read = await readOwnerScene(tenant.tenantId, file.record, file.bytes);
+  res.json({ photo: ownerPhotoView(tenant.tenantId, read.record), sceneCalls: read.calls });
+});
+
+app.delete('/api/owner-photos/:tenantId/:id', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant || !isOwnerPhotoId(req.params.id)) {
+    res.status(404).json({ error: '그 업주 사진이 없어요.' });
+    return;
+  }
+  try {
+    const removed = await removeOwnerPhoto(tenant.tenantId, req.params.id);
+    if (!removed) {
+      res.status(404).json({ error: '그 업주 사진이 없어요.' });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(ownerPhotoErrorStatus(err)).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 업주 사진 파일 — /api/owner-photos/<tenant>/<id>.<ext>(글의 사진 기록에 적는 앱 주소). 목록에 있는 id · 그 확장자만 준다. 내용으로 이름을
+// 지었으므로 바뀌지 않는다(오래 캐시).
+app.get('/api/owner-photos/:tenantId/:file', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  const m = /^([0-9a-f]{16})\.(jpg|png|webp)$/.exec(req.params.file);
+  const file = tenant && m ? await readOwnerPhotoFile(tenant.tenantId, m[1]!) : null;
+  if (!tenant || !m || !file || file.record.ext !== m[2]) {
+    res.status(404).json({ error: '그 업주 사진이 없어요.' });
+    return;
+  }
+  res.setHeader('Content-Type', file.record.mime);
+  res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+  res.send(file.bytes);
 });
 
 // 자사 화면 찍기(src/lib/screenCapture.ts · server/screens.ts) — { tenantId, screenId, variantId }. 찍을 주소는 브랜드 자사 사이트

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   captureScreen,
+  loadOwnerPhotos,
   loadPhotoScenes,
   loadPhotoScenesStatus,
   loadPublishSettings,
@@ -14,6 +15,7 @@ import {
   type StoredDraft,
   type TenantSummary,
 } from '../lib/api'
+import type { OwnerPhotoView } from '../lib/ownerPhotos'
 import {
   canonicalPhotoSrc,
   isPhotoMedical,
@@ -124,6 +126,8 @@ interface PhotoOption {
   pub?: PublicPhotoFields
   /** 관광공사 사진이면 그 서비스. */
   tour?: TourSource
+  /** 업주 사진 보관함의 사진이면 그 id(src/lib/ownerPhotos.ts — src는 앱 주소). */
+  ownerId?: string
 }
 
 /** 사진 자리 바로 아랫줄의 설명(`*설명*`) — 장소를 찾을 때 쓴다. */
@@ -178,6 +182,8 @@ export default function SitePhotoPanel({
   /** 이 PC에서 관광공사 사진(TourAPI)을 쓸 수 있는가 — null은 아직 모름. */
   const [tourOn, setTourOn] = useState<boolean | null>(null)
   const [tourFound, setTourFound] = useState<{ options: PhotoOption[]; places: string[]; notes: string[] } | null>(null)
+  /** 업주 사진 보관함(이 PC) — 웹이면 null(보관함 없음). */
+  const [ownerPhotos, setOwnerPhotos] = useState<{ key: string; list: OwnerPhotoView[] } | null>(null)
   const [tourLoading, setTourLoading] = useState(false)
   /** 이 PC에서 사진 장면을 읽을 수 있는가 · 고를 사진의 읽어 둔 장면(사진 주소 → 장면). */
   const [scenesOn, setScenesOn] = useState(false)
@@ -227,6 +233,21 @@ export default function SitePhotoPanel({
   // 장소 사전(sitemap.xml)은 사진 사용 확인(의료 업종은 의료광고 확인까지)이 있고 사진 자리나 고른 사진이 있을 때만 받는다 — 사진을 쓰지
   // 않는 브랜드의 카드를 펼칠 때마다 고객 사이트에 요청하지 않게.
   const wantPlaces = Boolean(siteRoot) && allowed && hasPhotoWork
+  // 업주 사진 보관함 — 사진 사용 확인이 있고 사진 자리가 있을 때만 읽는다(올리기는 콘텐츠 생성 화면의 「업주 사진 보관함」).
+  const wantOwner = allowed && slots.length > 0
+  useEffect(() => {
+    if (!wantOwner) return
+    let alive = true
+    loadOwnerPhotos(tenantId).then(
+      (box) => {
+        if (alive) setOwnerPhotos({ key: tenantId, list: box?.photos ?? [] })
+      },
+      (e: unknown) => console.warn('[SitePhotoPanel] 업주 사진 목록을 읽지 못했습니다', e),
+    )
+    return () => {
+      alive = false
+    }
+  }, [tenantId, wantOwner])
   useEffect(() => {
     if (!siteRoot || !wantPlaces) return
     let alive = true
@@ -301,7 +322,14 @@ export default function SitePhotoPanel({
     .filter((p) => !p.credit && !needsPhotoCredit(p.src, brand.ownedDomains))
     .map((p) => ({ src: p.src, alt: p.alt, pageUrl: found!.pageUrl, ...(p.where ? { where: p.where } : {}) }))
   const creditSkipped = (found?.photos.length ?? 0) - siteOptions.length
-  const options: PhotoOption[] = [...siteOptions]
+  const ownerOptions: PhotoOption[] = (ownerPhotos?.key === tenantId ? ownerPhotos.list : []).map((p) => ({
+    src: p.src,
+    alt: p.alt,
+    pageUrl: brand.brandPageUrl || '',
+    ownerId: p.id,
+    where: '업주 사진 보관함',
+  }))
+  const options: PhotoOption[] = [...siteOptions, ...ownerOptions]
   for (const o of publicOk ? [...(publicFound?.options ?? []), ...(tourFound?.options ?? [])] : []) {
     if (!options.some((x) => x.src === o.src)) options.push(o)
   }
@@ -545,12 +573,23 @@ export default function SitePhotoPanel({
     }
   }
   const placeOf = (p: PhotoPick): PhotoPlace => ({ slot: p.slot, nth: p.nth, heading: p.heading })
-  const putPhoto = (slot: PhotoSlot, src: string, alt: string, page: string, replaces?: PhotoPick, pub?: PublicPhotoFields) =>
+  const putPhoto = (slot: PhotoSlot, src: string, alt: string, page: string, replaces?: PhotoPick, pub?: PublicPhotoFields, ownerId?: string) =>
     save({
       actionId: stored.actionId,
       generatedAt: stored.generatedAt,
       op: 'pick',
-      pick: { slot: slot.key, nth: slot.nth, same: slot.same, heading: slot.heading, src, alt, pageUrl: page, ...(pub ?? {}) },
+      // 업주 사진은 id만 믿고 서버가 이 PC의 보관함에서 앱 주소 · 설명을 단다.
+      pick: {
+        slot: slot.key,
+        nth: slot.nth,
+        same: slot.same,
+        heading: slot.heading,
+        src,
+        alt,
+        pageUrl: page,
+        ...(pub ?? {}),
+        ...(ownerId ? { origin: 'owner' as const, ownerPhotoId: ownerId } : {}),
+      },
       ...(replaces ? { replaces: placeOf(replaces) } : {}),
     })
   /**
@@ -604,7 +643,7 @@ export default function SitePhotoPanel({
         replaces: placeOf(pick),
       })
     }
-    return putPhoto(slot, pick.src, pick.alt, pick.pageUrl, pick, pubOf(pick))
+    return putPhoto(slot, pick.src, pick.alt, pick.pageUrl, pick, pubOf(pick), pick.origin === 'owner' ? pick.ownerPhotoId : undefined)
   }
   const remove = (p: PhotoPick) => save({ actionId: stored.actionId, generatedAt: stored.generatedAt, op: 'remove', place: placeOf(p) })
   /** 「이 자리 빼기」 — 사진 없이 내보낼 자리로 적는다(그 자리의 사진도 뺀다). 「다시 넣기」는 그 표시를 지운다. */
@@ -917,6 +956,7 @@ export default function SitePhotoPanel({
                 <span>
                   {picked.auto && <span className="status-pill st-info no-glyph">자동</span>}
                   {isScreen && <span className="status-pill st-info no-glyph">자사 화면</span>}
+                  {picked.origin === 'owner' && <span className="status-pill st-info no-glyph">업주 사진</span>}
                   {photoCreditState(picked) === 'public' && (
                     <span className="status-pill st-info no-glyph">{isTourSourcePage(picked.pageUrl) ? '관광공사 사진' : '공공 사진'}</span>
                   )}
@@ -997,7 +1037,8 @@ export default function SitePhotoPanel({
                             <span className="status-pill st-info no-glyph" title={p.tour ? TOUR_SOURCES[p.tour].name : undefined}>
                               {p.tour ? '관광공사 사진' : '공공 사진'}
                             </span>
-                          )}{' '}
+                          )}
+                          {p.ownerId && <span className="status-pill st-info no-glyph">업주 사진</span>}{' '}
                           {p.alt || <span className="muted">설명 없음</span>}
                         </span>
                         {p.where && <span className="doc-meta">{p.where}</span>}
@@ -1021,7 +1062,7 @@ export default function SitePhotoPanel({
                     onClick={() => {
                       const p = options.find((x) => x.src === choice)
                       // 이 자리에 이미 들어간 사진이 있으면 그 사진을 바꾼다 — 소제목을 고쳐 자리 열쇠가 달라졌어도 옛 사진이 남지 않게.
-                      if (p) void putPhoto(slot, p.src, p.alt, p.pageUrl, picked, p.pub)
+                      if (p) void putPhoto(slot, p.src, p.alt, p.pageUrl, picked, p.pub, p.ownerId)
                     }}
                   >
                     이 사진 넣기

@@ -198,40 +198,75 @@ let client: Anthropic | null = null;
 
 /** Claude로 장면을 읽는다 — 구조화 출력(JSON 스키마), 5세대 모델이면 추론 강도 low · 거절 시 서버 쪽 대체 모델. */
 function claudeDescriber(): SceneDescriber {
-  return async (src, onCall) => {
-    const source = await imageSourceOf(src);
-    client ??= new Anthropic({ apiKey: apiKey(), maxRetries: 2, timeout: CALL_TIMEOUT_MS });
-    const model = sceneModel();
-    const modern = SUPPORTS_EFFORT_AND_FALLBACK.test(model);
-    const response = await client.beta.messages.create({
-      model,
-      max_tokens: MAX_TOKENS,
-      system: SCENE_SYSTEM,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'image', source },
-            { type: 'text', text: SCENE_USER },
-          ],
-        },
-      ],
-      output_config: { ...(modern ? { effort: 'low' as const } : {}), format: { type: 'json_schema', schema: SCENE_JSON_SCHEMA as unknown as Record<string, unknown> } },
-      ...(modern ? { fallbacks: 'default' as const, betas: ['server-side-fallback-2026-07-01'] } : {}),
-    });
-    onCall();
-    if (response.stop_reason === 'refusal') throw new SceneError('REFUSED', `모델이 이 사진의 장면을 읽지 않았어요(${response.stop_details?.category ?? '분류 없음'}).`);
-    if (response.stop_reason === 'max_tokens') throw new SceneError('INVALID', '모델 답이 출력 한도에서 잘렸어요.');
-    const text = response.content
-      .filter((block): block is Anthropic.Beta.BetaTextBlock => block.type === 'text')
-      .map((block) => block.text)
-      .join('');
-    try {
-      return { raw: JSON.parse(text) as unknown, model: response.model };
-    } catch (err) {
-      throw new SceneError('INVALID', `모델 답이 JSON이 아니에요(${err instanceof Error ? err.message.slice(0, 60) : 'parse'}).`);
-    }
-  };
+  return async (src, onCall) => describeImageSource(await imageSourceOf(src), onCall);
+}
+
+/** 사진 한 장(base64 · 주소)을 Claude에 보내 장면을 읽는다 — 웹 사진(claudeDescriber)과 업주 사진(describeLocalPhoto)이 같은 호출을 쓴다. */
+async function describeImageSource(
+  source: Anthropic.Beta.BetaBase64ImageSource | Anthropic.Beta.BetaURLImageSource,
+  onCall: () => void,
+): Promise<{ raw: unknown; model: string }> {
+  client ??= new Anthropic({ apiKey: apiKey(), maxRetries: 2, timeout: CALL_TIMEOUT_MS });
+  const model = sceneModel();
+  const modern = SUPPORTS_EFFORT_AND_FALLBACK.test(model);
+  const response = await client.beta.messages.create({
+    model,
+    max_tokens: MAX_TOKENS,
+    system: SCENE_SYSTEM,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image', source },
+          { type: 'text', text: SCENE_USER },
+        ],
+      },
+    ],
+    output_config: { ...(modern ? { effort: 'low' as const } : {}), format: { type: 'json_schema', schema: SCENE_JSON_SCHEMA as unknown as Record<string, unknown> } },
+    ...(modern ? { fallbacks: 'default' as const, betas: ['server-side-fallback-2026-07-01'] } : {}),
+  });
+  onCall();
+  if (response.stop_reason === 'refusal') throw new SceneError('REFUSED', `모델이 이 사진의 장면을 읽지 않았어요(${response.stop_details?.category ?? '분류 없음'}).`);
+  if (response.stop_reason === 'max_tokens') throw new SceneError('INVALID', '모델 답이 출력 한도에서 잘렸어요.');
+  const text = response.content
+    .filter((block): block is Anthropic.Beta.BetaTextBlock => block.type === 'text')
+    .map((block) => block.text)
+    .join('');
+  try {
+    return { raw: JSON.parse(text) as unknown, model: response.model };
+  } catch (err) {
+    throw new SceneError('INVALID', `모델 답이 JSON이 아니에요(${err instanceof Error ? err.message.slice(0, 60) : 'parse'}).`);
+  }
+}
+
+/**
+ * 업주 사진(이 PC에 둔 파일 — server/ownerPhotos.ts) 한 장의 장면을 읽는다. 캐시(photo-scenes.json — https 주소 열쇠)에는 넣지 않는다 — 장면은
+ * 업주 사진 목록에 적는다. 키가 없으면 AUTH, 파일이 base64 한도(BASE64_MAX_BYTES)를 넘으면 FORMAT(화면이 올리기 전에 줄인다).
+ * describer를 주면 그것으로(확인 스크립트의 가짜 — 주소 자리에 "owner:<id>"를 넘긴다).
+ */
+export async function describeLocalPhoto(
+  bytes: Buffer,
+  mime: 'image/jpeg' | 'image/png' | 'image/webp',
+  opts: { describer?: SceneDescriber; id?: string } = {},
+): Promise<{ scene: PhotoScene; calls: number }> {
+  const stats = { calls: 0 };
+  try {
+    if (!opts.describer && !photoScenesConfigured()) throw new SceneError('AUTH', '이 PC에 Claude 키가 없어 장면을 읽지 못했어요 — 설명 글자로만 맞춥니다.');
+    if (bytes.length > BASE64_MAX_BYTES) throw new SceneError('FORMAT', '사진이 너무 커 장면을 읽지 못했어요 — 더 작게 줄여 다시 올려 주세요.');
+    const onCall = () => {
+      stats.calls += 1;
+    };
+    const { raw, model } = await withSlot(() =>
+      opts.describer
+        ? opts.describer(`owner:${opts.id ?? ''}`, onCall)
+        : describeImageSource({ type: 'base64', media_type: mime, data: bytes.toString('base64') }, onCall),
+    );
+    const scene = parseScene(raw, { model, describedAt: new Date().toISOString() });
+    if (!scene) throw new SceneError('INVALID', '모델 답의 모양이 맞지 않아요.');
+    return { scene, calls: stats.calls };
+  } catch (err) {
+    throw sceneErrorOf(err);
+  }
 }
 
 /**

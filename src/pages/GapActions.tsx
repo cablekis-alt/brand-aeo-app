@@ -22,6 +22,7 @@ import {
 } from '../lib/api'
 import DraftPanel from '../components/DraftPanel'
 import ExtraArticleForm from '../components/ExtraArticleForm'
+import OwnerPhotoBox from '../components/OwnerPhotoBox'
 import PhotoAutoFill from '../components/PhotoAutoFill'
 import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
@@ -605,6 +606,7 @@ function WriterRuns({
         이어서 합니다. 도는 동안에는 글 카드의 단추와 「글 더 만들기」를 잠급니다. 운영 기간(~{writerPlan.activeUntil})에는 추가 글을{' '}
         {cap}편까지 둘 수 있어요(지금 {alive.size}편).
       </p>
+      {photosOn && brandPhotoArticles.length > 0 && brandPhotoSlots > 0 && <OwnerPhotoBox tenantId={tenantId} brand={brand} />}
       {photosOn && brandPhotoArticles.length > 0 && brandPhotoSlots > 0 && (
         <PhotoAutoFill
           tenantId={tenantId}

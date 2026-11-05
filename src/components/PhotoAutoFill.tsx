@@ -3,6 +3,7 @@ import {
   captureScreen,
   loadMapPoints,
   loadMaps,
+  loadOwnerPhotos,
   loadPhotoScenesStatus,
   loadPublishSettings,
   loadRegionTourPhotos,
@@ -235,6 +236,20 @@ export default function PhotoAutoFill({
       const canRead = await loadPhotoScenesStatus()
       const sceneMap = new Map<string, PhotoScene>()
       const scenes = canRead ? sceneMap : null
+      // 업주 사진 보관함(src/lib/ownerPhotos.ts) — 이 PC에 올린 업주 사진을 홈페이지 사진과 같은 후보로. 장면은 올릴 때 읽어 둔 것을 쓰고 여기서
+      // 새로 읽지 않는다(앱 주소라 장면 읽기 캐시에 없다). 웹(보관함 없음) · 읽기 실패면 없이 고른다.
+      let ownerCandidates: AutoCandidate[] = []
+      try {
+        const box = await loadOwnerPhotos(tenantId)
+        for (const p of box?.photos ?? []) {
+          if (p.scene) sceneMap.set(p.src, p.scene)
+          ownerCandidates.push({ src: p.src, alt: p.alt, pageUrl: brand.brandPageUrl || pageUrl, origin: 'owner', ownerPhotoId: p.id })
+        }
+      } catch (e) {
+        console.warn('[PhotoAutoFill] 업주 사진 목록을 읽지 못했습니다(업주 사진 없이 고릅니다)', e)
+        ownerCandidates = []
+      }
+      const ownerSrcs = new Set(ownerCandidates.map((c) => c.src))
       setProgress('사진 후보 모으는 중…')
       const pub = await publicFor(autoArticles, found, publicOk, refillOn, scenes !== null, recheckOn)
       // 장소 페이지를 읽은 장소 — 읽지 못한(일시 실패 · 읽기 상한) 장소의 자리는 관광공사 사진으로 먼저 채우지 않는다(다음에 눌러 그 페이지부터).
@@ -245,7 +260,9 @@ export default function PhotoAutoFill({
       const sceneNotes: string[] = []
       const asked = new Set<string>()
       // 키가 없으면 서버가 읽어 둔 장면만 받는다(loadScenesFor — 서버가 새로 읽을 수 없다고 답하면 묻기만 하고 멈춘다).
-      const readScenes = async (wanted: readonly SceneWant[]) => {
+      const readScenes = async (asking: readonly SceneWant[]) => {
+        // 업주 사진의 장면은 올릴 때 읽었다 — 여기서 묻지 않는다(장면이 없으면 설명 글자로만 맞춘다).
+        const wanted = asking.filter((w) => !ownerSrcs.has(w.src))
         if (!wanted.length) return
         setProgress(canRead ? '사진 장면 확인 중…' : '읽어 둔 사진 장면 확인 중…')
         try {
@@ -318,7 +335,7 @@ export default function PhotoAutoFill({
       const pick = () =>
         autoPickPhotos({
           articles: autoArticles,
-          candidates: found.photos.map((p) => ({ src: p.src, alt: p.alt, pageUrl, ...(p.credit ? { credit: true } : {}) })),
+          candidates: [...found.photos.map((p) => ({ src: p.src, alt: p.alt, pageUrl, ...(p.credit ? { credit: true } : {}) })), ...ownerCandidates],
           publicCandidates: pub.candidates,
           tourCandidates,
           ...(regionCity ? { regionCity, ...(regionCandidates ? { regionCandidates } : {}) } : {}),

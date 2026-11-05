@@ -4,6 +4,7 @@ import { draftTitle, IMAGE_SLOT } from './markdownFile'
 import { publishArticleParts } from './publishArticle'
 import type { PublishSettings } from './publishSettings'
 import { parseMapAppSrc } from './mapImage'
+import { parseOwnerPhotoAppSrc } from './ownerPhotos'
 import { parseScreenAppSrc } from './screenCapture'
 
 /**
@@ -41,7 +42,7 @@ const INLINE_IMG_SIZE = 'style="max-width:100%;height:auto"'
  * 그린 지도의 앱 주소(/api/maps/<tenant>/<id>.png — src/lib/mapImage.ts)도 같다.
  */
 function imageUrlOk(url: string): boolean {
-  return /^https?:\/\//i.test(url) || parseScreenAppSrc(url) !== null || parseMapAppSrc(url) !== null
+  return /^https?:\/\//i.test(url) || parseScreenAppSrc(url) !== null || parseMapAppSrc(url) !== null || parseOwnerPhotoAppSrc(url) !== null
 }
 
 /** 인라인 문법 — 굵게·기울임·코드·이미지·링크. 먼저 이스케이프한 뒤 문법만 태그로 바꾼다. */
@@ -51,7 +52,7 @@ function inline(text: string): string {
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
   // 이미지는 링크보다 먼저 — 아니면 `![x](주소)`가 「!」 + 링크로 남는다. 사진 자리는 글자로 알린다.
-  s = s.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/api\/(?:screens|maps)\/[^)\s]+)\)/g, (whole, alt: string, url: string) =>
+  s = s.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/api\/(?:screens|maps|owner-photos)\/[^)\s]+)\)/g, (whole, alt: string, url: string) =>
     imageUrlOk(url) ? `<img src="${url}" alt="${alt}" ${INLINE_IMG_SIZE}>` : whole,
   )
   s = s.replace(new RegExp(`!\\[([^\\]]*)\\]\\(${IMAGE_SLOT}\\)`, 'g'), '[사진: $1]')
@@ -206,7 +207,8 @@ export function buildPublishHtml({ stored, brand, facts, settings }: PublishHtml
   // 실제로 글에 들어간 사진만 — 같은 사진을 두 자리에 썼으면 한 번. 공공 사진은 출처 · 이용 허락과 함께 ImageObject로(본문 figcaption의
   // 출처 줄과 같은 내용), 홈페이지 사진은 지금처럼 주소 글자로. 자사 화면은 넣지 않는다 — 앱 주소는 공개된 절대 주소가 아니다(본문의
   // 그림은 내보낼 때 src/lib/screenExport.ts가 문서 안에 넣는다). 앱이 그린 지도도 같다(앱 주소 — 출처 줄은 본문 figcaption에 있다).
-  const webPhotos = photos.filter((p) => !p.screen && !p.map)
+  // 업주 사진(앱 주소 — src/lib/ownerPhotos.ts)도 넣지 않는다(공개된 절대 주소가 아니다).
+  const webPhotos = photos.filter((p) => !p.screen && !p.map && !p.owner)
   const images = [...new Map(webPhotos.map((p) => [p.src, p])).values()].map((p) =>
     p.credit
       ? { '@type': 'ImageObject', contentUrl: p.src, creditText: p.credit.credit, license: p.credit.creditUrl, acquireLicensePage: p.credit.creditUrl }

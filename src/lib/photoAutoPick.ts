@@ -94,6 +94,7 @@ import {
   type ScreenVariant,
   type ScreenVariantChoice,
 } from './screenCapture.js'
+import { parseOwnerPhotoAppSrc } from './ownerPhotos.js'
 import type { TourSource } from './tourPhotos.js'
 
 export { needsPhotoCredit }
@@ -149,8 +150,13 @@ export interface AutoCandidate {
   pageUrl: string
   /** 페이지가 출처 표시가 필요한 사진으로 표시했다(공공누리 data-kogl · 구조화 데이터 ImageObject의 공공누리 유형). */
   credit?: boolean
-  /** 공공 사진(자사 사이트 장소 페이지의 공공누리 사진) — 장소 이름으로만 맞춘다(설명이 「○○ 사진 N」 꼬리표뿐이다). */
-  origin?: 'public'
+  /**
+   * 공공 사진(자사 사이트 장소 페이지의 공공누리 사진) — 장소 이름으로만 맞춘다(설명이 「○○ 사진 N」 꼬리표뿐이다). owner는 업주 사진 보관함의
+   * 사진(src/lib/ownerPhotos.ts — src는 앱 주소, 설명 · 장면은 올릴 때 적고 읽어 둔 것) — 홈페이지 사진과 같은 단계(①)로 고른다.
+   */
+  origin?: 'public' | 'owner'
+  /** 업주 사진의 id(origin owner). */
+  ownerPhotoId?: string
   /** 공공 사진의 장소(장소 사전의 이름). */
   place?: string
   /** 공공 사진의 이용 허락 — 제1유형이면 'kogl-1', 아니면(제2~4유형 · 모름) null. */
@@ -186,7 +192,8 @@ export function autoCandidateSkip(
   c: Pick<AutoCandidate, 'src' | 'alt' | 'credit' | 'origin' | 'license' | 'creditText' | 'place'> & { pageUrl?: string },
   ownedDomains?: readonly string[],
 ): AutoCandidateSkip | null {
-  if (!canonicalPhotoSrc(c.src)) return 'bad-src'
+  // 업주 사진(origin owner)은 앱 주소다(https가 아니다) — 주소 모양만 본다.
+  if (c.origin === 'owner' ? !parseOwnerPhotoAppSrc(c.src) : !canonicalPhotoSrc(c.src)) return 'bad-src'
   const alt = cleanPhotoAlt(c.alt)
   if (!alt) return 'no-alt'
   if (/^일러스트/.test(alt)) return 'illustration'
@@ -196,6 +203,7 @@ export function autoCandidateSkip(
     if (c.license !== 'kogl-1') return 'license'
     return publicCandidateFields(c) ? null : 'credit'
   }
+  if (c.origin === 'owner') return null
   if (c.credit || needsPhotoCredit(c.src, ownedDomains)) return 'credit'
   return null
 }
@@ -701,7 +709,7 @@ function ownFacility(slot: { key: string; caption: string }, brandKey: string): 
  * 자연스럽다). 서버(server/contentDraft.ts saveAutoPhotoPicks)도 이 함수로 본다.
  */
 export function ownPhotoExempt(p: Pick<PhotoPick, 'origin' | 'slot'>, brandName: string | undefined): boolean {
-  if (p.origin !== undefined && p.origin !== 'site') return false
+  if (p.origin !== undefined && p.origin !== 'site' && p.origin !== 'owner') return false
   return ownFacility({ key: p.slot, caption: '' }, placeKey(brandName ?? ''))
 }
 
@@ -1329,7 +1337,7 @@ export function autoPickPhotos(input: {
   const usable: AutoCandidate[] = []
   const seen = new Set<string>()
   for (const raw of input.candidates) {
-    const src = canonicalPhotoSrc(raw.src)
+    const src = raw.origin === 'owner' ? (parseOwnerPhotoAppSrc(raw.src) ? raw.src : null) : canonicalPhotoSrc(raw.src)
     const reason = autoCandidateSkip(raw, input.ownedDomains) ?? (src && seen.has(src) ? 'duplicate' : null)
     if (reason || !src) {
       skipped.push({ candidate: raw, reason: reason ?? 'bad-src' })
@@ -1647,6 +1655,7 @@ export function autoPickPhotos(input: {
         pageUrl: candidate.pageUrl,
         auto: true,
         ...(credit ?? {}),
+        ...(candidate.origin === 'owner' && candidate.ownerPhotoId ? { origin: 'owner' as const, ownerPhotoId: candidate.ownerPhotoId } : {}),
       }
       Object.assign(row, {
         state: row.old ? 'replace' : 'filled',

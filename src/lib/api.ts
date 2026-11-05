@@ -10,6 +10,7 @@ import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { AnswerEvidence } from './answerEvidence'
 import { validScene, type PhotoScene } from './photoScenes'
 import { isMapImageId, normalizeMapPoints, parseMapAppSrc, type MapPoint } from './mapImage'
+import { parseOwnerPhotoAppSrc } from './ownerPhotos'
 import { parseScreenAppSrc, type ScreenKind, type ScreenShotView } from './screenCapture'
 import type { ConditionChange } from './comparability'
 import type {
@@ -1887,12 +1888,61 @@ export async function captureScreen(tenantId: string, screenId: string, variantI
  * 아니면 throw.
  */
 export async function fetchScreenFile(src: string): Promise<Blob> {
-  if (!parseScreenAppSrc(src) && !parseMapAppSrc(src)) throw new Error('자사 화면 · 지도 주소가 아니에요.')
+  // 업주 사진(/api/owner-photos/<tenant>/<id>.<ext> — src/lib/ownerPhotos.ts)도 같은 길로 받는다(jpg · png · webp — 형식은 screenExport가 본다).
+  const owner = parseOwnerPhotoAppSrc(src) !== null
+  if (!parseScreenAppSrc(src) && !parseMapAppSrc(src) && !owner) throw new Error('자사 화면 · 지도 · 업주 사진 주소가 아니에요.')
   const res = await fetch(src)
-  if (!res.ok) throw new Error(`화면 그림을 받지 못했어요 (HTTP ${res.status})`)
+  if (!res.ok) throw new Error(`그림을 받지 못했어요 (HTTP ${res.status})`)
   const blob = await res.blob()
-  if (blob.type !== 'image/png') throw new Error(`화면 그림이 PNG가 아니에요(${blob.type || '형식 없음'}).`)
+  if (!owner && blob.type !== 'image/png') throw new Error(`화면 그림이 PNG가 아니에요(${blob.type || '형식 없음'}).`)
   return blob
+}
+
+/** 업주 사진 보관함(server/ownerPhotos.ts) — 이 PC에 올린 업주 사진과 장면을 읽을 수 있는가. 웹(보관함 없음)이면 null. */
+export async function loadOwnerPhotos(tenantId: string): Promise<{ photos: import('./ownerPhotos').OwnerPhotoView[]; scenesAvailable: boolean } | null> {
+  const res = await fetch(`/api/owner-photos/${encodeURIComponent(tenantId)}`)
+  if (res.status === 404) return null
+  const body = (await res.json().catch(() => ({}))) as { photos?: import('./ownerPhotos').OwnerPhotoView[]; scenesAvailable?: boolean; error?: string }
+  if (!res.ok || !Array.isArray(body.photos)) throw new Error(body.error || `업주 사진 목록을 읽지 못했어요 (HTTP ${res.status})`)
+  return { photos: body.photos, scenesAvailable: Boolean(body.scenesAvailable) }
+}
+
+/**
+ * 업주 사진 한 장을 올린다 — 사진 바이트 그대로, 설명 · 권리는 쿼리. confirmed는 화면이 「업주(촬영자)에게 홈페이지 · 블로그 게시 허락을
+ * 받았다」 확인을 받았을 때만 보낸다. 서버가 장면을 한 번 읽는다(sceneCalls — 비용 셈).
+ */
+export async function uploadOwnerPhoto(
+  tenantId: string,
+  file: Blob,
+  meta: { alt: string; holder: string; note?: string },
+): Promise<{ photo: import('./ownerPhotos').OwnerPhotoView; existed: boolean; sceneCalls: number }> {
+  const q = new URLSearchParams({ confirmed: '1', alt: meta.alt, holder: meta.holder, ...(meta.note ? { note: meta.note } : {}) })
+  const res = await fetch(`/api/owner-photos/${encodeURIComponent(tenantId)}?${q.toString()}`, {
+    method: 'POST',
+    headers: { 'Content-Type': file.type && /^image\/(jpeg|png|webp)$/.test(file.type) ? file.type : 'application/octet-stream' },
+    body: file,
+  })
+  const body = (await res.json().catch(() => ({}))) as { photo?: import('./ownerPhotos').OwnerPhotoView; existed?: boolean; sceneCalls?: number; error?: string }
+  if (!res.ok || !body.photo) throw new Error(body.error || `업주 사진을 올리지 못했어요 (HTTP ${res.status})`)
+  return { photo: body.photo, existed: Boolean(body.existed), sceneCalls: body.sceneCalls ?? 0 }
+}
+
+/** 업주 사진의 설명을 고친다 · 장면을 다시 읽는다 · 보관함에서 뺀다(파일도 지운다). */
+export async function updateOwnerPhoto(
+  tenantId: string,
+  id: string,
+  action: { alt: string } | { rereadScene: true } | { remove: true },
+): Promise<import('./ownerPhotos').OwnerPhotoView | null> {
+  const base = `/api/owner-photos/${encodeURIComponent(tenantId)}/${encodeURIComponent(id)}`
+  const res =
+    'remove' in action
+      ? await fetch(base, { method: 'DELETE' })
+      : 'rereadScene' in action
+        ? await fetch(`${base}/scene`, { method: 'POST' })
+        : await fetch(base, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alt: action.alt }) })
+  const body = (await res.json().catch(() => ({}))) as { photo?: import('./ownerPhotos').OwnerPhotoView; error?: string }
+  if (!res.ok) throw new Error(body.error || `업주 사진을 바꾸지 못했어요 (HTTP ${res.status})`)
+  return body.photo ?? null
 }
 
 /** 이 PC에 그려 둔 군산 지도 한 장(server/maps.ts mapImageView — 앱 주소 · 대체 텍스트 · 위치 문장 · 그린 표지 · 뺀 표지). */

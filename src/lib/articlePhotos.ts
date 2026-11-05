@@ -9,6 +9,7 @@
  * (src/lib/screenCapture.ts는 DOM 없이 자사 화면의 앱 주소만 본다).
  */
 import { MAP_CREDIT, mapCaptionLines, mapPickExportable } from './mapImage.js'
+import { parseOwnerPhotoAppSrc } from './ownerPhotos.js'
 import { screenExportable } from './screenCapture.js'
 
 /** 사람이 고른 사진 하나 — 초안별로 저장한다(server/contentDraft.ts StoredDraft.photos). */
@@ -42,6 +43,8 @@ export interface PhotoPick {
    * 서버가 screens.json에서 찾아 src · pageUrl · alt · screenId · variantId · capturedAt을 단다(화면이 보낸 주소는 믿지 않는다).
    * 'osm-map'은 앱이 OSM 데이터로 그린 군산 지도(src/lib/mapImage.ts) — 서버가 maps.json에서 찾아 src(앱 주소 /api/maps/<tenant>/<id>.png) ·
    * pageUrl(장소 목록 출처) · alt(「군산 지도 — … 위치」) · caption · credit · mapId · mapVariant를 단다.
+   * 'owner'는 운영자 PC의 업주 사진 보관함에 올린 업주(자기 시설) 사진(src/lib/ownerPhotos.ts) — 서버가 owner-photos.json에서 찾아 src(앱 주소
+   * /api/owner-photos/<tenant>/<id>.<ext>) · alt(올릴 때 적은 설명) · pageUrl(브랜드 페이지) · ownerPhotoId를 단다.
    */
   origin?: PhotoOrigin
   /** 자사 화면의 화면 id(src/lib/screenCapture.ts 프로필 표). origin 'screen'에만. */
@@ -50,6 +53,8 @@ export interface PhotoPick {
   variantId?: string
   /** 자사 화면을 찍은 때(screens.json capturedAt). origin 'screen'에만. */
   capturedAt?: string
+  /** 업주 사진의 id(src/lib/ownerPhotos.ts — 파일 sha256 앞 16자). origin 'owner'에만. */
+  ownerPhotoId?: string
   /** 앱이 그린 지도의 id(maps.json — 그림 이름). origin 'osm-map'에만. */
   mapId?: string
   /** 앱이 그린 지도의 장소 묶음(src/lib/mapImage.ts mapVariantKey) — 반복 상한의 열쇠. origin 'osm-map'에만. */
@@ -103,7 +108,7 @@ export function clearedMatches(c: PhotoPlace, place: PhotoPlace): boolean {
   return c.slot === place.slot && (c.heading === place.heading || c.nth === place.nth)
 }
 
-export type PhotoOrigin = 'site' | 'public' | 'screen' | 'osm-map'
+export type PhotoOrigin = 'site' | 'public' | 'screen' | 'osm-map' | 'owner'
 
 /**
  * 받는 공공 사진의 이용 허락 — 공공누리 제1유형(출처 표시 · 상업 이용 · 변경 가능)만. 제2유형(상업 이용 금지) · 제3유형(변경 금지) ·
@@ -198,7 +203,8 @@ export function photoCreditState(p: Pick<PhotoPick, 'src' | 'origin' | 'license'
   // 앱이 그린 지도(origin osm-map)는 OSM 출처 줄이 이용 조건이다 — 출처 줄이 맞을 때만 내보낸다(넣을 때 그림 바로 아래에 붙는다).
   if (p.origin === 'osm-map') return p.credit === MAP_CREDIT ? 'site' : 'missing'
   // 자사 화면(origin screen — 운영자 PC에 찍어 둔 자사 사이트 화면)은 출처 표시가 필요 없다 — 홈페이지 사진과 같다.
-  if (p.origin === 'site' || p.origin === 'screen') return 'site'
+  // 업주 사진(origin owner — 권리 확인을 받고 올린 자기 시설 사진)도 출처 표시가 필요 없다.
+  if (p.origin === 'site' || p.origin === 'screen' || p.origin === 'owner') return 'site'
   return needsPhotoCredit(p.src) ? 'missing' : 'site'
 }
 
@@ -234,6 +240,11 @@ export interface AppliedPhoto {
    * og:image에는 넣지 않는다. credit은 그림 바로 아래 설명 줄에 붙은 OSM 출처 줄(「사진 출처」 파일에도 적는다).
    */
   map?: { mapId: string; variant: string; credit: string }
+  /**
+   * 업주 사진(origin owner) — src는 앱 주소(/api/owner-photos/<tenant>/<id>.<ext>)라 자사 화면처럼 내보낼 때 문서 안에 넣고 JSON-LD image ·
+   * og:image에는 넣지 않는다(공개된 절대 주소가 아니다).
+   */
+  owner?: { id: string }
 }
 
 export const PHOTO_LIMITS = { picks: 3, alt: 160, src: 2048 } as const
@@ -289,8 +300,10 @@ export function canonicalPhotoSrc(raw: string): string | null {
  * canonicalPhotoSrc는 https만 받는 그대로 둔다 — 서버가 화면이 보낸 사진 주소를 거르는 데 쓴다(앱 주소는 서버가 screens.json에서 단다).
  * 앱이 그린 지도(origin osm-map)도 앱 주소 그대로 — 주소 · 지도 id · 변형 열쇠가 맞을 때만(src/lib/mapImage.ts mapPickExportable).
  */
-export function photoPickSrc(p: Pick<PhotoPick, 'src' | 'origin' | 'screenId' | 'variantId' | 'mapId' | 'mapVariant'>): string | null {
+export function photoPickSrc(p: Pick<PhotoPick, 'src' | 'origin' | 'screenId' | 'variantId' | 'mapId' | 'mapVariant' | 'ownerPhotoId'>): string | null {
   if (p.origin === 'screen') return screenExportable(p) ? p.src : null
+  // 업주 사진 — 앱 주소 그대로, 주소의 id가 사진 기록의 id와 같을 때만(src/lib/ownerPhotos.ts).
+  if (p.origin === 'owner') return parseOwnerPhotoAppSrc(p.src)?.id === p.ownerPhotoId && p.ownerPhotoId ? p.src : null
   if (p.origin === 'osm-map') return mapPickExportable(p) ? p.src : null
   return canonicalPhotoSrc(p.src)
 }
@@ -553,6 +566,7 @@ function placePhotos(
         ? { screen: { screenId: pick.screenId, variantId: pick.variantId, ...(pick.capturedAt ? { capturedAt: pick.capturedAt } : {}) } }
         : {}),
       ...(isMap && pick.mapId && pick.mapVariant ? { map: { mapId: pick.mapId, variant: pick.mapVariant, credit: MAP_CREDIT } } : {}),
+      ...(pick.origin === 'owner' && pick.ownerPhotoId ? { owner: { id: pick.ownerPhotoId } } : {}),
     })
   }
   out.reverse()
