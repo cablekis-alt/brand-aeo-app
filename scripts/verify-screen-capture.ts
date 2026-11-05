@@ -116,8 +116,8 @@ interface ClipState {
 interface CaptureModule {
   captureScreen: (url: string, options: Record<string, unknown>) => Promise<unknown>
   disposeCapture: () => void
-  pageInspect: (ownHost: string, mapSelector: string | null, mapHosts: string[], region?: Rect | null) => InspectResult
-  pageClipState: (selectors: string[], optional: string[]) => ClipState
+  pageInspect: (ownHost: string, mapSelector: string | null, mapHosts: string[], region?: Rect | null, firstHeight?: number) => InspectResult
+  pageClipState: (selectors: string[], optional: string[], firstHeight: number) => ClipState
   pageClipCovers: (selectors: string[], optional: string[], region: Rect) => string[]
   clipPlan: (
     rects: { x: number; y: number; w: number; h: number }[],
@@ -215,6 +215,8 @@ interface FakeShot {
  * viewHeight)는 마지막 화면 흉내 값이고, 찍은 그림의 크기는 실제 CDP처럼 사각형(없으면 화면) × 화면 배율 × clip.scale이다. afterShot을
  * 주면 찍은 뒤의 그림 검사가 그 값을 돌려준다(찍는 사이에 페이지가 바뀐 것). tree는 DOM.getDocument의 뿌리, DOM.getBoxModel은 늘
  * 「상자 없음」으로 실패한다(display:contents host와 같다). relay면 서버 요청 처리(handleCaptureRequest)로 찍고 그 답을 result로 준다.
+ * page를 주면 잘라 찍기의 페이지 안 함수(pageClipState · pageClipCovers · pageInspect)를 정해 둔 값 대신 그 페이지(마지막 화면 흉내 크기)에서
+ * 그대로 돌린다 — captureSteps가 넘기는 인자까지 시험한다.
  */
 async function runFakePage(opts: {
   clip: boolean
@@ -222,6 +224,7 @@ async function runFakePage(opts: {
   afterShot?: InspectResult
   rects?: { x: number; y: number; w: number; h: number }[]
   relay?: boolean
+  page?: (view: { width: number; height: number }) => { eval: (code: string) => unknown }
 }): Promise<{ code: string; log: FakePageLog; result: FakeShot | null }> {
   const log: FakePageLog = { scrollAt: null, inspectAt: [], shotAt: null, windows: [], metrics: [], shots: [], steps: [] }
   const clean: InspectResult = { images: 0, mapImages: 0, foreign: [], kogl: 0, frames: [] }
@@ -238,6 +241,10 @@ async function runFakePage(opts: {
     const fn = /^\(function (\w+)\(/.exec(code)?.[1]
     if (fn === 'pageScroll') return { found: true, y: scrollY }
     if (fn === 'pageDecode') return { count: 0, failed: 0 }
+    if (opts.page && (fn === 'pageClipState' || fn === 'pageClipCovers' || fn === 'pageInspect')) {
+      if (fn === 'pageInspect') log.inspectAt.push(Date.now())
+      return opts.page({ width: view.width, height: view.height }).eval(code)
+    }
     if (fn === 'pageClipState') {
       return {
         missing: [], rects: opts.rects ?? [{ x: 100, y: 2300, w: 500, h: 300 }], text: '가상박물관\n이용시간', docWidth: 1280, docHeight: 4000,
@@ -965,11 +972,12 @@ try {
     )
 
     // 잘라 찍기 — 요소마다 자리(data-r="x,y,w,h", 화면 좌표)를 주고 jsdom에서 페이지 안 함수를 그대로 돌린다(군산각 장소 페이지 실측 자리).
-    const rectWindow = (html: string) => {
+    // 화면 높이는 800(1배 첫 화면), 잘라 찍기 화면을 흉내 낼 때는 2100.
+    const rectWindow = (html: string, height = 800) => {
       const dom = new JSDOM(html, { url: 'https://gunsan.webforai.kr/places/x/', runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
       const w = dom.window
       w.innerWidth = 1280
-      w.innerHeight = 800
+      w.innerHeight = height
       w.Element.prototype.getBoundingClientRect = function (this: Element) {
         const [x, y, width, height] = (this.getAttribute('data-r') ?? '0,0,0,0').split(',').map(Number) as [number, number, number, number]
         return { left: x, top: y, right: x + width, bottom: y + height, width, height, x, y, toJSON: () => ({}) }
@@ -988,13 +996,23 @@ try {
     const SEL = ['article.place .pl-head h1', 'article.place dl.kf.kf-hero']
     const OPT = ['article.place .pl-head .kicker', 'article.place .pl-head .pl-alt', 'article.place .pl-head .summary']
     const pw = rectWindow(PLACE_HTML)
-    const state = inPage<ClipState>(pw, capture.pageClipState, SEL, OPT)
+    const state = inPage<ClipState>(pw, capture.pageClipState, SEL, OPT, 800)
     ok(
       '잘라 찍을 요소 — 필수 · 있는 선택 요소의 자리(문서 좌표)와 글자(문서 순서), 위에 붙은 머리 높이',
       state.missing.length === 0 && state.rects.length === 4 && state.text.startsWith('관광지\n가상박물관\n가상 소개\n이용시간') && state.text.includes('성인 2,000원') &&
         state.cover === 52 && state.docWidth === 1280,
     )
     ok('필수 요소가 없으면 missing(선택 요소는 없어도 된다)', JSON.stringify(inPage<ClipState>(pw, capture.pageClipState, ['article.place .nope', 'h1'], ['.pl-alt']).missing) === '["article.place .nope"]')
+    // 위에 붙은 머리 — 잘라 찍기 화면(1280×2100)에서도 1배 첫 화면 높이(800)의 절반 위에서 끝나는 고정 · sticky 요소만. 화면 높이의 절반(1050)으로
+    // 보면 위에 붙은 높이 600 옆 칸(사각형과 안 겹침)을 머리로 쳐 1배에서 찍히던 페이지가 clip-covered가 됐다(검토 2026-11-05).
+    const SIDE_NAV = '<nav class="side" style="position:fixed" data-r="0,0,300,600">옆 칸</nav>'
+    const TALL_HEAD = '<header class="big" style="position:sticky" data-r="0,0,1280,380">큰 머리</header>'
+    ok(
+      '위에 붙은 머리(잘라 찍기 화면 2100) — 높이 600 옆 칸은 머리가 아니다(1배 화면과 같이 52) · 380에서 끝나는 머리는 그대로 머리',
+      inPage<ClipState>(rectWindow(`${PLACE_HTML}${SIDE_NAV}`, 2100), capture.pageClipState, SEL, OPT, 800).cover === 52 &&
+        inPage<ClipState>(rectWindow(`${PLACE_HTML}${SIDE_NAV}`), capture.pageClipState, SEL, OPT, 800).cover === 52 &&
+        inPage<ClipState>(rectWindow(`${PLACE_HTML}${TALL_HEAD}`, 2100), capture.pageClipState, SEL, OPT, 800).cover === 380,
+    )
     const page = { docWidth: 1280, docHeight: 16000, viewWidth: 1280, viewHeight: 800, scrollX: 0, scrollY: 0, cover: 52 }
     const plan = capture.clipPlan(state.rects, 16, { ...state, viewWidth: 1280, viewHeight: 800, scrollX: 0, scrollY: 0, docHeight: 16000 })
     ok(
@@ -1026,7 +1044,7 @@ try {
         capture.clipPlan([{ x: 364, y: 108, w: 393, h: 1969 }], 16, { ...clipPage, viewHeight: 2600 }).problem === 'clip-too-large',
     )
     const clipInspect = (region?: Rect) =>
-      inPage<InspectResult>(pw, capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region ?? null)
+      inPage<InspectResult>(pw, capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region ?? null, 800)
     const inside = clipInspect(plan.rect!)
     const wide = clipInspect({ x: 348, y: 92, width: 824, height: 364 })
     ok(
@@ -1057,7 +1075,7 @@ try {
     const KOGL_IMG = '<figure data-kogl="3" data-r="100,120,200,100"><img src="/img/k.png" data-r="100,120,200,100"></figure>'
     const REGION = { x: 84, y: 84, width: 532, height: 400 }
     const chromeInspect = (html: string, region: Rect | null = REGION) =>
-      inPage<InspectResult>(chromeLike(rectWindow(html)), capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region)
+      inPage<InspectResult>(chromeLike(rectWindow(html)), capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region, 800)
     ok(
       '그림 검사 — 투명도 0(드러내기 전)인 공공누리 그림도 센다 · display:none은 세지 않는다',
       chromeInspect(`<div class="rv" style="opacity:0" data-r="100,120,200,100">${KOGL_IMG}</div>`).kogl > 0 &&
@@ -1070,6 +1088,28 @@ try {
     ok(
       '그림 검사 — 사각형 밖 요소의 가상 요소가 사각형 안에 그린 공공누리 그림을 잡는다 · 사각형 밖에 그리면 괜찮다',
       chromeInspect(PSEUDO('-300px')).kogl > 0 && chromeInspect(PSEUDO('20px')).kogl === 0,
+    )
+    // 가상 요소 자리를 어림할 수 없을 때(transform · % 값) — host가 1배 첫 화면(1280×800)과 사각형을 합친 범위에 걸칠 때만 센다. 잘라 찍기
+    // 화면(2100) 전체로 보면 사각형 아래 먼 공공누리 칸(y 1200) 때문에 1배에서 찍히던 페이지가 kogl-image가 됐다(검토 2026-11-05).
+    const FAR_PSEUDO = (y: number) =>
+      `<div class="kp" data-kogl="3" data-r="820,${y},300,200" data-cs='{"position":"absolute"}' data-before='${JSON.stringify({ backgroundImage: 'url("/img/k.png")', position: 'absolute', left: '10px', top: '10px', width: '100px', height: '80px', transform: 'translateX(1px)' })}'></div>`
+    const tallInspect = (html: string, region: Rect) =>
+      inPage<InspectResult>(chromeLike(rectWindow(html, 2100)), capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region, 800)
+    const SHORT_CLIP = { x: 332, y: 84, width: 457, height: 572 }
+    const LONG_CLIP = { x: 332, y: 84, width: 457, height: 1332 }
+    ok(
+      '그림 검사(잘라 찍기 화면 2100) — 자리를 어림할 수 없는 가상 요소는 1배 첫 화면 · 사각형을 합친 범위만: 사각형 아래 먼 칸(y 1200)은 괜찮고, 첫 화면 안 · 긴 사각형 옆이면 센다',
+      tallInspect(FAR_PSEUDO(1200), SHORT_CLIP).kogl === 0 && tallInspect(FAR_PSEUDO(500), SHORT_CLIP).kogl > 0 && tallInspect(FAR_PSEUDO(1200), LONG_CLIP).kogl > 0,
+    )
+    // 위 두 경우를 찍기 순서 전체로(captureSteps가 넘기는 인자까지) — 페이지 안 함수를 잘라 찍기 화면(1280×2100)의 jsdom 페이지에서 돌린다.
+    const CARD = (h: number) => `<header class="top" style="position:sticky;background:#123" data-r="0,0,1280,52">위 줄</header><h1 data-r="348,100,425,${h}">가짜 장소</h1>`
+    const pageOf = (html: string) => (view: { width: number; height: number }) => chromeLike(rectWindow(html, view.height))
+    const sidePage = await runFakePage({ clip: true, page: pageOf(`${CARD(540)}${SIDE_NAV}`) })
+    const farPage = await runFakePage({ clip: true, page: pageOf(`${CARD(540)}${FAR_PSEUDO(1200)}`) })
+    const nearPage = await runFakePage({ clip: true, page: pageOf(`${CARD(1300)}${FAR_PSEUDO(1200)}`) })
+    ok(
+      `잘라 찍기(1280×2100) — 높이 600 옆 칸 · 사각형 아래 먼 공공누리 칸이 있어도 1배처럼 찍고(914×1144), 긴 사각형 옆 공공누리 칸은 버린다(${sidePage.code} · ${farPage.code} · ${nearPage.code})`,
+      sidePage.code === 'resolved' && sidePage.result?.width === 914 && sidePage.result.height === 1144 && farPage.code === 'resolved' && nearPage.code === 'kogl-image',
     )
     ok(
       '그림 검사 — SVG pattern 안의 <image> · <input type=image> · border-image의 공공누리 그림도 잡는다',

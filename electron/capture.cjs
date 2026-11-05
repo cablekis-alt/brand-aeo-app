@@ -22,7 +22,7 @@
 //     기다린다), 들어가지 않으면 찍지 않는다. 잘라 찍기 화면은 1280×2100 · 배율 2다(2026-11-05 결정 — 블로그에서 더 크게): 배율 2를
 //     사이트를 열기 전에 정해 사이트가 고해상도 그림(srcset)을 고르고 글자도 2배로 그린다(clip.scale로 키우면 1배 그림을 늘린다). 화면이 길어
 //     첫 화면(800)보다 긴 안내 카드(근대역사박물관 425×920)도 통째로 찍는다 — 세로 CLIP_MAX_HEIGHT까지. 사각형 · 그림 검사는 CSS px, 찍은
-//     그림은 그 2배(장치 px)다.
+//     그림은 그 2배(장치 px)다. 위에 붙은 머리 · 자리를 어림할 수 없는 가상 요소를 볼 범위는 1배 첫 화면(VIEW_HEIGHT) 기준 그대로다.
 //   - ownHostOnly: 자사 호스트 밖의 요청을 모두 막는다(관광공사 사진 · 지도 SDK · 동영상 썸네일 — 잘라 찍는 부분에 필요 없다).
 'use strict'
 
@@ -423,8 +423,10 @@ async function pageDecode() {
 /**
  * 잘라 찍을 요소들 — 선택자마다 보이는 요소(여럿이면 모두)의 자리(문서 좌표)와 글자(innerText, 문서 순서). 필수 선택자(selectors)에 보이는
  * 요소가 없으면 missing에 적는다(optional은 없어도 된다). 화면 맨 위에 붙은 고정 · sticky 머리의 높이(cover), 문서 · 화면 크기, 스크롤도 준다.
+ * 머리는 1배 첫 화면 높이(firstHeight)의 절반 위에서 끝나는 것만이다 — 잘라 찍기 화면(2100)의 절반으로 보면 위에 붙은 긴 옆 칸(높이 600)까지
+ * 머리로 쳐 1배에서 찍히던 페이지가 clip-covered가 된다.
  */
-function pageClipState(selectors, optional) {
+function pageClipState(selectors, optional, firstHeight) {
   const shown = (el) => {
     const r = el.getBoundingClientRect()
     return r.width > 0 && r.height > 0 && (el.checkVisibility ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true)
@@ -460,7 +462,7 @@ function pageClipState(selectors, optional) {
     const pos = getComputedStyle(el).position
     if (pos !== 'fixed' && pos !== 'sticky') continue
     const r = el.getBoundingClientRect()
-    if (r.top <= 2 && r.bottom > 0 && r.bottom < innerHeight / 2 && shown(el)) cover = Math.max(cover, r.bottom)
+    if (r.top <= 2 && r.bottom > 0 && r.bottom < firstHeight / 2 && shown(el)) cover = Math.max(cover, r.bottom)
   }
   const root = document.documentElement
   const body = document.body
@@ -522,12 +524,15 @@ function pageClipCovers(selectors, optional, region) {
  * 투명도 0인 그림도 센다(드러내기 효과 — 검사 뒤 · 찍기 전에 나타날 수 있다). display · visibility로 숨긴 것만 뺀다. 그려지지 않는 SVG
  * 묶음(defs · pattern · symbol …) 안의 <image>는 다른 곳(fill:url(#…) · <use>)에서 그려지므로 자리와 상관없이 보고, 가상 요소(::before ·
  * ::after)의 그림은 host 상자가 아니라 가상 요소의 자리(어림)로 본다.
+ * 가상 요소의 자리를 어림할 수 없으면 host가 near에 걸칠 때 센다 — 첫 화면, 잘라 찍기면 1배 첫 화면(위에서 firstHeight)과 사각형을 합친 범위.
+ * 잘라 찍기 화면(2100) 전체로 보면 1배에서는 보지 않던 사각형 아래 먼 요소까지 센다.
  */
-function pageInspect(ownHost, mapSelector, mapHosts, region) {
+function pageInspect(ownHost, mapSelector, mapHosts, region, firstHeight) {
   const vw = innerWidth
   const vh = innerHeight
   const view = { x: 0, y: 0, width: vw, height: vh }
   const box = region || view
+  const near = region ? { x: 0, y: 0, width: vw, height: Math.max(firstHeight, region.y + region.height) } : view
   const hits = (r, b) => r.width > 1 && r.height > 1 && r.bottom > b.y && r.right > b.x && r.top < b.y + b.height && r.left < b.x + b.width
   const inView = (r) => hits(r, box)
   const shown = (el) => (el.checkVisibility ? el.checkVisibility({ visibilityProperty: true }) : true)
@@ -616,8 +621,8 @@ function pageInspect(ownHost, mapSelector, mapHosts, region) {
   }
   const urlsIn = (v) => [...String(v || '').matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/g)].map((m) => m[2])
   // CSS 그림(배경 · content · 마스크 · border-image · 목록 표시) — <html> · <body>는 첫 화면 전체를 덮으므로 자리와 상관없이 보고, 나머지는 첫
-  // 화면(잘라 찍기면 그 사각형)에 걸친 요소만 본다. 가상 요소는 host가 밖이어도 그 자리(어림)가 걸치면 보고, 어림할 수 없으면 host가 첫 화면에
-  // 걸칠 때 본다.
+  // 화면(잘라 찍기면 그 사각형)에 걸친 요소만 본다. 가상 요소는 host가 밖이어도 그 자리(어림)가 걸치면 보고, 어림할 수 없으면 host가 near(첫
+  // 화면 · 잘라 찍기면 1배 첫 화면과 사각형을 합친 범위)에 걸칠 때 본다.
   const page = [document.documentElement, document.body].filter(Boolean)
   const boxes = roots.flatMap((root) => [...root.querySelectorAll(root === document ? 'body *' : '*')])
   for (const el of [...page, ...boxes]) {
@@ -638,7 +643,7 @@ function pageInspect(ownHost, mapSelector, mapHosts, region) {
       if (!urls.length || cs.visibility === 'hidden' || cs.display === 'none') continue
       if (pseudo && !hostIn) {
         const pb = pseudoBox(el, cs)
-        if (pb ? !inView(pb) : !hits(rect, view)) continue
+        if (pb ? !inView(pb) : !hits(rect, near)) continue
       }
       if (inKogl(el)) out.kogl += 1
       for (const u of urls) judge(el, u)
@@ -1136,7 +1141,7 @@ async function captureSteps(url, opts, ctx) {
   if (opts.clip) {
     const { selectors, optional, padding } = opts.clip
     const measure = async () => {
-      const state = await evalIn(ctx, pageCall(pageClipState, selectors, optional))
+      const state = await evalIn(ctx, pageCall(pageClipState, selectors, optional, VIEW_HEIGHT))
       if (state.missing.length) {
         throw captureError('clip-missing', `잘라 찍을 요소가 페이지에 없습니다(${state.missing.join(', ')}).`, { clipState: { missing: state.missing } })
       }
@@ -1169,7 +1174,7 @@ async function captureSteps(url, opts, ctx) {
   // 나타난 그림(드러내기 · 늦게 붙은 요소)이 있으면 찍은 그림도 버린다.
   const where = clipView ? '잘라 찍을 부분' : '첫 화면'
   const inspect = async (after) => {
-    const seen = await evalIn(ctx, pageCall(pageInspect, ctx.host, opts.map ? opts.map.selector : null, MAP_IMAGE_HOST_SUFFIXES, clipView))
+    const seen = await evalIn(ctx, pageCall(pageInspect, ctx.host, opts.map ? opts.map.selector : null, MAP_IMAGE_HOST_SUFFIXES, clipView, VIEW_HEIGHT))
     const when = after ? '찍는 사이에 ' : ''
     if (seen.kogl > 0) throw captureError('kogl-image', `${when}공공누리 표시가 붙은 그림이 ${where}에 있습니다(${seen.kogl}개).`, { inspect: seen })
     if (seen.foreign.length > 0) {
