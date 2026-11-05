@@ -44,6 +44,7 @@ import {
   screenAspectRatio,
   screenKindOf,
   screenProfileFor,
+  screenShotCurrent,
   screenShotDay,
   screenShotMeta,
   type ScreenKind,
@@ -625,8 +626,11 @@ export default function SitePhotoPanel({
         <ul className="photo-grid">
           {opts.map((o) => {
             const day = screenShotDay(o.shot?.capturedAt)
-            // 서버는 같은 날 찍은 화면을 다시 쓴다 — 오늘 찍은 화면에는 「다시 찍기」를 두지 않는다.
-            const canShoot = screens.canCapture && (!o.shot || kstDate(o.shot.capturedAt) !== today)
+            // 서버는 같은 날 같은 방식(배율 · 화면 가로)으로 찍은 화면만 다시 쓴다 — 그런 화면에는 「다시 찍기」를 두지 않는다. 오늘 찍었어도 지금과
+            // 다른 방식(600 전에 1280 화면으로 찍은 장소 안내)이면 둔다.
+            const def = screenProfile?.screens.find((s) => s.id === o.screenId)
+            const canShoot =
+              screens.canCapture && (!o.shot || kstDate(o.shot.capturedAt) !== today || (def !== undefined && !screenShotCurrent(o.shot, def)))
             return (
               <li key={o.key}>
                 <label className={`photo-option is-screen${choice === o.key ? ' is-chosen' : ''}`}>

@@ -153,6 +153,14 @@ export function screenShotViewWidth(screen: Pick<ScreenDef, 'clip'>): number {
   return screen.clip?.viewWidth ?? SCREEN_VIEW_WIDTH
 }
 
+/**
+ * 찍어 둔 화면이 지금 이 화면을 찍는 방식(화소 배율 · 화면 가로)과 같은가 — 서버는 같은 날이라도 같은 방식으로 찍은 것만 다시 쓴다
+ * (server/screens.ts sameDayShot). 다르면(600 전에 1280 화면으로 찍은 장소 안내 · 2배 전에 1배로 찍은 잘라 찍기) 오늘 찍었어도 다시 찍을 수 있다.
+ */
+export function screenShotCurrent(shot: Pick<ScreenShot, 'scale' | 'viewWidth'>, screen: Pick<ScreenDef, 'clip'>): boolean {
+  return (shot.scale ?? 1) === screenShotScale(screen) && (shot.viewWidth ?? SCREEN_VIEW_WIDTH) === screenShotViewWidth(screen)
+}
+
 /** 목록 · 찍기 응답에 나가는 한 장 — id(= sha16)와 앱 주소(src)를 붙인다. */
 export interface ScreenShotView extends ScreenShot {
   id: string

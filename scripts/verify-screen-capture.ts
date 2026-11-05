@@ -109,8 +109,8 @@ type Box = { x: number; y: number; w: number; h: number }
 interface ClipState {
   missing: string[]
   rects: Box[]
-  /** 넣지 않는 보이는 요소의 잉크 상자(문서 좌표) — 잘라 찍을 사각형(여백 포함)에 걸친 것. */
-  obstacles?: (Box & { d?: string })[]
+  /** 넣지 않는 보이는 요소의 잉크 상자(문서 좌표) — 잘라 찍을 사각형(여백 포함)에 걸친 것. core는 번짐을 뺀 진한 부분. */
+  obstacles?: (Box & { core?: Box; d?: string })[]
   text: string
   cover: number
   docWidth: number
@@ -126,7 +126,7 @@ interface CaptureModule {
   clipPlan: (
     rects: Box[],
     padding: number,
-    page: { docWidth: number; docHeight: number; viewWidth: number; viewHeight: number; scrollX: number; scrollY: number; cover: number; obstacles?: Box[] },
+    page: { docWidth: number; docHeight: number; viewWidth: number; viewHeight: number; scrollX: number; scrollY: number; cover: number; obstacles?: (Box & { core?: Box })[] },
   ) => { rect: Rect | null; scrollY: number; problem: string | null }
   requestBlockReason: (details: { url: string; method?: string; resourceType?: string }, ctx: Record<string, unknown>) => Promise<string | null>
   countClosedShadowRoots: (node: unknown) => number
@@ -511,6 +511,17 @@ try {
     '화면 가로 — 장소 안내는 600(좁은 화면의 아래 고정 줄 .pl-bar는 숨김), 가이드는 정하지 않음(1280) · 코스 · 지도는 잘라 찍지 않음',
     placeInfo?.clip?.viewWidth === 600 && (placeInfo.hide ?? []).includes('.pl-bar') && kidsGuide?.clip !== undefined && kidsGuide.clip.viewWidth === undefined &&
       !(kidsGuide.hide ?? []).includes('.pl-bar') && course?.clip === undefined && map?.clip === undefined && lib.SCREEN_VIEW_WIDTH === 1280,
+  )
+  // 찍어 둔 화면이 지금 찍는 방식(배율 · 화면 가로)과 같은가 — 서버는 같은 날이라도 같은 방식으로 찍은 것만 다시 쓴다(sameDayShot). 화면 고르기
+  // (SitePhotoPanel)는 오늘 찍은 화면에 「다시 찍기」를 두지 않았다 — 오늘 1280 화면으로 찍은 장소 안내는 다음 날에야 600으로 다시 찍을 수
+  // 있었다(검토 2026-11-05). 같은 방식이 아니면 오늘 찍었어도 「다시 찍기」를 둔다.
+  const shotCurrent = (lib as { screenShotCurrent?: (shot: { scale?: number; viewWidth?: number }, screen: NonNullable<typeof placeInfo>) => boolean }).screenShotCurrent
+  ok(
+    '찍는 방식 — 장소 안내는 600 · 2배 기록만 지금 방식(1280 · 2배 · 1배 옛 기록은 아님), 가이드는 1280 · 2배, 코스 · 지도는 1배',
+    typeof shotCurrent === 'function' &&
+      shotCurrent({ scale: 2, viewWidth: 600 }, placeInfo!) && !shotCurrent({ scale: 2 }, placeInfo!) && !shotCurrent({}, placeInfo!) && !shotCurrent({ viewWidth: 600 }, placeInfo!) &&
+      shotCurrent({ scale: 2 }, kidsGuide!) && !shotCurrent({}, kidsGuide!) && !shotCurrent({ scale: 2, viewWidth: 600 }, kidsGuide!) &&
+      shotCurrent({}, course!) && shotCurrent({ scale: 1, viewWidth: 1280 }, map!) && !shotCurrent({ scale: 2 }, course!),
   )
   const kidsTarget = { profile: profile!, ...findScreenVariant(profile!, 'course', 'kids')! }
   const wondosim = { profile: profile!, ...findScreenVariant(profile!, 'map', 'r-원도심')! }
@@ -1083,20 +1094,33 @@ try {
     // 7~10줄이 남았다(실측 2026-11-05).
     const CARD600 = [{ x: 27, y: 124, w: 546, h: 569 }]
     const page600 = { docWidth: 600, docHeight: 3000, viewWidth: 600, viewHeight: 2100, scrollX: 0, scrollY: 0, cover: 52 }
-    const rectWith = (obstacles: Box[], rects: Box[] = CARD600) => JSON.stringify(capture.clipPlan(rects, 16, { ...page600, obstacles }).rect)
+    const rectWith = (obstacles: (Box & { core?: Box })[], rects: Box[] = CARD600) => JSON.stringify(capture.clipPlan(rects, 16, { ...page600, obstacles }).rect)
     const R600 = (y: number, height: number, x = 11, width = 578) => JSON.stringify({ x, y, width, height })
     ok(
       '가장자리 규칙 — 카드 아래 줄이 아래 가장자리를 지나면 아래를 그 줄 바로 위로(578×601 → 578×594) · 위 · 왼쪽 · 오른쪽은 그대로',
       rectWith([]) === R600(108, 601) && rectWith([{ x: 27, y: 702, w: 546, h: 20 }]) === R600(108, 594),
     )
     const HEAD_RECTS = [{ x: 27, y: 202, w: 546, h: 491 }]
+    // 걸림돌의 잉크 상자는 번짐 끝(표준편차의 3배)까지, core는 번짐을 뺀 진한 부분이다. 아이콘(150–186)의 drop-shadow(0 6px 8px)는 진한 부분이
+    // 150–192로 넣을 요소(202) 위에 통째로 있고, 번짐 끝(216)만 넣을 요소에 걸친다 — 위를 넣을 요소의 위(202)까지 옮긴다. 예전 입력은 번짐을
+    // 1.5배로 본 잉크 상자(144–204)뿐이었다: 진한 부분을 따로 주지 않으면 넣을 요소에 걸친 걸림돌과 가를 수 없다(검토 2026-11-05).
     ok(
-      '가장자리 규칙 — 분류 줄 위 아이콘의 그림자(잉크 상자 144–204)가 위 가장자리(186)를 지나면 위를 넣을 요소의 위(202)까지 · 상자(150–186)만 보면 그대로 186',
-      rectWith([{ x: 15, y: 144, w: 88, h: 60 }], HEAD_RECTS) === R600(202, 507) && rectWith([{ x: 27, y: 150, w: 64, h: 36 }], HEAD_RECTS) === R600(186, 523),
+      '가장자리 규칙 — 분류 줄 위 아이콘의 그림자(잉크 132–216 · 진한 부분 150–192)가 위 가장자리(186)를 지나면 위를 넣을 요소의 위(202)까지 · 상자(150–186)만 보면 그대로 186 · 진한 부분까지 넣을 요소에 걸치면 그대로 186',
+      rectWith([{ x: 3, y: 132, w: 112, h: 84, core: { x: 27, y: 150, w: 64, h: 42 } }], HEAD_RECTS) === R600(202, 507) &&
+        rectWith([{ x: 27, y: 150, w: 64, h: 36 }], HEAD_RECTS) === R600(186, 523) && rectWith([{ x: 3, y: 132, w: 112, h: 84 }], HEAD_RECTS) === R600(186, 523),
     )
+    // 넣을 요소에 겹친 걸림돌은 어느 가장자리를 옮겨도 새 가장자리에 그대로 걸친다 — 옮기면 여백만 없어진다. 예전 기대값은 넣을 요소의 끝까지
+    // 옮긴 R600(108, 585) · R600(124, 585)였다: 걸림돌은 그대로 그림 가장자리에 남고, 넣을 요소들 사이의 가로 가득 구분선 하나로 왼쪽 · 오른쪽
+    // 여백이 없어져 제목이 그림 가장자리에 붙었다(검토 2026-11-05).
     ok(
-      '가장자리 규칙 — 넣을 요소에 겹친 요소면 가장자리는 넣을 요소의 끝(693)에서 멈춘다(그 안으로 들이지 않는다)',
-      rectWith([{ x: 27, y: 680, w: 546, h: 40 }]) === R600(108, 585) && rectWith([{ x: 27, y: 100, w: 546, h: 40 }]) === R600(124, 585),
+      '가장자리 규칙 — 넣을 요소에 겹친 요소(아래 칸 · 위 띠)는 옮겨도 뺄 수 없으므로 가장자리를 옮기지 않는다(여백 그대로)',
+      rectWith([{ x: 27, y: 680, w: 546, h: 40 }]) === R600(108, 601) && rectWith([{ x: 27, y: 100, w: 546, h: 40 }]) === R600(108, 601),
+    )
+    const TWO_RECTS = [{ x: 27, y: 124, w: 546, h: 40 }, { x: 27, y: 200, w: 546, h: 493 }]
+    ok(
+      '가장자리 규칙 — 넣을 요소들(제목 · 카드) 사이의 가로 가득 구분선 · 뒤에 깔린 가로 가득 배경판은 왼쪽 · 오른쪽 여백 16을 그대로 둔다',
+      rectWith([{ x: 0, y: 190, w: 600, h: 1 }], TWO_RECTS) === R600(108, 601) && rectWith([{ x: 0, y: 150, w: 600, h: 320 }], TWO_RECTS) === R600(108, 601) &&
+        rectWith([{ x: 0, y: 190, w: 600, h: 1 }, { x: 27, y: 702, w: 546, h: 20 }], TWO_RECTS) === R600(108, 594),
     )
     ok(
       '가장자리 규칙 — 왼쪽 · 오른쪽은 그대로: 화면 가로 가득한 아래 줄은 아래만 옮기고, 여백 안에만 있는 요소 · 사각형 밖 요소는 그대로',
@@ -1126,11 +1150,53 @@ try {
     const inkState = inPage<ClipState>(chromeLike(rectWindow(INK_HTML, 2100, 600)), capture.pageClipState, ['h1', 'dl.kf'], ['.kicker'], 800, 16)
     const inkNames = (inkState.obstacles ?? []).map((o) => o.d ?? '').sort().join(',')
     const inkPlan = capture.clipPlan(inkState.rects, 16, { ...page600, ...inkState })
+    const inkOf = (ink: ClipState, d: string) => JSON.stringify((ink.obstacles ?? []).find((o) => o.d === d))
+    // 예전 기대값은 번짐을 drop-shadow 1.5배 · box-shadow 1배로 본 잉크 상자(아이콘 15,144,88,60 · 아래 칸 19,702,562,46)와 아래 702(578×500)였다 —
+    // 번짐은 표준편차의 3배까지 그린다(drop-shadow 8px는 표준편차 8 → 24, box-shadow 8px는 표준편차 4 → 12). 진한 부분(core)도 함께 준다.
     ok(
-      `잉크 상자(페이지 안) — 아이콘의 drop-shadow · 아래 칸의 box-shadow까지, 조상 · 넣을 요소 안 · sticky · 숨긴 요소는 빼고(${inkNames}) → 위 202 · 아래 702`,
-      JSON.stringify((inkState.obstacles ?? []).find((o) => o.d === 'p.pl-kpic')) === JSON.stringify({ x: 15, y: 144, w: 88, h: 60, d: 'p.pl-kpic' }) &&
-        JSON.stringify((inkState.obstacles ?? []).find((o) => o.d === 'div.note')) === JSON.stringify({ x: 19, y: 702, w: 562, h: 46, d: 'div.note' }) &&
-        !/article|header|hidden-line|dt|dd|kicker|h1/.test(inkNames) && JSON.stringify(inkPlan.rect) === R600(202, 500),
+      `잉크 상자(페이지 안) — 아이콘의 drop-shadow · 아래 칸의 box-shadow까지(번짐은 표준편차의 3배 · 진한 부분 core), 조상 · 넣을 요소 안 · sticky · 숨긴 요소는 빼고(${inkNames}) → 위 202 · 아래 698`,
+      inkOf(inkState, 'p.pl-kpic') === JSON.stringify({ x: 3, y: 132, w: 112, h: 84, core: { x: 27, y: 150, w: 64, h: 42 }, d: 'p.pl-kpic' }) &&
+        inkOf(inkState, 'div.note') === JSON.stringify({ x: 15, y: 698, w: 570, h: 54, core: { x: 27, y: 710, w: 546, h: 32 }, d: 'div.note' }) &&
+        !/article|header|hidden-line|dt|dd|kicker|h1/.test(inkNames) && JSON.stringify(inkPlan.rect) === R600(202, 496),
+    )
+    // 잉크 상자 — filter 목록은 차례로 쌓는다(drop-shadow 두 번이면 아래로 16), drop-shadow() · blur() 길이는 표준편차(3배까지), 직접 든 글자의
+    // text-shadow, transform 배율(scale 2면 그림자 6이 12)도 본다. 예전에는 filter 사슬은 가장 큰 하나만, drop-shadow · blur는 1.5배만 보고
+    // text-shadow · transform은 보지 않아 카드 위 4~14줄(장치 화소)이 그림 가장자리에 남았다(검토 2026-11-05 합성 페이지 실측).
+    const BLACK = 'rgb(0, 0, 0)'
+    const INK2_HTML = [
+      '<h1 data-r="40,200,400,200">가짜 장소</h1>',
+      `<div class="chain" data-r="40,105,400,70" data-cs='${JSON.stringify({ backgroundColor: 'rgb(136, 136, 136)', filter: `drop-shadow(${BLACK} 0px 8px 0px) drop-shadow(${BLACK} 0px 8px 0px)` })}'></div>`,
+      `<p class="ts" data-r="40,150,300,20" data-cs='${JSON.stringify({ textShadow: `${BLACK} 0px 20px 0px` })}'>출처 · 확인 필요</p>`,
+      `<div class="sc" data-r="40,126,400,50" data-ow="200" data-oh="25" data-cs='${JSON.stringify({ backgroundColor: 'rgb(136, 136, 136)', boxShadow: `${BLACK} 0px 6px 0px 0px` })}'></div>`,
+      `<div class="ds" data-r="40,104,400,70" data-cs='${JSON.stringify({ backgroundColor: 'rgb(136, 136, 136)', filter: `drop-shadow(${BLACK} 0px 0px 8px)` })}'></div>`,
+      `<div class="bl" data-r="40,100,400,70" data-cs='${JSON.stringify({ backgroundColor: BLACK, filter: 'blur(10px)' })}'></div>`,
+    ].join('')
+    const ink2Win = chromeLike(rectWindow(INK2_HTML, 2100, 600))
+    for (const [prop, attr] of [['offsetWidth', 'data-ow'], ['offsetHeight', 'data-oh']] as const) {
+      Object.defineProperty(ink2Win.HTMLElement.prototype, prop, { configurable: true, get(this: Element) { return Number(this.getAttribute(attr) ?? 0) } })
+    }
+    const ink2 = inPage<ClipState>(ink2Win, capture.pageClipState, ['h1'], [], 800, 16)
+    ok(
+      `잉크 상자 — filter 사슬은 쌓고(아래 16) · drop-shadow · blur는 표준편차의 3배 · text-shadow · transform 배율까지(${(ink2.obstacles ?? []).map((o) => o.d).join(',')})`,
+      inkOf(ink2, 'div.chain') === JSON.stringify({ x: 40, y: 105, w: 400, h: 86, core: { x: 40, y: 105, w: 400, h: 86 }, d: 'div.chain' }) &&
+        inkOf(ink2, 'p.ts') === JSON.stringify({ x: 40, y: 150, w: 300, h: 40, core: { x: 40, y: 150, w: 300, h: 40 }, d: 'p.ts' }) &&
+        inkOf(ink2, 'div.sc') === JSON.stringify({ x: 40, y: 126, w: 400, h: 62, core: { x: 40, y: 126, w: 400, h: 62 }, d: 'div.sc' }) &&
+        inkOf(ink2, 'div.ds') === JSON.stringify({ x: 16, y: 80, w: 448, h: 118, core: { x: 40, y: 104, w: 400, h: 70 }, d: 'div.ds' }) &&
+        inkOf(ink2, 'div.bl') === JSON.stringify({ x: 10, y: 70, w: 460, h: 130, core: { x: 40, y: 100, w: 400, h: 70 }, d: 'div.bl' }),
+    )
+    // 소수 자리 — 사각형은 넣을 요소들을 합친 사각형을 정수로 넓혀(floor · ceil) 여백을 두른다. 걸림돌 후보도 같은 정수 사각형 + 여백으로 고른다:
+    // 소수 사각형 + 여백(24.6 · 416.6)으로 고르면 그 사이 1px 미만 띠에서 시작하는 이웃(오른쪽이 24.5인 검은 칸 · 위가 416.7인 검은 줄)을 보지
+    // 못해, 사각형(24부터 · 417까지)에 그 조각이 찍혔다(검토 2026-11-05: 왼쪽 2줄).
+    const ROUND_HTML = [
+      '<h1 data-r="40.6,200,400,200.6">가짜 장소</h1>',
+      `<div class="lb" data-r="0,200,24.5,200" data-cs='${JSON.stringify({ backgroundColor: BLACK })}'></div>`,
+      `<div class="bb" data-r="40,416.7,400,20" data-cs='${JSON.stringify({ backgroundColor: BLACK })}'></div>`,
+    ].join('')
+    const roundState = inPage<ClipState>(chromeLike(rectWindow(ROUND_HTML, 2100, 600)), capture.pageClipState, ['h1'], [], 800, 16)
+    const roundPlan = capture.clipPlan(roundState.rects, 16, { ...page600, ...roundState })
+    ok(
+      `가장자리 규칙(소수 자리) — 정수 사각형(24부터 · 417까지)에 걸친 이웃도 걸림돌로 보고 빼 25부터 · 416까지(${JSON.stringify(roundPlan.rect)})`,
+      (roundState.obstacles ?? []).map((o) => o.d).sort().join(',') === 'div.bb,div.lb' && JSON.stringify(roundPlan.rect) === JSON.stringify({ x: 25, y: 184, width: 432, height: 232 }),
     )
     const clipInspect = (region?: Rect) =>
       inPage<InspectResult>(pw, capture.pageInspect, 'gunsan.webforai.kr', null, ['daumcdn.net', 'kakao.com', 'kakaocdn.net'], region ?? null, 800)

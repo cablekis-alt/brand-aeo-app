@@ -443,9 +443,12 @@ async function pageDecode() {
  * 머리는 1배 첫 화면 높이(firstHeight)의 절반 위에서 끝나는 것만이다 — 잘라 찍기 화면(2100)의 절반으로 보면 위에 붙은 긴 옆 칸(높이 600)까지
  * 머리로 쳐 1배에서 찍히던 페이지가 clip-covered가 된다.
  * 가장자리 규칙(clipPlan)에 쓸 걸림돌(obstacles)도 준다 — 넣을 요소도, 그 조상 · 자손도 아닌 보이는 요소 가운데 스스로 그리는 것(배경 ·
- * 테두리 · 그림자 · 필터 · outline · 직접 든 글자 · 그림)의 잉크 상자(문서 좌표 { x, y, w, h } — 테두리 상자 + 바깥 box-shadow(번짐 + 퍼짐 ±
- * 어긋남) · filter drop-shadow(어긋남 + 번짐 × 1.5) · blur() · outline)가 넣을 요소들을 합친 사각형 + 여백(padding)에 걸치고 합친 사각형 안에
- * 다 들지는 않는 것. 고정 · sticky 요소는 스크롤에 따라 자리가 바뀌어 빼고 pageClipCovers가 따로 본다.
+ * 테두리 · 그림자 · 필터 · outline · 직접 든 글자 · 그림)의 잉크 상자(문서 좌표 { x, y, w, h } — 테두리 상자 + 바깥 box-shadow · 직접 든 글자의
+ * text-shadow · outline, 그 위에 filter 목록(drop-shadow() · blur())을 차례로 쌓고 transform 배율을 곱한 것)가 넣을 요소들을 합친 사각형
+ * (clipPlan과 같이 floor · ceil로 넓힌 정수 사각형) + 여백(padding)에 걸치고 합친 사각형 안에 다 들지는 않는 것. 번짐은 표준편차의 3배까지
+ * 그린다(Skia가 그리는 끝 — box-shadow · text-shadow 번짐 길이는 표준편차의 2배, drop-shadow() · blur() 길이는 표준편차). 걸림돌마다 번짐을
+ * 뺀 진한 부분(core — 테두리 상자 + 어긋남 · 퍼짐 · outline)도 준다. 고정 · sticky 요소는 스크롤에 따라 자리가 바뀌어 빼고 pageClipCovers가
+ * 따로 본다.
  */
 function pageClipState(selectors, optional, firstHeight, padding) {
   const shown = (el) => {
@@ -488,20 +491,21 @@ function pageClipState(selectors, optional, firstHeight, padding) {
   const obstacles = []
   if (rects.length) {
     const pad = Number.isFinite(padding) ? padding : 0
+    // clipPlan과 같은 정수 사각형 — 소수 사각형으로 고르면 그 사이 1px 미만 띠에서 시작하는 이웃을 보지 못한 채 사각형에 찍는다.
     const union = {
-      x0: Math.min(...rects.map((r) => r.x)),
-      y0: Math.min(...rects.map((r) => r.y)),
-      x1: Math.max(...rects.map((r) => r.x + r.w)),
-      y1: Math.max(...rects.map((r) => r.y + r.h)),
+      x0: Math.floor(Math.min(...rects.map((r) => r.x))),
+      y0: Math.floor(Math.min(...rects.map((r) => r.y))),
+      x1: Math.ceil(Math.max(...rects.map((r) => r.x + r.w))),
+      y1: Math.ceil(Math.max(...rects.map((r) => r.y + r.h))),
     }
     const clear = (v) => !v || v === 'transparent' || /^rgba\([^)]*,\s*0(?:\.0+)?\)$/.test(v)
     const none = (v) => !v || v === 'none'
     const outlined = (cs) => cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0
-    const paints = (el, cs) => {
+    const hasOwnText = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
+    const paints = (el, cs, ownText) => {
       const border = ['Top', 'Right', 'Bottom', 'Left'].some(
         (s) => parseFloat(cs[`border${s}Width`]) > 0 && cs[`border${s}Style`] !== 'none' && !clear(cs[`border${s}Color`]),
       )
-      const ownText = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
       return (
         !clear(cs.backgroundColor) || !none(cs.backgroundImage) || border || !none(cs.boxShadow) || !none(cs.filter) || outlined(cs) || ownText ||
         /^(img|svg|video|canvas|iframe|embed|object|input|button|select|textarea|picture)$/i.test(el.tagName)
@@ -526,32 +530,64 @@ function pageClipState(selectors, optional, firstHeight, padding) {
     /** 색(rgba() · #…)을 걷고 남은 px 길이들. */
     const lengths = (s) =>
       [...s.replace(/(?:rgba?|hsla?|hwb|color|lab|lch|oklab|oklch)\([^)]*\)|#[0-9a-f]+/gi, '').matchAll(/(-?\d+(?:\.\d+)?)px/g)].map((m) => parseFloat(m[1]))
-    /** 테두리 상자 밖으로 번지는 잉크(위 · 오른쪽 · 아래 · 왼쪽 px). */
-    const inkOf = (cs) => {
-      const e = { t: 0, r: 0, b: 0, l: 0 }
-      const add = (ox, oy, ext) => {
+    /** 가우스 번짐이 그리는 끝(px) — 표준편차의 3배. */
+    const tail = (sd) => Math.max(0, sd) * 3
+    /**
+     * 테두리 상자 밖으로 그리는 잉크(위 · 오른쪽 · 아래 · 왼쪽 px) — full은 번짐 끝까지, solid는 번짐을 뺀 진한 부분. 바깥 box-shadow · 직접 든
+     * 글자의 text-shadow · outline 위에 filter 목록을 차례로 쌓는다(drop-shadow()는 앞까지 그린 것을 옮겨 다시 그리고, blur()는 앞까지 그린 것을
+     * 번지게 한다). transform 배율은 그림자에도 걸린다 — 테두리 상자(b)가 레이아웃 크기(offsetWidth · offsetHeight)와 1px 넘게 다르면 그 비를 곱한다.
+     */
+    const inkOf = (el, cs, b, ownText) => {
+      const solid = { t: 0, r: 0, b: 0, l: 0 }
+      const full = { t: 0, r: 0, b: 0, l: 0 }
+      const grow = (e, ox, oy, ext) => {
         e.t = Math.max(e.t, ext - oy)
         e.b = Math.max(e.b, ext + oy)
         e.l = Math.max(e.l, ext - ox)
         e.r = Math.max(e.r, ext + ox)
       }
+      const shadow = (ox, oy, spread, sd) => {
+        grow(solid, ox, oy, spread)
+        grow(full, ox, oy, spread + tail(sd))
+      }
+      const redraw = (e, ox, oy, ext) => {
+        const p = { ...e }
+        e.t = Math.max(p.t, p.t + ext - oy)
+        e.b = Math.max(p.b, p.b + ext + oy)
+        e.l = Math.max(p.l, p.l + ext - ox)
+        e.r = Math.max(p.r, p.r + ext + ox)
+      }
       if (!none(cs.boxShadow)) {
         for (const part of split(cs.boxShadow)) {
           if (/\binset\b/.test(part)) continue
           const [ox = 0, oy = 0, blur = 0, spread = 0] = lengths(part)
-          add(ox, oy, blur + spread)
+          shadow(ox, oy, spread, blur / 2)
         }
       }
+      if (ownText && !none(cs.textShadow)) {
+        for (const part of split(cs.textShadow)) {
+          const [ox = 0, oy = 0, blur = 0] = lengths(part)
+          shadow(ox, oy, 0, blur / 2)
+        }
+      }
+      if (outlined(cs)) shadow(0, 0, parseFloat(cs.outlineWidth) + Math.max(0, parseFloat(cs.outlineOffset) || 0), 0)
       if (!none(cs.filter)) {
-        for (const m of cs.filter.matchAll(/drop-shadow\(((?:[^()]|\([^()]*\))*)\)/g)) {
-          const [ox = 0, oy = 0, blur = 0] = lengths(m[1])
-          add(ox, oy, blur * 1.5)
+        for (const m of cs.filter.matchAll(/([a-z-]+)\(((?:[^()]|\([^()]*\))*)\)/gi)) {
+          const fn = m[1].toLowerCase()
+          if (fn === 'drop-shadow') {
+            const [ox = 0, oy = 0, sd = 0] = lengths(m[2])
+            redraw(solid, ox, oy, 0)
+            redraw(full, ox, oy, tail(sd))
+          } else if (fn === 'blur') {
+            redraw(full, 0, 0, tail(lengths(m[2])[0] || 0))
+          }
         }
-        const blurred = /(?:^|\s)blur\(([^)]*)\)/.exec(cs.filter)
-        if (blurred) add(0, 0, (lengths(blurred[1])[0] || 0) * 1.5)
       }
-      if (outlined(cs)) add(0, 0, parseFloat(cs.outlineWidth) + Math.max(0, parseFloat(cs.outlineOffset) || 0))
-      return e
+      const ratio = (box, layout) => (layout > 0 && Math.abs(box - layout) > 1 ? box / layout : 1)
+      const kx = ratio(b.width, el.offsetWidth)
+      const ky = ratio(b.height, el.offsetHeight)
+      const scaled = (e) => ({ t: e.t * ky, r: e.r * kx, b: e.b * ky, l: e.l * kx })
+      return { full: scaled(full), solid: scaled(solid) }
     }
     const desc = (el) => {
       const cls = typeof el.className === 'string' && el.className.trim() ? `.${el.className.trim().split(/\s+/).join('.')}` : ''
@@ -562,16 +598,20 @@ function pageClipState(selectors, optional, firstHeight, padding) {
       const cs = getComputedStyle(el)
       if (cs.position === 'fixed' || cs.position === 'sticky') continue
       const b = el.getBoundingClientRect()
-      const ink = inkOf(cs)
-      const x0 = b.left + scrollX - ink.l
-      const y0 = b.top + scrollY - ink.t
-      const x1 = b.right + scrollX + ink.r
-      const y1 = b.bottom + scrollY + ink.b
+      const ownText = hasOwnText(el)
+      const { full, solid } = inkOf(el, cs, b, ownText)
+      const x0 = b.left + scrollX - full.l
+      const y0 = b.top + scrollY - full.t
+      const x1 = b.right + scrollX + full.r
+      const y1 = b.bottom + scrollY + full.b
       if (!(x1 > x0 && y1 > y0)) continue
       if (!(x1 > union.x0 - pad && x0 < union.x1 + pad && y1 > union.y0 - pad && y0 < union.y1 + pad)) continue
       if (x0 >= union.x0 && y0 >= union.y0 && x1 <= union.x1 && y1 <= union.y1) continue
-      if (!shown(el) || !paints(el, cs)) continue
-      obstacles.push({ x: x0, y: y0, w: x1 - x0, h: y1 - y0, d: desc(el) })
+      if (!shown(el) || !paints(el, cs, ownText)) continue
+      const cx0 = b.left + scrollX - solid.l
+      const cy0 = b.top + scrollY - solid.t
+      const core = { x: cx0, y: cy0, w: b.right + scrollX + solid.r - cx0, h: b.bottom + scrollY + solid.b - cy0 }
+      obstacles.push({ x: x0, y: y0, w: x1 - x0, h: y1 - y0, core, d: desc(el) })
     }
   }
   const root = document.documentElement
@@ -783,11 +823,13 @@ function countClosedShadowRoots(root) {
 // ── 잘라 찍기 계획 ────────────────────────────────────────────────────────
 
 /**
- * 가장자리 규칙 — 걸림돌(obstacles: 넣지 않는 요소의 잉크 상자, 문서 좌표 { x, y, w, h })이 사각형 가장자리(edges { x0, y0, x1, y1 })를 지나면
- * 그 조각이 그림 가장자리에 남지 않게 가장자리를 옮긴다. 한 쪽 가장자리만 옮겨 그 걸림돌을 다 뺄 수 있으면(걸림돌이 넣을 요소들을 합친
- * 사각형 union의 위 · 아래 · 왼쪽 · 오른쪽에 통째로 있으면) 덜 잘리는 쪽 하나만 잉크 바로 밖으로 옮긴다(가로 가득한 아래 줄은 아래만, 옆 칸은
- * 그 옆만). 뺄 수 없으면(합친 사각형에 겹친 걸림돌) 지나는 가장자리를 합친 사각형 끝까지만 옮긴다 — 합친 사각형 안으로는 들이지 않는다.
- * 가장자리를 지나지 않는 걸림돌(여백 안에 통째로 든 것)은 그대로 둔다. 옮긴 가장자리에 새로 걸린 걸림돌도 다시 본다.
+ * 가장자리 규칙 — 걸림돌(obstacles: 넣지 않는 요소의 잉크 상자, 문서 좌표 { x, y, w, h } · 그 가운데 번짐을 뺀 진한 부분 core — 없으면 잉크
+ * 상자 전체)이 사각형 가장자리(edges { x0, y0, x1, y1 })를 지나면 그 조각이 그림 가장자리에 남지 않게 가장자리를 옮긴다. 진한 부분이 넣을
+ * 요소들을 합친 사각형 union의 위 · 아래 · 왼쪽 · 오른쪽에 통째로 있으면 그 쪽 가장자리 하나(덜 잘리는 쪽)를 잉크 바로 밖으로 옮긴다(가로
+ * 가득한 아래 줄은 아래만, 옆 칸은 그 옆만) — 합친 사각형 안으로는 들이지 않는다(번짐 끝만 넣을 요소에 걸치면 거기서 멈춘다). 진한 부분이
+ * 합친 사각형에 걸친 걸림돌(넣을 요소에 겹친 칸 · 넣을 요소들 사이의 구분선 · 뒤에 깔린 배경판)은 어느 가장자리를 옮겨도 새 가장자리에
+ * 그대로 걸친다 — 옮기면 여백만 없어져 넣을 요소가 그림 가장자리에 붙으므로 옮기지 않는다. 가장자리를 지나지 않는 걸림돌(여백 안에 통째로
+ * 든 것)도 그대로 둔다. 옮긴 가장자리에 새로 걸린 걸림돌도 다시 본다.
  */
 function trimClipEdges(edges, union, obstacles) {
   const e = { ...edges }
@@ -798,28 +840,23 @@ function trimClipEdges(edges, union, obstacles) {
       const oy0 = o.y
       const ox1 = o.x + o.w
       const oy1 = o.y + o.h
+      const c = o.core || o
       if (!(ox1 > e.x0 && ox0 < e.x1 && oy1 > e.y0 && oy0 < e.y1)) continue
-      const crossed = [
-        oy0 < e.y0 && oy1 > e.y0 && { side: 'y0', to: Math.min(Math.ceil(oy1), union.y0) },
-        oy0 < e.y1 && oy1 > e.y1 && { side: 'y1', to: Math.max(Math.floor(oy0), union.y1) },
-        ox0 < e.x0 && ox1 > e.x0 && { side: 'x0', to: Math.min(Math.ceil(ox1), union.x0) },
-        ox0 < e.x1 && ox1 > e.x1 && { side: 'x1', to: Math.max(Math.floor(ox0), union.x1) },
-      ].filter(Boolean)
-      if (!crossed.length) continue
+      const crosses = (oy0 < e.y0 && oy1 > e.y0) || (oy0 < e.y1 && oy1 > e.y1) || (ox0 < e.x0 && ox1 > e.x0) || (ox0 < e.x1 && ox1 > e.x1)
+      if (!crosses) continue
       const clearing = [
-        oy1 <= union.y0 && { side: 'y0', to: Math.ceil(oy1) },
-        oy0 >= union.y1 && { side: 'y1', to: Math.floor(oy0) },
-        ox1 <= union.x0 && { side: 'x0', to: Math.ceil(ox1) },
-        ox0 >= union.x1 && { side: 'x1', to: Math.floor(ox0) },
+        c.y + c.h <= union.y0 && { side: 'y0', to: Math.min(Math.ceil(oy1), union.y0) },
+        c.y >= union.y1 && { side: 'y1', to: Math.max(Math.floor(oy0), union.y1) },
+        c.x + c.w <= union.x0 && { side: 'x0', to: Math.min(Math.ceil(ox1), union.x0) },
+        c.x >= union.x1 && { side: 'x1', to: Math.max(Math.floor(ox0), union.x1) },
       ].filter(Boolean)
+      if (!clearing.length) continue
       const loss = (m) => Math.abs(m.to - e[m.side]) * (m.side[0] === 'y' ? e.x1 - e.x0 : e.y1 - e.y0)
-      const moves = clearing.length ? [clearing.reduce((best, m) => (loss(m) < loss(best) ? m : best))] : crossed
-      for (const m of moves) {
-        const shrinks = m.side === 'y0' || m.side === 'x0' ? m.to > e[m.side] : m.to < e[m.side]
-        if (!shrinks) continue
-        e[m.side] = m.to
-        moved = true
-      }
+      const m = clearing.reduce((best, n) => (loss(n) < loss(best) ? n : best))
+      const shrinks = m.side === 'y0' || m.side === 'x0' ? m.to > e[m.side] : m.to < e[m.side]
+      if (!shrinks) continue
+      e[m.side] = m.to
+      moved = true
     }
     if (!moved) break
   }
