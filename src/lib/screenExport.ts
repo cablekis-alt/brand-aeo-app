@@ -4,13 +4,15 @@
  * 남으면 운영자 PC에서만 보이고 독자에게는 깨진다. 그래서 내보낼 때 그림을 받아 data:image/png로 문서 안에 넣는다(inlineScreens). 받지
  * 못한 화면은 그림을 빼고 「[화면: 이름]」 글자로 둔다 — 앱 주소를 남기지 않는다. 서식째 복사의 글자 쪽(text/plain — 마크다운)에는
  * 그림 대신 「[화면: 이름]」을 넣는다(screenPlainText). 앱 안의 글 미리보기도 골라 복사하는 곳이라 화면을 「[화면: 이름]」 글자로 그린다
- * (screenPreviewHtml — 그림은 자동 채우기 · 화면 고르기의 썸네일에서 본다).
+ * (screenPreviewHtml — 그림은 자동 채우기 · 화면 고르기의 썸네일에서 본다). 앱이 그린 군산 지도(/api/maps/ — src/lib/mapImage.ts)도 같은
+ * 길이고, 그림 바로 아래의 OSM 출처 줄은 늘 남는다 — 글자 쪽은 「[지도: 군산 지도 — … 위치] 출처 줄」 한 줄이다.
  *
  * 네이버 SmartEditor ONE · 티스토리가 붙여 넣은 data: 그림을 받는지는 아직 모른다(결정 2) — 그때까지 기본 전달은 「사진 N장 받기」
  * 파일이다(서버 photo-file이 이 PC의 화면 파일을 준다). 「사진 N장 받기」 · 작성자 묶음의 사진 파일은 여기를 거치지 않는다.
  *
  * DOM을 쓰지 않는다(검증 스크립트가 Node에서 부른다).
  */
+import { MAP_AREA_NAME, MAP_CREDIT, mapPlainLine } from './mapImage'
 
 /** 앱 주소의 화면 그림을 받는다 — 앱에서는 src/lib/api.ts fetchScreenFile. 실패하면 throw. */
 export type ScreenFetcher = (src: string) => Promise<Blob>
@@ -22,6 +24,9 @@ const FIGURE_IMG = /<figure><img src="(\/api\/(?:screens|maps)\/[^"]*)" alt="([^
 const ANY_IMG = /<img src="(\/api\/(?:screens|maps)\/[^"]*)" alt="([^"]*)"([^>]*)>/g
 /** 마크다운의 화면 · 지도 그림 — `![이름](앱 주소)`. */
 const MD_IMG = /!\[([^\]]*)\]\((\/api\/(?:screens|maps)\/[^)\s]*)\)/g
+/** 마크다운의 지도 그림과 그 바로 아래 출처 줄(src/lib/articlePhotos.ts placePhotos가 붙인 `*출처 줄*` — 있으면). */
+const MD_MAP_WITH_CREDIT = new RegExp(`!\\[([^\\]]*)\\]\\((\\/api\\/maps\\/[^)\\s]*)\\)(?:(\\r?\\n)[ \\t]*\\*${MAP_CREDIT.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}\\*[ \\t]*(?=\\r?\\n|$))?`, 'g')
+const MAP_PATH = /^\/api\/maps\//
 const PNG_SIG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 /** 한 장의 최대 크기 — 서버 저장 상한(server/screens.ts MAX_SCREEN_PNG_BYTES)과 같다. */
 const MAX_SCREEN_BYTES = 8 * 1024 * 1024
@@ -45,12 +50,17 @@ export function screenPlaceholder(alt: string): string {
  * 남는다), 자사 화면이면 「[화면: 이름]」.
  */
 function appImagePlaceholder(src: string, alt: string): string {
-  return /^\/api\/maps\//.test(src) ? `[지도: ${alt.trim() || '지도'}]` : screenPlaceholder(alt)
+  return MAP_PATH.test(src) ? `[지도: ${alt.trim() || '지도'}]` : screenPlaceholder(alt)
 }
 
-/** 서식째 복사의 글자 쪽(마크다운) — 화면 · 지도 그림을 「[화면: 이름]」 · 「[지도: …]」로. 없으면 그대로(바이트까지 같게). */
+/**
+ * 서식째 복사의 글자 쪽(마크다운) — 화면 그림은 「[화면: 이름]」, 지도 그림은 「[지도: 군산 지도 — … 위치] 출처 줄」 한 줄(바로 아래의 `*출처 줄*`은
+ * 그 줄에 합친다 — 출처 줄은 한 번, 출처 줄이 따라오지 않은 지도 그림에도 붙는다). 없으면 그대로(바이트까지 같게).
+ */
 export function screenPlainText(markdown: string): string {
-  return markdown.replace(MD_IMG, (_whole, alt: string, src: string) => appImagePlaceholder(src, alt))
+  return markdown
+    .replace(MD_MAP_WITH_CREDIT, (_whole, alt: string) => mapPlainLine(alt))
+    .replace(MD_IMG, (_whole, alt: string, src: string) => appImagePlaceholder(src, alt))
 }
 
 function base64Of(bytes: Uint8Array): string {
@@ -91,8 +101,10 @@ export interface InlinedScreens {
   html: string
   /** 문서 안에 넣은 화면 그림 수(같은 화면이 두 번이면 두 번). */
   inlined: number
-  /** 받지 못해 「[화면: 이름]」 글자로 바꾼 화면 그림 수. */
+  /** 받지 못해 「[화면: 이름]」 · 「[지도: …]」 글자로 바꾼 그림 수(화면 + 지도). */
   dropped: number
+  /** dropped 가운데 앱이 그린 지도 수. */
+  droppedMaps: number
 }
 
 /**
@@ -101,7 +113,7 @@ export interface InlinedScreens {
  * 든 글을 내보내지 않는다. 화면이 없으면 그대로.
  */
 export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promise<InlinedScreens> {
-  if (!APP_PATH.test(html)) return { html, inlined: 0, dropped: 0 }
+  if (!APP_PATH.test(html)) return { html, inlined: 0, dropped: 0, droppedMaps: 0 }
   const srcs = new Set([...html.matchAll(ANY_IMG)].map((m) => m[1]!))
   const data = new Map<string, { url: string; width: number | null } | null>()
   for (const src of srcs) {
@@ -125,10 +137,15 @@ export async function inlineScreens(html: string, fetcher: ScreenFetcher): Promi
 function replaceScreens(html: string, data: ReadonlyMap<string, { url: string; width: number | null } | null>): InlinedScreens {
   let inlined = 0
   let dropped = 0
+  let droppedMaps = 0
+  const drop = (src: string) => {
+    dropped += 1
+    if (MAP_PATH.test(src)) droppedMaps += 1
+  }
   const out = html
     .replace(FIGURE_IMG, (whole, src: string, alt: string) => {
       if (data.get(src)) return whole
-      dropped += 1
+      drop(src)
       return `<figure class="image-slot"><p>${appImagePlaceholder(src, alt)}</p>`
     })
     .replace(ANY_IMG, (_whole, src: string, alt: string, rest: string) => {
@@ -137,10 +154,10 @@ function replaceScreens(html: string, data: ReadonlyMap<string, { url: string; w
         inlined += 1
         return `<img src="${got.url}" alt="${alt}"${notWider(rest, got.width)}>`
       }
-      dropped += 1
+      drop(src)
       return appImagePlaceholder(src, alt)
     })
-  return { html: out, inlined, dropped }
+  return { html: out, inlined, dropped, droppedMaps }
 }
 
 /**
@@ -164,11 +181,20 @@ export async function richCopyWithScreens(markdown: string, html: string, fetche
 }
 
 /**
- * 화면 그림을 넣지 못한 내보내기의 알림 — 서식째 복사 · 홈페이지용 .html(DraftPanel · ContentLibrary · PublishList). 그 자리에는
- * 「[화면: 이름]」 글자가 들어갔다.
+ * 화면 · 지도 그림을 넣지 못한 내보내기의 알림 — 서식째 복사 · 홈페이지용 .html(DraftPanel · ContentLibrary · PublishList) · 작성자 묶음
+ * (GapActions — from은 「같은 폴더의」). dropped는 넣지 못한 그림 수(화면 + 지도), droppedMaps는 그 가운데 지도 수. 그 자리에는
+ * 「[화면: 이름]」 · 「[지도: …]」 글자가 들어갔다(지도의 출처 줄은 그 아래 그대로).
  */
-export function screensDroppedText(dropped: number): string {
-  return `자사 화면 ${dropped}장은 그림을 받지 못해 「[화면: 이름]」 글자로 두었어요 — 그 자리에 「사진 N장 받기」로 받은 화면 파일을 올려 주세요.`
+export function screensDroppedText(dropped: number, droppedMaps = 0, from = '「사진 N장 받기」로 받은'): string {
+  const screens = dropped - droppedMaps
+  const maps = droppedMaps
+  const what =
+    screens && maps
+      ? `자사 화면 ${screens}장 · ${MAP_AREA_NAME} 지도 ${maps}장은 그림을 받지 못해 「[화면: 이름]」 · 「[지도: …]」 글자로 두었어요(지도 출처 줄은 그대로예요)`
+      : maps
+        ? `${MAP_AREA_NAME} 지도 ${maps}장은 그림을 받지 못해 「[지도: …]」 글자로 두었어요(출처 줄은 그대로예요)`
+        : `자사 화면 ${screens}장은 그림을 받지 못해 「[화면: 이름]」 글자로 두었어요`
+  return `${what} — 그 자리에 ${from} ${screens && maps ? '화면 · 지도' : maps ? '지도' : '화면'} 파일을 올려 주세요.`
 }
 
 /**

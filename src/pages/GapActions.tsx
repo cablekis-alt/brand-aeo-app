@@ -63,6 +63,7 @@ import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { useProbePlan } from '../lib/useProbePlan'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import { citedPostIdsInWeek, weekFileTimingOf } from '../lib/publishTracking'
+import { screensDroppedText } from '../lib/screenExport'
 import { canSaveToFolder, saveWriterBundle, writerBundle } from '../lib/writerBundle'
 
 /** 집행 원장을 읽고 고치는 손잡이(useGapActionPlan의 posts). */
@@ -566,8 +567,8 @@ function WriterRuns({
       const parts = [`「${saved.where}」에 글 ${bundle.articles}편${bundle.photos > 0 ? ` · 사진 ${bundle.photos}장` : ''}을 저장했어요.`]
       if (bundle.missing.length > 0) parts.push(`초안이 없는 ${bundle.missing.length}편은 뺐어요(${bundle.missing.join(' · ')}).`)
       if (bundle.withGaps > 0) parts.push(`빈칸이 남은 글 ${bundle.withGaps}편 — 빈칸 줄은 빠졌어요.`)
-      if (saved.screensDropped > 0) {
-        parts.push(`.html에 그림을 넣지 못한 자사 화면 ${saved.screensDropped}장은 「[화면: 이름]」 글자로 두었어요 — 같은 폴더의 화면 사진 파일을 그 자리에 올려 주세요.`)
+      if (saved.screensDropped + saved.mapsDropped > 0) {
+        parts.push(`.html — ${screensDroppedText(saved.screensDropped + saved.mapsDropped, saved.mapsDropped, '같은 폴더의')}`)
       }
       setBundleNote({ key, text: parts.join(' '), error: false })
     } catch (e) {

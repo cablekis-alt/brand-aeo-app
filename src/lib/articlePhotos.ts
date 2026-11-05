@@ -8,7 +8,7 @@
  * 서버(server/contentDraft.ts · server/index.ts)도 같은 검사를 쓰므로 DOM을 쓰는 모듈은 import하지 않는다 — 서버 타입 검사는 DOM이 없다
  * (src/lib/screenCapture.ts는 DOM 없이 자사 화면의 앱 주소만 본다).
  */
-import { MAP_CREDIT, mapCaptionLine, mapPickExportable } from './mapImage.js'
+import { MAP_CREDIT, mapCaptionLines, mapPickExportable } from './mapImage.js'
 import { screenExportable } from './screenCapture.js'
 
 /** 사람이 고른 사진 하나 — 초안별로 저장한다(server/contentDraft.ts StoredDraft.photos). */
@@ -431,8 +431,8 @@ function mapSlots(sourceCaptions: readonly string[], targets: readonly PhotoSlot
  * 않는 공공 사진(photoCreditState missing)은 넣지 않는다. 넣은 사진이 없으면 원고를 그대로(바이트까지 같게) 돌려준다.
  * 자사 화면은 `![화면 이름](앱 주소)`로 넣는다(photoPickSrc) — 앱 안 미리보기는 같은 출처라 바로 보이고, 앱 밖으로 내보낼 때는
  * src/lib/screenExport.ts가 그림을 문서 안에 넣거나 「[화면: …]」 글자로 바꾼다. 앱이 그린 지도도 `![군산 지도 — … 위치](앱 주소)`로 넣고,
- * 바로 아랫줄 설명(사이트 기능 문장)은 지도의 위치 문장 + OSM 출처 줄로 바꾼다(설명 줄이 없으면 한 줄 끼운다) — 출처 줄이 그림 바로 아래에
- * 붙어 모든 내보내기(서식째 복사 · .html · 작성자 묶음 · 글자)에 따라간다.
+ * 그림 바로 아래 줄에 OSM 출처 줄, 그다음 줄에 지도의 위치 문장을 둔다 — 바로 아랫줄 설명(사이트 기능 문장)을 이 두 줄로 바꾸고, 설명 줄이
+ * 없으면 두 줄을 끼운다. 출처 줄이 그림 바로 아래에 붙어 모든 내보내기(서식째 복사 · .html · 작성자 묶음 · 글자)에 따라간다.
  */
 function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot: PhotoSlot }[]): { markdown: string; applied: AppliedPhoto[] } {
   if (!applied.length) return { markdown, applied: [] }
@@ -449,17 +449,23 @@ function placePhotos(markdown: string, applied: readonly { pick: PhotoPick; slot
     const credit = state === 'public' ? (publicPhotoFields(pick) as PublicPhotoFields) : undefined
     const isMap = pick.origin === 'osm-map'
     if (credit || isMap) {
-      const line = credit ? photoCreditLine(credit) : mapCaptionLine(pick.caption)
       const next = lines[slot.line + 1]
       const caption = next === undefined ? null : /^(\s*)\*(?!\*)(.+?)\*(\s*)$/.exec(next.replace(/\r$/, ''))
-      // 공공 사진은 설명 뒤에 출처를 붙이고, 지도는 설명(사이트 기능 문장)을 위치 문장 + 출처 줄로 바꾼다.
-      const text = (old: string) => (isMap ? line : `${old} (${line})`)
-      if (caption && next !== undefined) lines[slot.line + 1] = `${caption[1]}*${text(caption[2]!)}*${caption[3]}${next.endsWith('\r') ? '\r' : ''}`
-      else if (cr || !crlf) lines.splice(slot.line + 1, 0, `*${line}*${cr}`)
-      else {
-        // CRLF 원고의 마지막 줄 — 사진 줄에 줄 끝을 달고 출처 줄이 마지막 줄이 된다.
+      // 공공 사진은 설명 뒤에 출처를 붙이고(설명이 없으면 출처 줄만), 지도는 설명(사이트 기능 문장) 자리에 출처 줄 · 위치 문장 두 줄을 둔다.
+      const texts = credit ? [caption ? `${caption[2]!} (${photoCreditLine(credit)})` : photoCreditLine(credit)] : mapCaptionLines(pick.caption)
+      // 끼운 줄의 줄 끝 — 마지막 줄은 바꾼(끼운) 자리의 줄 끝, 그 앞 줄들은 원고의 줄 끝(CRLF 원고면 \r).
+      const ends = (last: string) => texts.map((_t, i) => (i < texts.length - 1 ? (crlf ? '\r' : '') : last))
+      if (caption && next !== undefined) {
+        const end = ends(next.endsWith('\r') ? '\r' : '')
+        lines.splice(slot.line + 1, 1, ...texts.map((t, i) => `${caption[1]}*${t}*${caption[3]}${end[i]}`))
+      } else if (cr || !crlf) {
+        const end = ends(cr)
+        lines.splice(slot.line + 1, 0, ...texts.map((t, i) => `*${t}*${end[i]}`))
+      } else {
+        // CRLF 원고의 마지막 줄 — 사진 줄에 줄 끝을 달고 끼운 줄의 마지막이 마지막 줄이 된다.
         lines[slot.line] = `${lines[slot.line]!}\r`
-        lines.splice(slot.line + 1, 0, `*${line}*`)
+        const end = ends('')
+        lines.splice(slot.line + 1, 0, ...texts.map((t, i) => `*${t}*${end[i]}`))
       }
     }
     out.push({

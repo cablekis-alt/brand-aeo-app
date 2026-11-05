@@ -6,6 +6,7 @@ import { frameFor, MAP_HEIGHT, MAP_WIDTH, type FrameSide } from './mapFrame.js';
 import { pngSize, type ParentPortLike } from './screens.js';
 import { writeJsonAtomic } from './tenantWriteQueue.js';
 import {
+  MAP_AVOID_TEXT,
   MAP_MAX_MARKERS,
   MAP_STYLE_VERSION,
   isMapImageId,
@@ -398,7 +399,8 @@ export async function drawMapVariant(
     if (!frame.ok) {
       throw new MapRenderError(
         frame.why,
-        frame.why === 'no-markers' ? '공군기지 주변 장소만 남아 지도를 그리지 않았어요.' : '공군기지 구역을 피하는 틀을 만들지 못해 지도를 그리지 않았어요.',
+        // 화면에 나가는 글 — 중립으로 쓴다(어떤 시설인지 적지 않는다, src/lib/mapImage.ts MAP_AVOID_TEXT).
+        frame.why === 'no-markers' ? `${MAP_AVOID_TEXT}의 장소만 남아 지도를 그리지 않았어요.` : `${MAP_AVOID_TEXT}을 피하는 틀을 만들지 못해 지도를 그리지 않았어요.`,
       );
     }
     if (frame.zoom < MIN_ZOOM || frame.zoom > MAX_ZOOM) throw new MapRenderError('too-wide', '장소가 너무 넓게 퍼져 한 장에 담지 못했어요.');

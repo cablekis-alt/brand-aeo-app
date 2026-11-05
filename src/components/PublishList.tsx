@@ -5,6 +5,7 @@ import { effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
 import { countImageSlots, draftTitle } from '../lib/markdownFile'
 import { escapeHtml, markdownToHtml } from '../lib/htmlFile'
 import { objectParticle } from '../lib/korean'
+import { mapCreditNote } from '../lib/mapImage'
 import { channelArticleParts, publishArticleOf } from '../lib/publishArticle'
 import type { PublishSettings } from '../lib/publishSettings'
 import { pregenerateTargets, VERB_CAUTION, VERB_LABEL, type PublishPlan, type PublishRow } from '../lib/publishPlan'
@@ -160,7 +161,7 @@ export default function PublishList({
       setError('클립보드에 복사하지 못했습니다.')
       return false
     }
-    if (out.dropped) setError(`${row.name} — ${screensDroppedText(out.dropped)}`)
+    if (out.dropped) setError(`${row.name} — ${screensDroppedText(out.dropped, out.droppedMaps)}`)
     return true
   }
 
@@ -346,7 +347,7 @@ export default function PublishList({
                       disabled={photoBusy !== null}
                       title={`${photos.map((p, i) => `사진${i + 1} = 「${p.heading || p.slotAlt}」`).join(' · ')}${
                         photos.some((p) => p.credit) ? ` · 공공 사진 출처는 「${ARTICLE_CREDITS_FILE}」로 함께 받아요` : ''
-                      }`}
+                      }${photos.some((p) => p.map) ? ` · 지도 출처 줄도 「${ARTICLE_CREDITS_FILE}」에 있어요` : ''}`}
                       onClick={() => {
                         const draft = row.article.draft
                         if (!draft) return
@@ -387,6 +388,8 @@ export default function PublishList({
                     ` 공공 사진 ${photos.filter((p) => p.credit).length}장은 출처 표시가 이용 조건이에요 — 사진 파일을 직접 올렸다면 함께 받은 「${ARTICLE_CREDITS_FILE}」대로 사진 바로 아래에 출처(공공누리 제1유형 링크)를 적어 주세요.`}
                   {photos.some((p) => p.screen) &&
                     ` 자사 화면 ${photos.filter((p) => p.screen).length}장은 그림을 글 안에 넣어 복사해요 — 블로그 편집기가 이 그림을 받는지는 아직 확인 전이에요.`}
+                  {photos.some((p) => p.map) &&
+                    ` ${mapCreditNote(photos.filter((p) => p.map).length)} 지도 그림도 글 안에 넣어 복사하고, 출처 줄은 그림 바로 아래에 함께 들어가요(「${ARTICLE_CREDITS_FILE}」에도 있어요).`}
                 </p>
               )}
               {stale && (

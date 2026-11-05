@@ -11,6 +11,7 @@
 import type { StoredDraft, TenantSummary } from '../src/lib/api'
 import type { PhotoPick } from '../src/lib/articlePhotos'
 import { buildPublishHtml } from '../src/lib/htmlFile'
+import { MAP_CREDIT, mapAppSrc, mapVariantKey } from '../src/lib/mapImage'
 import type { WriterPlan, WriterPlanArticle } from '../src/lib/probePlan'
 import { screenAppSrc } from '../src/lib/screenCapture'
 import { exportLeaks } from '../src/lib/screenExport'
@@ -392,6 +393,65 @@ async function main(): Promise<void> {
   ok(
     '화면 그림을 받지 못하면 .html에는 「[화면: 이름]」 글자 — 앱 주소 없이, screensDropped로 알린다',
     lostHtml.includes('<figure class="image-slot"><p>[화면: AI 코스 만들기]</p>') && exportLeaks(lostHtml).length === 0 && lostSaved?.screensDropped === 1,
+  )
+
+  // 8) 앱이 그린 군산 지도(origin osm-map) — 묶음의 .html에는 저장할 때 지도 그림을 문서 안(data:image/png)에 넣고 그림 바로 아래에 OSM 출처 줄,
+  //    그다음 줄에 위치 문장. 지도 파일은 photo-file 라우트가 준 PNG 그대로, 「00-사진 출처.txt」에 지도 파일 이름과 출처 줄. og:image ·
+  //    JSON-LD image에는 넣지 않는다. 지도 그림을 받지 못하면 「[지도: …]」 글자(출처 줄은 그대로)이고 mapsDropped로 따로 센다.
+  const MAP_ID = '00000000000000cd'
+  const MAP_SRC = mapAppSrc('vstay', MAP_ID)
+  const MAP_ALT = '군산 지도 — 가상역사관 · 가상바다공원 위치'
+  const MAP_CAPTION = '가상역사관 · 가상바다공원 위치를 지도에 표시했습니다.'
+  const mapPhoto = photo({
+    src: MAP_SRC, alt: MAP_ALT, pageUrl: 'https://gunsan.webforai.kr/map/', auto: true, origin: 'osm-map', mapId: MAP_ID,
+    mapVariant: mapVariantKey(['가상역사관', '가상바다공원']), caption: MAP_CAPTION, credit: MAP_CREDIT,
+  })
+  const mb = writerBundle({ ...input, drafts: { ...drafts, [a1.id]: { ...drafts[a1.id]!, photos: [mapPhoto] } } })
+  const mbHtml = mb.files.find((f): f is Extract<typeof f, { kind: 'html' }> => f.kind === 'html' && f.name.startsWith('01-'))!
+  const mbCredits = mb.files.find((f): f is Extract<typeof f, { kind: 'credits' }> => f.kind === 'credits')
+  ok(
+    '지도 — 묶음 계산의 .html은 앱 주소(저장할 때 넣는다) · 그림 설명이 출처 줄 · og:image · JSON-LD image 없음, 지도 파일 하나 · 출처 파일',
+    mbHtml.text.includes(`<img src="${MAP_SRC}"`) && mbHtml.text.includes(`<figcaption>${MAP_CREDIT}</figcaption></figure>\n<p><em>${MAP_CAPTION}</em></p>`) &&
+      !mbHtml.text.includes('og:image') && !mbHtml.text.includes('"image"') && mb.photos === 1 && mbCredits?.photos.length === 1 && mb.files.at(-1) === mbCredits,
+  )
+  photoRequests.length = 0
+  screenFetches.length = 0
+  g.fetch = pngFetch
+  const mapWritten: Written = new Map()
+  g.window = { showDirectoryPicker: async () => fakeFolder('바탕 화면', mapWritten, []) }
+  const mapSaved = await saveWriterBundle('vstay', mb)
+  const savedMapHtml = (await mapWritten.get(`${mb.folder}/${mbHtml.name}`)?.blob?.text()) ?? ''
+  const savedMapCredits = (await mapWritten.get(`${mb.folder}/${PHOTO_CREDITS_FILE}`)?.blob?.text()) ?? ''
+  ok(
+    '저장한 .html — 지도 그림은 문서 안(data:image/png), 그 바로 아래 출처 줄 · 그다음 위치 문장, 앱 주소 · 이 PC 주소 없음',
+    savedMapHtml.includes(`<img src="data:image/png;base64,${Buffer.from(PNG).toString('base64')}" alt="${MAP_ALT}"`) &&
+      savedMapHtml.includes(`<figcaption>${MAP_CREDIT}</figcaption></figure>\n<p><em>${MAP_CAPTION}</em></p>`) && exportLeaks(savedMapHtml).length === 0 &&
+      mapSaved?.screensDropped === 0 && mapSaved.mapsDropped === 0,
+  )
+  ok(
+    '지도 파일은 photo-file 라우트에서 받아 .png로, 「00-사진 출처.txt」에 그 파일 이름 · 출처 줄',
+    mapWritten.has(`${mb.folder}/01-사진1-무엇부터-보나요.png`) && screenFetches.some((u) => u.includes('/photo-file?')) && screenFetches.includes(MAP_SRC) &&
+      savedMapCredits.includes(['01', '01-사진1-무엇부터-보나요.png', MAP_CREDIT].join('\t')) && savedMapCredits.includes(MAP_CREDIT),
+  )
+  g.fetch = async (url: string) => (url.startsWith('/api/maps/') ? new Response(JSON.stringify({ error: '그 지도 파일이 없어요.' }), { status: 404 }) : pngFetch(url))
+  const lostMapWritten: Written = new Map()
+  g.window = { showDirectoryPicker: async () => fakeFolder('바탕 화면', lostMapWritten, []) }
+  const lostMapSaved = await saveWriterBundle('vstay', mb)
+  const lostMapHtml = (await lostMapWritten.get(`${mb.folder}/${mbHtml.name}`)?.blob?.text()) ?? ''
+  ok(
+    '지도 그림을 받지 못하면 .html에는 「[지도: …]」 글자와 그 아래 출처 줄 — 앱 주소 없이, mapsDropped로 알린다',
+    lostMapHtml.includes(`<figure class="image-slot"><p>[지도: ${MAP_ALT}]</p><figcaption>${MAP_CREDIT}</figcaption></figure>`) && exportLeaks(lostMapHtml).length === 0 &&
+      lostMapSaved?.screensDropped === 0 && lostMapSaved.mapsDropped === 1,
+  )
+  g.fetch = pngFetch
+  g.window = { setTimeout: () => 0 }
+  singleDownloads.length = 0
+  const mapDraft = { ...drafts[a1.id]!, photos: [mapPhoto] }
+  await downloadArticlePhotos('vstay', mapDraft, articlePhotoFiles(mapDraft, { settings: rights, industry: brand.industry }))
+  const mapSingleText = (await singleDownloads.find((d) => d.name === ARTICLE_CREDITS_FILE)?.blob.text()) ?? ''
+  ok(
+    '글 하나 사진 받기 — 지도가 있으면 지도 파일과 「사진 출처.txt」(지도 파일 이름 · 출처 줄)',
+    singleDownloads.some((d) => d.name === '사진1-무엇부터-보나요.png') && mapSingleText.includes(['사진1-무엇부터-보나요.png', MAP_CREDIT].join('\t')),
   )
   g.fetch = okFetch
 

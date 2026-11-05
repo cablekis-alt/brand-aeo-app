@@ -109,7 +109,7 @@ export default function ContentLibrary() {
       setCopyError('클립보드에 복사하지 못했습니다. 「홈페이지용 .html」을 브라우저로 열어 글을 골라 복사하세요 — 서식이 함께 복사됩니다.')
       return
     }
-    if (out.dropped) setCopyError(screensDroppedText(out.dropped))
+    if (out.dropped) setCopyError(screensDroppedText(out.dropped, out.droppedMaps))
     setCopied(d.actionId)
     window.setTimeout(() => setCopied((k) => (k === d.actionId ? null : k)), 1800)
   }
@@ -359,7 +359,7 @@ export default function ContentLibrary() {
                           .then((facts) => inlineScreens(buildPublishHtml({ stored: d, brand: tenant, facts, settings }), fetchScreenFile))
                           .then((out) => {
                             downloadHtml(`홈페이지용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.html`, out.html)
-                            if (out.dropped) setCopyError(screensDroppedText(out.dropped))
+                            if (out.dropped) setCopyError(screensDroppedText(out.dropped, out.droppedMaps))
                           })
                           .catch((e: unknown) => setCopyError(e instanceof Error ? e.message : String(e)))
                       }}

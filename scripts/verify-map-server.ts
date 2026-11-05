@@ -149,6 +149,9 @@ ok('같은 장소 묶음 · 같은 판이면 다시 그리지 않는다(reused �
 const codeOf = (p: Promise<unknown>) => p.then(() => 'resolved', (e: unknown) => (e as { code?: string }).code ?? 'other')
 ok('목록에 없는 장소 id는 unknown-point', (await codeOf(maps.drawMapVariant(TENANT, profile, pointsFile, ['없는곳'], { bridge: fakeBridge }))) === 'unknown-point')
 ok('공군기지 상자 안 장소만이면 no-markers(그리지 않는다)', (await codeOf(maps.drawMapVariant(TENANT, profile, pointsFile, ['기지옆골프장'], { bridge: fakeBridge }))) === 'no-markers' && renders.length === 1)
+const messageOf = (p: Promise<unknown>) => p.then(() => '', (e: unknown) => (e instanceof Error ? e.message : String(e)))
+const noMarkersMessage = await messageOf(maps.drawMapVariant(TENANT, profile, pointsFile, ['기지옆골프장'], { bridge: fakeBridge }))
+ok('그리지 않은 까닭 글은 중립 — 「지도에 넣지 않는 구역」, 시설 이름(공군 · 군사)을 쓰지 않는다', noMarkersMessage.includes('지도에 넣지 않는 구역') && !/공군|군사/.test(noMarkersMessage))
 const withBase = await maps.drawMapVariant(TENANT, profile, pointsFile, ['가상빵집', '기지옆골프장'], { bridge: fakeBridge, now: () => t0 })
 ok('상자 안 장소는 빼고 그린다(dropped avoid)', withBase.record.markers.map((m) => m.id).join() === '가상빵집' && withBase.record.dropped.map((d) => `${d.id}:${d.why}`).join() === '기지옆골프장:avoid')
 ok('그릴 수 없으면 unavailable(그려 둔 것은 그대로 준다)', (await codeOf(maps.drawMapVariant(TENANT, profile, pointsFile, ['가상빵집', '가상역사관'], { bridge: maps.createMapBridge(null) }))) === 'unavailable' &&

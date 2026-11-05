@@ -9,7 +9,7 @@ import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './ext
 import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { AnswerEvidence } from './answerEvidence'
 import { validScene, type PhotoScene } from './photoScenes'
-import { parseMapAppSrc } from './mapImage'
+import { isMapImageId, normalizeMapPoints, parseMapAppSrc, type MapPoint } from './mapImage'
 import { parseScreenAppSrc, type ScreenKind, type ScreenShotView } from './screenCapture'
 import type { ConditionChange } from './comparability'
 import type {
@@ -1893,6 +1893,134 @@ export async function fetchScreenFile(src: string): Promise<Blob> {
   const blob = await res.blob()
   if (blob.type !== 'image/png') throw new Error(`화면 그림이 PNG가 아니에요(${blob.type || '형식 없음'}).`)
   return blob
+}
+
+/** 이 PC에 그려 둔 군산 지도 한 장(server/maps.ts mapImageView — 앱 주소 · 대체 텍스트 · 위치 문장 · 그린 표지 · 뺀 표지). */
+export type MapImageItem = import('./photoAutoPick').AutoMapDrawn
+
+/**
+ * 군산 지도 목록(GET /api/maps/:tenantId) — available 이 실행에서 그릴 수 있는가(설치한 데스크톱 앱), source 장소 목록 출처가 있는 브랜드인가,
+ * points 저장한 장소 목록(없으면 null), maps 이 PC에 그려 둔 지도(늦게 그린 것부터).
+ */
+export interface MapList {
+  available: boolean
+  source: boolean
+  points: { fetchedAt: string; source: string; version: string; count: number } | null
+  maps: MapImageItem[]
+}
+
+/** 그린 지도 기록 모양 — 앱 주소의 지도 id가 기록과 같고 글자 칸이 있을 때만(다른 주소를 그림으로 받지 않게). */
+function mapItemOk(m: unknown): m is MapImageItem {
+  if (!m || typeof m !== 'object') return false
+  const r = m as Record<string, unknown>
+  return (
+    isMapImageId(r.id) &&
+    parseMapAppSrc(r.src)?.mapId === r.id &&
+    typeof r.variant === 'string' &&
+    typeof r.pointsVersion === 'string' &&
+    typeof r.alt === 'string' &&
+    typeof r.caption === 'string' &&
+    typeof r.source === 'string' &&
+    typeof r.drawnAt === 'string' &&
+    Array.isArray(r.markers)
+  )
+}
+
+/**
+ * 이 브랜드의 군산 지도 목록(server/index.ts GET /api/maps/:tenantId). **null은 "이 환경에는 지도 기능이 없다"(웹 — 라우트 없음)**는 뜻이다 —
+ * 화면은 「설치한 데스크톱 앱에서만」으로 알린다. 그 밖의 실패는 이유와 함께 throw한다. 그린 지도는 앱 주소 모양이 맞는 것만 받는다.
+ */
+export async function loadMaps(tenantId: string): Promise<MapList | null> {
+  let res: Response
+  try {
+    res = await fetch(`/api/maps/${encodeURIComponent(tenantId)}`)
+  } catch (err) {
+    throw new Error(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`, { cause: err })
+  }
+  const body = (await res.json().catch(() => null)) as (Partial<MapList> & { maps?: unknown[]; error?: string }) | null
+  if (res.status === 404 && !body?.error?.startsWith('tenant not found')) return null
+  if (!res.ok || !body || !Array.isArray(body.maps)) throw new Error(body?.error || `군산 지도 목록을 읽지 못했습니다 (HTTP ${res.status})`)
+  return {
+    available: body.available === true,
+    source: body.source === true,
+    points: body.points && typeof body.points === 'object' && typeof body.points.version === 'string' ? body.points : null,
+    maps: body.maps.filter(mapItemOk),
+  }
+}
+
+/** 지도 장소 목록(GET /api/maps/:tenantId/points) — 서버가 자사 사이트 /map/에서 점만 받아 저장한 것. stale이면 받지 못해 저장한 목록이다. */
+export interface MapPointsReply {
+  fetchedAt: string
+  source: string
+  version: string
+  points: MapPoint[]
+  fetched: boolean
+  stale: boolean
+  warning?: string
+}
+
+/**
+ * 군산 지도의 장소 목록 — 서버가 기한(7일) 안의 저장한 목록을 주거나 자사 사이트 /map/을 한 번 받아 점만 저장한다(server/mapPoints.ts). 받은
+ * 장소도 다시 검사한다(normalizeMapPoints). 실패하면 이유와 함께 throw.
+ */
+export async function loadMapPoints(tenantId: string): Promise<MapPointsReply> {
+  const res = await fetch(`/api/maps/${encodeURIComponent(tenantId)}/points`)
+  const body = (await res.json().catch(() => null)) as (Partial<MapPointsReply> & { points?: unknown; error?: string }) | null
+  if (!res.ok || !body || typeof body.version !== 'string' || !Array.isArray(body.points)) {
+    throw new Error(body?.error || `군산 지도 장소 목록을 읽지 못했습니다 (HTTP ${res.status})`)
+  }
+  return {
+    fetchedAt: typeof body.fetchedAt === 'string' ? body.fetchedAt : '',
+    source: typeof body.source === 'string' ? body.source : '',
+    version: body.version,
+    points: normalizeMapPoints(body.points).points,
+    fetched: body.fetched === true,
+    stale: body.stale === true,
+    ...(typeof body.warning === 'string' && body.warning ? { warning: body.warning } : {}),
+  }
+}
+
+/** 지도 한 장의 그리기 결과 — 그렸거나(다시 썼으면 reused) 그리지 못했다(code — src/lib/mapImage.ts mapDrawFailText로 화면 글자). */
+export type MapRenderItem = { ids: string[]; ok: true; reused: boolean; map: MapImageItem } | { ids: string[]; ok: false; code: string; message: string }
+
+/** 지도 그리기를 기다리는 최대 시간 — 서버가 한 장씩 메인에 맡긴다(한 장 1초 안팎, 앞에 줄 선 화면 찍기 · 지도까지 기다린다). */
+const MAP_RENDER_TIMEOUT_MS = 180_000
+
+/**
+ * 군산 지도를 그린다(POST /api/maps/:tenantId/render — 서버가 메인 프로세스에 청해 오프스크린 창에서 동봉한 OSM 데이터로 그리고 이 PC에
+ * 저장한다). 화면은 장소 id만 보낸다 — 좌표 · 이름 · 틀은 서버가 장소 목록에서 정한다. 장마다 결과를 돌려준다. 그릴 수 없는 실행(503 —
+ * 웹 · 개발 서버)이나 요청 오류는 이유와 서버의 code를 담아 throw.
+ */
+export async function renderMaps(tenantId: string, maps: readonly { ids: readonly string[] }[]): Promise<MapRenderItem[]> {
+  let res: Response
+  try {
+    res = await fetch(`/api/maps/${encodeURIComponent(tenantId)}/render`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ maps: maps.map((m) => ({ ids: [...m.ids] })) }),
+      signal: AbortSignal.timeout(MAP_RENDER_TIMEOUT_MS),
+    })
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'TimeoutError') {
+      throw Object.assign(new Error(`지도 그리기가 ${MAP_RENDER_TIMEOUT_MS / 1000}초 안에 끝나지 않았어요.`, { cause: e }), { code: 'timeout' })
+    }
+    throw e
+  }
+  const out = (await res.json().catch(() => ({}))) as { results?: unknown; error?: string; code?: string }
+  if (!res.ok || !Array.isArray(out.results)) {
+    throw Object.assign(new Error(out.error || `지도를 그리지 못했어요 (HTTP ${res.status})`), { status: res.status, code: typeof out.code === 'string' ? out.code : 'failed' })
+  }
+  return out.results.map((raw): MapRenderItem => {
+    const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+    const ids = Array.isArray(r.ids) ? r.ids.filter((x): x is string => typeof x === 'string') : []
+    if (r.ok === true && mapItemOk(r.map)) return { ids, ok: true, reused: r.reused === true, map: r.map }
+    return {
+      ids,
+      ok: false,
+      code: r.ok === true ? 'bad-reply' : typeof r.code === 'string' ? r.code : 'failed',
+      message: typeof r.message === 'string' ? r.message : '지도를 그리지 못했어요.',
+    }
+  })
 }
 
 /** 이 PC에서 관광공사 사진(3단계, TourAPI)을 쓸 수 있는가 — /api/health의 tourApi. 웹에는 없어 false. */

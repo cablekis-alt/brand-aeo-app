@@ -63,6 +63,7 @@ import {
   type SitePhotoResult,
 } from '../lib/sitePhotos'
 import { isTourSourcePage, TOUR_SOURCES, type TourSource } from '../lib/tourPhotos'
+import MapPickBrief from './MapPickBrief'
 import PhotoAutoFill from './PhotoAutoFill'
 
 /**
@@ -92,6 +93,9 @@ import PhotoAutoFill from './PhotoAutoFill'
  * 이용 조건을 확인하기 전이라 크게 보기만 하고 넣는 단추를 두지 않는다(결정 4 — 서버도 거절한다). 빼기 · 바꾸기는 사진과 같다. 장소 안내는
  * 사이트 장소마다 한 장이라, 자리 글자(장면 · 설명 줄 · 소제목)에 나온 장소(사이트 장소 사전)와 이 PC에 찍어 둔 장소만 보인다. 잘라 찍은
  * 화면(장소 안내 · 가이드)의 썸네일은 그 비율 그대로다.
+ *
+ * 군산 지도 — 자동 채우기가 넣은 앱이 그린 지도(origin osm-map — src/lib/mapImage.ts)는 16:10 썸네일 · 「군산 지도(OSM) · 확인 필요」 칩 ·
+ * 출처 줄 · 위치 문장으로 보인다(MapPickBrief). 빼기 · 바꾸기는 사진과 같고, 「이 자리로 옮기기」는 지도 id로 서버가 이 PC의 목록에서 다시 찾는다.
  */
 
 /** 「화면 고르기」의 화면 · 변형 하나와 가장 늦게 찍은 화면. */
@@ -575,11 +579,23 @@ export default function SitePhotoPanel({
     const f = publicPhotoFields(p)
     return f && typeof f === 'object' ? f : undefined
   }
-  /** 찾지 못한 자리의 사진을 이 자리로 옮긴다 — 자사 화면은 화면 · 변형 · 찍은 화면 id로(서버가 목록에서 다시 찾는다). */
+  /**
+   * 찾지 못한 자리의 사진을 이 자리로 옮긴다 — 자사 화면은 화면 · 변형 · 찍은 화면 id로, 앱이 그린 지도는 지도 id로(서버가 이 PC의 목록에서
+   * 다시 찾아 앱 주소 · 대체 텍스트 · 위치 문장 · 출처 줄을 단다).
+   */
   const movePick = (slot: PhotoSlot, pick: PhotoPick) => {
     const shotId = pick.origin === 'screen' ? parseScreenAppSrc(pick.src)?.shotId : undefined
     if (pick.origin === 'screen' && pick.screenId && pick.variantId && shotId) {
       return putScreen(slot, { screenId: pick.screenId, variantId: pick.variantId, shotId, src: pick.src, url: pick.pageUrl, alt: pick.alt }, pick)
+    }
+    if (pick.origin === 'osm-map' && pick.mapId) {
+      return save({
+        actionId: stored.actionId,
+        generatedAt: stored.generatedAt,
+        op: 'pick',
+        pick: { slot: slot.key, nth: slot.nth, same: slot.same, heading: slot.heading, src: pick.src, alt: pick.alt, pageUrl: pick.pageUrl, origin: 'osm-map', mapId: pick.mapId },
+        replaces: placeOf(pick),
+      })
     }
     return putPhoto(slot, pick.src, pick.alt, pick.pageUrl, pick, pubOf(pick))
   }
@@ -820,14 +836,45 @@ export default function SitePhotoPanel({
         const id = slotId(slot)
         const open = openSlot === id
         const isScreen = picked?.origin === 'screen'
+        const isMap = picked?.origin === 'osm-map'
         const canScreen = screenable(slot, picked)
+        // 고른 사진 · 화면 · 지도에 함께 두는 단추 — 빼기 · 바꾸기 · 화면 고르기.
+        const actions = picked ? (
+          <>
+            <button type="button" className="link-btn" disabled={off} onClick={() => void remove(picked)}>
+              빼기
+            </button>
+            {allowed && options.length > 0 && (
+              <>
+                {' · '}
+                <button type="button" className="link-btn" disabled={off} onClick={() => openFor(open && openMode === 'photo' ? null : id)}>
+                  바꾸기
+                </button>
+              </>
+            )}
+            {canScreen && (
+              <>
+                {' · '}
+                <button type="button" className="link-btn" disabled={off} onClick={() => openFor(open && openMode === 'screen' ? null : id, 'screen')}>
+                  {isScreen ? '화면 바꾸기' : '화면 고르기'}
+                </button>
+              </>
+            )}
+          </>
+        ) : null
         return (
           <div key={slot.line} className="photo-slot">
             <p className="doc-meta" style={{ margin: 0 }}>
               {slot.heading && <b>{slot.heading}</b>}
               {slot.heading && ' · '}사진 자리: {slot.alt}
             </p>
-            {picked ? (
+            {picked && isMap ? (
+              <MapPickBrief className="photo-picked" src={picked.src} alt={picked.alt || slot.alt} {...(picked.caption ? { caption: picked.caption } : {})} auto={Boolean(picked.auto)}>
+                <span className="doc-meta" style={{ display: 'block' }}>
+                  장소 목록: {picked.pageUrl} · {actions}
+                </span>
+              </MapPickBrief>
+            ) : picked ? (
               <div className={`photo-picked${isScreen ? ' is-screen' : ''}`}>
                 <img src={picked.src} alt={picked.alt || slot.alt} referrerPolicy="no-referrer" loading="lazy" />
                 <span>
@@ -864,26 +911,7 @@ export default function SitePhotoPanel({
                     </span>
                   )}
                   <span className="doc-meta">
-                    {isScreen ? screenShotMeta(brand.brandName, picked.pageUrl, picked.capturedAt) : picked.pageUrl} ·{' '}
-                    <button type="button" className="link-btn" disabled={off} onClick={() => void remove(picked)}>
-                      빼기
-                    </button>
-                    {allowed && options.length > 0 && (
-                      <>
-                        {' · '}
-                        <button type="button" className="link-btn" disabled={off} onClick={() => openFor(open && openMode === 'photo' ? null : id)}>
-                          바꾸기
-                        </button>
-                      </>
-                    )}
-                    {canScreen && (
-                      <>
-                        {' · '}
-                        <button type="button" className="link-btn" disabled={off} onClick={() => openFor(open && openMode === 'screen' ? null : id, 'screen')}>
-                          {isScreen ? '화면 바꾸기' : '화면 고르기'}
-                        </button>
-                      </>
-                    )}
+                    {isScreen ? screenShotMeta(brand.brandName, picked.pageUrl, picked.capturedAt) : picked.pageUrl} · {actions}
                   </span>
                 </span>
               </div>

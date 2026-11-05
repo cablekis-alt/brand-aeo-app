@@ -15,8 +15,9 @@ import { articleTailMarkdown, brandSiteUrl, channelArticleParts, publishArticleO
 import { sourceKeyOf } from '../src/prompts/b9d-channel-adapt'
 import type { StoredDraft, TenantSummary } from '../src/lib/api'
 import type { PhotoPick } from '../src/lib/articlePhotos'
+import { MAP_CREDIT, mapAppSrc, mapVariantKey } from '../src/lib/mapImage'
 import { screenAppSrc } from '../src/lib/screenCapture'
-import { exportLeaks, inlineScreens, richCopyWithScreens, screenPlainText, screenPreviewHtml, type ScreenFetcher } from '../src/lib/screenExport'
+import { exportLeaks, inlineScreens, richCopyWithScreens, screenPlainText, screenPreviewHtml, screensDroppedText, type ScreenFetcher } from '../src/lib/screenExport'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -263,6 +264,85 @@ ok('채널 줄 미리보기도 화면은 글자로', exportLeaks(blogPreview).le
 const noScreenHtml = markdownToHtml(publishArticleOf(withPhoto, { brand, settings: rights }))
 ok('화면이 없는 글의 미리보기는 그대로(사진은 그림으로)', screenPreviewHtml(noScreenHtml) === noScreenHtml && noScreenHtml.includes('<img'))
 ok('누출 검사 — 앱 주소 · 127.0.0.1 · localhost를 찾는다', JSON.stringify(exportLeaks(`a ${SCREEN_SRC} http://127.0.0.1:4000/x http://localhost/`)) === '["/api/screens/","127.0.0.1","localhost"]')
+
+// 3-4) 앱이 그린 군산 지도(origin osm-map — src/lib/mapImage.ts) — 글에는 앱 주소로 들어가고, 그림 바로 아래 줄에 OSM 출처 줄, 그다음 줄에
+//      위치 문장(자리의 사이트 기능 문장 대신)이 온다. 앱 밖으로 나가는 .html · 서식째 복사에는 그림을 문서 안(data:)에 넣고, 글자 쪽에는
+//      「[지도: 군산 지도 — … 위치] 출처 줄」 한 줄. og:image · JSON-LD image에는 넣지 않는다. 앱 안 미리보기는 글자 자리와 출처 줄.
+const MAP_ID = '00000000000000ab'
+const MAP_SRC = mapAppSrc('vtravel', MAP_ID)
+const MAP_ALT = '군산 지도 — 가상역사관 · 가상바다공원 위치'
+const MAP_CAPTION = '가상역사관 · 가상바다공원 위치를 지도에 표시했습니다.'
+const mapPhoto = photo({
+  slot: '가상 골목 풍경', heading: '지역은 어떻게 고르나요?', src: MAP_SRC, alt: MAP_ALT, pageUrl: 'https://gunsan.webforai.kr/map/', auto: true,
+  origin: 'osm-map', mapId: MAP_ID, mapVariant: mapVariantKey(['가상역사관', '가상바다공원']), caption: MAP_CAPTION, credit: MAP_CREDIT,
+})
+const mapStored: StoredDraft = { ...articleDraft, photos: [mapPhoto] }
+const mapParts = publishArticleParts(mapStored, { brand, settings: rights })
+ok(
+  '지도 — 그림 바로 아래 줄에 출처 줄, 그다음 줄에 위치 문장(자리의 설명 줄 「골목 입구」 대신)',
+  mapParts.markdown.includes(`![${MAP_ALT}](${MAP_SRC})\n*${MAP_CREDIT}*\n*${MAP_CAPTION}*\n\n`) && !mapParts.markdown.includes('*골목 입구*') &&
+    mapParts.photos.length === 1 && mapParts.photos[0]!.map?.mapId === MAP_ID && mapParts.photos[0]!.map.credit === MAP_CREDIT,
+)
+ok('지도를 넣어도 본문 · 지문은 그대로', publishMarkdownOf(mapStored) === publishMarkdownOf(articleDraft) && sourceKeyOf(publishMarkdownOf(mapStored)) === sourceKeyOf(publishMarkdownOf(articleDraft)))
+const MAP_FIGURE = (src: string) => `<figure><img src="${src}" alt="${MAP_ALT}" ${FIGURE_SIZE}><figcaption>${MAP_CREDIT}</figcaption></figure>\n<p><em>${MAP_CAPTION}</em></p>`
+const mapDoc = buildPublishHtml({ stored: mapStored, brand, facts: [], settings: rights })
+ok('.html — 지도 그림의 그림 설명(figcaption)이 출처 줄, 바로 다음 문단이 위치 문장', mapDoc.includes(MAP_FIGURE(MAP_SRC)))
+ok('.html — 지도뿐이면 og:image · JSON-LD image가 없다', !mapDoc.includes('og:image') && !mapDoc.includes('"image"'))
+const mapBothDoc = buildPublishHtml({ stored: { ...articleDraft, photos: [mapPhoto, photo()] }, brand, facts: [], settings: rights })
+ok(
+  '.html — 홈페이지 사진이 함께 있으면 og:image · JSON-LD image는 그 사진만(지도 주소는 없다)',
+  mapBothDoc.includes('<meta property="og:image" content="https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg">') &&
+    mapBothDoc.includes('"image": [\n    "https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg"\n  ]') && !/og:image"[^>]*api\/maps/.test(mapBothDoc) && !/"image": \[[^\]]*api\/maps/.test(mapBothDoc),
+)
+fetched.length = 0
+const mapInlined = await inlineScreens(mapDoc, okFetch)
+ok(
+  '.html 내보내기 — 지도 그림은 문서 안(data:image/png), 그 바로 아래 출처 줄 · 그다음 위치 문장, 앱 주소 · 이 PC 주소 없음',
+  mapInlined.inlined === 1 && mapInlined.dropped === 0 && mapInlined.droppedMaps === 0 && mapInlined.html.includes(MAP_FIGURE(PNG_DATA)) &&
+    exportLeaks(mapInlined.html).length === 0 && fetched.join() === MAP_SRC,
+)
+const mapDropped = await inlineScreens(mapDoc, failFetch)
+ok(
+  '지도 그림을 받지 못하면 「[지도: 군산 지도 — … 위치]」 글자 — 출처 줄은 그 바로 아래 그대로, 앱 주소 없음, 지도로 센다',
+  mapDropped.dropped === 1 && mapDropped.droppedMaps === 1 &&
+    mapDropped.html.includes(`<figure class="image-slot"><p>[지도: ${MAP_ALT}]</p><figcaption>${MAP_CREDIT}</figcaption></figure>\n<p><em>${MAP_CAPTION}</em></p>`) &&
+    exportLeaks(mapDropped.html).length === 0,
+)
+ok(
+  '그림을 넣지 못한 알림 — 지도만이면 지도라고, 화면만이면 지금처럼 화면이라고, 둘 다면 둘 다',
+  screensDroppedText(1, 1).includes('군산 지도 1장') && !screensDroppedText(1, 1).includes('자사 화면') && screensDroppedText(1, 1).includes('[지도: …]') &&
+    screensDroppedText(2).includes('자사 화면 2장') && !screensDroppedText(2).includes('지도') &&
+    screensDroppedText(3, 1).includes('자사 화면 2장') && screensDroppedText(3, 1).includes('군산 지도 1장'),
+)
+const mapCopyMd = publishArticleOf(mapStored, { brand, settings: rights })
+const mapRich = await richCopyWithScreens(mapCopyMd, markdownToHtml(mapCopyMd), okFetch)
+const mapPlain = mapRich.markdown.split('\n')
+const mapAt = mapPlain.findIndex((l) => l.startsWith('[지도: '))
+ok(
+  '서식째 복사 — 글자 쪽은 「[지도: 군산 지도 — … 위치] 출처 줄」 한 줄 다음 위치 문장(출처 줄은 한 번), 서식 쪽은 data: 그림 바로 아래 출처 줄',
+  mapPlain[mapAt] === `[지도: ${MAP_ALT}] ${MAP_CREDIT}` && mapPlain[mapAt + 1] === `*${MAP_CAPTION}*` && mapRich.markdown.split(MAP_CREDIT).length === 2 &&
+    mapRich.inlined === 1 && mapRich.html.includes(MAP_FIGURE(PNG_DATA)) && exportLeaks(mapRich.markdown).length === 0 && exportLeaks(mapRich.html).length === 0,
+)
+ok(
+  '글자 내보내기 — 출처 줄이 따라오지 않은 지도 그림도 「[지도: …] 출처 줄」(출처를 빠뜨리지 않는다)',
+  screenPlainText(`앞\n![${MAP_ALT}](${MAP_SRC})\n\n뒤`) === `앞\n[지도: ${MAP_ALT}] ${MAP_CREDIT}\n\n뒤`,
+)
+const mapPreview = screenPreviewHtml(markdownToHtml(mapCopyMd))
+ok(
+  '앱 안 글 미리보기 — 지도는 「[지도: …]」 글자와 그 바로 아래 출처 줄 · 위치 문장, 앱 주소 없음',
+  exportLeaks(mapPreview).length === 0 && mapPreview.includes(`<figure class="image-slot"><p>[지도: ${MAP_ALT}]</p><figcaption>${MAP_CREDIT}</figcaption></figure>\n<p><em>${MAP_CAPTION}</em></p>`),
+)
+const mapBlog = channelArticleParts(
+  { markdown: publishMarkdownOf(articleDraft), style: 'blog' },
+  { brand, settings: rights },
+  { markdown: publishMarkdownOf(articleDraft), picks: [mapPhoto] },
+)
+const mapBlogRich = await richCopyWithScreens(mapBlog.markdown, markdownToHtml(mapBlog.markdown), okFetch)
+ok(
+  '채널 줄(블로그 문체)도 같은 길 — 출처 줄이 그림 바로 아래, 복사하면 data: · 「[지도: …] 출처 줄」',
+  mapBlog.markdown.includes(`(${MAP_SRC})\n*${MAP_CREDIT}*\n*${MAP_CAPTION}*`) && mapBlogRich.inlined === 1 &&
+    mapBlogRich.markdown.includes(`[지도: ${MAP_ALT}] ${MAP_CREDIT}`) && exportLeaks(mapBlogRich.markdown).length === 0 && exportLeaks(mapBlogRich.html).length === 0,
+)
 
 // 4) 인용 — 빈 `>` 줄은 문단 나눔
 ok('여러 문단 인용', markdownToHtml('> 첫 문단\n>\n> 둘째 문단') === '<blockquote><p>첫 문단</p><p>둘째 문단</p></blockquote>')

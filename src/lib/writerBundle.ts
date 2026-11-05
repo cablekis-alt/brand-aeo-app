@@ -149,10 +149,10 @@ export async function bundleFileContent(
   file: WriterBundleFile,
   names: ReadonlyMap<WriterBundleFile, string>,
   fetchScreen: ScreenFetcher = fetchScreenFile,
-): Promise<{ name: string; blob: Blob; dropped?: number }> {
+): Promise<{ name: string; blob: Blob; dropped?: number; droppedMaps?: number }> {
   if (file.kind === 'html') {
-    const { html, dropped } = await inlineScreens(file.text, fetchScreen)
-    return { name: file.name, blob: new Blob([html], { type: 'text/html;charset=utf-8' }), ...(dropped ? { dropped } : {}) }
+    const { html, dropped, droppedMaps } = await inlineScreens(file.text, fetchScreen)
+    return { name: file.name, blob: new Blob([html], { type: 'text/html;charset=utf-8' }), ...(dropped ? { dropped } : {}), ...(droppedMaps ? { droppedMaps } : {}) }
   }
   if (file.kind === 'credits') return { name: file.name, blob: new Blob([photoCreditsText(file, (p) => names.get(p))], { type: 'text/plain;charset=utf-8' }) }
   const blob = await fetchDraftPhotoFile(tenantId, { actionId: file.actionId, generatedAt: file.generatedAt, place: file.photo.place })
@@ -189,15 +189,21 @@ async function freshBundleFolder(parent: FileSystemDirectoryHandle, base: string
  * 안 된다. 폴더에는 맨 먼저 주소로 어림한 이름으로 써 두고, 끝나면(멈춰도) 받은 사진 이름으로 다시 쓴다. 내려받기는 다시 쓸 수 없어 끝에
  * 한 번 받는다 — 멈췄으면 그때까지 받은 공공 사진이 있을 때 받는다.
  *
- * screensDropped는 .html에 그림을 넣지 못해 「[화면: 이름]」 글자로 둔 자사 화면 수 — 작성자가 같은 묶음의 화면 사진 파일을 그 자리에 올린다.
+ * screensDropped는 .html에 그림을 넣지 못해 「[화면: 이름]」 글자로 둔 자사 화면 수, mapsDropped는 「[지도: …]」 글자로 둔 군산 지도 수(출처 줄은
+ * 그 아래 그대로) — 작성자가 같은 묶음의 사진 파일을 그 자리에 올린다.
  */
-export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): Promise<{ saved: number; where: string; screensDropped: number } | null> {
+export async function saveWriterBundle(
+  tenantId: string,
+  bundle: WriterBundle,
+): Promise<{ saved: number; where: string; screensDropped: number; mapsDropped: number } | null> {
   const picker = directoryPicker()
   const names = new Map<WriterBundleFile, string>()
   let screensDropped = 0
+  let mapsDropped = 0
   const contentOf = async (file: WriterBundleFile) => {
     const got = await bundleFileContent(tenantId, file, names)
-    screensDropped += got.dropped ?? 0
+    screensDropped += (got.dropped ?? 0) - (got.droppedMaps ?? 0)
+    mapsDropped += got.droppedMaps ?? 0
     return got
   }
   const credits = bundle.files.find((f) => f.kind === 'credits')
@@ -221,7 +227,7 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
       throw err
     }
     await saveCredits()
-    return { saved: bundle.files.length, where: '내려받기 폴더', screensDropped }
+    return { saved: bundle.files.length, where: '내려받기 폴더', screensDropped, mapsDropped }
   }
   let parent: FileSystemDirectoryHandle
   try {
@@ -253,5 +259,5 @@ export async function saveWriterBundle(tenantId: string, bundle: WriterBundle): 
     throw err
   }
   if (credits) await write(credits)
-  return { saved: bundle.files.length, where: `${parent.name}/${dir.name}`, screensDropped }
+  return { saved: bundle.files.length, where: `${parent.name}/${dir.name}`, screensDropped, mapsDropped }
 }

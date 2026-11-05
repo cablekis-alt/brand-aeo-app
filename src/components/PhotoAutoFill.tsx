@@ -1,26 +1,33 @@
 import { useMemo, useRef, useState } from 'react'
 import {
   captureScreen,
+  loadMapPoints,
+  loadMaps,
   loadPhotoScenesStatus,
   loadPublishSettings,
   loadRegionTourPhotos,
   loadScreenCaptureStatus,
   loadScreens,
   loadTourApiStatus,
+  renderMaps,
   saveDraftPhotosAuto,
   type AutoPhotoSaveResult,
+  type MapImageItem,
   type ScreenList,
   type StoredDraft,
   type TenantSummary,
 } from '../lib/api'
 import { canonicalPhotoSrc, PHOTO_LICENSES, photoCreditState, photosAllowed, publicPhotosAllowed, type PhotoLicense } from '../lib/articlePhotos'
 import { publishMarkdownOf } from '../lib/draftGaps'
+import { MAP_AREA_NAME, mapDrawFailText, type MapPoint } from '../lib/mapImage'
 import {
   AUTO_CANDIDATE_SKIP_TEXT,
   AUTO_SLOT_STATE_TEXT,
   autoPickPhotos,
   autoPreviewCounts,
   findPlace,
+  mapMissText,
+  mapPickReason,
   otherPhotoUses,
   photoStateKey,
   placesToRead,
@@ -38,6 +45,7 @@ import {
   type AutoSlotState,
   type SceneSkip,
 } from '../lib/photoAutoPick'
+import { kstDate } from '../lib/publishedUrl'
 import { REGION_SCENE_LIMITS, SCENE_SETTING_TEXT, sceneMeta, type PhotoScene, type SceneWant } from '../lib/photoScenes'
 import { isScreenKind, MAP_PREVIEW_ONLY_TEXT, SCREEN_SLOT_KIND_TEXT, screenAspectRatio, screenCaptureOrder, screenProfileFor, screenShotMeta } from '../lib/screenCapture'
 import {
@@ -58,6 +66,7 @@ import {
   type SitePhotoResult,
 } from '../lib/sitePhotos'
 import { TOUR_PLACE_LIMIT, TOUR_SOURCES, tourRegionOf, tourSourceOf, type TourSource } from '../lib/tourPhotos'
+import MapPickBrief from './MapPickBrief'
 
 /**
  * 사진 자리 자동 채우기 — 단추를 누르면 홈페이지 사진 후보로 빈 사진 자리를 맞추고(1단계), 그래도 빈 자리는 자리 글자에 나온 장소의
@@ -95,6 +104,13 @@ import { TOUR_PLACE_LIMIT, TOUR_SOURCES, tourRegionOf, tourSourceOf, type TourSo
  * 찍는다. 찍을 수 없으면(웹 · 개발 서버) 찍어 둔 화면만 쓰고 그렇다고 알린다. 지도 화면은 카카오 지도 이용 조건을 확인하기 전이라
  * 미리보기만 하고 저장하지 않는다(결정 4 — 저장 수에 세지 않는다). 코스 · 장소 안내 · 가이드 화면은 사진과 같이 op auto로 저장한다(서버가
  * 다시 본다). 장소 안내 · 가이드는 잘라 찍은 화면이라 자리 글자의 시각 · 요금 · 요일이 찍은 글자에 없으면 「확인 필요」로 보인다.
+ *
+ * 군산 지도 — 장소 목록 출처가 있는 프로필(군산각)의 지도 자리는 카카오 지도 미리보기 대신 앱이 동봉한 OpenStreetMap 데이터로 그린 지도로
+ * 채운다(src/lib/mapImage.ts — 표지는 자사 사이트 /map/의 장소에서 고른다, GET /api/maps · /api/maps/:tenantId/points). 아직 그리지 않은
+ * 지도는 미리보기의 「군산 지도 그리기」로 한 번에 그리고(한 장에 1초 안팎 — 「군산 지도 그리는 중 n/m」, POST /api/maps/:tenantId/render),
+ * 그린 뒤 같은 입력으로 다시 골라 미리보기를 바꾼다. 지도는 늘 「확인 필요」이고, 까닭 줄에 표지 · 뺀 장소를 중립 글자로 적는다(「표시하지
+ * 않은 곳: … (지도에 넣지 않는 구역)」). 그리기는 설치한 데스크톱 앱에서만 — 개발 서버는 그려 둔 지도만 쓰고, 웹은 지도 라우트가 없어
+ * 「데스크톱 앱에서만」으로 알린다.
  *
  * 미리보기는 계산한 때의 초안으로 고른다 — 그사이 다른 미리보기 · 사람이 고른 사진이 저장되거나 글이 바뀌면(photoStateKey) 그
  * 미리보기로는 저장하지 않고 다시 맞추게 한다(작성자 · 브랜드 반복 상한이 달라진다). 서버도 쓰기 안에서 상한을 다시 본다.
@@ -153,22 +169,38 @@ export default function PhotoAutoFill({
     refill: boolean
     /** 자사 화면 — 찍은 수 · 남은 화면 · 찍지 못한 화면 · 지도 미리보기. warn이면 찍지 못한 화면이 있다. */
     screenNote: { text: string; warn: boolean } | null
+    /**
+     * 군산 지도(장소 목록 출처가 있는 브랜드만, 아니면 null) — available 이 실행에서 그릴 수 있는가, drawn 이 PC에 그려 둔 지도(그린 뒤 더한다),
+     * notes 장소 목록 · 웹 알림(warn이면 경고), drawNote 마지막 「군산 지도 그리기」 결과(warn이면 그리지 못한 지도가 있다).
+     */
+    maps: { available: boolean; drawn: MapImageItem[]; notes: string[]; drawNote: { text: string; warn: boolean } | null; warn: boolean } | null
   } | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  /** 「군산 지도 그리기」 진행 글자 — 그리는 동안만. */
+  const [drawing, setDrawing] = useState<string | null>(null)
   /** 이 화면에서 찍다가 실패한 자사 화면(「화면id:변형id」) — 다음에 누를 때 뒤로 보낸다(같은 화면이 남은 화면을 막지 않게). */
   const captureFailed = useRef<Set<string>>(new Set())
+  /** 미리보기 계산 차례 — 지도를 그리는 사이 다시 맞추면 그 그리기 결과로 미리보기를 바꾸지 않는다. */
+  const runSeq = useRef(0)
+  /**
+   * 마지막 미리보기를 계산한 입력으로 다시 고르는 길 — 지도를 그린 뒤 그린 지도만 바꿔 다시 고른다(사진 후보 · 장면 · 화면은 그대로, AI를
+   * 부르지 않는다). run이 단다.
+   */
+  const repick = useRef<{ run: number; pick: (drawn: readonly MapImageItem[]) => AutoPickResult } | null>(null)
   const titleOf = new Map(articles.map((a) => [a.stored.actionId, a.title]))
   const previewIds = useMemo(() => new Set(preview?.result.articles.map((a) => a.actionId) ?? []), [preview])
   const stale = useMemo(() => preview !== null && photoStateKey(drafts, previewIds) !== preview.key, [preview, drafts, previewIds])
   const hasCleared = articles.some((a) => (a.stored.photoCleared?.length ?? 0) > 0)
-  // 장면으로 다시 볼 자동 사진 — 자사 화면은 장면을 읽지 않는다(photoAutoPick.ts recheckAuto).
-  const hasAuto = articles.some((a) => a.stored.photos?.some((p) => p.auto && p.origin !== 'screen'))
+  // 장면으로 다시 볼 자동 사진 — 자사 화면 · 군산 지도는 장면을 읽지 않는다(photoAutoPick.ts recheckAuto).
+  const hasAuto = articles.some((a) => a.stored.photos?.some((p) => p.auto && p.origin !== 'screen' && p.origin !== 'osm-map'))
 
   const run = async () => {
     const refillOn = refill && hasCleared
     const recheckOn = recheck && hasAuto
+    const seq = (runSeq.current += 1)
+    repick.current = null
     setLoading(true)
     setProgress(null)
     setError(null)
@@ -258,6 +290,31 @@ export default function PhotoAutoFill({
       }
       const canCapture = screenList !== null && screenList.available && (await loadScreenCaptureStatus())
       let screenShots: AutoScreenShot[] = screenList?.shots ?? []
+      // 군산 지도 — 장소 목록 출처가 있는 프로필(군산각)만 이 PC에 그려 둔 지도와 자사 사이트 장소 목록(서버가 /map/에서 점만 받아 둔 것)을
+      // 받는다. 웹은 지도 라우트가 없어 null — 지도는 설치한 데스크톱 앱에서만 그린다고 알린다. 그리기는 미리보기의 「군산 지도 그리기」로.
+      const mapNotes: string[] = []
+      let mapWarn = false
+      let mapWeb = false
+      let mapsIn: { available: boolean; points: MapPoint[]; pointsVersion: string; drawn: MapImageItem[] } | null = null
+      if (screenProfile?.mapPoints) {
+        try {
+          const list = await loadMaps(tenantId)
+          if (!list) mapWeb = true
+          else {
+            setProgress(`${MAP_AREA_NAME} 지도 장소 목록 확인 중…`)
+            const got = await loadMapPoints(tenantId)
+            if (got.warning) {
+              mapWarn = true
+              mapNotes.push(`${got.warning} — 저장해 둔 장소 목록(${kstDate(got.fetchedAt) ?? '날짜 모름'})으로 골랐어요.`)
+            }
+            mapsIn = { available: list.available, points: got.points, pointsVersion: got.version, drawn: list.maps }
+          }
+        } catch (e) {
+          console.warn('[PhotoAutoFill] 군산 지도 목록 · 장소 목록을 읽지 못했습니다(지도 자리는 비워 둡니다)', e)
+          mapWarn = true
+          mapNotes.push(`${MAP_AREA_NAME} 지도 장소 목록을 읽지 못해 지도 자리는 비워 뒀어요 — ${e instanceof Error ? e.message : String(e)}`)
+        }
+      }
       const pick = () =>
         autoPickPhotos({
           articles: autoArticles,
@@ -274,6 +331,7 @@ export default function PhotoAutoFill({
           ownedDomains: brand.ownedDomains,
           ...(scenes ? { scenes, sceneFailed: sceneSum.failed } : { knownScenes: sceneMap }),
           ...(screenList ? { screens: { available: canCapture, shots: screenShots } } : {}),
+          ...(mapsIn ? { maps: mapsIn } : {}),
           refillCleared: refillOn,
           recheckAuto: recheckOn,
         })
@@ -369,8 +427,14 @@ export default function PhotoAutoFill({
             : `아직 찍지 않은 화면이 들어갈 자리 ${screenWaiting}곳 — 화면 찍기는 설치한 데스크톱 앱에서만 돼요. 여기서는 이 PC에 찍어 둔 화면만 써요.`,
         )
       }
-      if (screenProfile && !screenList && !screenListFailed && screenRows.length) {
-        screenNotes.push(`자사 화면 자리 ${screenRows.length}곳 — 자사 화면은 설치한 데스크톱 앱에서만 찍고 넣을 수 있어요.`)
+      // 웹이면 지도 자리는 지도 알림이 따로 말한다.
+      const webScreenRows = mapWeb ? screenRows.filter((r) => r.screenSlot !== 'map') : screenRows
+      if (screenProfile && !screenList && !screenListFailed && webScreenRows.length) {
+        screenNotes.push(`자사 화면 자리 ${webScreenRows.length}곳 — 자사 화면은 설치한 데스크톱 앱에서만 찍고 넣을 수 있어요.`)
+      }
+      const mapSlots = screenRows.filter((r) => r.screenSlot === 'map').length
+      if (mapWeb && mapSlots) {
+        mapNotes.push(`${MAP_AREA_NAME} 지도 자리 ${mapSlots}곳 — ${MAP_AREA_NAME} 지도는 설치한 데스크톱 앱에서만 그려 넣을 수 있어요(웹에서는 지도 자리를 비워 둬요).`)
       }
       if (screenPreviews) screenNotes.push(`지도 화면 자리 ${screenPreviews}곳 — 카카오 지도 이용 조건 확인 전이라 미리보기만 하고 저장하지 않아요.`)
       if (result.region) {
@@ -415,7 +479,20 @@ export default function PhotoAutoFill({
         sceneNote,
         refill: refillOn,
         screenNote: screenNotes.length ? { text: screenNotes.join(' '), warn: screenWarn } : null,
+        maps: screenProfile?.mapPoints
+          ? { available: mapsIn?.available ?? false, drawn: mapsIn?.drawn ?? [], notes: mapNotes, drawNote: null, warn: mapWarn }
+          : null,
       })
+      // 지도를 그린 뒤 다시 고르는 길 — 이 미리보기를 계산한 입력 그대로, 그려 둔 지도만 바꾼다.
+      repick.current = mapsIn
+        ? {
+            run: seq,
+            pick: (drawn) => {
+              mapsIn = { ...mapsIn!, drawn: [...drawn] }
+              return pick()
+            },
+          }
+        : null
       setShowAll(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -532,6 +609,59 @@ export default function PhotoAutoFill({
     }
   }
 
+  /**
+   * 「군산 지도 그리기」 — 미리보기의 아직 그리지 않은 지도(mapWanted)를 한 번에 그린다(한 장씩 청한다 — 한 장에 1초 안팎, 서버가 메인
+   * 프로세스에 맡겨 동봉한 OSM 데이터로 그리고 이 PC에 저장한다). 다 그린 뒤 같은 입력으로 다시 골라 미리보기를 바꾼다. 그리기를 쓸 수 없거나
+   * (앱 종료 중) 줄이 차면 남은 지도는 그리지 않는다. 그리지 못한 까닭은 중립 글자로 보인다(mapDrawFailText).
+   */
+  const drawMaps = async () => {
+    const p = preview
+    const again = repick.current
+    if (!p?.maps?.available || !again || again.run !== runSeq.current || !p.result.mapWanted.length) return
+    const wanted = p.result.mapWanted
+    const labelsOf = new Map<string, string>()
+    for (const a of p.result.articles) for (const r of a.rows) if (r.mapPick) labelsOf.set(r.mapPick.key, r.mapPick.markers.map((m) => m.label).join(' · '))
+    const drawn = [...p.maps.drawn]
+    const failed: string[] = []
+    let made = 0
+    let reused = 0
+    setError(null)
+    setNote(null)
+    try {
+      for (const [i, w] of wanted.entries()) {
+        setDrawing(`${MAP_AREA_NAME} 지도 그리는 중 ${i + 1}/${wanted.length}`)
+        const name = labelsOf.get(w.key) ?? w.ids.join(' · ')
+        let code: string | null = null
+        try {
+          const [r] = await renderMaps(tenantId, [{ ids: w.ids }])
+          if (r?.ok) {
+            drawn.unshift(r.map)
+            if (r.reused) reused += 1
+            else made += 1
+          } else {
+            code = r?.code ?? 'failed'
+            failed.push(`${name}(${mapDrawFailText(code, r?.message ?? '')})`)
+          }
+        } catch (e) {
+          console.warn(`[PhotoAutoFill] 군산 지도(${w.key})를 그리지 못했습니다`, e)
+          code = typeof (e as { code?: unknown }).code === 'string' ? (e as { code: string }).code : 'failed'
+          failed.push(`${name}(${mapDrawFailText(code, e instanceof Error ? e.message : String(e))})`)
+        }
+        // 그리기 자체를 쓸 수 없거나(앱 종료 중) 줄이 찼으면 남은 지도도 그리지 못한다.
+        if (code === 'unavailable' || code === 'disposed' || code === 'busy') break
+      }
+      if (again.run !== runSeq.current) return
+      setDrawing('그린 지도로 다시 맞추는 중…')
+      const result = again.pick(drawn)
+      const done = made || reused ? [`${MAP_AREA_NAME} 지도 ${made}장을 그려 이 PC에 저장했어요${reused ? `(이미 그려 둔 지도 ${reused}장은 다시 썼어요)` : ''}.`] : []
+      const text = [...done, ...(failed.length ? [`그리지 못한 지도 ${failed.length}장 — ${failed.join(' · ')}`] : [])].join(' ')
+      const drawNote = text ? { text, warn: failed.length > 0 } : null
+      setPreview((cur) => (cur && cur.maps && again.run === runSeq.current ? { ...cur, result, maps: { ...cur.maps, drawn, drawNote } } : cur))
+    } finally {
+      setDrawing(null)
+    }
+  }
+
   const rows = preview ? preview.result.articles.flatMap((a) => a.rows.map((row) => ({ actionId: a.actionId, row }))) : []
   const count = (state: AutoSlotState) => rows.filter((r) => r.row.state === state).length
   // 채울 자리의 괄호(확인 필요 · 비슷한 사진 · 장소 없는 자리)는 채울 자리만, 바꿀 자리의 것은 바꿈 뒤에 따로 센다.
@@ -556,8 +686,33 @@ export default function PhotoAutoFill({
   const changes = filled + replaced + removed
   const filledScreens = rows.filter((r) => r.row.state === 'filled' && r.row.pick?.origin === 'screen').length
   const hasScreenRows = rows.some((r) => r.row.screenPick)
+  const filledMaps = rows.filter((r) => r.row.state === 'filled' && r.row.pick?.origin === 'osm-map').length
+  const hasMapRows = rows.some((r) => r.row.mapPick)
+  // 군산 지도 알림 — 장소 목록 · 웹 알림, 마지막 그리기 결과, 아직 그리지 않은 자리(그릴 수 있으면 「군산 지도 그리기」로).
+  const undrawnRows = rows.filter((r) => r.row.state === 'undrawn').length
+  const mapNote = preview?.maps
+    ? {
+        text: [
+          ...preview.maps.notes,
+          ...(preview.maps.drawNote ? [preview.maps.drawNote.text] : []),
+          ...(undrawnRows
+            ? [
+                preview.maps.available
+                  ? `아직 그리지 않은 지도 자리 ${undrawnRows}곳(지도 ${preview.result.mapWanted.length}장) — 「${MAP_AREA_NAME} 지도 그리기」를 누르면 한 번에 그려요(앱에 든 OpenStreetMap 데이터로 이 PC에서 그려요).`
+                  : `아직 그리지 않은 지도 자리 ${undrawnRows}곳 — ${MAP_AREA_NAME} 지도 그리기는 설치한 데스크톱 앱에서만 돼요. 여기서는 이 PC에 그려 둔 지도만 써요.`,
+              ]
+            : []),
+        ].join(' '),
+        warn: preview.maps.warn || Boolean(preview.maps.drawNote?.warn),
+      }
+    : null
   const isShown = (row: AutoSlotRow) =>
-    row.state === 'filled' || row.state === 'replace' || row.state === 'remove' || row.state === 'preview' || row.recheck === 'similar'
+    row.state === 'filled' ||
+    row.state === 'replace' ||
+    row.state === 'remove' ||
+    row.state === 'preview' ||
+    row.state === 'undrawn' ||
+    row.recheck === 'similar'
   const shownCount = rows.filter((r) => isShown(r.row)).length
   const shown = showAll ? rows : rows.filter((r) => isShown(r.row))
   const skippedByReason = preview
@@ -565,7 +720,7 @@ export default function PhotoAutoFill({
         preview.result.skipped.reduce<Record<string, number>>((m, s) => ({ ...m, [s.reason]: (m[s.reason] ?? 0) + 1 }), {}),
       ).map(([reason, n]) => `${AUTO_CANDIDATE_SKIP_TEXT[reason as keyof typeof AUTO_CANDIDATE_SKIP_TEXT]} ${n}`)
     : []
-  const others = (['kept', 'cleared', 'screen', 'preview', 'uncaptured', 'nomatch', 'scene', 'unread', 'used', 'full', 'license'] as const)
+  const others = (['kept', 'cleared', 'screen', 'preview', 'uncaptured', 'undrawn', 'nomatch', 'scene', 'unread', 'used', 'full', 'license'] as const)
     .map((s) => [s, s === 'kept' ? rows.filter((r) => r.row.state === 'kept' && !r.row.recheck).length : count(s)] as const)
     .filter(([, n]) => n > 0)
     .map(([s, n]) => `${AUTO_SLOT_STATE_TEXT[s]} ${n}`)
@@ -576,9 +731,9 @@ export default function PhotoAutoFill({
         <button
           type="button"
           className="ghost"
-          disabled={locked || loading || saving}
+          disabled={locked || loading || saving || drawing !== null}
           onClick={() => void run()}
-          title={`사진 설명 · 장소와 사진 자리 글자를 맞춰 빈 자리에 넣을 사진을 고릅니다. 이 PC에 Claude 키가 있으면 후보 사진의 장면을 읽어(사진 한 장에 한 번 — 읽은 장면은 저장해 다시 읽지 않아요) 장면이 맞는 사진만 고릅니다. 자사 웹사이트 화면 자리는 이 PC에 찍어 둔 화면으로 맞추고, 데스크톱 앱에서는 아직 찍지 않은 화면을 한 번에 ${SCREEN_CAPTURES_PER_RUN}장까지 찍어요. 저장 전에 미리보기 표를 보여 줍니다.`}
+          title={`사진 설명 · 장소와 사진 자리 글자를 맞춰 빈 자리에 넣을 사진을 고릅니다. 이 PC에 Claude 키가 있으면 후보 사진의 장면을 읽어(사진 한 장에 한 번 — 읽은 장면은 저장해 다시 읽지 않아요) 장면이 맞는 사진만 고릅니다. 자사 웹사이트 화면 자리는 이 PC에 찍어 둔 화면으로 맞추고, 데스크톱 앱에서는 아직 찍지 않은 화면을 한 번에 ${SCREEN_CAPTURES_PER_RUN}장까지 찍어요. 지도 자리는 자사 사이트 장소 목록이 있는 브랜드(군산각)면 표지를 골라 앱이 그린 ${MAP_AREA_NAME} 지도(OpenStreetMap)를 넣어요. 저장 전에 미리보기 표를 보여 줍니다.`}
         >
           {loading ? (progress ?? '사진 맞추는 중…') : label}
         </button>
@@ -620,6 +775,7 @@ export default function PhotoAutoFill({
             {counts.filled.public > 0 && ` (공공 사진 ${counts.filled.public})`}
             {counts.filled.tour > 0 && ` (관광공사 사진 ${counts.filled.tour})`}
             {filledScreens > 0 && ` (자사 화면 ${filledScreens})`}
+            {filledMaps > 0 && ` (${MAP_AREA_NAME} 지도 ${filledMaps})`}
             {counts.filled.review > 0 && ` (확인 필요 ${counts.filled.review})`}
             {counts.filled.similar > 0 && ` (비슷한 사진 ${counts.filled.similar})`}
             {counts.filled.placeless > 0 && ` (장소 없는 자리 — 비슷한 장면 ${counts.filled.placeless})`}
@@ -643,6 +799,24 @@ export default function PhotoAutoFill({
               {preview.screenNote.text}
             </p>
           )}
+          {mapNote?.text && (
+            <p className={mapNote.warn ? 'hint warn' : 'doc-meta'} style={{ margin: 0 }}>
+              {mapNote.text}
+            </p>
+          )}
+          {preview.maps?.available && preview.result.mapWanted.length > 0 && (
+            <div className="brief-bar" style={{ margin: 0 }}>
+              <button
+                type="button"
+                className="ghost"
+                disabled={drawing !== null || saving || locked}
+                title="표의 「지도를 아직 그리지 않음」 자리에 들어갈 지도를 한 번에 그립니다 — 자사 사이트 장소 목록의 좌표로, 앱에 든 OpenStreetMap 데이터를 이 PC에서 그려요(인터넷 지도 서비스를 부르지 않아요). 한 장에 1초 안팎이고, 그린 지도는 이 PC에 저장해 다시 쓰고 미리보기를 다시 맞춰요."
+                onClick={() => void drawMaps()}
+              >
+                {drawing ?? `${MAP_AREA_NAME} 지도 그리기(${preview.result.mapWanted.length}장)`}
+              </button>
+            </div>
+          )}
           <p className="hint" style={{ margin: 0 }}>
             틀린 사진보다 빈자리가 낫다는 기준으로, 설명이 충분히 맞는 사진만 고릅니다. 공공 사진 · 관광공사 사진은 자리 글자에 나온 장소의
             사진이에요 — 사진 장면을 읽었으면 장면이 자리와 어긋난 사진(외관 자리에 실내 사진 · 사람을 알아볼 수 있는 사진 등)은 빼고 장면이 맞는
@@ -653,6 +827,8 @@ export default function PhotoAutoFill({
             주세요. 사람이 고른 자리는 덮지 않고, 사람이 뺀 자리는 「사람이 뺀 자리도 다시 채우기」를 켰을 때만 다시 채웁니다.
             {hasScreenRows &&
               ' 자사 화면은 브랜드 웹사이트 화면을 이 PC에서 찍은 그림이에요 — 글에는 이 PC의 화면 주소만 적고, 복사 · 홈페이지용 .html로 내보낼 때 그림을 넣어요. 붙여 넣은 글에서 화면이 안 보이면 「사진 N장 받기」로 받은 파일을 그 자리에 올려 주세요.'}
+            {hasMapRows &&
+              ` ${MAP_AREA_NAME} 지도는 자사 사이트 장소 목록의 장소를 앱이 OpenStreetMap 데이터로 그린 그림이에요(사이트 화면이 아니에요) — 표지와 위치 문장을 자리 글자로 골라 늘 「확인 필요」이니 썸네일과 까닭을 확인해 주세요. 내보낼 때 지도 바로 아래에 출처 줄(지도 데이터 © OpenStreetMap contributors · ODbL)이 붙고, 그 아래 줄이 위치 문장이에요.`}
           </p>
           {shown.length > 0 && (
             <div className="table-wrap">
@@ -680,12 +856,12 @@ export default function PhotoAutoFill({
             </div>
           )}
           <div className="brief-bar" style={{ margin: 0 }}>
-            <button type="button" disabled={(changes === 0 && credits === 0) || saving || locked || stale} onClick={() => void save()}>
+            <button type="button" disabled={(changes === 0 && credits === 0) || saving || locked || stale || drawing !== null} onClick={() => void save()}>
               {saving
                 ? '저장 중…'
                 : `저장 — ${filled}자리${replaced ? ` · 바꿈 ${replaced}` : ''}${removed ? ` · 뺌 ${removed}` : ''}${credits ? ` · 출처 ${credits}장` : ''}`}
             </button>
-            <button type="button" className="ghost" disabled={saving} onClick={() => setPreview(null)}>
+            <button type="button" className="ghost" disabled={saving || drawing !== null} onClick={() => setPreview(null)}>
               닫기
             </button>
             {rows.length > shownCount && (
@@ -861,9 +1037,17 @@ function PreviewRow({ title, row, brandName }: { title: string | null; row: Auto
     />
   ) : null
   const screen = row.screenPick ? <ScreenBrief brandName={brandName} pick={row.screenPick} /> : null
+  // 앱이 그린 군산 지도 — 그렸으면 썸네일(16:10), 아직이면 빈 자리. 늘 「확인 필요」 칩과 출처 줄.
+  const map = row.mapPick ? <MapPickBrief {...(row.mapPick.drawn ? { src: row.mapPick.drawn.src } : {})} alt={row.mapPick.alt} caption={row.mapPick.caption} /> : null
   const warn = row.state === 'replace' || row.state === 'remove' || row.recheck === 'similar' || (row.state === 'filled' && row.review)
   const status = row.recheck ? RECHECK_TEXT[row.recheck] : row.state === 'filled' && row.review ? '확인 필요' : AUTO_SLOT_STATE_TEXT[row.state]
-  const pill = warn ? 'st-warn' : row.state === 'filled' ? 'st-good' : row.state === 'preview' || row.state === 'uncaptured' ? 'st-info' : 'st-ok'
+  const pill = warn
+    ? 'st-warn'
+    : row.state === 'filled'
+      ? 'st-good'
+      : row.state === 'preview' || row.state === 'uncaptured' || row.state === 'undrawn'
+        ? 'st-info'
+        : 'st-ok'
   return (
     <tr>
       {title !== null && <td className="cell-text">{title}</td>}
@@ -883,11 +1067,19 @@ function PreviewRow({ title, row, brandName }: { title: string | null; row: Auto
         ) : row.old ? (
           <OldBrief row={row} />
         ) : (
-          (screen ?? fresh ?? <span className="muted">—</span>)
+          (map ?? screen ?? fresh ?? <span className="muted">—</span>)
         )}
       </td>
       <td className="cell-text">
-        {row.screenSlot ? (
+        {row.mapPick ? (
+          mapPickReason(row.mapPick).map((line, i) => (
+            <span key={line} className={i ? 'doc-meta' : undefined} style={{ display: 'block' }}>
+              {line}
+            </span>
+          ))
+        ) : row.mapMiss ? (
+          <span className="muted">{mapMissText(row)}</span>
+        ) : row.screenSlot ? (
           <span className={row.screenPick ? undefined : 'muted'}>{screenWhy(row)}</span>
         ) : row.placeless && c ? (
           <>

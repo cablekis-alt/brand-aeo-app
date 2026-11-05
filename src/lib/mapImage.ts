@@ -9,8 +9,9 @@
  * 나오면 그 장소를, 이름이 없으면 설명 줄 · 소제목 · 절 글자에 나온 장소 둘레나 그 권역에서 고른다(mapChoiceOf). 공군기지 상자(MAP_AVOID)
  * 안의 장소는 넣지 않는다.
  *
- * 글에 넣을 때(src/lib/articlePhotos.ts placePhotos) 대체 텍스트는 「군산 지도 — A · B · C 위치」(사이트 화면이라고 쓰지 않는다), 설명 줄은
- * 자리의 사이트 기능 문장 대신 장소 위치 문장 + 출처 줄(MAP_CREDIT)이다. 출처 줄은 그림이 앱 밖으로 나가는 모든 곳에서 그림 바로 아래에 붙는다.
+ * 글에 넣을 때(src/lib/articlePhotos.ts placePhotos) 대체 텍스트는 「군산 지도 — A · B · C 위치」(사이트 화면이라고 쓰지 않는다), 그림 바로
+ * 아래 줄은 출처 줄(MAP_CREDIT), 그다음 줄은 자리의 사이트 기능 문장 대신 장소 위치 문장이다. 출처 줄은 그림이 앱 밖으로 나가는 모든 곳
+ * (서식째 복사 · .html · 작성자 묶음 · 글자 내보내기)에서 그림 바로 아래에 붙는다.
  *
  * 서버(server/maps.ts · server/index.ts)와 화면이 함께 쓰므로 DOM에 기대지 않는다.
  */
@@ -244,10 +245,52 @@ export function mapCaptionOf(markers: readonly Pick<MapMarker, 'label' | 'kind'>
   return `${lead}${hasBatchim(lead) ? '과' : '와'} ${last} 위치를 지도에 표시했습니다.`
 }
 
-/** 넣을 때 그림 바로 아래 설명 줄 — 위치 문장 + 출처 줄(설명 문장이 비면 출처 줄만). */
-export function mapCaptionLine(caption: string | undefined): string {
+/**
+ * 넣을 때 그림 아래 줄들 — 그림 바로 아래 줄은 출처 줄, 그다음 줄은 위치 문장(설명 문장이 비면 출처 줄만). 출처 줄이 그림에 붙어 있어야
+ * 블로그에 붙여 넣거나 글자로 옮겨도 그림과 출처가 떨어지지 않는다(2026-11-05 — 그림 → 출처 줄 → 설명).
+ */
+export function mapCaptionLines(caption: string | undefined): string[] {
   const c = (caption ?? '').replace(/[*\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
-  return c ? `${c} ${MAP_CREDIT}` : MAP_CREDIT
+  return c ? [MAP_CREDIT, c] : [MAP_CREDIT]
+}
+
+/** 글자만 나가는 곳(서식째 복사의 글자 쪽)의 지도 자리 — 「[지도: 군산 지도 — … 위치] 출처 줄」 한 줄. */
+export function mapPlainLine(alt: string): string {
+  return `[지도: ${alt.trim() || `${MAP_AREA_NAME} 지도`}] ${MAP_CREDIT}`
+}
+
+// ── 화면 글자 ────────────────────────────────────────────────────────────
+
+/** 지도 사진의 칩 — 자동 채우기 미리보기 · 글의 「홈페이지 사진」 칸. 앱이 그린 지도는 표지 · 위치 문장을 자리 글자로 골라 늘 「확인 필요」다. */
+export const MAP_PICK_CHIP = `${MAP_AREA_NAME} 지도(OSM) · 확인 필요`
+
+/** 지도에 넣지 않는 구역(MAP_AVOID)을 화면에 적는 말 — 중립으로 쓴다(어떤 시설인지 적지 않는다, 2026-11-05 결정). */
+export const MAP_AVOID_TEXT = '지도에 넣지 않는 구역'
+
+/**
+ * 지도에서 뺀 장소 — 「표시하지 않은 곳: A · B (지도에 넣지 않는 구역)」. why 'base'는 구역 밖이지만 틀이 구역에 걸리지 않게 뺀 장소
+ * (server/mapFrame.ts dropped why 'base').
+ */
+export function mapLeftOutText(names: readonly string[], why: 'avoid' | 'base' = 'avoid'): string {
+  return `표시하지 않은 곳: ${names.join(' · ')} (${why === 'base' ? `${MAP_AVOID_TEXT}을 피해 뺌` : MAP_AVOID_TEXT})`
+}
+
+/**
+ * 지도를 그리지 못한 까닭(서버 · 메인의 code)을 화면 글자로. 구역 · 틀 문제는 중립 글자로 바꾼다 — 서버 · 메인 프로세스의 글(로그용)은 쓰지
+ * 않는다. 그 밖은 서버 글 그대로.
+ */
+export function mapDrawFailText(code: string, message: string): string {
+  if (code === 'no-markers') return `${MAP_AVOID_TEXT}의 장소만 남아 그리지 않았어요`
+  if (code === 'avoid-area' || code === 'base-in-frame') return `${MAP_AVOID_TEXT}을 피하는 틀을 만들지 못해 그리지 않았어요`
+  if (code === 'out-of-cover' || code === 'too-wide') return '장소가 넓게 퍼져 동봉한 지도 데이터 한 장에 담지 못했어요'
+  if (code === 'unavailable' || code === 'disposed') return '이 실행에서는 지도를 그릴 수 없어요 — 설치한 데스크톱 앱에서만 그려요'
+  if (code === 'timeout') return '그리는 동안 시간이 다 됐어요 — 다시 눌러 주세요'
+  return message || '지도를 그리지 못했어요'
+}
+
+/** 「사진 N장 받기」 · 올리기 목록의 지도 안내 — 지도 파일을 직접 올리면 그림 아래 출처 줄이 따라가지 않을 수 있다. */
+export function mapCreditNote(count: number): string {
+  return `${MAP_AREA_NAME} 지도 ${count}장은 OpenStreetMap 데이터로 그린 그림이라 출처 표시가 이용 조건이에요 — 지도 파일을 직접 올렸다면 지도 바로 아래에 「${MAP_CREDIT}」를 적어 주세요.`
 }
 
 // ── 표지 고르기 ───────────────────────────────────────────────────────────
@@ -563,7 +606,7 @@ export function mapChoiceOf(slot: MapSlotText, points: readonly MapPoint[], regi
     }
     why.push(`${kinds.map((k) => MAP_KIND_TEXT[k]).join(' · ')} ${!anchor && kinds.includes('attraction') ? '(관광지는 사이트 목록 순서)' : '(가까운 차례)'}`)
   }
-  if (avoided.length) why.push(`공군기지 상자 안이라 뺌: ${avoided.join(' · ')}`)
+  if (avoided.length) why.push(mapLeftOutText(avoided))
   if (!list.length) return { miss: 'no-markers', why: `${why.join(' · ')} — 넣을 장소가 없음` }
   const variants = [variantOf(list, 0)]
   if (list.length < MAP_MAX_MARKERS) {

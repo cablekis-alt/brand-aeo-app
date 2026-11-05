@@ -5626,6 +5626,14 @@ section.dash-card {
   object-fit: cover;
   border-radius: var(--r-ctl);
 }
+/* 앱이 그린 군산 지도(MapPickBrief.tsx MapDraftFigure) — 늘 1280×800이라 16:10 그대로(잘리지 않게). */
+.draft-image-slot.is-map .draft-image-photo {
+  width: min(100%, 384px);
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  border: 1px solid var(--line);
+}
 .photo-slot {
   display: grid;
   gap: 6px;
@@ -5736,6 +5744,29 @@ section.dash-card {
 .photo-auto-pick.is-screen img {
   width: 96px;
   max-height: 120px;
+}
+/*
+ * 앱이 그린 군산 지도(MapPickBrief.tsx) — 늘 1280×800이라 썸네일도 16:10 그대로(잘리지 않게). 아직 그리지 않은 지도는 같은 크기의 빈 자리.
+ */
+.photo-picked.is-map img,
+.photo-auto-pick.is-map img,
+.photo-auto-pick.is-map .map-thumb-empty {
+  aspect-ratio: 16 / 10;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  flex: none;
+}
+.photo-picked.is-map img {
+  width: 160px;
+}
+.photo-auto-pick.is-map img,
+.photo-auto-pick.is-map .map-thumb-empty {
+  width: 112px;
+}
+.photo-auto-pick.is-map .map-thumb-empty {
+  font-size: 11px;
+  text-align: center;
 }
 .photo-option-empty {
   display: grid;

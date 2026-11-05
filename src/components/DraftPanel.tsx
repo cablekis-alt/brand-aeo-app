@@ -19,9 +19,11 @@ import { claimOf, draftRequestOf, effectiveDraft, filledLine, gapKey, gapProgres
 import type { GapAction } from '../lib/gapActions'
 import { copyRich } from '../lib/clipboard'
 import { buildPublishHtml, markdownToHtml } from '../lib/htmlFile'
+import { mapCreditNote } from '../lib/mapImage'
 import { publishArticleOf } from '../lib/publishArticle'
 import { inlineScreens, richCopyWithScreens, screensDroppedText } from '../lib/screenExport'
 import EvidencePanel from './EvidencePanel'
+import { MapDraftFigure } from './MapPickBrief'
 import SitePhotoPanel from './SitePhotoPanel'
 import { matchPhotos, normSlotAlt } from '../lib/articlePhotos'
 import { ARTICLE_CREDITS_FILE, articlePhotoFiles, downloadArticlePhotos } from '../lib/sitePhotos'
@@ -574,13 +576,13 @@ export default function DraftPanel({
                       const markdown = publishArticleOf(stored, { brand: tenant, settings })
                       return richCopyWithScreens(markdown, markdownToHtml(markdown), fetchScreenFile)
                     })
-                    .then(async (out) => ({ ok: await copyRich(out.markdown, out.html), dropped: out.dropped }))
-                    .then(({ ok, dropped }) => {
+                    .then(async (out) => ({ ok: await copyRich(out.markdown, out.html), dropped: out.dropped, droppedMaps: out.droppedMaps }))
+                    .then(({ ok, dropped, droppedMaps }) => {
                       if (!ok) {
                         setError('클립보드에 복사하지 못했습니다. 「홈페이지용 .html」을 브라우저로 열어 글을 골라 복사하세요 — 서식이 함께 복사됩니다.')
                         return
                       }
-                      if (dropped) setError(screensDroppedText(dropped))
+                      if (dropped) setError(screensDroppedText(dropped, droppedMaps))
                       setArticleCopied(true)
                       window.setTimeout(() => setArticleCopied(false), 1800)
                     })
@@ -607,7 +609,7 @@ export default function DraftPanel({
                     .then(([factList, settings]) => inlineScreens(buildPublishHtml({ stored, brand: tenant, facts: factList, settings }), fetchScreenFile))
                     .then((out) => {
                       downloadHtml(`홈페이지용-${safeFileName(action.title)}-${stored.generatedAt.slice(0, 10)}.html`, out.html)
-                      if (out.dropped) setError(screensDroppedText(out.dropped))
+                      if (out.dropped) setError(screensDroppedText(out.dropped, out.droppedMaps))
                     })
                     .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
                 }}
@@ -623,7 +625,7 @@ export default function DraftPanel({
                     photoFiles.some((p) => p.credit)
                       ? ` 공공 사진이 있어 「${ARTICLE_CREDITS_FILE}」도 함께 받아요 — 공공 사진 파일을 직접 올리면 사진 바로 아래에 그 파일의 출처(공공누리 제1유형 링크)를 적어 주세요.`
                       : ''
-                  }`}
+                  }${photoFiles.some((p) => p.map) ? ` ${mapCreditNote(photoFiles.filter((p) => p.map).length)} 출처 줄은 함께 받는 「${ARTICLE_CREDITS_FILE}」에도 있어요.` : ''}`}
                   onClick={() => {
                     setPhotoBusy(true)
                     setError(null)
@@ -881,6 +883,10 @@ export default function DraftPanel({
                   // 사진은 사람이 찍거나 골라 올린다 — 글은 무엇을 넣을지만 제안한다(발행본에 「사진 넣을 자리」로 나간다). 홈페이지
                   // 사진을 골랐으면 그 사진이 들어간다(아래 「홈페이지 사진」).
                   const photo = photoFor(sec.heading, sec.image.alt)
+                  // 앱이 그린 군산 지도 — 「홈페이지 사진」이 아니라 지도 칩, 설명은 출처 줄 · 위치 문장(src/components/MapPickBrief.tsx).
+                  if (photo?.origin === 'osm-map') {
+                    return <MapDraftFigure src={photo.src} alt={photo.alt || sec.image.alt} {...(photo.caption ? { caption: photo.caption } : {})} />
+                  }
                   return (
                     <figure className={`draft-image-slot${photo ? ' is-picked' : ''}`}>
                       {photo ? (

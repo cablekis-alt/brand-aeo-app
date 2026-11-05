@@ -64,6 +64,7 @@ import {
   mapAltOf,
   mapCaptionOf,
   mapChoiceOf,
+  mapLeftOutText,
   mapSectionText,
   parseMapAppSrc,
   type MapChoiceBy,
@@ -800,6 +801,8 @@ export interface AutoMapDrawn {
   drawnAt: string
   markers: Pick<MapMarker, 'id' | 'label' | 'kind'>[]
   dropped?: { id: string; name: string; why: 'avoid' | 'base' }[]
+  /** 그림에서 이름이 겹쳐 이름 없이 표지만 넣은 곳(줄 이름) — 대체 텍스트 · 위치 문장에서는 빠졌다(server/maps.ts mapTextOf). */
+  labelsDropped?: string[]
   width?: number
   height?: number
 }
@@ -828,6 +831,32 @@ export interface AutoMapPick {
 export interface AutoMapWant {
   key: string
   ids: string[]
+}
+
+/**
+ * 지도 자리의 까닭 줄(자동 채우기 미리보기) — 표지를 고른 까닭(mapChoiceOf why — 자리 글자에서 뺀 장소는 그 안에 중립 글자로), 넓힌 묶음이면
+ * 그 까닭, 표지(그린 지도면 실제로 그린 표지), 그린 지도에서 빠진 장소(구역 안 · 틀이 구역에 걸리지 않게 뺀 곳 — 중립 글자), 이름이 겹쳐
+ * 표지만 넣은 곳.
+ */
+export function mapPickReason(pick: AutoMapPick): string[] {
+  const lines = [pick.why]
+  if (pick.tier > 0) lines.push('같은 장소 묶음을 이 글 · 작성자에게 이미 써서 둘레 관광지를 더한 묶음')
+  const markers = pick.drawn?.markers ?? pick.markers
+  lines.push(`표지 ${markers.length}곳: ${markers.map((m) => m.label).join(' · ')}`)
+  const avoided = new Set(pick.avoided ?? [])
+  const dropped = (pick.drawn?.dropped ?? []).filter((d) => !avoided.has(d.name))
+  const inside = dropped.filter((d) => d.why === 'avoid').map((d) => d.name)
+  const beside = dropped.filter((d) => d.why === 'base').map((d) => d.name)
+  if (inside.length) lines.push(mapLeftOutText(inside))
+  if (beside.length) lines.push(mapLeftOutText(beside, 'base'))
+  if (pick.drawn?.labelsDropped?.length) lines.push(`이름이 겹쳐 표지만 넣은 곳: ${pick.drawn.labelsDropped.join(' · ')}`)
+  return lines
+}
+
+/** 지도 자리에 표지를 고르지 못한 까닭(미리보기) — 장소 목록이 비었거나 넣을 장소가 없다(까닭은 중립 글자). */
+export function mapMissText(row: Pick<AutoSlotRow, 'mapMiss' | 'mapMissWhy'>): string {
+  const head = row.mapMiss === 'no-points' ? '자사 사이트 장소 목록이 비어 지도 표지를 고르지 못했어요' : '지도에 넣을 장소가 없어 비워 둬요'
+  return row.mapMissWhy ? `${head} — ${row.mapMissWhy}` : head
 }
 
 /** 찍을 화면 · 변형 하나(screenWanted) — 화면이 POST /api/screens/capture로 찍고 다시 고른다. 변형 이름(장소 안내는 장소 이름)도 함께. */
@@ -911,6 +940,8 @@ export interface AutoSlotRow {
   mapPick?: AutoMapPick
   /** 지도 자리에 표지를 고르지 못했다 — no-points 장소 목록이 비었음, no-markers 넣을 장소가 없음(공군기지 상자 안뿐 · 기준 장소 없음). */
   mapMiss?: 'no-points' | 'no-markers'
+  /** 표지를 고르지 못한 까닭(mapChoiceOf why — 중립 글자). */
+  mapMissWhy?: string
 }
 
 /** 이미 넣은 자동 사진을 바꾸거나 뺄 것 — 저장할 때 서버가 그 자리에 같은 자동 사진이 아직 있을 때만 한다(server/contentDraft.ts). */
@@ -1762,6 +1793,7 @@ export function autoPickPhotos(input: {
         )
         if ('miss' in choice) {
           row.mapMiss = choice.miss
+          row.mapMissWhy = choice.why
           return
         }
         const open = choice.variants.filter((v) => !blocked(mapKey(v)) && !removed(row, mapKey(v)))

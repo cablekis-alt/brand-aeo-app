@@ -29,7 +29,7 @@ import {
   isMapImageId,
   mapAltOf,
   mapAppSrc,
-  mapCaptionLine,
+  mapCaptionLines,
   mapCaptionOf,
   mapChoiceOf,
   mapKindsIn,
@@ -118,7 +118,11 @@ ok(
     '관광지 가, 음식점 식당a · 식당b · 식당c · 식당d 외 1곳과 숙소 나 위치를 지도에 표시했습니다.',
 )
 ok('출처 줄 상수', MAP_CREDIT === '지도 데이터 © OpenStreetMap contributors · ODbL · https://www.openstreetmap.org/copyright')
-ok('설명 줄 + 출처 줄 — 별표 · 줄바꿈은 걷고, 설명이 비면 출처 줄만', mapCaptionLine('가 *위치*\n표시') === `가 위치 표시 ${MAP_CREDIT}` && mapCaptionLine('') === MAP_CREDIT && mapCaptionLine(undefined) === MAP_CREDIT)
+ok(
+  '그림 아래 줄들 — 출처 줄 다음 줄에 위치 문장(별표 · 줄바꿈은 걷는다), 설명이 비면 출처 줄만',
+  JSON.stringify(mapCaptionLines('가 *위치*\n표시')) === JSON.stringify([MAP_CREDIT, '가 위치 표시']) &&
+    JSON.stringify(mapCaptionLines('')) === JSON.stringify([MAP_CREDIT]) && JSON.stringify(mapCaptionLines(undefined)) === JSON.stringify([MAP_CREDIT]),
+)
 
 // ── 이름 맞추기 ──────────────────────────────────────────────────────────────
 let n = 0
@@ -195,8 +199,9 @@ const c6 = pick('지도에서 찾기 화면', { caption: '군산각은 관광지
 ok('서비스 소개 문구만 있는 자리 — 종류를 정하지 않아 관광지', !('miss' in c6) && c6.kinds.join() === 'attraction')
 const c7 = pick('지도에서 찾기 화면에 기지골프장과 가상호수공원 위치가 표시된 모습')
 ok(
-  '공군기지 상자 안 장소는 넣지 않는다(avoided)',
-  !('miss' in c7) && c7.avoided.join() === '기지골프장' && labelsOf(c7) === '가상호수공원' && c7.variants.every((v) => v.markers.every((m) => !inMapAvoid(m))) && /공군기지/.test(c7.why),
+  '공군기지 상자 안 장소는 넣지 않는다(avoided) — 까닭 글자는 중립(「표시하지 않은 곳: … (지도에 넣지 않는 구역)」, 시설 이름 없음)',
+  !('miss' in c7) && c7.avoided.join() === '기지골프장' && labelsOf(c7) === '가상호수공원' && c7.variants.every((v) => v.markers.every((m) => !inMapAvoid(m))) &&
+    c7.why.includes('표시하지 않은 곳: 기지골프장 (지도에 넣지 않는 구역)') && !/공군|군사|상자/.test(c7.why),
 )
 const c8 = pick('지도에서 찾기 화면에 기지골프장 위치가 표시된 모습')
 ok('상자 안 장소만 말한 자리 — 넣을 장소가 없다(no-markers)', 'miss' in c8 && c8.miss === 'no-markers')
@@ -246,22 +251,40 @@ const md = ['# 가상 글', '', '## 지도', '', '![가상각 웹사이트의 �
 const placed = withPhotos(md, [mapPick()])
 const lines = placed.markdown.split('\n')
 ok(
-  '글에 넣기 — 그림 줄은 지도 대체 텍스트 · 앱 주소, 바로 아랫줄 설명은 사이트 기능 문장 대신 위치 문장 + 출처 줄',
+  '글에 넣기 — 그림 줄은 지도 대체 텍스트 · 앱 주소, 그림 바로 아래 줄은 출처 줄, 그다음 줄은 사이트 기능 문장 대신 위치 문장',
   lines[4] === `![군산 지도 — 가상역사박물관 · 가상해양공원 위치](${mapAppSrc('vmap', MID)})` &&
-    lines[5] === `*가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다. ${MAP_CREDIT}*` &&
+    lines[5] === `*${MAP_CREDIT}*` &&
+    lines[6] === '*가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다.*' &&
+    lines[7] === '' &&
     !placed.markdown.includes('지도에서 찾기로 관광지 위치를'),
 )
 ok('글에 넣기 — 넣은 지도는 map 표시(JSON-LD · og:image에서 뺀다) · 공공 사진 출처는 없다', placed.applied.length === 1 && placed.applied[0]!.map?.mapId === MID && placed.applied[0]!.map?.credit === MAP_CREDIT && !placed.applied[0]!.credit)
 const noCaption = withPhotos(md.replace('*지도에서 찾기로 관광지 위치를 확인할 수 있습니다.*\n', ''), [mapPick()]).markdown.split('\n')
-ok('설명 줄이 없는 자리 — 위치 문장 + 출처 줄을 한 줄 끼운다', noCaption[5] === `*가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다. ${MAP_CREDIT}*` && noCaption[7] === '끝 문단')
+ok(
+  '설명 줄이 없는 자리 — 출처 줄과 위치 문장을 차례로 끼운다',
+  noCaption[5] === `*${MAP_CREDIT}*` && noCaption[6] === '*가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다.*' && noCaption[8] === '끝 문단',
+)
 const crlf = withPhotos(md.replace(/\n/g, '\r\n'), [mapPick()]).markdown
-ok('CRLF 원고 — 줄 끝을 지킨다', crlf.split('\r\n')[5] === `*가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다. ${MAP_CREDIT}*` && !/[^\r]\n/.test(crlf))
+ok(
+  'CRLF 원고 — 줄 끝을 지킨다(끼운 줄도)',
+  crlf.split('\r\n')[5] === `*${MAP_CREDIT}*` && crlf.split('\r\n')[6] === '*가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다.*' && !/[^\r]\n/.test(crlf),
+)
+const crlfNoCaption = withPhotos(md.replace('*지도에서 찾기로 관광지 위치를 확인할 수 있습니다.*\n', '').replace(/\n/g, '\r\n'), [mapPick()]).markdown
+ok(
+  'CRLF 원고 · 설명 줄 없음 — 끼운 두 줄도 CRLF',
+  crlfNoCaption.split('\r\n')[5] === `*${MAP_CREDIT}*` && crlfNoCaption.split('\r\n')[6]!.startsWith('*가상역사박물관') && !/[^\r]\n/.test(crlfNoCaption),
+)
+const lastLine = withPhotos(['## 지도', '', '![가상각 웹사이트의 지도에서 찾기 화면에 가상역사박물관 위치가 표시된 모습](#image-slot)'].join('\r\n'), [mapPick()]).markdown
+ok(
+  'CRLF 원고의 마지막 줄 자리 — 끼운 두 줄 사이도 CRLF, 마지막 줄은 줄 끝 없이',
+  lastLine.endsWith(`\r\n*${MAP_CREDIT}*\r\n*가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다.*`) && !/[^\r]\n/.test(lastLine),
+)
 ok('출처 줄이 없는 지도는 넣지 않는다', withPhotos(md, [mapPick({ credit: undefined })]).applied.length === 0)
 const html = markdownToHtml(placed.markdown)
 ok(
-  '본문 HTML — 지도 그림은 figure로, figcaption에 위치 문장과 출처 줄',
+  '본문 HTML — 지도 그림은 figure로, figcaption(그림 바로 아래)은 출처 줄, 바로 다음 문단이 위치 문장',
   html.includes(`<figure><img src="${mapAppSrc('vmap', MID)}" alt="군산 지도 — 가상역사박물관 · 가상해양공원 위치"`) &&
-    html.includes(`<figcaption>가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다. ${MAP_CREDIT.replace(/&/g, '&amp;')}</figcaption>`),
+    html.includes(`<figcaption>${MAP_CREDIT.replace(/&/g, '&amp;')}</figcaption></figure>\n<p><em>가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다.</em></p>`),
 )
 const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 5, 0, 0, 0, 3, 0x20, 8, 6, 0, 0, 0])
 const fetched: string[] = []
@@ -274,9 +297,12 @@ const dropped = await inlineScreens(html, async () => {
   throw new Error('받지 못함')
 })
 ok('받지 못한 지도 — 「[지도: …]」 글자로, 앱 주소 없이', dropped.dropped === 1 && dropped.html.includes('[지도: 군산 지도 — 가상역사박물관 · 가상해양공원 위치]') && exportLeaks(dropped.html).length === 0)
-ok('글자 내보내기 — 지도 그림 대신 「[지도: …]」, 출처 줄은 그 아래 그대로', (() => {
+ok('글자 내보내기 — 지도 그림 대신 「[지도: …] 출처 줄」 한 줄, 그다음 줄이 위치 문장(출처 줄은 한 번)', (() => {
   const plain = screenPlainText(placed.markdown).split('\n')
-  return plain[4] === '[지도: 군산 지도 — 가상역사박물관 · 가상해양공원 위치]' && plain[5]!.includes(MAP_CREDIT) && exportLeaks(plain.join('\n')).length === 0
+  return (
+    plain[4] === `[지도: 군산 지도 — 가상역사박물관 · 가상해양공원 위치] ${MAP_CREDIT}` && plain[5] === '*가상역사박물관 · 가상해양공원 위치를 지도에 표시했습니다.*' &&
+    plain.join('\n').split(MAP_CREDIT).length === 2 && exportLeaks(plain.join('\n')).length === 0
+  )
 })())
 ok('앱 안 글 미리보기 — 지도 그림도 「[지도: …]」 글자로(앱 주소를 그리지 않는다)', exportLeaks(screenPreviewHtml(html)).length === 0 && screenPreviewHtml(html).includes('[지도: '))
 ok('앱 주소 새기 검사는 /api/maps/도 본다', exportLeaks(`a ${mapAppSrc('vmap', MID)}`).includes('/api/maps/'))
