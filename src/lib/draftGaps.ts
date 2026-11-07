@@ -98,11 +98,14 @@ export function workMarkdownOf(stored: StoredDraft): string {
   return stored.editedMarkdown ?? draftToMarkdown(effectiveDraft(stored))
 }
 
-/** 발행용 원고 — 남은 빈칸 줄과 「이 글이 쓴 사실」을 뺀다. 복사·.md·.html이 같은 원고를 쓴다. */
+/**
+ * 발행용 원고 — 남은 빈칸 줄과 「이 글이 쓴 사실」을 뺀다. 블로그 글 형식은 답 없이 남은 FAQ 질문 · 뒤가 빈 안내 문장(고아 자리,
+ * markdownFile.ts withoutOrphans)도 덜어낸다. 복사·.md·.html이 같은 원고를 쓴다. 저장한 초안 · 작업용 원고는 그대로다.
+ */
 export function publishMarkdownOf(stored: StoredDraft): string {
   if (!stored.editedMarkdown) return draftToPublishMarkdown(effectiveDraft(stored))
   const md = stripGapNotes(stored.editedMarkdown)
-  // 블로그 글 형식만 — 빈 소제목 · 절 번호 · 제목 수를 맞춘다. 옛 형식은 예전 그대로(한 글자도 바꾸지 않는다).
+  // 블로그 글 형식만 — 고아 자리 · 빈 소제목 · 절 번호 · 제목 수를 맞춘다. 옛 형식은 예전 그대로(한 글자도 바꾸지 않는다).
   return stored.draft.format === 'article' ? tidyArticleMarkdown(md, stored.draft.title) : md
 }
 

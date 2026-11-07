@@ -1,6 +1,6 @@
-import type { ContentDraft, DraftBlock, DraftImage } from '../prompts/b9c-content-draft'
+import type { ContentDraft, DraftBlock, DraftImage, DraftSection } from '../prompts/b9c-content-draft'
 import type { StoredDraft } from './api'
-import { articleSources, sourcesLine } from './officialSources'
+import { articleSources, sourcesLine, type OfficialSource } from './officialSources'
 
 /**
  * 마크다운 파일로 내보내기 — 화면 부품과 떼어 둔다.
@@ -63,28 +63,21 @@ export const IMAGE_SLOT = '#image-slot'
 const IMAGE_SLOT_LINE = /^!\[[^\]]*\]\(#image-slot\)$/
 
 /**
- * 고친 블로그 글 형식 원고의 발행본 정리 — 빈칸 줄을 걷은 원고(stripGapNotes)에서 본문이 없는 절(소제목 · 사진 자리 · 참고 줄만
- * 남은 절)을 빼고, 남은 「## n.」 번호를 1부터 다시 매기고, 제목이 {N} 틀(titleTemplate)이면 그 수를 실린 절 수로 맞춘다.
- * 작업용 원고는 채울 곳이 보이게 빈칸만 있는 절에도 번호를 달고 그 절까지 센다 — 고친 글을 그대로 내보내면 빈 소제목과 틀린
- * 수가 나간다. 사람이 번호를 지운 소제목은 그대로 둔다.
+ * 고친 블로그 글 형식 원고의 발행본 정리 — 빈칸 줄을 걷은 원고(stripGapNotes)에서 고아 자리(withoutOrphans)를 덜고, 본문이 없는
+ * 절(소제목 · 사진 자리 · 참고 줄만 남은 절)을 빼고, 남은 「## n.」 번호를 1부터 다시 매기고, 제목이 {N} 틀(titleTemplate)이면 그
+ * 수를 실린 절 수로 맞춘다. 작업용 원고는 채울 곳이 보이게 빈칸만 있는 절에도 번호를 달고 그 절까지 센다 — 고친 글을 그대로
+ * 내보내면 빈 소제목과 틀린 수가 나간다. 사람이 번호를 지운 소제목은 그대로 둔다.
  */
 export function tidyArticleMarkdown(markdown: string, titleTemplate: string): string {
   const lines = withoutUsedFacts(markdown.split('\n'))
   const isHeading = (l: string) => /^#{1,2}\s/.test(l)
-  // 본문이 아닌 줄 — 빈 줄, 사진 자리, 사진 자리 바로 아래 설명 줄, 공식 출처 「참고:」 줄(링크만 있는 모양). 사람이 쓴 「참고: …」
-  // 문장이나 기울임 문단은 본문이다.
-  const isFiller = (l: string, prev: string) => {
-    const t = l.trim()
-    if (!t || IMAGE_SLOT_LINE.test(t) || SOURCES_LINE.test(t)) return true
-    return /^\*(?!\*)(.+?)\*$/.test(t) && IMAGE_SLOT_LINE.test(prev.trim())
-  }
   const kept: string[] = []
   for (let i = 0; i < lines.length; ) {
     if (/^##\s/.test(lines[i]!)) {
       let j = i + 1
       while (j < lines.length && !isHeading(lines[j]!)) j += 1
-      const body = lines.slice(i + 1, j)
-      if (!body.every((l, k) => isFiller(l, k > 0 ? body[k - 1]! : ''))) kept.push(lines[i]!, ...body)
+      const body = withoutOrphans(lines[i]!, lines.slice(i + 1, j))
+      if (hasBody(body)) kept.push(lines[i]!, ...body)
       i = j
       continue
     }
@@ -121,6 +114,129 @@ const USED_FACTS_LINE = '**이 글이 쓴 사실**'
 /** 공식 출처 「참고:」 줄의 모양(src/lib/officialSources.ts sourcesLine) — 링크만으로 된 줄. */
 const SOURCES_LINE = /^참고:\s*\[[^\]]+\]\(https?:[^)\s]+\)(?:\s·\s\[[^\]]+\]\(https?:[^)\s]+\))*$/
 
+/**
+ * 본문이 아닌 줄 — 빈 줄, 사진 자리, 사진 자리 바로 아래 설명 줄, 공식 출처 「참고:」 줄(링크만 있는 모양). 사람이 쓴 「참고: …」
+ * 문장이나 기울임 문단은 본문이다.
+ */
+function isFiller(line: string, prev: string): boolean {
+  const t = line.trim()
+  if (!t || IMAGE_SLOT_LINE.test(t) || SOURCES_LINE.test(t)) return true
+  return /^\*(?!\*)(.+?)\*$/.test(t) && IMAGE_SLOT_LINE.test(prev.trim())
+}
+
+/** 절 본문에 문단이 하나라도 있는가 — 없으면 발행본에서 소제목째 뺀다. */
+function hasBody(body: string[]): boolean {
+  return !body.every((l, k) => isFiller(l, k > 0 ? body[k - 1]! : ''))
+}
+
+/** FAQ 절 소제목 — 「자주 묻는 질문」 「자주 하는 질문」 「FAQ」 「Q&A」 「묻고 답하기」. 「자주 하는 오해」는 아니다. */
+const FAQ_HEADING = /자주\s*\S*\s*질문|FAQ|Q\s*&\s*A|묻고\s*답/i
+/** 문단 앞의 질문 꼬리표(「Q.」 「**Q.**」 「Q:」). */
+const Q_LABEL = /^(?:\*\*)?Q\s*[.:：](?:\*\*)?\s*/
+/** 질문 바로 뒤의 빈 답 꼬리표(「…나가나요? A.」 「…? **A.**」) — 답 문장이 빠지면 꼬리표만 남는다. */
+const EMPTY_ANSWER = /(?<=[?？](?:\*\*)?)\s*(?:\*\*)?(?:A|답)\s*[.:：](?:\*\*)?$/
+/** 뒤에 올 내용을 알리는 끝 문장 — 「…다음과 같습니다.」 「…아래와 같습니다.」 쌍점(:)으로 끝나는 줄. 혼자서는 할 말이 없다. */
+const FORWARD_LEAD = /(?:(?:다음|아래)과\s*같(?:습니다|아요|다)\.|[:：])$/
+/** 문장 사이 공백 — server/contentDraft.ts splitSentences와 같은 경계(마침표 뒤 숫자 · 칭호 약어 뒤는 문장 끝이 아니다). */
+const SENTENCE_GAP = /(?<=[.!?。？](?:\*\*)?|다\.|요\.)(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Mt|vs)\.(?:\*\*)?)\s+(?!\d)/g
+const IMAGE_LINE = /^!\[[^\]]*\]\([^)]*\)$/
+const BOLD_LINE = /^\*\*((?:(?!\*\*).)+)\*\*$/
+
+/** 문장마다 시작 위치. */
+function sentenceStarts(text: string): number[] {
+  return [0, ...[...text.matchAll(SENTENCE_GAP)].map((m) => m.index + m[0].length)]
+}
+
+/** 문장 끝 굵게 · 닫는 따옴표 · 괄호를 걷고 본 끝 글자가 물음표인가. */
+function isQuestion(sentence: string): boolean {
+  return /[?？]$/.test(sentence.trim().replace(/[*"'」』”’)\]]+$/, ''))
+}
+
+/** 문단 끝의 질문 문장(들)을 덜어낸 앞부분. 끝 문장이 질문이 아니면 null. */
+function withoutTrailingQuestions(text: string): string | null {
+  const starts = sentenceStarts(text)
+  let cut = text.length
+  for (let k = starts.length - 1; k >= 0 && isQuestion(text.slice(starts[k], cut)); k -= 1) cut = starts[k]!
+  return cut === text.length ? null : text.slice(0, cut).trimEnd()
+}
+
+/**
+ * 발행본의 고아 자리를 덜어낸 절 본문 줄(소제목 heading 아래 줄들). 사실 가드(server/factGuard.ts keepSentences)는 문단 안에서
+ * 문장을 빼고 그 문장에 기대던 다음 문장만 함께 뺀다 — 문단 경계는 보지 않아, 답 문장만 빠진 FAQ 질문(「효과는 어떻게
+ * 확인하나요?」 「Q. … A.」)과 뒤따를 내용이 빠진 안내 문장이 그대로 발행됐다(2026-11-07 에이아이오투오 80편 감사). 그래서 발행본을
+ * 만들 때 모양으로 한 번 더 본다. 저장한 초안 · 작업용 원고는 그대로다 — 운영자는 고칠 자리를 본다.
+ *   FAQ 질문  FAQ 절의 문단 · 「###」 질문 소제목, 또는 「Q.」 문단의 끝 문장이 질문인데, 같은 절에 그 답이 없다 — 다음 내용 줄
+ *            (사진 · 설명 · 출처 줄은 넘긴다)이 없거나 그 줄도 질문으로 시작한다. 빈 「A.」 꼬리표와 함께 질문 문장만 덜고, 남는
+ *            말이 없으면 줄째 뺀다(「질문? 답. 질문?」은 「질문? 답.」이 된다).
+ *   안내 문장 끝 문장이 「다음과/아래와 같습니다」이거나 쌍점으로 끝나는데 같은 절에 뒤따르는 줄(목록 · 표 · 사진 · 문단)이 하나도 없다.
+ * 인용(그대로 쓸 말) · 목록 · 표 · 사진 줄은 덜지 않는다. 한 곳을 덜면 그 앞이 새로 고아가 될 수 있어 바뀌지 않을 때까지 다시 본다.
+ */
+function withoutOrphans(heading: string, lines: string[]): string[] {
+  const faq = FAQ_HEADING.test(heading)
+  const blankish = (t: string) => !t || SOURCES_LINE.test(t) || /^-{3,}$/.test(t)
+  const imageOrCaption = (body: string[], k: number) => {
+    const t = body[k]!.trim()
+    return IMAGE_LINE.test(t) || (/^\*(?!\*)(.+?)\*$/.test(t) && k > 0 && IMAGE_LINE.test(body[k - 1]!.trim()))
+  }
+  const nextContent = (body: string[], k: number, skip: (j: number) => boolean) => {
+    for (let j = k + 1; j < body.length; j += 1) if (!skip(j)) return body[j]!.trim()
+    return null
+  }
+  // 질문의 답이 될 수 없는 다음 줄 — 없음, 소제목, 질문으로 시작하는 줄(꼬리표 「Q.」 포함). 목록 · 표는 답이다.
+  const notAnswer = (next: string | null) => {
+    if (next === null || /^#{1,6}\s/.test(next)) return true
+    if (/^(?:[-*+]|\d+[.)])\s/.test(next) || next.startsWith('|')) return false
+    const text = unwrap(next.replace(/^>\s?/, ''))
+    return Q_LABEL.test(text) || isQuestion(text.slice(0, sentenceStarts(text)[1] ?? text.length))
+  }
+  // 한 줄을 고친 모양 — undefined는 그대로, null은 줄째 빼기.
+  const fix = (body: string[], k: number): string | null | undefined => {
+    const t = body[k]!.trim()
+    if (blankish(t) || /^(?:>|\|)/.test(t) || /^(?:[-*+]|\d+[.)])\s/.test(t) || imageOrCaption(body, k)) return undefined
+    const sub = /^#{3,6}\s+(.+)$/.exec(t)
+    if (sub) {
+      const unanswered = faq && notAnswer(nextContent(body, k, (j) => blankish(body[j]!.trim()) || imageOrCaption(body, j)))
+      return unanswered && withoutTrailingQuestions(sub[1]!.replace(Q_LABEL, '')) === '' ? null : undefined
+    }
+    if (/^#/.test(t)) return undefined
+    const bold = BOLD_LINE.exec(t)
+    const text = bold ? bold[1]! : t
+    const rewrap = (rest: string) => (rest.replace(Q_LABEL, '').trim() ? (bold ? `**${rest}**` : rest) : null)
+    if ((faq || Q_LABEL.test(text)) && notAnswer(nextContent(body, k, (j) => blankish(body[j]!.trim()) || imageOrCaption(body, j)))) {
+      const rest = withoutTrailingQuestions(text.replace(EMPTY_ANSWER, ''))
+      if (rest !== null) return rewrap(rest)
+    }
+    const starts = sentenceStarts(text)
+    const last = starts[starts.length - 1]!
+    if (FORWARD_LEAD.test(text.slice(last).trim().replace(/\*+$/, '')) && nextContent(body, k, (j) => blankish(body[j]!.trim())) === null) {
+      return rewrap(text.slice(0, last).trimEnd())
+    }
+    return undefined
+  }
+  let body = lines
+  for (let k = 0; k < body.length; ) {
+    const fixed = fix(body, k)
+    if (fixed === undefined) {
+      k += 1
+      continue
+    }
+    if (fixed === null) {
+      // 뺀 줄 옆의 빈 줄도 하나 뺀다 — 문단 사이 빈 줄이 겹치지 않게.
+      const [from, to] = k + 1 < body.length && !body[k + 1]!.trim() ? [k, k + 1] : k > 0 && !body[k - 1]!.trim() ? [k - 1, k] : [k, k]
+      body = [...body.slice(0, from), ...body.slice(to + 1)]
+    } else {
+      body = body.map((l, i) => (i === k ? fixed : l))
+    }
+    k = 0
+  }
+  return body
+}
+
+/** 줄 전체를 감싼 굵게(**…**)를 걷는다. 줄 안에 굵게가 더 있으면 그대로 둔다. */
+function unwrap(line: string): string {
+  return BOLD_LINE.exec(line)?.[1] ?? line
+}
+
 /** 글에 남은 사진 자리 수 — 올리기 목록이 「사진 넣을 곳 N곳」으로 알린다. */
 export function countImageSlots(markdown: string): number {
   return markdown.split('\n').filter((line) => IMAGE_SLOT_LINE.test(line.trim())).length
@@ -131,11 +247,26 @@ export function fillTitleCount(title: string, count: number): string {
   return title.split('{N}').join(String(count))
 }
 
-/** 발행본에 실리는 절 — 빈칸이 아닌 문단이 하나라도 있는 절과 그 문단. si는 d.sections 안 순서. */
-function publishedSections(d: ContentDraft) {
+/**
+ * 발행본에 실리는 절과 그 본문 줄 — 빈칸이 아닌 문단 · 사진 자리 · 공식 출처 「참고:」 줄에서 고아 자리(withoutOrphans)를 덜고 문단이
+ * 하나라도 남은 절만. sources는 d.sections 순서대로 절마다 붙일 공식 출처(articleSources).
+ */
+function publishedSections(d: ContentDraft, sources: OfficialSource[][] = articleSources(d)) {
   return d.sections
-    .map((sec, si) => ({ sec, si, blocks: sec.blocks.filter((b) => b.kind !== 'gap' && (b.body ?? '').trim()) }))
-    .filter((s) => s.blocks.length > 0)
+    .map((sec, si) => {
+      const blocks = sec.blocks.filter((b) => b.kind !== 'gap' && (b.body ?? '').trim())
+      return { sec, body: withoutOrphans(sec.heading, sectionBody(sec, blocks, sources[si])) }
+    })
+    .filter((s) => hasBody(s.body))
+}
+
+/** 절 본문 줄 — 문단마다 한 줄과 빈 줄, 사진 자리와 설명 줄, 공식 출처 「참고:」 줄은 절 끝에. */
+function sectionBody(sec: DraftSection, blocks: DraftBlock[], sources: readonly OfficialSource[] | undefined): string[] {
+  return [
+    ...blocks.flatMap((b) => [articleBlockLine(b), '']),
+    ...(sec.image ? [...imageLines(sec.image), ''] : []),
+    ...(sources?.length ? [sourcesLine(sources), ''] : []),
+  ]
 }
 
 /** 화면 · 파일 이름에 쓰는 제목 — 블로그 글 형식이면 {N}을 발행본에 실릴 절 수로 채운다. 옛 형식은 그대로. */
@@ -160,21 +291,17 @@ function imageLines(image: DraftImage): string[] {
 /**
  * 블로그 글 형식(format 'article') — 실린 절에 순서대로 번호를 붙이고(엔진은 번호를 쓰지 않는다), 사진 자리와 공식 출처
  * 「참고:」 줄(src/lib/officialSources.ts)은 절 끝에. publish면 옛 형식과 같은 원칙으로 빈칸 줄 · 빈칸만 있던 절 · 「이 글이
- * 쓴 사실」을 뺀다. 문단이 하나도 없는 절(빈칸을 모두 뺀 절)은 작업용에서도 뺀다 — 번호가 비지 않게.
+ * 쓴 사실」을 빼고, 고아 자리(답 없는 FAQ 질문 · 뒤가 빈 안내 문장)도 덜어낸다. 문단이 하나도 없는 절(빈칸을 모두 뺀 절)은
+ * 작업용에서도 뺀다 — 번호가 비지 않게.
  */
 function articleMarkdown(d: ContentDraft, publish: boolean): string {
-  const shown = publish
-    ? publishedSections(d)
-    : d.sections.map((sec, si) => ({ sec, si, blocks: sec.blocks })).filter((s) => s.blocks.length > 0)
   const sources = articleSources(d)
+  const shown = publish
+    ? publishedSections(d, sources)
+    : d.sections.flatMap((sec, si) => (sec.blocks.length > 0 ? [{ sec, body: sectionBody(sec, sec.blocks, sources[si]) }] : []))
   const L: string[] = [`# ${fillTitleCount(d.title, shown.length)}`, '']
   if (d.lead) L.push(d.lead, '')
-  shown.forEach(({ sec, si, blocks }, i) => {
-    L.push(`## ${i + 1}. ${sec.heading}`, '')
-    for (const b of blocks) L.push(articleBlockLine(b), '')
-    if (sec.image) L.push(...imageLines(sec.image), '')
-    if (sources[si]?.length) L.push(sourcesLine(sources[si]), '')
-  })
+  shown.forEach(({ sec, body }, i) => L.push(`## ${i + 1}. ${sec.heading}`, '', ...body))
   if (publish) return L.join('\n').trimEnd() + '\n'
   if (d.usedFacts.length) L.push('---', '', '**이 글이 쓴 사실**', ...d.usedFacts.map((f) => `- ${f}`), '')
   return L.join('\n')

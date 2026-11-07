@@ -9,8 +9,9 @@
  *
  *   npx tsx scripts/verify-content-export.ts
  */
-import { publishMarkdownOf, workMarkdownOf } from '../src/lib/draftGaps'
+import { effectiveDraft, publishMarkdownOf, workMarkdownOf } from '../src/lib/draftGaps'
 import { buildPublishHtml, markdownToHtml } from '../src/lib/htmlFile'
+import { draftTitle } from '../src/lib/markdownFile'
 import { articleTailMarkdown, brandSiteUrl, channelArticleParts, publishArticleOf, publishArticleParts } from '../src/lib/publishArticle'
 import { sourceKeyOf } from '../src/prompts/b9d-channel-adapt'
 import type { StoredDraft, TenantSummary } from '../src/lib/api'
@@ -358,6 +359,120 @@ ok(
 // 4) 인용 — 빈 `>` 줄은 문단 나눔
 ok('여러 문단 인용', markdownToHtml('> 첫 문단\n>\n> 둘째 문단') === '<blockquote><p>첫 문단</p><p>둘째 문단</p></blockquote>')
 ok('한 문단 인용은 그대로', markdownToHtml('> 한 줄\n> 이어진 줄') === '<blockquote><p>한 줄 이어진 줄</p></blockquote>')
+
+// 5) 발행본의 고아 자리 — 사실 가드가 답 문장만 빼거나 빈칸 줄을 걷으면 FAQ 질문이 답 없이, 「다음과 같습니다」가 뒤 없이 남는다
+//    (2026-11-07 에이아이오투오 80편 감사). 발행본(복사 · .html · 묶음 · 미리보기)에서만 뺀다 — 저장한 초안 · 작업용 원고는 그대로.
+const faqStored: StoredDraft = {
+  actionId: 'content:faq',
+  generatedAt: '2026-11-07T09:00:00.000Z',
+  draft: {
+    format: 'article',
+    title: '가상시 숙소 고르는 기준 {N}가지',
+    lead: '가상시 숙소는 여행 목적에 따라 고르면 됩니다.',
+    sections: [
+      { heading: '무엇을 챙기나요?', answers: 'v5-001', blocks: [
+        { kind: 'text', role: 'key', body: '짐은 가볍게 챙기세요.' },
+        { kind: 'text', role: 'action', body: '객실 구성은 다음과 같습니다.' },
+        { kind: 'text', role: 'action', body: 'A동은 침실 두 개, B동은 침실 하나입니다.' },
+        { kind: 'text', role: 'why', body: '짐이 적으면 이동이 편합니다. 준비물은 다음과 같습니다.' },
+        { kind: 'gap', need: '준비물 목록 — 팩트 그래프에 없음' },
+      ] },
+      { heading: '어떤 동을 고를까요?', answers: 'v5-002', blocks: [
+        { kind: 'text', role: 'key', body: '두 동 모두 독채입니다.' },
+        { kind: 'text', role: 'action', body: '어느 동이 우리 일행에 맞을까요?' },
+      ] },
+      { heading: '자주 묻는 질문', answers: 'v5-003', blocks: [
+        { kind: 'text', role: 'key', body: '체크인은 몇 시인가요? 오후 3시부터입니다.' },
+        { kind: 'text', role: 'action', body: '차 없이 가도 되나요?' },
+        { kind: 'text', role: 'action', body: 'Q. 주차가 되나요? A.' },
+        { kind: 'text', role: 'action', body: '반려견과 갈 수 있나요? 반려동물은 함께 갈 수 없습니다. 바비큐가 되나요?' },
+        { kind: 'gap', need: '바비큐 가능 여부 — 팩트 그래프에 없음' },
+        { kind: 'text', role: 'why', body: '취소하면 어떻게 되나요? 당일 취소는 환불되지 않습니다.' },
+        { kind: 'text', role: 'action', body: '조식이 나오나요?' },
+        { kind: 'text', role: 'quote', body: '체크인 전에 짐을 맡길 수 있나요?' },
+      ], image: { alt: '가상스테이 정원' } },
+      { heading: '자주 묻는 질문 더', answers: 'v5-004', blocks: [
+        { kind: 'text', role: 'action', body: '바비큐가 되나요?' },
+        { kind: 'text', role: 'action', body: 'Q. 조식이 나오나요? A.' },
+        { kind: 'gap', need: '조식 여부 — 팩트 그래프에 없음' },
+      ] },
+    ],
+    gapCount: 2,
+    usedFacts: [],
+  },
+}
+const faqSnapshot = JSON.stringify(faqStored)
+const faqPub = publishMarkdownOf(faqStored)
+ok('발행본 — 답 없는 FAQ 질문 · 빈 「A.」 · 문단 끝에 남은 질문 · 절 끝의 「다음과 같습니다」를 뺀다', faqPub === [
+  '# 가상시 숙소 고르는 기준 3가지', '',
+  '가상시 숙소는 여행 목적에 따라 고르면 됩니다.', '',
+  '## 1. 무엇을 챙기나요?', '',
+  '**짐은 가볍게 챙기세요.**', '',
+  '객실 구성은 다음과 같습니다.', '',
+  'A동은 침실 두 개, B동은 침실 하나입니다.', '',
+  '짐이 적으면 이동이 편합니다.', '',
+  '## 2. 어떤 동을 고를까요?', '',
+  '**두 동 모두 독채입니다.**', '',
+  '어느 동이 우리 일행에 맞을까요?', '',
+  '## 3. 자주 묻는 질문', '',
+  '**체크인은 몇 시인가요? 오후 3시부터입니다.**', '',
+  '반려견과 갈 수 있나요? 반려동물은 함께 갈 수 없습니다.', '',
+  '취소하면 어떻게 되나요? 당일 취소는 환불되지 않습니다.', '',
+  '> 체크인 전에 짐을 맡길 수 있나요?', '',
+  '![가상스테이 정원](#image-slot)', '',
+].join('\n'))
+ok('질문이 모두 답 없이 남은 FAQ 절은 소제목째 빠지고 제목 수 · 번호가 맞는다', !faqPub.includes('자주 묻는 질문 더') && draftTitle(effectiveDraft(faqStored)) === '가상시 숙소 고르는 기준 3가지' && JSON.stringify([...faqPub.matchAll(/^## (\d+)\./gm)].map((m) => m[1])) === JSON.stringify(['1', '2', '3']))
+ok('작업용 원고는 그대로 — 고칠 자리가 보인다', workMarkdownOf(faqStored).includes('차 없이 가도 되나요?') && workMarkdownOf(faqStored).includes('Q. 주차가 되나요? A.') && workMarkdownOf(faqStored).includes('## 4. 자주 묻는 질문 더'))
+ok('저장한 초안은 바꾸지 않는다', JSON.stringify(faqStored) === faqSnapshot)
+ok('고아 자리가 없는 글은 발행본 · 지문이 그대로', publishMarkdownOf(articleDraft) === '# 가상시 숙소 고르는 기준 2가지\n\n가상시 숙소는 여행 목적에 따라 고르면 됩니다.\n\n## 1. 지역은 어떻게 고르나요?\n\n**목적지에 가까운 곳이 편합니다.**\n\n![가상 골목 풍경](#image-slot)\n*골목 입구*\n\n## 2. 사례: 가상스테이\n\n가상스테이는 독채 두 동입니다.\n\n![가상스테이 정원](#image-slot)\n*A동과 B동 모두 독채입니다.*\n' && sourceKeyOf(publishMarkdownOf(articleDraft)) === '5r-sh7zac')
+const legacyFaq: StoredDraft = {
+  ...legacy,
+  actionId: 'content:legacy-faq',
+  gapFills: undefined,
+  draft: { ...legacy.draft, sections: [{ heading: '자주 묻는 질문', answers: '', blocks: [{ kind: 'text', body: '차 없이 가도 되나요?' }, { kind: 'gap', need: '대중교통 — 항목 없음' }] }] },
+}
+ok('옛 형식은 예전 그대로 — 한 글자도 바꾸지 않는다', publishMarkdownOf(legacyFaq) === '# 가상 여행 정보, 어디서 찾나요?\n\n가상시 여행 정보는 공식 관광 안내와 지역 정보 사이트를 함께 보면 빠릅니다. 아래에서 고르는 기준을 정리했습니다.\n\n## 자주 묻는 질문\n\n차 없이 가도 되나요?\n')
+const faqEdited: StoredDraft = {
+  ...faqStored,
+  actionId: 'content:faq-edited',
+  editedAt: '2026-11-07T10:00:00.000Z',
+  editedMarkdown: [
+    '# 가상시 숙소 고르는 기준 3가지', '',
+    '가상시 숙소는 여행 목적에 따라 고르면 됩니다.', '',
+    '## 1. 무엇을 챙기나요?', '',
+    '준비물은 다음과 같습니다.', '',
+    '- 편한 신발', '- 물', '',
+    '요금은 이렇습니다:', '',
+    '| 항목 | 요금 |', '| --- | --- |', '| 1박 | 10만 원 |', '',
+    '추가로 챙길 것:', '',
+    '> **채워야 함:** 추가 준비물', '',
+    '## 2. 자주 묻는 질문', '',
+    '### 차 없이 가도 되나요?', '',
+    '### 주차가 되나요?', '',
+    '주차장이 있습니다.', '',
+    '**요금은 얼마인가요?**', '',
+    '1박 10만 원입니다.', '',
+    '**Q.** 조식이 나오나요? **A.**', '',
+    '> **채워야 함:** 조식 여부', '',
+    '## 3. 자주 묻는 질문 더', '',
+    '**바비큐가 되나요?**', '',
+    '> **채워야 함:** 바비큐 여부', '',
+  ].join('\n'),
+}
+ok('고친 글 발행본 — 목록 · 표 앞 안내 문장과 답 있는 질문은 남고, 답 없는 질문 · 절 끝 쌍점 줄 · 빈 FAQ 절은 빠진다', publishMarkdownOf(faqEdited) === [
+  '# 가상시 숙소 고르는 기준 2가지', '',
+  '가상시 숙소는 여행 목적에 따라 고르면 됩니다.', '',
+  '## 1. 무엇을 챙기나요?', '',
+  '준비물은 다음과 같습니다.', '',
+  '- 편한 신발', '- 물', '',
+  '요금은 이렇습니다:', '',
+  '| 항목 | 요금 |', '| --- | --- |', '| 1박 | 10만 원 |', '',
+  '## 2. 자주 묻는 질문', '',
+  '### 주차가 되나요?', '',
+  '주차장이 있습니다.', '',
+  '**요금은 얼마인가요?**', '',
+  '1박 10만 원입니다.',
+].join('\n'))
 
 let failed = 0
 for (const [label, pass] of checks) {
