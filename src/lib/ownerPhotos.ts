@@ -32,6 +32,11 @@ export interface OwnerPhotoRights {
   /** 허락한 사람(「업주」 · 「업주 지인(촬영자)」) — 이름은 적지 않는다. */
   holder: string
   note?: string
+  /**
+   * 「제품 화면」으로 올리거나 표시할 때 받은 회사의 확인(작성자 블로그에 실어도 된다 · 실제 고객 정보가 보이지 않는다 — 2026-11-07 검토 2차)의
+   * 때(서버 시각). 표시를 빼면 지운다.
+   */
+  screenConfirmedAt?: string
 }
 
 /**
@@ -67,21 +72,101 @@ export function productLabel(product: string): string {
   return productNames(product)[0]?.name ?? ''
 }
 
-/** 제품 이름 정리 — 한 줄 · 이름마다 띄어쓰기 정리 · 2자 미만 이름은 뺀다. 이름이 없거나 PRODUCT_SCREEN_MAX자를 넘으면 null. */
-export function cleanProductScreen(raw: unknown): OwnerProductScreen | null {
-  if (typeof raw !== 'string') return null
-  const product = productNames(raw.replace(/[\p{Cc}<>]/gu, ' '))
-    .map((n) => n.name)
-    .join(', ')
-  return product && product.length <= PRODUCT_SCREEN_MAX ? { product } : null
+/**
+ * 제품 이름으로 쓰지 않는 흔한 낱말(비교 글자) — 화면 · 앱 · AI · PDF 같은 말은 아무 자리에나 걸려 다른 화면 자리를 연다(2026-11-07 검토
+ * 2차). 제품 이름 제안 · 화면 자리 안내도 건너뛴다.
+ */
+const GENERIC_PRODUCT_KEYS = new Set([
+  '화면', '캡처', '캡쳐', '스크린샷', '사진', '이미지', '앱', '어플', '웹', '웹사이트', '사이트', '홈페이지', '서비스', '제품', '프로그램', '솔루션',
+  '플랫폼', '시스템', '대시보드', '관리자', '브라우저', '휴대폰', '스마트폰', '모바일', '디지털', '파일', '문서', '메인', '로그인', '실시간',
+  '스프레드시트', '보고서', '리포트', '진단표',
+  'ai', 'aeo', 'geo', 'seo', 'pdf', 'url', 'did', 'tv', 'sns', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'ir', 'ui', 'ux', 'api', 'csv', 'html',
+  'qr', 'faq', 'pc', 'app', 'web', 'id', 'ok', 'b2b', 'b2c', 'crm', 'erp', 'kpi', 'roi', 'gpt', 'llm',
+])
+
+/** 흔한 낱말인가(비교 글자 — productKey). */
+export function genericProductKey(key: string): boolean {
+  return GENERIC_PRODUCT_KEYS.has(key)
 }
 
 /**
- * 장면이 화면으로 읽힌 사진의 제품 이름 제안 — 설명의 첫 로마자 낱말(「ADO2 첫 화면 — …」 → 「ADO2」, 「robots.txt 화면」 → 「robots.txt」).
- * 없으면 ''. 제안일 뿐 — 사람이 고쳐 표시한다.
+ * 제품 이름 정리 — 한 줄, 쉼표로 다른 이름, 이름마다 띄어쓰기를 정리한다. 맞지 않으면 고쳐 받지 않고 null(2026-11-07 검토 2차 — 2자 미만
+ * 이름을 지우면 대표 이름이 바뀌고, 줄바꿈을 합치면 두 이름이 한 이름이 된다): 줄바꿈 · 제어 · 형식 문자(폭 없는 공백 · 방향 바꾸기) · <>가
+ * 있거나, 비교 글자가 2자 미만인 이름 · 흔한 낱말(genericProductKey)이 있거나, 이름이 없거나, PRODUCT_SCREEN_MAX자를 넘는다. 끝의 빈
+ * 쉼표(「NEGOTIUM,」)는 괜찮다.
  */
-export function productGuessFromAlt(alt: string): string {
-  return /[A-Za-z][A-Za-z0-9]*(?:[.+-][A-Za-z0-9]+)*/.exec(alt)?.[0] ?? ''
+export function cleanProductScreen(raw: unknown): OwnerProductScreen | null {
+  if (typeof raw !== 'string' || /[\p{Cc}\p{Cf}<>]/u.test(raw)) return null
+  const names = raw
+    .split(/[,，]/)
+    .map((s) => s.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+  if (!names.length || names.some((n) => productKey(n).length < PRODUCT_NAME_MIN || genericProductKey(productKey(n)))) return null
+  const product = names.join(', ')
+  return product.length <= PRODUCT_SCREEN_MAX ? { product } : null
+}
+
+/** 로마자 · 숫자(비교 글자) — 이름의 앞뒤가 이것으로 붙어 이어지면 다른 이름이다. */
+const LATIN_DIGIT = /[a-z0-9]/
+
+/**
+ * 제품 이름(비교 글자 key — productKey)을 글자에서 찾는 식 — 띄어쓰기 · 문장부호는 무시하고(「Nego tium」), 로마자 · 숫자로 시작하거나 끝나는
+ * 이름은 앞뒤가 로마자 · 숫자로 이어지면 다른 이름이다(「ADO」는 「ADO2」에 없다 — 검토 2차). tail을 주면 이름 바로 뒤에 그 식이 와야 한다.
+ * 소문자 NFC 글자에 쓴다.
+ */
+export function productNameRe(key: string, tail = ''): RegExp {
+  const body = Array.from(key).join('[^\\p{L}\\p{N}]*')
+  const pre = LATIN_DIGIT.test(key[0] ?? '') ? '(?<![a-z0-9])' : ''
+  const post = LATIN_DIGIT.test(key.at(-1) ?? '') ? '(?![a-z0-9])' : ''
+  return new RegExp(`${pre}${body}${post}${tail}`, 'u')
+}
+
+/** 로마자 낱말(「ADO2」 · 「robots.txt」 · 「WebforAI」). */
+const LATIN_WORD = /[A-Za-z][A-Za-z0-9]*(?:[.+-][A-Za-z0-9]+)*/
+/** 요청서 파일 번호 꼴(「N1」 · 「S2」 — 파일 이름에서 만든 기본 설명) — 제품 이름이 아니다. */
+const FILE_CODE = /^[A-Za-z]{1,2}\d+$/
+/** 화면 낱말 — 설명의 화면 이름 앞부분을 자른다. */
+const CAPTURE_WORD = /화면|스크린\s?샷|캡처|캡쳐/
+/** 낱말 끝 조사 — 제품 이름 제안에서 뗀다(「로」 · 「이」 · 「가」는 이름 끝일 수 있어 떼지 않는다). */
+const NAME_JOSA = /(?:의|에서|에|은|는|을|를|와|과)$/
+
+/**
+ * 화면 캡처 설명의 제품 이름 제안 — 화면 낱말 앞부분(「ADO2 첫 화면 — …」의 「ADO2 첫」)에서: 이 브랜드에 이미 표시한 제품(known — 다른 이름까지
+ * 그대로)이 나오면 그것, 아니면 첫 로마자 낱말이나 세 글자 이상 한글 낱말. 브랜드 이름 · 요청서 파일 번호(「N1」) · 흔한 낱말(PDF · DID ·
+ * 화면)은 건너뛰고, 화면 낱말 뒤(「… NEGOTIUM 업로드 양식」)는 보지 않는다 — 다른 제품을 고르지 않게(검토 2차). 없으면 ''. 제안일 뿐 — 사람이
+ * 고쳐 표시한다.
+ */
+export function productGuessFromAlt(alt: string, opts: { known?: readonly string[]; brandNames?: readonly string[] } = {}): string {
+  const text = alt.normalize('NFC')
+  const at = text.search(CAPTURE_WORD)
+  const head = at > 0 ? text.slice(0, at) : ''
+  if (!head.trim()) return ''
+  const low = head.toLowerCase()
+  const known = (opts.known ?? []).find((p) => productNames(p).some((n) => productNameRe(n.key).test(low)))
+  if (known) return known
+  const brandKeys = (opts.brandNames ?? []).map(productKey).filter((k) => k.length >= PRODUCT_NAME_MIN)
+  for (const raw of head.split(/\s+/)) {
+    const latin = new RegExp(`^${LATIN_WORD.source}`).exec(raw)?.[0]
+    const word = latin ?? raw.replace(/[^\p{L}\p{N}]+/gu, '').replace(NAME_JOSA, '')
+    const key = productKey(word)
+    if (!key || brandKeys.some((b) => key.startsWith(b)) || genericProductKey(key)) continue
+    if (latin ? key.length >= PRODUCT_NAME_MIN && !FILE_CODE.test(latin) : key.length >= 3 && /^\p{Script=Hangul}+$/u.test(word)) return word
+  }
+  return ''
+}
+
+/**
+ * 자리 글자의 제품 같은 이름 — 흔한 로마자 · 요청서 파일 번호 · 브랜드 이름이 아닌 첫 로마자 낱말(「ADO2 화면에 …」 → 「ADO2」). 찍지 않는 화면
+ * 자리의 안내(「제품 화면」으로 올리면 채워요)에 쓴다 — 제품 이름이 없는 자리는 올려도 채울 수 없다(검토 2차). 없으면 null.
+ */
+export function productLikeName(text: string, brandNames: readonly string[] = []): string | null {
+  const brandKeys = brandNames.map(productKey).filter((k) => k.length >= PRODUCT_NAME_MIN)
+  for (const m of text.normalize('NFC').matchAll(new RegExp(LATIN_WORD.source, 'g'))) {
+    const key = productKey(m[0])
+    if (key.length < PRODUCT_NAME_MIN || genericProductKey(key) || FILE_CODE.test(m[0]) || brandKeys.some((b) => b.includes(key))) continue
+    return m[0]
+  }
+  return null
 }
 
 /** 보관한 업주 사진 하나(owner-photos.json). */

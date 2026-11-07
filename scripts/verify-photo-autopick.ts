@@ -30,7 +30,11 @@ import {
   needsPhotoCredit,
   otherPhotoUses,
   ownerPickAllowed,
+  ownerScreenMismatch,
   ownerScreenReason,
+  ownerScreenScore,
+  ownerScreenSlotProduct,
+  ownerUnmarkedScreen,
   ownPhotoExempt,
   photoSlotStats,
   photoStateKey,
@@ -1356,7 +1360,7 @@ ok('표시한 제품 화면이 없는 브랜드는 지금처럼 사진 자리로
 
 // (medium) 다른 회사 · AI 답변 · 검색 결과 · 휴대폰 화면, 사람이 화면을 보는 장면, 낱말 하나만 같은 자리는 채우지 않는다.
 const oC = oRun(
-  [oSlots('o3', ['네이버 검색 결과 화면에 NEGOMATE 소개가 나온 모습', 'ChatGPT 답변 화면에 WEBCHECK 진단 결과가 인용된 모습', '가로형 회사 소개서 PDF와 이를 세로형으로 바꾼 결과를 휴대폰 화면에 나란히 띄운 장면'])],
+  [oSlots('o3', ['네이버 검색 결과 화면에 NEGOMATE 소개가 나온 모습', 'ChatGPT 답변 화면에 WEBCHECK 진단 결과가 인용된 모습', '가로형 회사 소개서 PDF와 이를 세로메이커로 바꾼 결과를 휴대폰 화면에 나란히 띄운 장면'])],
   Object.values(OS),
 )
 ok('(medium) 다른 회사(네이버) · AI 답변 · 휴대폰 화면 자리는 제품 이름이 있어도 채우지 않는다', oC.articles[0]!.rows.every((r) => !r.pick && r.ownerScreenMiss === 'words') && oC.articles[0]!.picks.length === 0)
@@ -1406,7 +1410,7 @@ const onceRows = oRun([oSlots('o8', [SLOT.negLog, SLOT.negLogB])], [OS.negLog]).
 const twiceRows = oRun([oSlots('o8', [SLOT.negLog, SLOT.negLogB])], [OS.negLog, OS.negLog2]).articles[0]!.rows
 ok(
   'D4 — 글 하나에 한 번(둘째 자리는 다른 화면, 없으면 비움)',
-  onceRows.filter((r) => r.pick?.src === OS.negLog.src).length === 1 && onceRows.some((r) => !r.pick && r.ownerScreenMiss === 'used') &&
+  onceRows.filter((r) => r.pick?.src === OS.negLog.src).length === 1 && onceRows.some((r) => !r.pick && r.ownerScreenMiss === 'article') &&
     twiceRows.every((r) => r.pick) && new Set(twiceRows.map((r) => r.pick?.src)).size === 2,
 )
 const removedAt = oRun([oSlots('o9', [SLOT.negLog], { cleared: [{ slot: SLOT.negLog, nth: 1, heading: '절', removed: [OS.negLog.src] }] })], [OS.negLog, OS.negLog2], { refillCleared: true })
@@ -1466,6 +1470,157 @@ ok(
     !ownerPickAllowed('공급사별 협상 로그와 조율 타임라인이 표시된 모습', recOf(capScreen, SCREEN_SCENE), [OB]) &&
     !ownerPickAllowed('공급사별 협상 로그와 조율 타임라인이 표시된 모습', recOf(capNoScene), [OB]) &&
     ownerPickAllowed('에이아이랩 사무실 입구 간판', recOf(officeSign, sceneOfKind('exterior', '사무실 입구 간판', ['간판'])), [OB]),
+)
+
+// 18) 제품 화면 검토 2차(2026-11-07) — 다른 이름 · 이름 경계 · 사람 장면 · 맥락 · 시작/결과 · 겹친 낱말 · 다시 보기 · 실물 화면 · 표시 없는 캡처.
+const stayInfo = oScreen(8, '가상각', '가상각 숙소 안내 화면 — 숙소의 여는 시간과 요금, 가는 길')
+// (high 반대 방향) 다른 이름이 화면을 꾸미는 사진 자리(「네고메이트 화면에서 …」)도 제품 화면 자리 — 실제 사진이 「확인 필요」 없이 들어가지 않는다.
+const ALIAS_SLOT = '네고메이트 화면에서 공급사별 협상 로그와 조율 타임라인이 표시된 모습'
+const q1 = oRun([oSlots('p1', [ALIAS_SLOT])], [logPhoto, ownerLog, OS.negStart], { scenes: oScenes([logScene, [ownerLog.src, logScene[1]]]) }).articles[0]!.rows[0]!
+ok(
+  '(2차) 다른 이름이 화면 낱말을 꾸미는 사진 자리(「네고메이트 화면」 · 「네고메이트의 협상 화면」)도 제품 화면 자리 — 실제 사진을 넣지 않는다',
+  q1.state === 'nomatch' && !q1.pick && q1.ownerScreenProduct === 'NEGOMATE' &&
+    ownerScreenSlotProduct('네고메이트의 협상 화면에서 공급사별 협상 로그를 보여 주는 모습', NEG, OB_ALIASES) === 'NEGOMATE',
+)
+ok(
+  '(2차) 서버 다시 보기 — 표시한 제품의 화면 자리에 표시 없는 업주 사진은 받지 않는다(다른 자리는 받는다)',
+  !ownerPickAllowed(ALIAS_SLOT, { alt: ownerLog.alt, scene: logScene[1] }, OB_ALIASES, [NEG]) &&
+    ownerPickAllowed('사무실 책상 위 모니터와 서류', { alt: ownerLog.alt, scene: logScene[1] }, OB_ALIASES, [NEG]),
+)
+// 장면을 못 읽은 표시 없는 업주 사진 — 설명에 화면 낱말이 있으면 화면 캡처(사이니지 · 「한 화면에 담긴」 · 화면 낱말 없는 사진은 사진).
+const UNMARKED_ALTS = [
+  'NEGOMATE 시작 화면 — 품목 · 목표가 · 마감일을 입력하는 화면',
+  'NEGOMATE 협상 기록 화면 — 한 품목의 공급사별 제안 · 협상 로그 · 조율 타임라인이 시간순으로 보이는 화면',
+  '세로메이커 전후 비교 화면 — 가로형 PDF 회사 소개서를 세로형 콘텐츠로 바꾸기 전과 후를 나란히 놓은 화면',
+  '엑셀 파일 화면 — 반복 구매 품목 · 지난 매입 단가 · 거래 공급사를 예시 값으로 정리한 NEGOMATE 업로드 양식',
+  '가상각 숙소 안내 화면 — 숙소의 여는 시간과 요금, 가는 길',
+  'WEBCHECK 화면',
+]
+const PHOTO_ALTS = [
+  '매장 안 디지털 사이니지(DID) 화면에 가게 홍보 영상이 자막과 함께 재생되는 모습',
+  '가로형 회사 소개서 인쇄물 한 장과 세로형으로 바뀐 결과물을 띄운 휴대폰을 나란히 놓은 사진',
+  '가상스테이 정원과 툇마루가 한 화면에 담긴 장면',
+]
+ok(
+  '(2차) 장면을 못 읽은 표시 없는 업주 사진 — 설명에 화면 · 스크린샷 · 캡처가 있으면 화면 캡처(실물 화면 · 「한 화면에 담긴」은 사진)',
+  UNMARKED_ALTS.every((alt) => ownerUnmarkedScreen({ alt })) && PHOTO_ALTS.every((alt) => !ownerUnmarkedScreen({ alt })),
+)
+const xlsCap: AutoCandidate = { src: oSrc(70), alt: UNMARKED_ALTS[3]!, pageUrl: 'https://lab.example/', origin: 'owner', ownerPhotoId: oid(70) }
+const q2 = oRun([oSlots('p2', ['구매팀 실무자가 품목, 최근 매입가, 공급사 연락처를 정리한 엑셀 시트를 모니터에 띄워 놓은 장면'])], [xlsCap])
+ok('(2차) 장면을 못 읽은 표시 없는 캡처는 사람 사진 자리에 넣지 않는다(「화면 캡처」로 뺀다)', !q2.articles[0]!.rows[0]!.pick && q2.skipped.some((s) => s.reason === 'screen' && s.candidate.src === xlsCap.src))
+// 사람이 주어인 화면 장면(직함 · 쓰는 사람 · 손)은 제품 화면 자리가 아니다 — 화면 안에서 입력하는 장면 · 「관리자 화면」은 화면 자리.
+const PERSON_SLOTS = [
+  '사용자가 WEBCHECK 진단 결과 화면에서 AEO · GEO 준비도 점수를 보는 장면',
+  '에이아이랩 실무자가 NEGOMATE 화면 협상 로그를 동료와 공유하는 모습',
+  '에이아이랩 대표가 NEGOMATE 화면의 공급사별 협상 로그를 설명하는 모습',
+  '손가락으로 NEGOMATE 화면의 공급사별 협상 로그를 넘기는 모습',
+  '구매 담당자가 NEGOMATE 화면에서 공급사별 협상 로그를 확인하는 장면',
+]
+ok(
+  '(2차) 사람이 주어인 화면 장면은 제품 화면 자리가 아니다 · 화면에서 입력하는 장면과 「관리자 화면」은 제품 화면 자리',
+  PERSON_SLOTS.every((s) => ownerScreenSlotProduct(s, s.includes('WEBCHECK') ? WEB : NEG, OB_ALIASES) === null) &&
+    ownerScreenSlotProduct(SLOT.negStart, NEG, OB_ALIASES) === 'NEGOMATE' &&
+    ownerScreenSlotProduct('NEGOMATE 관리자 화면에서 공급사 목록을 등록하는 모습', NEG, OB_ALIASES) === 'NEGOMATE',
+)
+// 다른 회사 · AI 답변 · 검색 · 메일 · 메신저 · 인스타 · 도입 전 · 지도 맥락은 화면 설명에도 있어야 한다.
+const CONTEXT_CASES: [string, string, string][] = [
+  ['경쟁사 구매 솔루션 화면과 NEGOMATE 협상 로그 · 조율 타임라인 화면 비교', OS.negLog.alt, NEG],
+  ['AI 응답 화면에 WEBCHECK의 AEO · GEO 준비도 진단 결과가 인용된 모습', OS.webResult.alt, WEB],
+  ['생성형 AI가 답한 화면에서 WEBCHECK 진단 결과와 홈페이지 주소가 함께 나온 모습', OS.webResult.alt, WEB],
+  ['포털 검색 화면에 WEBCHECK 진단 홈페이지 주소가 노출된 모습', OS.webStart.alt, WEB],
+  ['공급사에서 받은 견적 이메일 화면과 NEGOMATE 협상 로그', OS.negLog.alt, NEG],
+  ['카톡 대화 화면으로 공급사와 협상하던 로그를 NEGOMATE 화면으로 옮긴 모습', OS.negLog.alt, NEG],
+  ['인스타 릴스 화면에 세로메이커로 바꾼 세로형 소개서가 올라간 모습', OS.sero.alt, SERO],
+  ['NEGOMATE 도입 전 공급사별 제안을 엑셀로 정리하던 협상 로그 화면', OS.negLog.alt, NEG],
+  ['가상각 서비스 화면에서 숙소의 여는 시간과 요금, 지도 위치가 함께 표시된 모습', stayInfo.alt, '가상각'],
+]
+ok(
+  '(2차) 다른 회사 · AI 답변 · 검색 · 메일 · 메신저 · 인스타 · 도입 전 · 지도 맥락이 화면 설명에 없으면 넣지 않는다',
+  CONTEXT_CASES.every(([slot, alt, product]) => ownerScreenMismatch(slot, alt, product, OB_ALIASES) === 'context'),
+)
+// 시작 · 결과 화면 — 점수 · 리포트도 결과, 입력하는 자리는 시작 화면만, 「결과물」은 결과가 아니다.
+ok(
+  '(2차) 점수 · 리포트 자리는 결과 화면만 · 입력하는 자리는 시작 화면만 · 「결과물」은 결과 낱말이 아니다',
+  ownerScreenMismatch('WEBCHECK에서 홈페이지 주소를 넣은 뒤 AEO · GEO 준비도 점수가 나온 화면', OS.webStart.alt, WEB) === 'phase' &&
+    ownerScreenMismatch('WEBCHECK에서 홈페이지 주소를 넣은 뒤 AEO · GEO 준비도 점수가 나온 화면', OS.webResult.alt, WEB) === null &&
+    ownerScreenMismatch('WEBCHECK 진단 리포트 화면 — 홈페이지 주소별 AEO · GEO 준비도', OS.webStart.alt, WEB) === 'phase' &&
+    ownerScreenMismatch(SLOT.negStart, OS.negLog.alt, NEG) === 'phase' &&
+    ownerScreenMismatch(SLOT.negStart, OS.negStart.alt, NEG) === null &&
+    ownerScreenMismatch('NEGOMATE 협상을 마친 결과물 화면 — 공급사별 제안과 협상 로그', OS.negLog.alt, NEG) === null &&
+    !oRun([oSlots('p5', [SLOT.negStart])], [OS.negLog]).articles[0]!.rows[0]!.pick,
+)
+// 흔한 다른 이름 · 이름 부분 일치 · 실물 화면(매장 모니터 · 키오스크)은 자리를 열지 않는다.
+ok(
+  '(2차) 흔한 다른 이름(「세로형」 · 「AI 답변 준비도 진단」)은 화면을 꾸밀 때만 · 이름은 낱말 경계로(「VID」는 「VID2」에 없다)',
+  ownerScreenSlotProduct('다른 회사 앱에서 가로형 영상을 세로형으로 바꾼 전후 비교 화면', SERO, OB_ALIASES) === null &&
+    ownerScreenSlotProduct('인스타 릴스용 세로형 영상 편집 앱 화면', SERO, OB_ALIASES) === null &&
+    ownerScreenSlotProduct('병원 홈페이지의 AI 답변 준비도 진단 결과 화면에 AEO · GEO 점수가 나란히 보이는 모습', WEB, OB_ALIASES) === null &&
+    ownerScreenSlotProduct('VID2 첫 화면에 지도 주소를 넣고 분석을 시작하는 화면', 'VID', OB_ALIASES) === null &&
+    ownerScreenSlotProduct('VID2 첫 화면에 지도 주소를 넣고 분석을 시작하는 화면', 'VID2', OB_ALIASES) === 'VID2',
+)
+ok(
+  '(2차) 매장 모니터 · 키오스크에서 영상이 재생되는 자리는 실물 화면 사진 자리',
+  ownerScreenSlotProduct('VIDMATE로 만든 가게 홍보 영상이 매장 모니터 화면에서 자막과 함께 재생되는 모습', 'VIDMATE', OB_ALIASES) === null &&
+    ownerScreenSlotProduct('키오스크 화면에 VIDMATE 홍보 영상이 나오는 모습', 'VIDMATE', OB_ALIASES) === null,
+)
+// 한 화면 낱말에 맞은 자리 낱말 둘(「숙소」 · 「숙소별」)은 하나로 센다.
+ok(
+  '(2차) 같은 화면 낱말에 맞은 자리 낱말 둘은 하나로 센다(장면 낱말 2개 문턱)',
+  !ownerScreenScore({ key: '가상각 서비스 화면에서 숙소와 숙소별 위치를 찾는 모습', caption: '', heading: '' }, stayInfo.alt, '가상각').pass &&
+    !ownerScreenScore({ key: '가상각 서비스 화면에서 숙소 위치와 주변 숙소들을 찾는 모습', caption: '', heading: '' }, stayInfo.alt, '가상각').pass,
+)
+// 다시 보기 — 제품 화면 사진 자리의 자동 실제 사진은 표시한 제품 화면으로 바꾸고, 맞지 않는 자리의 표시한 제품 화면은 다시 본다.
+const AT2 = '2026-11-07T00:00:00.000Z'
+const oldReal: PhotoPick = { slot: SLOT.negLog, nth: 1, same: 1, heading: '절', src: logPhoto.src, alt: logPhoto.alt, pageUrl: PAGE, confirmedAt: AT2, auto: true }
+const q8 = oRun([oSlots('p8', [SLOT.negLog], { picks: [oldReal] })], [logPhoto, OS.negLog], { scenes: oScenes([logScene]), recheckAuto: true }).articles[0]!
+ok(
+  '(2차) 다시 보기 — 제품 화면 사진 자리에 넣어 둔 자동 실제 사진은 표시한 제품 화면으로 바꾼다(다른 실제 사진으로 바꾸지 않는다)',
+  q8.rows[0]!.state === 'replace' && q8.rows[0]!.pick?.src === OS.negLog.src && q8.rows[0]!.ownerScreenPicked === true &&
+    q8.replaces.some((x) => x.src === logPhoto.src && x.pick?.src === OS.negLog.src),
+)
+const PHONE_SLOT = '구매 담당자가 모니터 앞에서 공급사와 통화하는 장면'
+const oldMarked: PhotoPick = { slot: PHONE_SLOT, nth: 1, same: 1, heading: '절', src: OS.negLog.src, alt: OS.negLog.alt, pageUrl: 'https://lab.example/', confirmedAt: AT2, auto: true, origin: 'owner', ownerPhotoId: oid(2) }
+const q8b = oRun([oSlots('p8b', [PHONE_SLOT], { picks: [oldMarked] })], [OS.negLog], { recheckAuto: true }).articles[0]!
+ok('(2차) 다시 보기 — 맞지 않는 자리에 들어간 표시한 제품 화면은 다시 본다(바꿀 사진이 없으면 뺀다)', q8b.rows[0]!.state === 'remove' && q8b.replaces.some((x) => x.src === OS.negLog.src && !x.pick))
+// 자리 글자가 화면을 말하는 사진 자리(그 제품을 아직 표시하지 않음)에 넣은 실제 사진은 「확인 필요」.
+const seroPhoto = cand('seroph', '가로형 회사 소개서 인쇄물 한 장과 세로형으로 바뀐 결과물을 띄운 휴대폰을 나란히 놓은 사진')
+const q14 = oRun(
+  [oSlots('p14', ['세로메이커로 가로형 PDF 회사 소개서를 세로형 콘텐츠로 바꾼 전후 화면을 나란히 놓은 모습'])],
+  [seroPhoto, OS.negLog],
+  { scenes: oScenes([[seroPhoto.src, sceneOfKind('closeup', '책상 위 인쇄물과 휴대폰', ['인쇄물', '휴대폰'])]]) },
+).articles[0]!.rows[0]!
+ok('(2차) 자리 글자가 화면을 말하는 사진 자리에 넣은 실제 사진은 「확인 필요」', q14.pick?.src === seroPhoto.src && q14.review === true)
+// 넣은 제품 화면에 없는 자리 글자의 낱말은 까닭에 적는다(나눠 받은 협상 화면 — 「실시간 인디케이터와 조율 타임라인이 함께」 자리).
+const negRec = oScreen(9, NEG, 'NEGOMATE 협상 기록 화면 — 한 품목의 공급사별 제안 · 협상 로그 · 조율 타임라인이 시간순으로 보이는 화면')
+const negLive = oScreen(10, NEG, 'NEGOMATE 실시간 화면 — 공급사별 협상 진행 상황, 협상 성공률 실시간 인디케이터, 실시간 최저가 검색 결과, 품목별 목표가')
+const q13 = oRun(
+  [oSlots('p13', ['NEGOMATE 화면에서 협상 성공률 실시간 인디케이터와 조율 타임라인이 함께 보이는 장면'])],
+  [negRec, negLive],
+  { scenes: oScenes([[negRec.src, SCREEN_SCENE], [negLive.src, SCREEN_SCENE]]) },
+).articles[0]!.rows[0]!
+ok('(2차) 넣은 제품 화면 설명에 없는 자리 글자의 낱말을 까닭에 적는다', q13.pick?.src === negLive.src && /자리 글자의 「조율」.*화면 설명에 없어요/.test(ownerScreenReason(q13) ?? ''))
+// 비운 까닭 — 같은 글에서 이미 쓴 화면은 「이 글에 이미 씀」(작성자 묶음이 없는 브랜드도).
+ok('(2차) 같은 글에서 이미 쓴 제품 화면 — 「이 글에 이미 씀」', onceRows.some((r) => !r.pick && ownerScreenReason(r) === '제품 화면 자리(NEGOMATE) — 이 글에 이미 씀'))
+// 「제품 화면으로 올리면 채워요」 안내 — 찍지 않는 화면 자리 가운데 자리 글자에 제품 같은 이름(흔한 로마자 · 브랜드 이름 아님)이 있을 때만.
+const hintRows = oRun(
+  [
+    oSlots('p15', [
+      'VIDMATE 앱 화면에 업체명과 지도 공유 주소를 입력하는 장면',
+      '스프레드시트에 항목을 행으로, 홈페이지·보도자료·지도 서비스·블로그를 열로 두고 서로 다른 표기에 색을 칠한 회사 정보 대조표 화면',
+      '병원 사이트 분석 화면에서 AI 서비스를 거쳐 들어온 유입 경로를 확인하는 장면',
+      'AI랩 홈페이지 화면에서 회사 소개를 보는 모습',
+    ]),
+  ],
+  Object.values(OS),
+).articles[0]!.rows
+ok(
+  '(2차) 「제품 화면」으로 올리면 채울 수 있는 화면 자리에만 안내(자리 글자의 제품 같은 이름)',
+  hintRows.every((r) => r.state === 'screen') && hintRows[0]!.ownerScreenHint === 'VIDMATE' && hintRows.slice(1).every((r) => r.ownerScreenHint === undefined),
+)
+// D6 — 걷어 낼 이름은 3자부터(「아이」 같은 2자 이름이 진짜 아이 사진을 가리지 않는다).
+ok(
+  '(2차) 2자 이름(「아이」)은 걷지 않는다 — 진짜 아이 사진은 「사람이 찍힘」',
+  autoCandidateSkip({ src: oSrc(80), alt: '아이들이 체험 부스에서 노는 모습', pageUrl: 'https://lab.example/', origin: 'owner' }, [], ['아이랩', '아이']) === 'people',
 )
 
 let failed = 0

@@ -542,6 +542,14 @@ function WriterRuns({
     slots += statsOf(actions.filter((a) => a.kind === 'content' && !writerArticle(writerPlan, a.id) && drafts[a.id]).map((a) => a.id)).slots
     return { photoStats: out, brandPhotoSlots: slots }
   }, [writerPlan, drafts, actions])
+  // 업주 사진 보관함 — 「제품 화면」의 제품 이름이 이 브랜드 글의 사진 자리 글자에 있는지 알린다(초안이 바뀔 때만 다시 모은다).
+  const brandSlotTexts = useMemo(
+    () =>
+      [...writerPlan.articles.map((a) => a.id), ...actions.filter((a) => a.kind === 'content' && !writerArticle(writerPlan, a.id)).map((a) => a.id)].flatMap((id) =>
+        drafts[id] ? photoSlotsOf(publishMarkdownOf(drafts[id])).map((slot) => slot.key) : [],
+      ),
+    [writerPlan, drafts, actions],
+  )
   // 브랜드 전부 — 배정 순서의 작성자 글, 그다음 배정에 없는 자사 글(본 글 등).
   const brandPhotoArticles = [
     ...writerPlan.articles.flatMap((a) => photoArticle(a.id)),
@@ -606,7 +614,7 @@ function WriterRuns({
         이어서 합니다. 도는 동안에는 글 카드의 단추와 「글 더 만들기」를 잠급니다. 운영 기간(~{writerPlan.activeUntil})에는 추가 글을{' '}
         {cap}편까지 둘 수 있어요(지금 {alive.size}편).
       </p>
-      {photosOn && brandPhotoArticles.length > 0 && brandPhotoSlots > 0 && <OwnerPhotoBox tenantId={tenantId} brand={brand} />}
+      {photosOn && brandPhotoArticles.length > 0 && brandPhotoSlots > 0 && <OwnerPhotoBox tenantId={tenantId} brand={brand} slotTexts={brandSlotTexts} />}
       {photosOn && brandPhotoArticles.length > 0 && brandPhotoSlots > 0 && (
         <PhotoAutoFill
           tenantId={tenantId}

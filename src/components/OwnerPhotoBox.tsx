@@ -9,7 +9,7 @@ import {
   productLabel,
   type OwnerPhotoView,
 } from '../lib/ownerPhotos'
-import { ownerUnmarkedScreen } from '../lib/photoAutoPick'
+import { ownerUnmarkedScreen, productNamedIn } from '../lib/photoAutoPick'
 import { sceneMeta } from '../lib/photoScenes'
 
 /**
@@ -20,7 +20,9 @@ import { sceneMeta } from '../lib/photoScenes'
  *
  * 회사가 준 제품 화면 캡처는 「제품 화면(캡처)」으로 표시하고 제품 이름을 적는다(2026-11-07 설계 D1 — 회사의 게시 확인 · 실제 고객 정보가
  * 보이지 않는다는 확인을 받는다). 자동 채우기는 자리 글자가 그 제품과 화면을 말하는 자리에만 넣는다. 표시하지 않은 사진의 장면이 화면으로
- * 읽혔으면(또는 설명이 화면 캡처로 읽히면) 표시를 제안한다 — 표시가 결정한다.
+ * 읽혔으면(또는 설명이 화면 캡처로 읽히면) 표시를 제안한다 — 표시가 결정한다. 제품 이름은 설명의 화면 낱말 앞에서 제안하고(이미 표시한 제품을
+ * 먼저 — 요청서 파일 번호 「N1」 · 흔한 낱말은 건너뛴다), 사람이 이름을 고치기 전에는 설명이 바뀌면 다시 제안한다. 이름이 이 브랜드 글의 사진
+ * 자리 글자 어디에도 없으면 알린다(slotTexts — 자동 채우기가 쓰지 않는다, 2026-11-07 검토 2차).
  */
 
 /** 제품 화면을 올리거나 표시할 때 받는 확인. */
@@ -63,10 +65,19 @@ async function shrinkForUpload(file: File): Promise<Blob> {
   return blob ?? file
 }
 
-/** screen — 「제품 화면(캡처)」으로 올린다(product가 제품 이름). */
-type Pending = { file: File; url: string; alt: string; screen: boolean; product: string }
+/** screen — 「제품 화면(캡처)」으로 올린다(product가 제품 이름). productTouched — 사람이 제품 이름을 고쳤다(설명이 바뀌어도 다시 제안하지 않는다). */
+type Pending = { file: File; url: string; alt: string; screen: boolean; product: string; productTouched: boolean }
 
-export default function OwnerPhotoBox({ tenantId, brand }: { tenantId: string; brand: Pick<TenantSummary, 'brandName'> }) {
+export default function OwnerPhotoBox({
+  tenantId,
+  brand,
+  slotTexts,
+}: {
+  tenantId: string
+  brand: Pick<TenantSummary, 'brandName' | 'aliases'>
+  /** 이 브랜드 글의 사진 자리 글자(장면 글자) — 표시한 제품 이름이 어느 자리에도 없으면 알린다. 없으면 알리지 않는다. */
+  slotTexts?: readonly string[]
+}) {
   const [box, setBox] = useState<{ key: string; photos: OwnerPhotoView[]; scenesAvailable: boolean } | null>(null)
   const [missing, setMissing] = useState(false)
   const [pending, setPending] = useState<Pending[]>([])
@@ -110,8 +121,20 @@ export default function OwnerPhotoBox({ tenantId, brand }: { tenantId: string; b
 
   const choose = (files: FileList | null) => {
     setMessage(null)
-    setPending([...(files ?? [])].map((file) => ({ file, url: URL.createObjectURL(file), alt: altFromFileName(brand.brandName, file.name), screen: false, product: '' })))
+    setPending(
+      [...(files ?? [])].map((file) => ({ file, url: URL.createObjectURL(file), alt: altFromFileName(brand.brandName, file.name), screen: false, product: '', productTouched: false })),
+    )
   }
+  /** 이 브랜드에 이미 표시한 제품 이름(다른 이름까지) — 제안이 먼저 고른다. */
+  const known = [...new Set(photos.flatMap((p) => (p.productScreen ? [p.productScreen.product] : [])))]
+  const guess = (alt: string) => productGuessFromAlt(alt, { known, brandNames: [brand.brandName, ...(brand.aliases ?? [])] })
+  /** 제품 이름이 이 브랜드 글의 사진 자리 글자에 한 번도 나오지 않는다 — 그 화면은 자동 채우기가 쓰지 않는다(자리 글자를 받은 때만 본다). */
+  const unused = (product: string) => Boolean(slotTexts?.length) && !slotTexts!.some((t) => productNamedIn(t, product))
+  const unusedNote = (product: string) => (
+    <span className="hint warn" style={{ margin: 0 }}>
+      「{productLabel(product)}」은(는) 이 브랜드 글의 사진 자리 글자 어디에도 없어요 — 자동 채우기가 쓰지 않아요(제품 이름 · 다른 이름을 확인해 주세요).
+    </span>
+  )
   const setPendingAt = (i: number, change: Partial<Pending>) => setPending((cur) => cur.map((x, j) => (j === i ? { ...x, ...change } : x)))
   const hasPhoto = pending.some((p) => !p.screen)
   const hasScreen = pending.some((p) => p.screen)
@@ -196,19 +219,29 @@ export default function OwnerPhotoBox({ tenantId, brand }: { tenantId: string; b
                       aria-label={`${p.file.name} 설명`}
                       value={p.alt}
                       placeholder={p.screen ? '보이는 화면(예: NEGOTIUM 협상 화면 — 공급사별 협상 로그)' : '보이는 장면(예: 독채 앞 정원과 나무 데크, 맑은 낮)'}
-                      onChange={(e) => setPendingAt(i, { alt: e.target.value })}
+                      onChange={(e) => setPendingAt(i, { alt: e.target.value, ...(p.screen && !p.productTouched ? { product: guess(e.target.value) } : {}) })}
                     />
                     <label className="doc-meta">
                       <input
                         type="checkbox"
                         checked={p.screen}
-                        onChange={(e) => setPendingAt(i, { screen: e.target.checked, product: p.product || productGuessFromAlt(p.alt) })}
+                        onChange={(e) => {
+                          setPendingAt(i, { screen: e.target.checked, ...(p.productTouched ? {} : { product: guess(p.alt) }) })
+                          // 제품 화면은 회사가 확인한다 — 허락한 사람이 기본값(업주)이면 회사로 바꾼다.
+                          if (e.target.checked && holder === '업주') setHolder('회사')
+                        }}
                       />{' '}
                       제품 화면(캡처)
                     </label>
                     {p.screen && (
-                      <input aria-label={`${p.file.name} 제품 이름`} value={p.product} placeholder={PRODUCT_HINT} onChange={(e) => setPendingAt(i, { product: e.target.value })} />
+                      <input
+                        aria-label={`${p.file.name} 제품 이름`}
+                        value={p.product}
+                        placeholder={PRODUCT_HINT}
+                        onChange={(e) => setPendingAt(i, { product: e.target.value, productTouched: true })}
+                      />
                     )}
+                    {p.screen && cleanProductScreen(p.product) && unused(p.product) && unusedNote(p.product)}
                   </div>
                 </li>
               ))}
@@ -238,7 +271,11 @@ export default function OwnerPhotoBox({ tenantId, brand }: { tenantId: string; b
                 {busy ? '올리는 중…' : `${pending.length}장 올리기`}
               </button>
               {pending.some((p) => !p.alt.trim()) && <span className="hint">설명이 빈 사진이 있어요.</span>}
-              {badProduct && <span className="hint">제품 화면의 제품 이름을 적어 주세요(이름마다 2자 이상, {PRODUCT_SCREEN_MAX}자까지).</span>}
+              {badProduct && (
+                <span className="hint">
+                  제품 화면의 제품 이름을 적어 주세요(이름마다 2자 이상, {PRODUCT_SCREEN_MAX}자까지 — 화면 · 앱 · AI 같은 흔한 낱말과 줄바꿈 · &lt;&gt;는 쓸 수 없어요).
+                </span>
+              )}
             </div>
           </>
         )}
@@ -256,9 +293,9 @@ export default function OwnerPhotoBox({ tenantId, brand }: { tenantId: string; b
               {photos.map((p) => {
                 const draft = edits[p.id] ?? p.alt
                 const marked = p.productScreen?.product
-                // 표시하지 않았는데 화면 캡처로 읽힌 사진 — 표시를 제안한다(제품 이름은 설명의 첫 로마자 낱말).
+                // 표시하지 않았는데 화면 캡처로 읽힌 사진 — 표시를 제안한다(제품 이름은 설명의 화면 낱말 앞 — 이미 표시한 제품 먼저).
                 const suggest = !marked && ownerUnmarkedScreen({ alt: p.alt, scene: p.scene ?? null })
-                const product = products[p.id] ?? marked ?? (suggest ? productGuessFromAlt(p.alt) : '')
+                const product = products[p.id] ?? marked ?? (suggest ? guess(p.alt) : '')
                 const productOk = cleanProductScreen(product)
                 return (
                   <li key={p.id}>
@@ -284,6 +321,7 @@ export default function OwnerPhotoBox({ tenantId, brand }: { tenantId: string; b
                           onChange={(e) => setProducts((cur) => ({ ...cur, [p.id]: e.target.value }))}
                         />
                       )}
+                      {(marked || suggest) && productOk && unused(productOk.product) && unusedNote(productOk.product)}
                       {(marked || suggest) && (
                         <span className="doc-meta">
                           {suggest && (

@@ -30,6 +30,7 @@ import {
   mapMissText,
   mapPickReason,
   otherPhotoUses,
+  OWNER_SCREEN_MISPLACED_TEXT,
   ownerScreenReason,
   photoStateKey,
   placesToRead,
@@ -861,7 +862,7 @@ export default function PhotoAutoFill({
             {hasScreenRows &&
               ' 자사 화면은 브랜드 웹사이트 화면을 이 PC에서 찍은 그림이에요 — 글에는 이 PC의 화면 주소만 적고, 복사 · 홈페이지용 .html로 내보낼 때 그림을 넣어요. 붙여 넣은 글에서 화면이 안 보이면 「사진 N장 받기」로 받은 파일을 그 자리에 올려 주세요.'}
             {hasOwnerScreenRows &&
-              ' 제품 화면은 업주 사진 보관함에서 「제품 화면」으로 표시한 캡처예요 — 자리 글자가 그 제품과 화면을 함께 말하는 자리에만, 설명 낱말 · 결과 화면 여부가 맞을 때 넣고 늘 「확인 필요」예요(같은 화면은 작성자 한 사람에게 한 번). 그런 사진 자리에는 실제 사진을 넣지 않아요.'}
+              ' 제품 화면은 업주 사진 보관함에서 「제품 화면」으로 표시한 캡처예요 — 자리 글자가 그 제품과 화면을 함께 말하는 자리에만, 설명 낱말 · 맥락(다른 회사 · 휴대폰 · 지도 · AI 답변 · 도입 전) · 시작/결과 화면이 맞을 때 넣고 늘 「확인 필요」예요(같은 화면은 작성자 한 사람에게 한 번). 그런 사진 자리에는 실제 사진을 넣지 않고, 넣어 둔 자동 사진은 「이미 넣은 자동 사진도 장면 확인」 때 제품 화면으로 바꿔요.'}
             {hasMapRows &&
               ` ${MAP_AREA_NAME} 지도는 자사 사이트 장소 목록의 장소를 앱이 OpenStreetMap 데이터로 그린 그림이에요(사이트 화면이 아니에요) — 표지와 위치 문장을 자리 글자로 골라 늘 「확인 필요」이니 썸네일과 까닭을 확인해 주세요. 내보낼 때 지도 바로 아래에 출처 줄(지도 데이터 © OpenStreetMap contributors · ODbL)이 붙고, 그 아래 줄이 위치 문장이에요.`}
           </p>
@@ -1022,8 +1023,9 @@ function screenWhy(row: AutoSlotRow): string {
   const sp = row.screenPick
   if (!sp && row.screenMiss === 'no-place') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 자리 글자 · 소제목에 사이트의 장소 이름이 없어 찍지 않아요(장소 이름을 넣거나 직접 골라요)`
   if (!sp && row.screenMiss === 'no-directory') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 사이트 장소 목록(sitemap.xml)을 읽지 못해 찍을 장소를 정하지 못했어요`
-  if (!sp && kind === 'none') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요) · 업주 사진 보관함에 「제품 화면」으로 올리면 채워요`
-  if (!sp) return isScreenKind(kind) ? SCREEN_SLOT_KIND_TEXT[kind] : `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요)`
+  // 자리 글자에 제품 같은 이름이 있는 찍지 않는 화면 자리 — 그 제품 화면을 「제품 화면」으로 올리면 채울 수 있다(이름이 없으면 올려도 못 채운다).
+  const hint = row.ownerScreenHint ? ` · 「${row.ownerScreenHint}」 화면을 업주 사진 보관함에 「제품 화면」으로 올리면 채워요` : ''
+  if (!sp) return isScreenKind(kind) ? SCREEN_SLOT_KIND_TEXT[kind] : `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요)${hint}`
   const facts = row.factGaps?.length ? ` · 자리 글자의 ${row.factGaps.map((g) => `「${g}」`).join(' ')}이(가) 찍은 화면에 없어요(맞는지 확인)` : ''
   const via = row.viaAction ? ' · 장소를 눌러 보는 화면 자리라 그 장소의 장소 안내로 대신해요(맞는지 확인)' : ''
   return `${SCREEN_SLOT_KIND_TEXT[kind]} · ${screenByText(row, sp)}${via}${facts}`
@@ -1141,11 +1143,17 @@ function PreviewRow({ title, row, brandName }: { title: string | null; row: Auto
         ) : c?.origin === 'public' && row.place ? (
           `장소: ${row.place}${c.tour && c.alt !== row.place ? ` → 관광공사 「${c.alt}」` : ''}`
         ) : row.score ? (
-          `${row.score.words.join(' · ')} · ${row.score.score}${row.synonym ? ' · 비슷한 말로 맞춘 자기 시설 사진(맞는지 확인)' : ''}`
+          `${row.score.words.join(' · ')} · ${row.score.score}${row.synonym ? ' · 비슷한 말로 맞춘 자기 시설 사진(맞는지 확인)' : ''}${row.screenWordPhoto ? ' · 자리 글자가 화면을 말해요 — 실제 사진이 맞는지 확인(제품 화면이면 업주 사진 보관함에 「제품 화면」으로 올려요)' : ''}`
         ) : row.place ? (
           <span className="muted">장소: {row.place}</span>
         ) : (
           <span className="muted">—</span>
+        )}
+        {row.ownerScreenMisplaced && (
+          <span className="doc-meta" style={{ display: 'block' }}>
+            {OWNER_SCREEN_MISPLACED_TEXT}
+            {row.state === 'remove' && ' — 바꿀 사진이 없어 뺍니다(다음에 다시 채워요)'}
+          </span>
         )}
         {row.oldFit && !row.oldFit.ok && (
           <span className="doc-meta" style={{ display: 'block' }}>

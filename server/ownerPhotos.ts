@@ -78,11 +78,14 @@ async function loadRecords(tenantId: string): Promise<OwnerPhotoRecord[]> {
   }
   const parsed = JSON.parse(text) as { photos?: unknown };
   if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.photos)) throw new Error(`${tenantId}/owner-photos/${LIST_FILE}의 모양이 맞지 않습니다.`);
-  // 「제품 화면」 표시가 모양이 틀리면 표시만 버린다(사진은 남긴다).
+  // 「제품 화면」 표시가 모양이 틀리면 표시만 버린다(사진은 남긴다). 회사 확인 때(screenConfirmedAt)가 글자가 아니면 그것만 버린다.
   return parsed.photos.filter(validRecord).map((rec) => {
-    if (rec.productScreen === undefined) return rec;
+    const badConfirm = rec.rights.screenConfirmedAt !== undefined && typeof rec.rights.screenConfirmedAt !== 'string';
+    if (rec.productScreen === undefined && !badConfirm) return rec;
+    const copy: OwnerPhotoRecord = { ...rec, rights: { ...rec.rights } };
+    if (badConfirm) delete copy.rights.screenConfirmedAt;
+    if (rec.productScreen === undefined) return copy;
     const productScreen = cleanProductScreen(rec.productScreen?.product);
-    const copy: OwnerPhotoRecord = { ...rec };
     if (productScreen) copy.productScreen = productScreen;
     else delete copy.productScreen;
     return copy;
@@ -122,7 +125,8 @@ function updateRecords<T>(tenantId: string, task: (photos: OwnerPhotoRecord[]) =
 /**
  * 사진 하나를 보관한다 — 형식(앞 바이트) · 크기 · 장수를 보고, 파일 sha256 앞 16자를 id로 쓴다. 같은 사진이 이미 있으면 설명 · 권리만
  * 새로 적고(existed) 파일은 그대로 둔다. 권리 확인(holder)이 없으면 거절한다 — 화면이 확인을 받고 보낸다. productScreen(「제품 화면」 표시 —
- * 정리한 것)을 주면 표시하고, 주지 않으면 이미 있던 사진의 표시는 그대로 둔다(빼기는 setOwnerPhotoProductScreen).
+ * 정리한 것)을 주면 표시하고 회사 확인 때(rights.screenConfirmedAt)를 적는다. 주지 않으면 이미 있던 사진의 표시와 회사 확인 때는 그대로 둔다
+ * (빼기는 setOwnerPhotoProductScreen).
  */
 export async function addOwnerPhoto(
   tenantId: string,
@@ -139,12 +143,18 @@ export async function addOwnerPhoto(
   const now = (meta.now ?? new Date()).toISOString();
   const alt = cleanPhotoAlt(meta.alt);
   const note = typeof meta.note === 'string' ? meta.note.replace(/[\p{Cc}<>]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 100) : '';
-  const rights = { confirmedAt: now, holder: cleanRightsHolder(meta.holder), ...(note ? { note } : {}) };
+  const rights: OwnerPhotoRecord['rights'] = {
+    confirmedAt: now,
+    holder: cleanRightsHolder(meta.holder),
+    ...(note ? { note } : {}),
+    ...(meta.productScreen ? { screenConfirmedAt: now } : {}),
+  };
   return updateRecords(tenantId, async (photos) => {
     const had = photos.find((p) => p.id === id);
     if (had) {
       if (alt) had.alt = alt;
-      had.rights = rights;
+      const kept = !meta.productScreen && had.productScreen ? had.rights.screenConfirmedAt : undefined;
+      had.rights = { ...rights, ...(kept ? { screenConfirmedAt: kept } : {}) };
       if (meta.productScreen) had.productScreen = meta.productScreen;
       return { record: { ...had }, existed: true };
     }
@@ -181,13 +191,27 @@ export function updateOwnerPhotoAlt(tenantId: string, id: string, alt: string): 
   });
 }
 
-/** 「제품 화면」 표시를 적거나(정리한 것) 뺀다(null) — 없으면 not-found. */
-export function setOwnerPhotoProductScreen(tenantId: string, id: string, productScreen: OwnerProductScreen | null): Promise<OwnerPhotoRecord> {
+/**
+ * 「제품 화면」 표시를 적거나(정리한 것 — 회사 확인 때 rights.screenConfirmedAt를 적는다) 뺀다(null — 회사 확인 때도 지운다). 없으면 not-found.
+ */
+export function setOwnerPhotoProductScreen(
+  tenantId: string,
+  id: string,
+  productScreen: OwnerProductScreen | null,
+  now: Date = new Date(),
+): Promise<OwnerPhotoRecord> {
   return updateRecords(tenantId, (photos) => {
     const rec = photos.find((p) => p.id === id);
     if (!rec) throw new OwnerPhotoError('not-found', '그 업주 사진이 없어요.');
-    if (productScreen) rec.productScreen = productScreen;
-    else delete rec.productScreen;
+    const rights = { ...rec.rights };
+    if (productScreen) {
+      rec.productScreen = productScreen;
+      rights.screenConfirmedAt = now.toISOString();
+    } else {
+      delete rec.productScreen;
+      delete rights.screenConfirmedAt;
+    }
+    rec.rights = rights;
     return { ...rec };
   });
 }

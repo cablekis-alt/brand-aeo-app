@@ -30,7 +30,7 @@ import {
 import { photoCreditState, photoPickSrc, withPhotos, type PhotoPick } from '../src/lib/articlePhotos'
 import { exportLeaks, inlineScreens, screenPlainText } from '../src/lib/screenExport'
 import { markdownToHtml } from '../src/lib/htmlFile'
-import { autoPickPhotos, autoCandidateSkip, ownPhotoExempt } from '../src/lib/photoAutoPick'
+import { autoPickPhotos, autoCandidateSkip, ownPhotoExempt, productNamedIn } from '../src/lib/photoAutoPick'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -58,18 +58,45 @@ ok(
 )
 // 「제품 화면」 표시(2026-11-07 설계 D1) — 제품 이름 한 줄(30자까지), 쉼표로 다른 이름, 띄어쓰기 · 문장부호 없이 소문자로 견준다, 이름마다 2자 이상.
 ok(
-  '제품 화면 이름 — 쉼표로 다른 이름 · 비교 글자 · 2자 미만 이름은 뺀다 · 30자 · 한 줄',
+  '제품 화면 이름 — 쉼표로 다른 이름 · 비교 글자 · 30자 · 이름마다 2자 이상',
   JSON.stringify(productNames('NEGOMATE, 네고 메이트')) === JSON.stringify([{ name: 'NEGOMATE', key: 'negomate' }, { name: '네고 메이트', key: '네고메이트' }]) &&
     cleanProductScreen('  NEGOMATE ,  네고메이트 ')?.product === 'NEGOMATE, 네고메이트' &&
-    cleanProductScreen('A, NEGOMATE')?.product === 'NEGOMATE' &&
-    cleanProductScreen('NEGO\nMATE')?.product === 'NEGO MATE' &&
     cleanProductScreen('x') === null && cleanProductScreen('') === null && cleanProductScreen('가'.repeat(31)) === null && cleanProductScreen(3) === null &&
     productLabel('NEGOMATE, 네고메이트') === 'NEGOMATE',
 )
+// (2차) 맞지 않는 이름은 조용히 고쳐 받지 않고 거절한다 — 2자 미만 이름(대표 이름이 바뀐다) · 줄바꿈(두 이름이 하나로) · 형식 문자 · <> · 흔한 낱말.
 ok(
-  '장면이 화면으로 읽힌 사진의 제품 이름 제안 — 설명의 첫 로마자 낱말',
+  '(2차) 제품 이름 — 2자 미만 이름 · 줄바꿈 · 형식 문자 · <> · 흔한 낱말(화면 · AI)은 고치지 않고 거절(끝의 빈 쉼표는 괜찮다)',
+  cleanProductScreen('A, NEGOMATE') === null && cleanProductScreen('N, 네고메이트') === null && cleanProductScreen('NEGO\nMATE') === null &&
+    cleanProductScreen('NEGO‮MATE') === null && cleanProductScreen('NEGO​MATE') === null && cleanProductScreen('<b>NEGOMATE') === null &&
+    cleanProductScreen('화면') === null && cleanProductScreen('NEGOMATE, AI') === null && cleanProductScreen('NEGOMATE, ')?.product === 'NEGOMATE',
+)
+ok(
+  '장면이 화면으로 읽힌 사진의 제품 이름 제안 — 화면 낱말 앞의 이름',
   productGuessFromAlt('ADO2 첫 화면 — 네이버 지도 URL을 넣고 시작하는 화면') === 'ADO2' && productGuessFromAlt('robots.txt 화면') === 'robots.txt' &&
     productGuessFromAlt('WEBCHECK에 주소를 넣은 화면') === 'WEBCHECK' && productGuessFromAlt('가상 첫 화면') === '',
+)
+// (2차) 제안은 파일 번호(「N1」) · 흔한 낱말(PDF · DID)을 건너뛰고, 화면 낱말 앞의 이름만 본다(뒤의 다른 제품 이름을 고르지 않는다) · 이미 표시한 제품을 먼저.
+ok(
+  '(2차) 제품 이름 제안 — 파일 번호 · 흔한 낱말 · 브랜드 이름은 건너뛰고 화면 낱말 앞의 이름, 이미 표시한 제품 이름을 먼저',
+  productGuessFromAlt('에이아이랩 N1', { brandNames: ['에이아이랩'] }) === '' &&
+    productGuessFromAlt('세로메이커 전후 비교 화면 — 가로형 PDF 회사 소개서를 세로형 콘텐츠로 바꾸기 전과 후를 나란히 놓은 화면') === '세로메이커' &&
+    productGuessFromAlt('엑셀 파일 화면 — 반복 구매 품목 · 지난 매입 단가를 정리한 NEGOMATE 업로드 양식') === '' &&
+    productGuessFromAlt('PDF 변환 화면 — 가로형 소개서') === '' &&
+    productGuessFromAlt('에이아이랩 NEGOMATE 협상 화면 — 공급사별 협상 로그', { brandNames: ['에이아이랩'] }) === 'NEGOMATE' &&
+    productGuessFromAlt('네고메이트 협상 화면 — 공급사별 협상 로그', { known: ['NEGOMATE, 네고메이트'] }) === 'NEGOMATE, 네고메이트',
+)
+ok(
+  '(2차) 자리 글자에 제품 이름이 나오는가(표시할 때 알림) — 대표 이름은 낱말 경계로, 다른 이름은 화면을 꾸밀 때만',
+  productNamedIn('NEGOMATE 화면에서 협상 로그', 'NEGOMATE, 네고메이트') && productNamedIn('네고메이트 화면에서 협상 로그', 'NEGOMATE, 네고메이트') &&
+    !productNamedIn('VID2 첫 화면', 'VID') && !productNamedIn('가로형 영상을 세로형으로 바꾼 화면', '세로메이커, 세로형') && !productNamedIn('N1 화면', 'N1X'),
+)
+// (2차) 서식째 복사의 글자 쪽 — 화면 캡처로 읽히는 업주 사진(「제품 화면」)은 「[화면: 설명]」.
+const SHOT_SRC = ownerPhotoAppSrc('vowner', '0123456789abcdee', 'png')
+ok(
+  '(2차) 서식째 복사의 글자 쪽 — 화면 캡처로 읽히는 업주 사진은 「[화면: 설명]」, 실물 화면 사진은 「[사진: 설명]」',
+  screenPlainText(`![NEGOMATE 협상 화면 — 공급사별 협상 로그](${SHOT_SRC})`).includes('[화면: NEGOMATE 협상 화면 — 공급사별 협상 로그]') &&
+    screenPlainText(`![매장 사이니지 화면에 홍보 영상이 재생되는 모습](${SHOT_SRC})`).includes('[사진: 매장 사이니지 화면에 홍보 영상이 재생되는 모습]'),
 )
 
 // 2) 사진 기록 · 내보내기
@@ -137,7 +164,7 @@ writeFileSync(
 )
 const draft = (id: string) => ({ actionId: id, generatedAt: AT, draft: { format: 'article', title: '가상 글', sections: [], gapCount: 0, usedFacts: [] } })
 const draftsOf = (ids: string[]) => Object.fromEntries(ids.map((id) => [id, draft(id)]))
-writeFileSync(path.join(tenantDir, 'drafts.json'), JSON.stringify(draftsOf(['a', 'b', 'c', 'd', 's', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'].map((x) => `content:${x}`))))
+writeFileSync(path.join(tenantDir, 'drafts.json'), JSON.stringify(draftsOf(['a', 'b', 'c', 'd', 's', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'].map((x) => `content:${x}`))))
 writeFileSync(path.join(tenantDir, 'publish-settings.json'), JSON.stringify({ photoRights: { confirmedAt: AT } }))
 const b2bDir = path.join(dir, 'data', B2B)
 mkdirSync(b2bDir, { recursive: true })
@@ -239,16 +266,35 @@ try {
   const shotId = String(shot?.id ?? '')
   ok('올리기 — 「제품 화면」 표시와 제품 이름(쉼표로 다른 이름)', shotUp.status === 201 && (shot?.productScreen as Record<string, unknown> | undefined)?.product === PRODUCT)
   ok('제품 이름이 맞지 않으면(2자 미만) 올리지 않는다', (await upload(Buffer.concat([PNG, Buffer.from('bad')]), { confirmed: '1', alt: '화면', holder: '회사', product: 'x' })).status === 400)
+  const listFile = path.join(tenantDir, 'owner-photos', 'owner-photos.json')
+  const rightsOf = (pid: string) =>
+    ((JSON.parse(readFileSync(listFile, 'utf-8')) as { photos: Record<string, unknown>[] }).photos.find((p) => p.id === pid)?.rights ?? {}) as Record<string, unknown>
+  const upRights = rightsOf(shotId)
   const cleared = await patch(shotId, { productScreen: null })
+  const clearedRights = rightsOf(shotId)
   const marked = await patch(shotId, { productScreen: { product: PRODUCT } })
+  const markedRights = rightsOf(shotId)
   ok(
     '나중에 고치기 — 표시 빼기(null) · 다시 표시 · 이름이 맞지 않거나 바꿀 것이 없으면 400',
     cleared.status === 200 && cleared.body.photo?.productScreen === undefined && marked.status === 200 &&
       (marked.body.photo?.productScreen as Record<string, unknown> | undefined)?.product === PRODUCT &&
       (await patch(shotId, { productScreen: { product: 'y' } })).status === 400 && (await patch(shotId, {})).status === 400,
   )
+  // (2차) 회사의 게시 확인을 기록한다 — 올릴 때 · 표시할 때 screenConfirmedAt, 표시를 빼면 지운다.
+  ok(
+    '(2차) 제품 화면의 회사 게시 확인을 권리 기록에 남긴다(올릴 때 · 표시할 때, 표시를 빼면 지운다)',
+    typeof upRights.screenConfirmedAt === 'string' && clearedRights.screenConfirmedAt === undefined && typeof markedRights.screenConfirmedAt === 'string',
+  )
+  // (2차) 맞지 않는 이름은 고쳐 받지 않고 400 — 2자 미만 이름이 섞이면(대표 이름이 바뀐다) · 제품 이름이 둘 이상(배열)이면.
+  const twoProducts = await fetch(
+    `${BASE}/api/owner-photos/${TENANT}?${new URLSearchParams([['confirmed', '1'], ['alt', 'NEGOMATE 화면'], ['holder', '회사'], ['product', 'NEGOMATE'], ['product', 'VIDMATE']]).toString()}`,
+    { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: Buffer.concat([PNG, Buffer.from('two')]) },
+  )
+  ok(
+    '(2차) 제품 이름 — 2자 미만 이름이 섞이거나 두 번 주면 고치지 않고 400',
+    (await patch(shotId, { productScreen: { product: 'N, 네고메이트' } })).status === 400 && twoProducts.status === 400,
+  )
   // 표시하지 않은 화면 캡처(장면이 화면) — 이 PC에 읽어 둔 장면을 목록에 적어 둔다(이 서버에는 Claude 키가 없다).
-  const listFile = path.join(tenantDir, 'owner-photos', 'owner-photos.json')
   const box = JSON.parse(readFileSync(listFile, 'utf-8')) as { photos: Record<string, unknown>[] }
   const SCREEN_ID = 'cccccccccccccccc'
   box.photos.push({
@@ -269,9 +315,27 @@ try {
     kind.status === 200 && kind.body.saved === 1 && kind.body.skipped === 2 && stored()['content:c']?.photos?.[0]?.ownerPhotoId === shotId &&
       !stored()['content:d']?.photos?.length && !stored()['content:s']?.photos?.length,
   )
-  const SLOT_NEG = 'NEGOMATE 화면에서 품목, 목표가, 마감일을 입력하는 장면'
+  const SLOT_NEG = 'NEGOMATE 화면에서 공급사별 협상 로그가 시간순으로 정리된 모습'
   const capSave = await put({ op: 'auto', articles: ['e', 'f', 'g', 'h'].map((x) => autoOwner(`content:${x}`, SLOT_NEG, shotId)) })
   ok('서버 — 제품 화면은 브랜드 상한(3)을 받지 않는다(D4)', capSave.status === 200 && capSave.body.saved === 4 && capSave.body.skipped === 0)
+  // (2차) 서버 다시 보기는 두 방향 — 표시한 제품의 화면 자리에는 표시 없는 업주 사진 · 홈페이지 사진도 받지 않는다(다른 자리는 받는다).
+  const deskUp = await upload(Buffer.concat([PNG, Buffer.from('desk')]), { confirmed: '1', alt: '모니터에 공급사별 협상 로그와 조율 타임라인이 표시된 사무실 책상', holder: '업주' })
+  const deskId = String((deskUp.body.photo as Record<string, unknown> | undefined)?.id ?? '')
+  const SLOT_SHOT = 'NEGOMATE 화면에서 공급사별 협상 로그와 조율 타임라인이 표시된 모습'
+  const sitePick = { slot: SLOT_SHOT, nth: 1, same: 1, heading: '절', src: 'https://stay.example/img/desk.jpg', alt: '사무실 책상 위 모니터', pageUrl: 'https://stay.example/', auto: true }
+  const twoWay = await put({
+    op: 'auto',
+    articles: [
+      autoOwner('content:m', SLOT_SHOT, deskId),
+      { actionId: 'content:n', generatedAt: AT, picks: [sitePick] },
+      autoOwner('content:o', '사무실 책상 위 모니터와 서류', deskId),
+    ],
+  })
+  ok(
+    '(2차) 서버 — 표시한 제품의 화면 자리에 표시 없는 업주 사진 · 홈페이지 사진은 넣지 않는다(다른 자리는 넣는다)',
+    twoWay.status === 200 && twoWay.body.saved === 1 && twoWay.body.skipped === 2 && !stored()['content:m']?.photos?.length &&
+      !stored()['content:n']?.photos?.length && stored()['content:o']?.photos?.[0]?.ownerPhotoId === deskId,
+  )
   // (low) B2B 브랜드는 「매장」 자리를 자기 시설로 보지 않는다 — 같은 업주 사진 넷을 지역 브랜드는 모두, B2B 브랜드는 상한(3)까지.
   const SHOP = '매장 안 디지털 사이니지 화면에 홍보 영상이 나오는 모습'
   const shopAlt = { confirmed: '1', alt: '매장 안 디지털 사이니지 화면에 홍보 영상이 재생되는 모습', holder: '업주' }

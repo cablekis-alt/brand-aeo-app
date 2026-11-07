@@ -14,6 +14,7 @@
  */
 import { MAP_AREA_NAME, MAP_CREDIT, mapPlainLine } from './mapImage'
 import { OWNER_PHOTO_MAX_BYTES, ownerPhotoSize, sniffOwnerPhotoType } from './ownerPhotos'
+import { altReadsAsScreen } from './photoAutoPick'
 
 /** 앱 주소의 화면 그림을 받는다 — 앱에서는 src/lib/api.ts fetchScreenFile. 실패하면 throw. */
 export type ScreenFetcher = (src: string) => Promise<Blob>
@@ -50,10 +51,11 @@ export function screenPlaceholder(alt: string): string {
 
 /**
  * 앱 주소 그림의 자리 글자 — 앱이 그린 지도면 「[지도: 군산 지도 — … 위치]」(대체 텍스트 그대로 — 지도의 출처 줄은 바로 아랫줄 설명에 그대로
- * 남는다), 자사 화면이면 「[화면: 이름]」.
+ * 남는다), 자사 화면이면 「[화면: 이름]」, 업주 사진이면 「[사진: 설명]」 — 설명이 화면 캡처로 읽히는 업주 사진(「제품 화면」 — 2026-11-07
+ * 검토 2차)은 「[화면: 설명]」.
  */
 function appImagePlaceholder(src: string, alt: string): string {
-  if (OWNER_PATH.test(src)) return `[사진: ${alt.trim() || '업주 사진'}]`
+  if (OWNER_PATH.test(src)) return altReadsAsScreen(alt) ? `[화면: ${alt.trim()}]` : `[사진: ${alt.trim() || '업주 사진'}]`
   return MAP_PATH.test(src) ? `[지도: ${alt.trim() || '지도'}]` : screenPlaceholder(alt)
 }
 

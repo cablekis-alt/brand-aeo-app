@@ -71,7 +71,7 @@ import {
   type PhotoPick,
   type PublicPhotoFields,
 } from '../src/lib/articlePhotos.js';
-import { AUTO_PICK_RULES, autoCandidateSkip, ownerPickAllowed, ownPhotoExempt, placeKey } from '../src/lib/photoAutoPick.js';
+import { AUTO_PICK_RULES, autoCandidateSkip, ownerPickAllowed, ownPhotoExempt, placeKey, productScreenSlotOf } from '../src/lib/photoAutoPick.js';
 import {
   findScreenVariant,
   isScreenShotId,
@@ -1155,6 +1155,11 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       const entries: AutoPhotoEntry[] = [];
       let rejected = 0;
       let needPublic = false;
+      // 「제품 화면」으로 표시한 제품들 — 그 제품의 화면 자리(productScreenSlotOf)는 화면 몫이라 실제 사진(표시 없는 업주 사진 · 홈페이지 · 공공
+      // 사진)을 받지 않는다(2026-11-07 검토 2차 — 화면의 미리보기가 오래됐거나 표시를 뺀 뒤 저장해도). 자사 화면 · 앱이 그린 지도는 그대로.
+      const brandNames = [tenant.brandName, ...(tenant.aliases ?? [])];
+      const markedProducts = [...new Set(ownerRecords.flatMap((r) => (r.productScreen ? [r.productScreen.product] : [])))];
+      const productSlot = (slot: string) => productScreenSlotOf(slot, markedProducts, brandNames) !== null;
       // 자동으로 넣을 사진 하나 — 맞지 않으면 null(rejected로 센다). 공공 사진인데 공공 사진 사용 확인이 없으면 needPublic.
       const autoPickOf = (raw: unknown): PhotoPick | null => {
         const p = pickOf(raw);
@@ -1169,9 +1174,10 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         // 앱이 그린 지도 — 사진 후보 검사는 보지 않는다(서버가 그린 그림이고 대체 텍스트 · 위치 문장 · 출처 줄은 서버가 단다).
         if (p?.map) return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.map.fields };
         // 업주 사진 — 이 PC에 올린 사진(권리 확인을 받고 올렸다). 사진 후보 검사(사람 낱말 · 일러스트)는 화면이 설명으로 한다. 종류는 다시 본다
-        // (2026-11-07 설계) — 「제품 화면」으로 표시한 사진은 그 제품의 화면 자리에만, 표시하지 않은 화면 캡처는 넣지 않는다(ownerPickAllowed).
+        // (2026-11-07 설계 · 검토 2차) — 「제품 화면」으로 표시한 사진은 그 자리에 맞는 종류일 때만, 표시하지 않은 사진은 화면 캡처가 아니고 표시한
+        // 제품의 화면 자리도 아닐 때만(ownerPickAllowed).
         if (p?.owner) {
-          if (!ownerPickAllowed(p.place.slot, p.owner.record, [tenant.brandName, ...(tenant.aliases ?? [])])) {
+          if (!ownerPickAllowed(p.place.slot, p.owner.record, brandNames, markedProducts)) {
             rejected += 1;
             return null;
           }
@@ -1192,7 +1198,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
               ...(pub ? { origin: 'public' as const, license: pub.license, creditText: pub.credit, ...(tour ? { place: tour.title } : {}) } : {}),
             }
           : null;
-        if (!p || typeof p.pub === 'string' || !candidate || (tour && !tour.type1) || autoCandidateSkip(candidate, owned)) {
+        if (!p || typeof p.pub === 'string' || !candidate || (tour && !tour.type1) || autoCandidateSkip(candidate, owned) || productSlot(p.place.slot)) {
           rejected += 1;
           return null;
         }
@@ -1557,7 +1563,7 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
 // 확인(confirmed)이 없으면 400. 올린 뒤 장면을 한 번 읽는다(키가 없으면 sceneError — 설명 글자로만 맞춘다). Express 전용(Vercel 함수 12/12 —
 // 웹은 업주 사진이 없다).
 const ownerPhotoErrorStatus = (err: unknown) => (err instanceof OwnerPhotoError ? (err.code === 'not-found' ? 404 : 400) : err instanceof RangeError ? 400 : 500);
-const PRODUCT_SCREEN_INVALID = `「제품 화면」의 제품 이름은 한 줄 ${PRODUCT_SCREEN_MAX}자까지, 이름마다 2자 이상이어야 해요(쉼표로 다른 이름 — 예: 「NEGOTIUM, 네고시움」).`;
+const PRODUCT_SCREEN_INVALID = `「제품 화면」의 제품 이름은 한 줄 ${PRODUCT_SCREEN_MAX}자까지, 이름마다 2자 이상이어야 해요(쉼표로 다른 이름 — 예: 「NEGOTIUM, 네고시움」). 화면 · 앱 · AI 같은 흔한 낱말과 줄바꿈 · <>는 쓸 수 없어요.`;
 async function readOwnerScene(tenantId: string, rec: OwnerPhotoRecord, bytes: Buffer): Promise<{ record: OwnerPhotoRecord; calls: number }> {
   try {
     const { scene, calls } = await describeLocalPhoto(bytes, rec.mime, { id: rec.id });
@@ -1593,7 +1599,11 @@ app.post(
       return;
     }
     const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
-    // 「제품 화면」 표시(product — 제품 이름, 쉼표로 다른 이름) — 주면 이름이 맞아야 올린다.
+    // 「제품 화면」 표시(product — 제품 이름, 쉼표로 다른 이름) — 주면 이름이 맞아야 올린다(두 번 주면 — 글자가 아니면 — 400).
+    if (q.product !== undefined && typeof q.product !== 'string') {
+      res.status(400).json({ error: PRODUCT_SCREEN_INVALID });
+      return;
+    }
     const asked = typeof q.product === 'string' && q.product.trim() !== '';
     const productScreen = asked ? cleanProductScreen(q.product) : null;
     if (asked && !productScreen) {

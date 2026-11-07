@@ -35,7 +35,10 @@
  * 업주 사진의 「제품 화면」(2026-11-07 설계 D1~D7) — 업주 사진 보관함에서 「제품 화면」으로 표시한 캡처(AutoCandidate.screenProduct)는 사진
  * 단계에 쓰지 않고, 자사 화면 단계 뒤의 업주 화면 단계가 제품 화면 자리(자리 글자가 그 제품 이름과 화면 낱말을 함께 말하는 빈 화면 자리 ·
  * 사진 자리 — ownerScreenSlotProduct)에만 넣는다. 그런 사진 자리에는 실제 사진을 넣지 않는다(화면 몫). 늘 「확인 필요」, 같은 화면은 글
- * 하나 · 작성자 한 사람에게 한 번(브랜드 상한 없음). 표시하지 않은 화면 캡처는 사진 자리에 넣지 않는다(ownerUnmarkedScreen).
+ * 하나 · 작성자 한 사람에게 한 번(브랜드 상한 없음). 표시하지 않은 화면 캡처는 사진 자리에 넣지 않는다(ownerUnmarkedScreen). 검토 2차
+ * (2026-11-07) — 다른 이름은 화면 낱말을 꾸밀 때만 자리를 열고(이름은 낱말 경계로), 사람이 주어인 화면 장면 · 실물 화면 · 다른 회사 · 지도 ·
+ * AI 답변 · 도입 전 맥락 · 시작/결과가 다른 화면은 넣지 않는다. 다시 보는 자동 실제 사진은 맞는 제품 화면으로 바꾸고, 화면을 말하는 사진
+ * 자리에 넣은 실제 사진은 「확인 필요」다.
  */
 import {
   canonicalPhotoSrc,
@@ -99,7 +102,7 @@ import {
   type ScreenVariant,
   type ScreenVariantChoice,
 } from './screenCapture.js'
-import { parseOwnerPhotoAppSrc, productKey, productLabel, productNames } from './ownerPhotos.js'
+import { parseOwnerPhotoAppSrc, productKey, productLabel, productLikeName, productNameRe, productNames } from './ownerPhotos.js'
 import type { TourSource } from './tourPhotos.js'
 
 export { needsPhotoCredit }
@@ -199,7 +202,8 @@ export function publicCandidateFields(c: Pick<AutoCandidate, 'origin' | 'license
  * 사진 호스트여도 홈페이지 사진이다(needsPhotoCredit). 공공 사진의 설명은 장소 이름이라, 사람 낱말은 장소 이름(place, 없으면 장소 페이지
  * 주소의 이름)을 걷어 낸 글자에서만 본다 — 「새만금어린이랜드」 · 「먹방이와 친구들」의 사진이 「사람이 찍힘」으로 빠지지 않게. 장소 이름만으로는
  * 사진에 사람이 찍혔는지 알 수 없어, 넣은 공공 사진은 늘 「확인 필요」다(autoPickPhotos). 업주 사진은 names(브랜드 이름 · 다른 이름 · 표시한
- * 제품 이름)를 걷어 낸 글자에서 본다 — 「에이아이오투오 …」의 「아이」가 「사람이 찍힘」으로 빠지지 않게(2026-11-07 설계 D6).
+ * 제품 이름)를 걷어 낸 글자에서 본다 — 「에이아이오투오 …」의 「아이」가 「사람이 찍힘」으로 빠지지 않게(2026-11-07 설계 D6). 3자보다 짧은
+ * 이름은 걷지 않는다 — 「아이」 같은 2자 이름이 진짜 아이 사진을 가리지 않게(검토 2차).
  */
 export function autoCandidateSkip(
   c: Pick<AutoCandidate, 'src' | 'alt' | 'credit' | 'origin' | 'license' | 'creditText' | 'place'> & { pageUrl?: string },
@@ -212,7 +216,7 @@ export function autoCandidateSkip(
   if (!alt) return 'no-alt'
   if (/^일러스트/.test(alt)) return 'illustration'
   const place = c.origin === 'public' ? c.place || placeNameOfUrl(c.pageUrl) : null
-  const strip = c.origin === 'owner' ? names : place ? [place] : []
+  const strip = c.origin === 'owner' ? names.filter((n) => placeKey(n).length >= MIN_PLACE_KEY) : place ? [place] : []
   if (PEOPLE_PHOTO.test(strip.length ? strip.reduce((s, n) => withoutPlaceName(s, n), alt) : alt)) return 'people'
   if (c.origin === 'public') {
     if (c.license !== 'kogl-1') return 'license'
@@ -370,126 +374,230 @@ export function isPeopleScene(slotKey: string, places: readonly string[] = []): 
   return PEOPLE_SCENE.test(places.reduce((s, p) => withoutPlaceName(s, p), normSlotAlt(slotKey).toLowerCase()))
 }
 
-// ── 업주 사진의 「제품 화면」(2026-11-07 설계 D1~D7) ─────────────────────────────────────────────────────────────
+// ── 업주 사진의 「제품 화면」(2026-11-07 설계 D1~D7 · 검토 2차) ─────────────────────────────────────────────────────
 // 회사가 준 제품 화면 캡처(보관함에서 「제품 화면」으로 표시 — src/lib/ownerPhotos.ts OwnerProductScreen)는 사진이 아니라 화면이다. 자리 글자가
 // 그 제품 이름과 화면 낱말을 함께 말하는 자리(제품 화면 자리)에만 넣고, 그런 사진 자리에는 실제 사진을 넣지 않는다. 서버(server/index.ts
-// op auto)도 같은 함수로 다시 본다(ownerPickAllowed).
+// op auto)도 같은 함수로 다시 본다(ownerPickAllowed · productScreenSlotOf).
 
 /** 화면 자리 낱말 — 화면 · 스크린샷 · 캡처. */
 const OWNER_SCREEN_WORD = /화면|스크린\s?샷|캡처|캡쳐/
-/** 「화면」이지만 화면 캡처가 아닌 말 — 「한 화면에 담긴 장면」(한 장의 사진 안에). */
-const SCREEN_IDIOM = /한\s?화면에\s?(?:담|들어|모아|모인|잡)/g
-/** 실물 화면(사이니지 · 전광판 · TV)을 찍은 사진 자리 — 화면 캡처가 아니라 사진이다. */
-const DISPLAY_PHOTO = /사이니지|\bdid\b|전광판|티비|\btv\b|텔레비전|대형\s?화면/i
-/** 화면을 보는 사람의 직함 — 사람 낱말(PEOPLE_SCENE) 밖의 것(「구매 담당자」 · 「마케팅 팀장」). */
-const SCREEN_VIEWER = /담당자|실무자|팀장|팀원|대표|사장|원장|점주|마케터|관리자|운영자|동료|구매팀|마케팅팀/
-/** 사람이 화면을 보거나 띄워 둔 장면의 낱말. */
-const SCREEN_VIEWING = /모니터|노트북|태블릿|회의실|책상|띄워|띄운|살펴|들여다|바라보|보는|보며|보고\s?있|함께\s?보/
+/** 「화면」이지만 화면 캡처가 아닌 말 — 「한 화면에 담긴 장면」(한 장의 사진 안에) · 「화면 비율」(가로세로 비). */
+const SCREEN_IDIOM = /한\s?화면에\s?(?:담|들어|모아|모인|잡)|화면\s?비율/g
 /**
- * 제품 화면과 맞지 않는 자리 맥락 — 자리 글자에 있으면 화면 설명에도 있어야 한다(다른 회사 · 기기 · 지도 앱 · AI 답변 · 검색 결과 화면). 한
- * 묶음 안의 낱말이면 맞은 것으로 본다(「휴대폰」 자리 · 「스마트폰」 화면). 「AI 답변 준비도」는 AI 답변 화면이 아니다.
+ * 실물 화면(사이니지 · 전광판 · TV · 매장 모니터 · 키오스크)을 찍은 사진 자리 · 실물 화면에서 영상을 트는 장면 — 화면 캡처가 아니라 사진이다
+ * (검토 2차 — 「매장 모니터 화면에서 자막과 함께 재생되는 모습」).
+ */
+const DISPLAY_PHOTO = /사이니지|\bdid\b|전광판|티비|\btv\b|텔레비전|대형\s?화면|(?:매장|벽|실물|대형)\s?모니터|키오스크|재생\s?(?:되|하|중)|틀어\s?(?:둔|놓)/i
+/**
+ * 화면 자리의 사람 — 직함 · 쓰는 사람 · 손(사람 낱말 PEOPLE_SCENE 밖의 것). 있으면 사람이 화면을 보는 · 설명하는 · 공유하는 사진 자리다(검토
+ * 2차 — 「직함 × 보는 동사」 허용 목록은 「사용자가 … 보는」 · 「실무자가 … 공유하는」을 놓쳤다).
+ */
+const SCREEN_PERSON = /담당자|실무자|팀장|팀원|대표|사장|원장|점주|마케터|관리자|운영자|동료|구매팀|마케팅팀|사용자|이용자|바이어|구매자|고객(?:사)?(?=[이가은는과와께도의]|들)|손가락|손으로|손끝|두\s?손|한\s?손/
+/** 사람 낱말이지만 화면 이름인 말(「관리자 화면」 · 「사용자 페이지」 · 「대표 화면」) — 사람을 볼 때 걷는다. */
+const SCREEN_ROLE_NAME = /(?:관리자|운영자|사용자|이용자|고객|대표)\s?(?:화면|페이지|모드|메뉴|계정|권한|이미지|사진|용)/g
+/** 화면 안에서 하는 입력 — 사람이 화면 낱말 뒤에 나오고 이 낱말이 있으면 화면 자리다(「화면에서 구매 담당자가 품목을 입력하는」). */
+const SCREEN_INPUT = /입력|넣는|넣고|넣은|등록하|작성하|고르는|선택하는|올리는|업로드/
+/**
+ * 제품 화면과 맞지 않는 자리 맥락 — 자리 글자에 있으면 화면 설명에도 있어야 한다(다른 회사 · 기기 · 지도 · AI 답변 · 검색 · 메일 · 메신저 화면,
+ * 제품을 쓰기 전 — 검토 2차에서 넓혔다). 한 묶음 안의 낱말이면 맞은 것으로 본다(「휴대폰」 자리 · 「스마트폰」 화면). 「AI 답변 준비도」는 AI
+ * 답변 화면이 아니다.
  */
 const SCREEN_CONTEXT: readonly RegExp[] = [
   /네이버|naver/i,
-  /카카오|kakao/i,
+  /카카오|kakao|카톡/i,
   /구글|google/i,
   /티맵|t\s?맵|tmap/i,
-  /인스타그램|instagram/i,
+  /인스타|instagram/i,
   /유튜브|youtube/i,
   /플레이스/,
   /휴대폰|핸드폰|스마트폰|모바일|태블릿/,
-  /지도\s?(?:앱|어플)/,
-  /chat\s?gpt|챗\s?gpt|챗지피티|gemini|제미나이|perplexity|퍼플렉시티|copilot|코파일럿|클로드|claude|(?:ai|인공지능)\s?(?:답변|검색|챗봇)(?!\s?준비도)|답변\s?(?:화면|창)/i,
-  /검색\s?결과/,
+  /지도/,
+  /chat\s?gpt|챗\s?gpt|챗지피티|gemini|제미나이|perplexity|퍼플렉시티|copilot|코파일럿|클로드|claude|생성형\s?ai|(?:ai|인공지능|챗봇)\s?(?:가|이)?\s?(?:답변|답한|답하|답을|응답|검색|챗봇)(?!\s?준비도)|(?:답변|응답)\s?(?:화면|창)/i,
+  /검색\s?(?:결과|화면|창)|포털/,
+  /경쟁사|경쟁\s?(?:업체|제품|서비스|솔루션)|타사|다른\s?(?:회사|업체|서비스|솔루션|제품)/,
+  /이메일|메일|문자\s?메시지|메신저|\bsms\b/i,
+  /도입\s?(?:전|이전|하기\s?전)|(?:쓰기|사용하기|사용|적용)\s?전|이전에|기존|대신|(?:하|쓰|주고받|보내)던/,
 ]
-/** 결과 화면 낱말(「검색 결과」는 아니다) — 자리와 화면 설명이 함께 말하거나 함께 말하지 않아야 한다(D2 — 「진단 결과 화면」 자리에 시작 화면). */
-const RESULT_WORD = /(?<!검색\s?)결과/
+/** 결과 화면 낱말 — 점수 · 리포트도 결과 화면이다(「검색 결과」 · 「결과물」은 아니다 — 검토 2차). */
+const RESULT_PHASE = /(?<!검색\s?)결과(?!물)|점수|리포트|보고서|진단표/
+/** 시작(입력) 화면 낱말. */
+const START_PHASE = /시작|입력(?:하|해|한|칸|란|창)|빈\s?입력|첫\s?화면/
 /** 제품 화면 점수에서 빼는 낱말 — 화면이면 다 있는 말. */
 const OWNER_SCREEN_STOP = ['화면', '표시', '모습', '장면', '캡처', '스크린샷']
 /** 제품 화면은 장면 글자의 낱말이 이만큼 이상 설명과 맞아야 넣는다 — 낱말 하나만 같은 자리(지도 자리에 장소 안내 화면)를 막는다. */
 const OWNER_SCREEN_KEY_WORDS = 2
+/** 다른 이름이 자리를 여는 꼴 — 이름 바로 뒤의 화면 낱말(「네고시움 화면」 · 「네고시움의 협상 화면」). */
+const ALIAS_SCREEN_TAIL = '\\s*(?:의\\s*(?:[\\p{L}\\p{N}]+\\s*)?)?(?:화면|스크린\\s?샷|캡처|캡쳐)'
+/** 「제품 화면」으로 올리면 채울 수 있다고 알리는 찍지 않는 화면 자리의 종류(screenKindOf). */
+const OWNER_SCREEN_HINT_KINDS: ReadonlySet<ScreenSlotKind> = new Set<ScreenSlotKind>(['none', 'action', 'other', 'unrelated'])
+/**
+ * 까닭에 적지 않는 자리 낱말 — 움직씨 · 꾸밈말 꼴(「입력하」 · 「입력하고」 · 「나온」 · 「바꾼」 · 「펼쳐진」 · 「쌓인」 · 「나란히」, 두 글자
+ * 「보여」 · 「열어」).
+ */
+const GAP_VERB_END = /(?:하|해|했|한|된|되|돼|진|져|쳐|인|운|은|는|던|온|꾼|뀐|히|하고)$|^[가-힣][여어]$/
 
-/** 이름들(브랜드 · 제품)을 걷어 낸 비교 글자(장소 이름처럼 — withoutPlaceName, 소문자). */
+/** 이름들(브랜드 · 제품)을 걷어 낸 비교 글자(장소 이름처럼 — withoutPlaceName, 소문자). 3자보다 짧은 이름은 걷지 않는다(「아이」 — 검토 2차). */
 function withoutNames(text: string, names: readonly string[]): string {
-  return names.reduce((s, n) => withoutPlaceName(s, n), normSlotAlt(text).toLowerCase())
+  return names.filter((n) => placeKey(n).length >= MIN_PLACE_KEY).reduce((s, n) => withoutPlaceName(s, n), normSlotAlt(text).toLowerCase())
 }
 
 /**
- * 자리가 사람이 화면을 보는 장면인가 — 사람 낱말(PEOPLE_SCENE)이 있거나, 직함(담당자 · 팀장 …)과 보는 · 띄워 둔 · 모니터 · 노트북 낱말이 함께
- * 있다(「구매 담당자가 … 화면을 모니터에 띄워 놓고」). 브랜드 · 제품 이름을 걷고 본다(D6). 화면 안에서 입력하는 장면(「화면에서 구매 담당자가
- * 품목을 입력하는」)은 화면 자리다.
+ * 자리가 사람이 화면을 보는 · 쓰는 장면인가 — 사람 낱말(PEOPLE_SCENE)이 있거나, 화면 자리의 사람(SCREEN_PERSON — 직함 · 쓰는 사람 · 손)이
+ * 있다. 다만 사람이 화면 낱말 뒤에 나오고 입력 낱말이 있으면 화면 안에서 하는 입력이라 화면 자리다(「화면에서 구매 담당자가 품목을 입력하는」).
+ * 브랜드 · 제품 이름을 걷고 본다(D6).
  */
 function screenViewerScene(slotKey: string, names: readonly string[]): boolean {
-  const t = withoutNames(slotKey, names)
-  return PEOPLE_SCENE.test(t) || (SCREEN_VIEWER.test(t) && SCREEN_VIEWING.test(t))
+  const t = withoutNames(slotKey, names).replace(SCREEN_ROLE_NAME, ' ')
+  if (PEOPLE_SCENE.test(t)) return true
+  const person = SCREEN_PERSON.exec(t)
+  if (!person) return false
+  const screen = OWNER_SCREEN_WORD.exec(t)
+  return !(screen && screen.index < person.index && SCREEN_INPUT.test(t.slice(person.index)))
 }
 
 /**
- * 제품 화면 자리인가 — 장면 글자가 그 제품 이름과 화면 낱말(화면 · 스크린샷 · 캡처)을 함께 말하고, 사람이 화면을 보는 장면 · 실물 화면(사이니지 ·
- * 전광판) 사진 · 「한 화면에 담긴」 사진 자리가 아니다. 화면 자리(isScreenSlot)는 다른 이름도 보지만, 사진 자리는 대표 이름(첫 이름)이 있을 때만
- * 연다 — 흔한 다른 이름(「세로형」)이 사진 자리를 화면 몫으로 가져가지 않게(설계 검토). 맞으면 대표 이름, 아니면 null. brandNames는 브랜드
- * 이름 · 다른 이름(사람 낱말을 볼 때 걷는다).
+ * 제품 이름이 글자에서 자리를 여는가 — 대표 이름(첫 이름)은 글자에 나오면, 다른 이름은 화면 낱말을 바로 꾸밀 때만(「네고시움 화면」 ·
+ * 「네고시움의 협상 화면」). 흔한 다른 이름(「세로형으로 바꾼 …」 · 「AI 답변 준비도 진단 결과 화면」)은 열지 않는다. 이름은 낱말 경계로
+ * 본다(「ADO」는 「ADO2」에 없다 — productNameRe). 「한 화면에 담긴」 · 「화면 비율」은 화면 낱말이 아니다.
+ */
+function productOpens(text: string, names: readonly { name: string; key: string }[]): boolean {
+  const t = normSlotAlt(text).toLowerCase().replace(SCREEN_IDIOM, ' ')
+  return names.some((n, i) => productNameRe(n.key, i === 0 ? '' : ALIAS_SCREEN_TAIL).test(t))
+}
+
+/** 자리 글자에 그 제품 이름이 나오는가(대표 이름 · 화면을 꾸미는 다른 이름) — 업주 사진 보관함이 표시할 때 「어느 자리에도 없어요」를 알린다. */
+export function productNamedIn(text: string, product: string): boolean {
+  return productOpens(text, productNames(product))
+}
+
+/**
+ * 제품 화면 자리인가 — 장면 글자가 그 제품 이름(productOpens — 대표 이름, 또는 화면을 꾸미는 다른 이름)과 화면 낱말(화면 · 스크린샷 · 캡처)을
+ * 함께 말하고, 사람이 화면을 보는 · 쓰는 장면(screenViewerScene) · 실물 화면(사이니지 · 매장 모니터 · 키오스크) 사진 · 「한 화면에 담긴」
+ * 사진 자리가 아니다. 화면 자리 · 사진 자리 모두 같은 규칙이다(검토 2차 — 사진 자리를 대표 이름에만 묶으면 「네고시움 화면에서 …」 사진
+ * 자리에 실제 사진이 「확인 필요」 없이 들어갔다). 맞으면 대표 이름, 아니면 null. brandNames는 브랜드 이름 · 다른 이름(사람 낱말을 볼 때 걷는다).
  */
 export function ownerScreenSlotProduct(slotKey: string, product: string, brandNames: readonly string[] = []): string | null {
   const names = productNames(product)
   if (!names.length) return null
   const all = [...brandNames, ...names.map((n) => n.name)]
   const rest = withoutNames(slotKey, all).replace(SCREEN_IDIOM, ' ')
-  if (!OWNER_SCREEN_WORD.test(rest) || DISPLAY_PHOTO.test(rest)) return null
-  const key = productKey(slotKey)
-  const open = isScreenSlot(slotKey) ? names : names.slice(0, 1)
-  if (!open.some((n) => key.includes(n.key))) return null
+  if (!OWNER_SCREEN_WORD.test(rest) || DISPLAY_PHOTO.test(rest) || !productOpens(slotKey, names)) return null
   return screenViewerScene(slotKey, all) ? null : names[0]!.name
 }
 
+/** 표시한 제품들(products — 「제품 화면」의 제품 이름) 가운데 자리가 말한 제품의 대표 이름 — 그 자리는 제품 화면 몫이다. 아니면 null. */
+export function productScreenSlotOf(slotKey: string, products: readonly string[], brandNames: readonly string[] = []): string | null {
+  for (const product of products) {
+    const hit = ownerScreenSlotProduct(slotKey, product, brandNames)
+    if (hit) return hit
+  }
+  return null
+}
+
+/** 화면 단계 — 결과 화면(점수 · 리포트 포함) · 시작(입력) 화면 · 그 밖(null). */
+function screenPhase(text: string): 'result' | 'start' | null {
+  return RESULT_PHASE.test(text) ? 'result' : START_PHASE.test(text) ? 'start' : null
+}
+
 /**
- * 제품 화면 설명이 자리와 어긋나는가 — context 자리 글자의 맥락 낱말(SCREEN_CONTEXT — 다른 회사 · 휴대폰 · 지도 앱 · AI 답변 · 검색 결과)이
- * 화면 설명에 없음, phase 결과 화면 여부가 다름(D2). 브랜드 · 제품 이름은 걷고 본다. 맞으면 null.
+ * 제품 화면 설명이 자리와 어긋나는가 — context 자리 글자의 맥락 낱말(SCREEN_CONTEXT)이 화면 설명에 없음, phase 화면 단계가 다름(D2 · 검토 2차 —
+ * 결과 화면 자리에는 결과 화면만, 결과 화면은 결과 자리에만, 입력하는 자리에는 시작 화면만. 단계를 말하지 않는 자리에는 시작 화면도 된다).
+ * 브랜드 · 제품 이름은 걷고 본다. 맞으면 null.
  */
 export function ownerScreenMismatch(slotKey: string, alt: string, product: string, brandNames: readonly string[] = []): 'context' | 'phase' | null {
   const names = [...brandNames, ...productNames(product).map((n) => n.name)]
   const slot = withoutNames(slotKey, names)
   const shot = withoutNames(alt, names)
   if (SCREEN_CONTEXT.some((re) => re.test(slot) && !re.test(shot))) return 'context'
-  return RESULT_WORD.test(slot) === RESULT_WORD.test(shot) ? null : 'phase'
+  const a = screenPhase(slot)
+  const b = screenPhase(shot)
+  return a === b || (a === null && b === 'start') ? null : 'phase'
+}
+
+/** 표시한 제품 화면이 그 자리에 맞는 종류인가 — 제품 화면 자리이고(ownerScreenSlotProduct) 맥락 · 화면 단계가 맞다(ownerScreenMismatch). */
+export function ownerScreenFits(slotKey: string, alt: string, product: string, brandNames: readonly string[] = []): boolean {
+  return ownerScreenSlotProduct(slotKey, product, brandNames) !== null && ownerScreenMismatch(slotKey, alt, product, brandNames) === null
 }
 
 /**
- * 제품 화면과 자리의 설명 낱말 점수 — 사진과 같은 문턱(scoreSlot)에 더해 장면 글자의 낱말이 OWNER_SCREEN_KEY_WORDS개 이상 맞아야 한다. 브랜드 ·
- * 제품 이름(다른 이름 포함)과 화면 낱말은 점수에 세지 않는다 — 같은 제품의 다른 화면을 가르고, 흔한 다른 이름(「AI 답변 준비도 진단」)이 점수를
- * 부풀리지 않게.
+ * 제품 화면 점수 · 빠진 낱말에서 빼는 낱말 — 브랜드 · 제품 이름(다른 이름 포함)과 화면 낱말. 이름은 조사를 뗀 꼴과 그대로의 꼴을 함께 둔다
+ * (「새로세로」는 조사를 떼면 「새로세」 — 자리 글자 「새로세로로」는 「새로세로」로 읽힌다).
+ */
+function ownerScreenStop(product: string, stop: ReadonlySet<string>): Set<string> {
+  const names = productNames(product).map((n) => n.name)
+  const raw = names.flatMap((n) => normSlotAlt(n).toLowerCase().split(/[^\p{L}\p{N}]+/u)).filter((t) => t.length >= 2)
+  return new Set([...stop, ...contentWords(names.join(' ')), ...raw, ...OWNER_SCREEN_STOP])
+}
+
+/**
+ * 제품 화면과 자리의 설명 낱말 점수 — 사진과 같은 문턱(scoreSlot)에 더해 장면 글자의 낱말이 OWNER_SCREEN_KEY_WORDS개 이상 맞아야 한다(한 화면
+ * 낱말에 맞은 자리 낱말 둘 — 「숙소」 · 「숙소들」 — 은 하나로 센다, 검토 2차). 브랜드 · 제품 이름(다른 이름 포함)과 화면 낱말은 점수에 세지
+ * 않는다 — 같은 제품의 다른 화면을 가르고, 흔한 다른 이름(「AI 답변 준비도 진단」)이 점수를 부풀리지 않게.
  */
 export function ownerScreenScore(slot: { key: string; caption: string; heading: string }, alt: string, product: string, stop: ReadonlySet<string> = new Set()): SlotScore {
-  const ostop = new Set([...stop, ...contentWords(productNames(product).map((n) => n.name).join(' ')), ...OWNER_SCREEN_STOP])
+  const ostop = ownerScreenStop(product, stop)
   const score = scoreSlot(slot, alt, ostop)
   const shot = contentWords(alt, ostop)
-  const keyHits = contentWords(slot.key, ostop).filter((w) => shot.some((p) => sameWord(w, p))).length
+  const keys = contentWords(slot.key, ostop)
+  const keyHits = Math.min(keys.filter((w) => shot.some((p) => sameWord(w, p))).length, shot.filter((p) => keys.some((w) => sameWord(w, p))).length)
   return { ...score, pass: score.pass && keyHits >= OWNER_SCREEN_KEY_WORDS }
 }
 
 /**
- * 「제품 화면」으로 표시하지 않은 업주 사진이 화면 캡처인가 — 장면이 화면이거나, 장면을 읽지 못했고 설명이 화면 자리 글자다(isScreenSlotText —
- * 「ADO2 첫 화면 — 네이버 지도 …」). 표시가 결정한다 — 이런 사진은 사진 자리에 넣지 않고, 보관함이 표시를 제안한다.
+ * 자리 장면 글자의 낱말 가운데 제품 화면 설명에 없는 것 — 넣은 제품 화면의 까닭에 적는다(맞는지 확인 — 검토 2차: 「실시간 인디케이터와 조율
+ * 타임라인이 함께」 자리에 실시간 화면만). 꾸밈말 끝(「펼쳐진」)은 적지 않는다.
  */
-export function ownerUnmarkedScreen(rec: { alt: string; scene?: Pick<PhotoScene, 'setting'> | null }): boolean {
-  return rec.scene ? rec.scene.setting === 'screen' : isScreenSlotText(cleanPhotoAlt(rec.alt))
+export function ownerScreenGaps(slotKey: string, alt: string, product: string, stop: ReadonlySet<string> = new Set()): string[] {
+  const ostop = ownerScreenStop(product, stop)
+  const shot = contentWords(alt, ostop)
+  // 조사가 둘 붙은 꼴(「공급사와의」 → 「공급사와」)은 한 번 더 떼고 견준다. 화면을 쓰는 사람(「담당자」)은 화면에 없는 것이 맞다.
+  const has = (w: string) => [w, stripJosa(w)].some((x) => shot.some((p) => sameWord(x, p)))
+  return contentWords(slotKey, ostop).filter((w) => !GAP_VERB_END.test(w) && !SCREEN_PERSON.test(w) && !has(w))
 }
 
 /**
- * 서버(server/index.ts op auto)가 자동 채우기 저장 때 업주 사진을 다시 본다 — 「제품 화면」으로 표시한 사진은 그 자리가 제품 화면 자리이고
- * (ownerScreenSlotProduct) 맥락 · 결과 여부가 맞을 때만(ownerScreenMismatch), 표시하지 않은 사진은 화면 캡처가 아닐 때만(ownerUnmarkedScreen).
- * 설명 낱말 점수(ownerScreenScore)는 설명 줄 · 소제목이 있어야 해 화면만 본다 — 서버는 종류가 맞는지를 다시 본다.
+ * 설명이 화면 캡처로 읽히는가 — 화면 자리 글자(isScreenSlotText)이거나, 화면 낱말(화면 · 스크린샷 · 캡처)이 있고 실물 화면(사이니지 · TV)
+ * · 「한 화면에 담긴」 사진이 아니다(검토 2차 — 「NEGOTIUM 협상 기록 화면 — …」 · 「엑셀 파일 화면 — …」). 업주 사진의 화면 캡처 가리기와
+ * 내보낼 때 업주 사진 자리 글자(「[화면: …]」 — src/lib/screenExport.ts)가 쓴다.
+ */
+export function altReadsAsScreen(alt: string): boolean {
+  const t = cleanPhotoAlt(alt)
+  if (isScreenSlotText(t)) return true
+  const rest = t.replace(SCREEN_IDIOM, ' ')
+  return OWNER_SCREEN_WORD.test(rest) && !DISPLAY_PHOTO.test(rest)
+}
+
+/**
+ * 「제품 화면」으로 표시하지 않은 업주 사진이 화면 캡처인가 — 장면이 화면이거나, 장면을 읽지 못했고 설명이 화면 캡처로 읽힌다(altReadsAsScreen).
+ * 표시가 결정한다 — 이런 사진은 사진 자리에 넣지 않고, 보관함이 표시를 제안한다.
+ */
+export function ownerUnmarkedScreen(rec: { alt: string; scene?: Pick<PhotoScene, 'setting'> | null }): boolean {
+  return rec.scene ? rec.scene.setting === 'screen' : altReadsAsScreen(rec.alt)
+}
+
+/**
+ * 서버(server/index.ts op auto)가 자동 채우기 저장 때 업주 사진을 다시 본다 — 「제품 화면」으로 표시한 사진은 그 자리에 맞는 종류일 때만
+ * (ownerScreenFits), 표시하지 않은 사진은 화면 캡처가 아니고 표시한 제품(products)의 화면 자리도 아닐 때만(검토 2차 — 두 방향). 설명 낱말
+ * 점수(ownerScreenScore)는 설명 줄 · 소제목이 있어야 해 화면만 본다 — 서버는 종류가 맞는지를 다시 본다.
  */
 export function ownerPickAllowed(
   slotKey: string,
   rec: { alt: string; scene?: Pick<PhotoScene, 'setting'> | null; productScreen?: { product: string } | null },
   brandNames: readonly string[] = [],
+  products: readonly string[] = [],
 ): boolean {
   const product = rec.productScreen?.product
-  if (product && productNames(product).length) {
-    return ownerScreenSlotProduct(slotKey, product, brandNames) !== null && ownerScreenMismatch(slotKey, rec.alt, product, brandNames) === null
-  }
-  return !ownerUnmarkedScreen(rec)
+  if (product && productNames(product).length) return ownerScreenFits(slotKey, rec.alt, product, brandNames)
+  return !ownerUnmarkedScreen(rec) && !productScreenSlotOf(slotKey, products, brandNames)
+}
+
+/**
+ * 자리 글자가 화면을 말하는 사진 자리인가(제품 화면 자리가 아닐 때) — 화면 낱말이 있고 실물 화면 · 「한 화면에 담긴」 · 사람이 화면을 보는
+ * 장면이 아니다. 그 제품을 아직 「제품 화면」으로 표시하지 않았을 수 있어, 실제 사진을 넣으면 「확인 필요」다(검토 2차).
+ */
+function screenTalkSlot(slotKey: string, names: readonly string[]): boolean {
+  const rest = withoutNames(slotKey, names).replace(SCREEN_IDIOM, ' ')
+  return OWNER_SCREEN_WORD.test(rest) && !DISPLAY_PHOTO.test(rest) && !screenViewerScene(slotKey, names)
 }
 
 /** 낱말 끝의 조사 하나를 뗀다(떼고 두 글자 이상 남을 때만). */
@@ -1201,27 +1309,52 @@ export interface AutoSlotRow {
   mapMissWhy?: string
   /**
    * 제품 화면 자리(ownerScreenSlotProduct — 표시한 제품 가운데 자리가 말한 제품)의 대표 이름 — 업주 화면 단계가 볼 자리만(빈 화면 자리 · 사진
-   * 자리). 사진 자리면 사진 단계가 실제 사진을 넣지 않는다(화면 몫). 넣었으면 넣은 화면의 제품.
+   * 자리 · 다시 보는 자동 사진의 자리). 사진 자리면 사진 단계가 실제 사진을 넣지 않는다(화면 몫). 넣었으면 넣은 화면의 제품.
    */
   ownerScreenProduct?: string
   /** 업주 화면 단계가 「제품 화면」을 넣었다(늘 「확인 필요」). */
   ownerScreenPicked?: true
-  /** 제품 화면 자리를 비운 까닭 — words 맞는 화면 없음(맥락 · 결과 화면 여부 · 설명 낱말), used 이 글 · 작성자에게 이미 씀, full 글의 사진이 다 참. */
-  ownerScreenMiss?: 'words' | 'used' | 'full'
+  /**
+   * 제품 화면 자리를 비운 까닭 — words 맞는 화면 없음(맥락 · 시작/결과 화면 · 설명 낱말), article 이 글에 이미 씀, used 이 작성자에게 이미 씀,
+   * full 맞는 화면이 남았는데 글의 사진이 다 참.
+   */
+  ownerScreenMiss?: 'words' | 'article' | 'used' | 'full'
+  /** 넣은 제품 화면의 설명에 없는 자리 장면 글자의 낱말(ownerScreenGaps — 까닭에 적는다, 맞는지 확인). */
+  ownerScreenGaps?: string[]
+  /** 찍지 않는 화면 자리(none · action · other · unrelated)의 제품 같은 이름(productLikeName) — 「제품 화면」으로 올리면 채울 수 있다고 알린다. */
+  ownerScreenHint?: string
+  /** 다시 본 자동 사진이 이 자리와 맞지 않는 「제품 화면」이다(ownerScreenFits — 장면과 무관하게 바꾸거나 뺀다). */
+  ownerScreenMisplaced?: true
+  /** 자리 글자가 화면을 말하는 사진 자리(제품 화면 자리가 아님)에 실제 사진을 넣었다 — 「확인 필요」(그 제품 화면을 아직 표시하지 않았을 수 있다). */
+  screenWordPhoto?: true
 }
 
-/** 제품 화면 자리의 까닭(자동 채우기 미리보기) — 넣었으면 자리의 제품 · 맞은 낱말 · 점수, 비웠으면 그 까닭. 업주 화면 단계가 본 자리가 아니면 null. */
-export function ownerScreenReason(row: Pick<AutoSlotRow, 'ownerScreenProduct' | 'ownerScreenPicked' | 'ownerScreenMiss' | 'score'>): string | null {
+/** 넣어 둔 「제품 화면」이 자리와 맞지 않을 때의 까닭 글자(ownerScreenMisplaced). */
+export const OWNER_SCREEN_MISPLACED_TEXT = '넣어 둔 「제품 화면」이 이 자리(제품 · 화면 · 사람 · 맥락 · 시작/결과)와 맞지 않아요'
+
+/**
+ * 제품 화면 자리의 까닭(자동 채우기 미리보기) — 넣었으면 자리의 제품 · 맞은 낱말 · 점수 · 화면 설명에 없는 자리 낱말, 비웠으면 그 까닭(넣어
+ * 둔 자동 사진을 그대로 둔 자리는 그렇다고). 업주 화면 단계가 본 자리가 아니면 null.
+ */
+export function ownerScreenReason(
+  row: Pick<AutoSlotRow, 'ownerScreenProduct' | 'ownerScreenPicked' | 'ownerScreenMiss' | 'ownerScreenGaps' | 'score' | 'old' | 'state'>,
+): string | null {
   const product = row.ownerScreenProduct
   if (!product) return null
-  if (row.ownerScreenPicked) return `자리의 제품 ${product} · 맞은 낱말 ${row.score?.words.join(' · ') || '—'} · ${row.score?.score ?? 0}(맞는지 확인)`
+  if (row.ownerScreenPicked) {
+    const gaps = row.ownerScreenGaps?.length ? ` · 자리 글자의 ${row.ownerScreenGaps.map((g) => `「${g}」`).join(' ')}이(가) 화면 설명에 없어요` : ''
+    return `자리의 제품 ${product} · 맞은 낱말 ${row.score?.words.join(' · ') || '—'} · ${row.score?.score ?? 0}${gaps}(맞는지 확인)`
+  }
   if (!row.ownerScreenMiss) return null
   const why =
     row.ownerScreenMiss === 'used'
       ? '이 작성자에게 이미 씀'
-      : row.ownerScreenMiss === 'full'
-        ? `글의 사진 ${PHOTO_LIMITS.picks}장이 다 참`
-        : '맞는 화면 없음(결과 화면 여부 포함)'
+      : row.ownerScreenMiss === 'article'
+        ? '이 글에 이미 씀'
+        : row.ownerScreenMiss === 'full'
+          ? `글의 사진 ${PHOTO_LIMITS.picks}장이 다 참`
+          : '맞는 화면 없음(결과 화면 여부 포함)'
+  if (row.old && row.state === 'kept') return `제품 화면 자리(${product})에 넣어 둔 자동 사진은 그대로 — 제품 화면: ${why}(맞는지 확인)`
   return `제품 화면 자리(${product}) — ${why}`
 }
 
@@ -1531,16 +1664,10 @@ export function autoPickPhotos(input: {
   const bySrc = (a: AutoCandidate, b: AutoCandidate) => (a.src < b.src ? -1 : a.src > b.src ? 1 : 0)
   usable.sort(bySrc)
   ownerScreens.sort(bySrc)
-  const ownerScreenSrcs = new Set(ownerScreens.map((c) => c.src))
+  const ownerScreenBySrc = new Map(ownerScreens.map((c) => [c.src, c]))
   const screenProducts = [...new Set(ownerScreens.map((c) => c.screenProduct!))]
-  /** 자리가 말한 표시한 제품(제품 화면 자리 — ownerScreenSlotProduct)의 대표 이름, 아니면 null. */
-  const slotProduct = (slotKey: string) => {
-    for (const product of screenProducts) {
-      const hit = ownerScreenSlotProduct(slotKey, product, brandNames)
-      if (hit) return hit
-    }
-    return null
-  }
+  /** 자리가 말한 표시한 제품(제품 화면 자리 — productScreenSlotOf)의 대표 이름, 아니면 null. */
+  const slotProduct = (slotKey: string) => productScreenSlotOf(slotKey, screenProducts, brandNames)
 
   // 공공 사진 — 장소별로, 페이지의 사진 순서 그대로(대표 사진이 앞이다). 출처 붙이기는 설명 검사와 무관하게 제1유형 · 출처만 본다.
   const places = input.places ?? []
@@ -1740,11 +1867,17 @@ export function autoPickPhotos(input: {
     )
     let room = Math.max(0, PHOTO_LIMITS.picks - picks.length)
     // 다시 볼 자동 사진 — 장면으로 고를 때 「이미 넣은 자동 사진도 장면 확인」이면, 자리를 찾아 넣은(applied) 자동 사진(auto)만(화면 자리 ·
-    // 자사 화면 · 「제품 화면」으로 표시한 업주 사진 제외 — 화면 장면이라 사진 자리 장면과 견주면 늘 어긋난다).
+    // 자사 화면 제외). 「제품 화면」으로 표시한 업주 사진은 그 자리에 맞는 종류면(ownerScreenFits) 다시 보지 않고 — 화면 장면이라 사진 자리
+    // 장면과 견주면 늘 어긋난다 — 맞지 않으면 장면과 무관하게 바꾸거나 뺀다(misplacedAt — 검토 2차).
     const recheckAt = new Map<number, PhotoPick>()
+    const misplacedAt = new Set<number>()
     if (scenes && input.recheckAuto) {
       for (const m of match.applied) {
-        if (m.pick.auto && m.pick.origin !== 'screen' && !isScreenSlot(m.slot.key) && !ownerScreenSrcs.has(m.pick.src)) recheckAt.set(m.slot.line, m.pick)
+        if (!m.pick.auto || m.pick.origin === 'screen' || isScreenSlot(m.slot.key)) continue
+        const marked = ownerScreenBySrc.get(m.pick.src)
+        if (marked && ownerScreenFits(m.slot.key, marked.alt, marked.screenProduct!, brandNames)) continue
+        recheckAt.set(m.slot.line, m.pick)
+        if (marked) misplacedAt.add(m.slot.line)
       }
     }
 
@@ -1765,13 +1898,17 @@ export function autoPickPhotos(input: {
             : 'nomatch'
       const found = (state === 'nomatch' || old) && places.length ? slotPlaces({ key: slot.key, caption }, places) : []
       const screenKind = state === 'screen' ? screenKindOf(slot.key, screenProfile, input.brandName) : null
-      // 제품 화면 자리 — 빈 화면 자리와, 다시 보는 자동 사진이 없는 빈 사진 자리. 사진 자리면 사진 단계가 실제 사진을 넣지 않는다(화면 몫).
-      const product = screenProducts.length && (state === 'screen' || (state === 'nomatch' && !old)) ? slotProduct(slot.key) : null
+      // 제품 화면 자리 — 빈 화면 자리 · 빈 사진 자리 · 다시 보는 자동 사진의 자리. 사진 자리면 사진 단계가 실제 사진을 넣지 않는다(화면 몫 —
+      // 다시 보는 자동 실제 사진은 업주 화면 단계가 맞는 제품 화면으로 바꾼다, 검토 2차).
+      const product = screenProducts.length && (state === 'screen' || state === 'nomatch' || old) ? slotProduct(slot.key) : null
+      // 찍지 않는 화면 자리에 제품 같은 이름이 있으면 「제품 화면」으로 올려 채울 수 있다고 알린다(제품 이름이 없는 자리는 올려도 못 채운다).
+      const hint = !product && screenKind && OWNER_SCREEN_HINT_KINDS.has(screenKind.kind) ? productLikeName(slot.key, brandNames) : null
       const row: AutoSlotRow = {
         slot,
         caption,
         state,
         ...(product ? { ownerScreenProduct: product } : {}),
+        ...(hint ? { ownerScreenHint: hint } : {}),
         ...(found.length ? { place: found[0]!, places: found } : {}),
         ...((state === 'nomatch' || state === 'screen') && cleared.length ? { refill: true as const } : {}),
         ...(old ? { old } : {}),
@@ -1820,9 +1957,19 @@ export function autoPickPhotos(input: {
     // 사진을 찾는 자리로 연다(nomatch — 그 사진 · 사람이 그 자리에서 뺀 사진은 고르지 않는다). 시간만 다르면(soft) ①②③③b의 맞는 사진으로만
     // 바꾸고, 종류 · 사람이 어긋났으면 ④ 비슷한 사진으로도 바꾸며, 둘 다 없으면 뺀다(finish). 종류 · 사람이 어긋난 사진은 반드시 나가므로
     // 지금 상한에서 덜어 낸다 — 같은 글의 다른 자리 · 뒤 글의 맞는 자리가 그 사진을 쓸 수 있다.
+    /** 다시 보는 자동 사진을 지금 상한에서 이미 덜어 낸 자리 — 업주 화면 단계가 바꿀 때 다시 덜지 않는다. */
+    const releasedOld = new Set<AutoSlotRow>()
     for (const row of rows) {
       if (!row.old) continue
       const src = canonicalPhotoSrc(row.old.src) ?? row.old.src
+      if (misplacedAt.has(row.slot.line)) {
+        // 자리와 맞지 않는 「제품 화면」 — 장면과 무관하게 바꿀 사진을 찾고(없으면 뺀다 — finish), 지금 상한에서 덜어 낸다.
+        Object.assign(row, { state: 'nomatch', ownerScreenMisplaced: true })
+        inArticle.delete(src)
+        release(src, index, article.group)
+        releasedOld.add(row)
+        continue
+      }
       want({ src }, row.old.origin === 'public' ? 'public' : 'site', true)
       const scene = scenes?.get(src)
       if (!scene) {
@@ -1837,6 +1984,7 @@ export function autoPickPhotos(input: {
         if (!fit.soft) {
           inArticle.delete(src)
           release(src, index, article.group)
+          releasedOld.add(row)
         }
       }
     }
@@ -1858,6 +2006,8 @@ export function autoPickPhotos(input: {
         ...(credit ?? {}),
         ...(candidate.origin === 'owner' && candidate.ownerPhotoId ? { origin: 'owner' as const, ownerPhotoId: candidate.ownerPhotoId } : {}),
       }
+      // 자리 글자가 화면을 말하는 사진 자리 — 그 제품을 아직 「제품 화면」으로 표시하지 않았을 수 있어 실제 사진은 「확인 필요」(검토 2차).
+      const screenWord = screenTalkSlot(row.slot.key, brandNames)
       Object.assign(row, {
         state: row.old ? 'replace' : 'filled',
         ...(row.old ? { recheck: 'replace' } : {}),
@@ -1866,8 +2016,9 @@ export function autoPickPhotos(input: {
         score,
         ...(seen?.scene ? { scene: seen.scene } : {}),
         ...(seen?.fit ? { fit: seen.fit } : {}),
-        ...(isPeopleScene(row.slot.key, row.places ?? []) || credit || similar ? { review: true } : {}),
+        ...(isPeopleScene(row.slot.key, row.places ?? []) || credit || similar || screenWord ? { review: true } : {}),
         ...(similar ? { similar } : {}),
+        ...(screenWord ? { screenWordPhoto: true } : {}),
       })
       if (row.old) {
         replaces.push({ place: { slot: at.slot, nth: at.nth, heading: at.heading }, src: row.old.src, pick })
@@ -2310,36 +2461,45 @@ export function autoPickPhotos(input: {
 
     /**
      * 업주 화면(2026-11-07 설계 D3 · D4) — 자사 화면 단계 뒤에, 제품 화면 자리(ownerScreenProduct — 아직 빈 화면 자리와 사진 단계가 비워 둔 사진
-     * 자리) 가운데 「제품 화면」으로 표시한 업주 사진이 맞는 자리에, 설명 낱말 점수가 높은 짝부터 글에 남은 자리만큼 넣는다. 짝은 그 제품을 말하는
-     * 자리(ownerScreenSlotProduct)이고, 맥락 · 결과 화면 여부가 맞으며(ownerScreenMismatch), 낱말 점수가 문턱을 넘어야 한다(ownerScreenScore).
-     * 알아볼 수 있는 사람이 찍힌 화면 · 사람이 그 자리에서 뺀 화면은 고르지 않는다. 같은 화면은 글 하나 · 작성자 한 사람에게 한 번, 브랜드 상한은
-     * 받지 않는다(자사 화면과 같다). 늘 「확인 필요」. 글의 사진 수(room)는 고치지 않는다(자사 화면 단계와 같다).
+     * 자리, 다시 보는 자동 사진의 자리) 가운데 「제품 화면」으로 표시한 업주 사진이 맞는 자리에, 설명 낱말 점수가 높은 짝부터 글에 남은 자리만큼
+     * 넣는다(다시 보는 자동 사진의 자리는 바꾼다 — replace, 글의 사진 수에 세지 않는다). 짝은 그 자리에 맞는 종류이고(ownerScreenFits — 제품 ·
+     * 화면 · 사람 · 맥락 · 화면 단계), 낱말 점수가 문턱을 넘어야 한다(ownerScreenScore). 화면 설명에 없는 자리 낱말은 까닭에 적는다
+     * (ownerScreenGaps). 알아볼 수 있는 사람이 찍힌 화면 · 사람이 그 자리에서 뺀 화면은 고르지 않는다. 같은 화면은 글 하나 · 작성자 한
+     * 사람에게 한 번, 브랜드 상한은 받지 않는다(자사 화면과 같다). 늘 「확인 필요」. 글의 사진 수(room)는 고치지 않는다(자사 화면 단계와 같다).
      */
     const ownerScreenStage = () => {
       if (!ownerScreens.length) return
       let left = screenLeft ?? room
-      type OwnerPair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore }
+      type OwnerPair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore; gaps: string[] }
       const ownerPairs: OwnerPair[] = []
       for (const row of rows) {
         if (!row.ownerScreenProduct) continue
-        // 자사 화면 단계가 채웠거나 맡은 화면 자리(찍을 화면 · 지도 · 다 참 · 이미 씀)는 보지 않는다.
-        if (!((row.state === 'screen' && !row.screenPick && !row.mapPick) || (row.state === 'nomatch' && !row.old))) {
+        // 자사 화면 단계가 채웠거나 맡은 화면 자리(찍을 화면 · 지도 · 다 참 · 이미 씀)는 보지 않는다. 다시 보는 자동 사진의 자리는 장면이 맞아
+        // 그대로 둔 자리(kept)도 본다 — 제품 화면 자리의 실제 사진은 맞는 제품 화면으로 바꾼다(검토 2차).
+        const open =
+          (row.state === 'screen' && !row.screenPick && !row.mapPick) ||
+          (row.state === 'nomatch' && !row.old) ||
+          Boolean(row.old && (row.state === 'nomatch' || row.state === 'kept'))
+        if (!open) {
           delete row.ownerScreenProduct
           continue
         }
         row.ownerScreenMiss = 'words'
         for (const candidate of ownerScreens) {
           const product = candidate.screenProduct!
-          if (!ownerScreenSlotProduct(row.slot.key, product, brandNames) || removed(row, candidate.src)) continue
-          if (sceneOf(candidate.src)?.people === 'identifiable' || ownerScreenMismatch(row.slot.key, candidate.alt, product, brandNames)) continue
+          if (removed(row, candidate.src) || sceneOf(candidate.src)?.people === 'identifiable') continue
+          if (!ownerScreenFits(row.slot.key, candidate.alt, product, brandNames)) continue
           const score = ownerScreenScore({ key: row.slot.key, caption: row.caption, heading: row.slot.heading }, candidate.alt, product, stop)
-          if (score.pass) ownerPairs.push({ row, candidate, score })
+          if (score.pass) ownerPairs.push({ row, candidate, score, gaps: ownerScreenGaps(row.slot.key, candidate.alt, product, stop) })
         }
       }
-      const blocked = (src: string) =>
-        inArticle.has(src) || (article.group !== undefined && (groupUsed.get(article.group)?.get(src) ?? 0) + heldLater(src, index, article.group).group > 0)
+      const inGroup = (src: string) =>
+        article.group !== undefined && (groupUsed.get(article.group)?.get(src) ?? 0) + heldLater(src, index, article.group).group > 0
+      const blocked = (src: string) => inArticle.has(src) || inGroup(src)
+      // 다시 보는 자동 사진의 자리는 그 사진을 바꾸는 것이라 글의 사진 수에 세지 않는다.
+      const roomFor = (row: AutoSlotRow) => Boolean(row.old) || left > 0
       for (;;) {
-        const open = ownerPairs.filter((p) => !p.row.ownerScreenPicked && left > 0 && !blocked(p.candidate.src))
+        const open = ownerPairs.filter((p) => !p.row.ownerScreenPicked && roomFor(p.row) && !blocked(p.candidate.src))
         if (!open.length) break
         const best = open.sort(
           (a, b) =>
@@ -2348,11 +2508,13 @@ export function autoPickPhotos(input: {
             (a.candidate.src < b.candidate.src ? -1 : a.candidate.src > b.candidate.src ? 1 : 0),
         )[0]!
         const { row, candidate } = best
+        const old = row.old
+        const at = old ?? { slot: row.slot.key, nth: row.slot.nth, same: row.slot.same, heading: row.slot.heading }
         const pick: AutoPickInput = {
-          slot: row.slot.key,
-          nth: row.slot.nth,
-          same: row.slot.same,
-          heading: row.slot.heading,
+          slot: at.slot,
+          nth: at.nth,
+          same: at.same,
+          heading: at.heading,
           src: candidate.src,
           alt: candidate.alt,
           pageUrl: candidate.pageUrl,
@@ -2361,21 +2523,39 @@ export function autoPickPhotos(input: {
           ownerPhotoId: candidate.ownerPhotoId!,
         }
         Object.assign(row, {
-          state: 'filled',
+          state: old ? 'replace' : 'filled',
+          ...(old ? { recheck: 'replace' } : {}),
           pick,
           candidate,
           score: best.score,
           review: true,
           ownerScreenPicked: true,
           ownerScreenProduct: productLabel(candidate.screenProduct!),
+          ...(best.gaps.length ? { ownerScreenGaps: best.gaps } : {}),
         })
         delete row.ownerScreenMiss
-        out.push(pick)
-        left -= 1
+        if (old) {
+          // 다시 보는 자동 사진을 바꾼다 — 아직 상한에서 덜지 않은 사진(장면이 맞음 · 모름 · 시간만 다름)이면 지금 던다.
+          replaces.push({ place: { slot: at.slot, nth: at.nth, heading: at.heading }, src: old.src, pick })
+          if (!releasedOld.has(row)) {
+            const oldSrc = canonicalPhotoSrc(old.src) ?? old.src
+            inArticle.delete(oldSrc)
+            release(oldSrc, index, article.group)
+          }
+        } else {
+          out.push(pick)
+          left -= 1
+        }
         inArticle.add(candidate.src)
         countUse(candidate.src, article.group)
       }
-      for (const p of ownerPairs) if (!p.row.ownerScreenPicked) p.row.ownerScreenMiss = left <= 0 ? 'full' : 'used'
+      // 짝이 있었는데 넣지 못한 자리 — 짝이 모두 이 글에서 쓴 화면이면 article, 작성자에게 쓴 화면이 섞였으면 used, 막히지 않은 짝이 있으면 full.
+      for (const row of rows) {
+        if (row.ownerScreenPicked) continue
+        const mine = ownerPairs.filter((p) => p.row === row)
+        if (!mine.length) continue
+        row.ownerScreenMiss = mine.some((p) => !blocked(p.candidate.src)) ? 'full' : mine.every((p) => inArticle.has(p.candidate.src)) ? 'article' : 'used'
+      }
     }
 
     // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소의 공공 사진이 모두 「제1유형 아님」으로 빠졌으면 license.
@@ -2389,8 +2569,9 @@ export function autoPickPhotos(input: {
     }
     const finish = (): AutoArticleResult => {
       for (const row of rows) {
-        // 비워 둔 제품 화면 자리는 그 까닭(ownerScreenMiss)으로 둔다 — 사진을 고르지 않은 자리다.
-        if (row.state !== 'nomatch' || row.ownerScreenProduct) continue
+        // 비워 둔 제품 화면 자리는 그 까닭(ownerScreenMiss)으로 둔다 — 사진을 고르지 않은 자리다. 장면이 어긋난 다시 보는 자동 사진의 자리는
+        // 제품 화면으로 바꾸지 못했으면 아래처럼(비슷한 사진으로 두거나 뺀다).
+        if (row.state !== 'nomatch' || (row.ownerScreenProduct && !row.old)) continue
         if (row.old) {
           // 다시 본 자동 사진 — 바꿀 사진이 없다. 시간만 다르면 비슷한 사진으로 두고, 아니면 뺀다(사람이 뺀 자리로 적지 않는다 — 이미 덜어 냈다).
           if (row.oldFit?.soft && row.oldScene) {
