@@ -1909,14 +1909,21 @@ export async function loadOwnerPhotos(tenantId: string): Promise<{ photos: impor
 
 /**
  * 업주 사진 한 장을 올린다 — 사진 바이트 그대로, 설명 · 권리는 쿼리. confirmed는 화면이 「업주(촬영자)에게 홈페이지 · 블로그 게시 허락을
- * 받았다」 확인을 받았을 때만 보낸다. 서버가 장면을 한 번 읽는다(sceneCalls — 비용 셈).
+ * 받았다」 확인을 받았을 때만 보낸다(「제품 화면」이면 회사의 게시 확인). product를 주면 「제품 화면」으로 표시한다(제품 이름 — 쉼표로 다른
+ * 이름). 서버가 장면을 한 번 읽는다(sceneCalls — 비용 셈).
  */
 export async function uploadOwnerPhoto(
   tenantId: string,
   file: Blob,
-  meta: { alt: string; holder: string; note?: string },
+  meta: { alt: string; holder: string; note?: string; product?: string },
 ): Promise<{ photo: import('./ownerPhotos').OwnerPhotoView; existed: boolean; sceneCalls: number }> {
-  const q = new URLSearchParams({ confirmed: '1', alt: meta.alt, holder: meta.holder, ...(meta.note ? { note: meta.note } : {}) })
+  const q = new URLSearchParams({
+    confirmed: '1',
+    alt: meta.alt,
+    holder: meta.holder,
+    ...(meta.note ? { note: meta.note } : {}),
+    ...(meta.product ? { product: meta.product } : {}),
+  })
   const res = await fetch(`/api/owner-photos/${encodeURIComponent(tenantId)}?${q.toString()}`, {
     method: 'POST',
     headers: { 'Content-Type': file.type && /^image\/(jpeg|png|webp)$/.test(file.type) ? file.type : 'application/octet-stream' },
@@ -1927,11 +1934,11 @@ export async function uploadOwnerPhoto(
   return { photo: body.photo, existed: Boolean(body.existed), sceneCalls: body.sceneCalls ?? 0 }
 }
 
-/** 업주 사진의 설명을 고친다 · 장면을 다시 읽는다 · 보관함에서 뺀다(파일도 지운다). */
+/** 업주 사진의 설명을 고친다 · 「제품 화면」 표시를 바꾼다(null이면 뺀다) · 장면을 다시 읽는다 · 보관함에서 뺀다(파일도 지운다). */
 export async function updateOwnerPhoto(
   tenantId: string,
   id: string,
-  action: { alt: string } | { rereadScene: true } | { remove: true },
+  action: { alt: string } | { productScreen: { product: string } | null } | { rereadScene: true } | { remove: true },
 ): Promise<import('./ownerPhotos').OwnerPhotoView | null> {
   const base = `/api/owner-photos/${encodeURIComponent(tenantId)}/${encodeURIComponent(id)}`
   const res =
@@ -1939,7 +1946,7 @@ export async function updateOwnerPhoto(
       ? await fetch(base, { method: 'DELETE' })
       : 'rereadScene' in action
         ? await fetch(`${base}/scene`, { method: 'POST' })
-        : await fetch(base, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alt: action.alt }) })
+        : await fetch(base, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(action) })
   const body = (await res.json().catch(() => ({}))) as { photo?: import('./ownerPhotos').OwnerPhotoView; error?: string }
   if (!res.ok) throw new Error(body.error || `업주 사진을 바꾸지 못했어요 (HTTP ${res.status})`)
   return body.photo ?? null

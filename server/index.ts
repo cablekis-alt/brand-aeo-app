@@ -71,7 +71,7 @@ import {
   type PhotoPick,
   type PublicPhotoFields,
 } from '../src/lib/articlePhotos.js';
-import { AUTO_PICK_RULES, autoCandidateSkip, ownPhotoExempt, placeKey } from '../src/lib/photoAutoPick.js';
+import { AUTO_PICK_RULES, autoCandidateSkip, ownerPickAllowed, ownPhotoExempt, placeKey } from '../src/lib/photoAutoPick.js';
 import {
   findScreenVariant,
   isScreenShotId,
@@ -117,10 +117,19 @@ import {
   readOwnerPhotoFile,
   readOwnerPhotos,
   removeOwnerPhoto,
+  setOwnerPhotoProductScreen,
   setOwnerPhotoScene,
   updateOwnerPhotoAlt,
 } from './ownerPhotos.js';
-import { isOwnerPhotoId, OWNER_PHOTO_MAX_BYTES, ownerPhotoAppSrc, type OwnerPhotoRecord } from '../src/lib/ownerPhotos.js';
+import {
+  cleanProductScreen,
+  isOwnerPhotoId,
+  OWNER_PHOTO_MAX_BYTES,
+  ownerPhotoAppSrc,
+  PRODUCT_SCREEN_MAX,
+  type OwnerPhotoRecord,
+  type OwnerProductScreen,
+} from '../src/lib/ownerPhotos.js';
 import { buildArticleEvidence, WEEK_OF } from './articleEvidence.js';
 import { channelStyleOf } from '../src/prompts/b9d-channel-adapt.js';
 import { briefFocusOf } from '../src/prompts/b9b-content-brief.js';
@@ -992,7 +1001,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
       pageUrl: ownerPageUrl,
       siteAlt,
       alt,
-      owner: { fields: { origin: 'owner' as const, ownerPhotoId: rec.id } },
+      owner: { fields: { origin: 'owner' as const, ownerPhotoId: rec.id }, record: rec },
     };
   };
   // 고른 사진 하나 — 자리 · https 사진 주소 · 페이지 주소가 맞지 않으면 null. 설명은 사실 가드를 거친다(걸리면 '' — siteAlt로 알린다).
@@ -1159,8 +1168,15 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         }
         // 앱이 그린 지도 — 사진 후보 검사는 보지 않는다(서버가 그린 그림이고 대체 텍스트 · 위치 문장 · 출처 줄은 서버가 단다).
         if (p?.map) return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.map.fields };
-        // 업주 사진 — 이 PC에 올린 사진(권리 확인을 받고 올렸다). 사진 후보 검사(사람 낱말 · 일러스트)는 화면이 설명으로 한다.
-        if (p?.owner) return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.owner.fields };
+        // 업주 사진 — 이 PC에 올린 사진(권리 확인을 받고 올렸다). 사진 후보 검사(사람 낱말 · 일러스트)는 화면이 설명으로 한다. 종류는 다시 본다
+        // (2026-11-07 설계) — 「제품 화면」으로 표시한 사진은 그 제품의 화면 자리에만, 표시하지 않은 화면 캡처는 넣지 않는다(ownerPickAllowed).
+        if (p?.owner) {
+          if (!ownerPickAllowed(p.place.slot, p.owner.record, [tenant.brandName, ...(tenant.aliases ?? [])])) {
+            rejected += 1;
+            return null;
+          }
+          return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...p.owner.fields };
+        }
         const pub = p?.pub && typeof p.pub === 'object' ? p.pub : null;
         if (pub && !publicAt) {
           needPublic = true;
@@ -1249,10 +1265,13 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         }
       }
       // 같은 작성자의 글 사이에 같은 사진 한 번 — 화면의 미리보기가 오래됐어도 쓰기 안에서 다시 본다(작성자 배정 기간에만).
-      // refillCleared(「사람이 뺀 자리도 다시 채우기」)면 사람이 뺀 자리에도 넣되, 그 자리에서 뺀 사진은 넣지 않는다.
+      // refillCleared(「사람이 뺀 자리도 다시 채우기」)면 사람이 뺀 자리에도 넣되, 그 자리에서 뺀 사진은 넣지 않는다. 자기 시설 사진(B2B 브랜드는
+      // 브랜드 이름 자리만)과 「제품 화면」으로 표시한 업주 사진은 브랜드 상한을 받지 않는다(2026-11-07 설계 D4).
+      const productScreens = new Set(ownerRecords.filter((r) => r.productScreen).map((r) => r.id));
       const saved = await saveAutoPhotoPicks(tenant.tenantId, entries, AUTO_PICK_RULES.brandRepeat, await writerGroupOf(tenant.tenantId), {
         refillCleared: b.refillCleared === true,
-        ownExempt: (p) => ownPhotoExempt(p, tenant.brandName),
+        ownExempt: (p) =>
+          ownPhotoExempt(p, tenant.brandName, tenant.marketScope) || (p.origin === 'owner' && p.ownerPhotoId !== undefined && productScreens.has(p.ownerPhotoId)),
       });
       res.json({ ...saved, skipped: saved.skipped + rejected });
       return;
@@ -1538,6 +1557,7 @@ app.get('/api/content-draft/:tenantId/photo-file', async (req, res) => {
 // 확인(confirmed)이 없으면 400. 올린 뒤 장면을 한 번 읽는다(키가 없으면 sceneError — 설명 글자로만 맞춘다). Express 전용(Vercel 함수 12/12 —
 // 웹은 업주 사진이 없다).
 const ownerPhotoErrorStatus = (err: unknown) => (err instanceof OwnerPhotoError ? (err.code === 'not-found' ? 404 : 400) : err instanceof RangeError ? 400 : 500);
+const PRODUCT_SCREEN_INVALID = `「제품 화면」의 제품 이름은 한 줄 ${PRODUCT_SCREEN_MAX}자까지, 이름마다 2자 이상이어야 해요(쉼표로 다른 이름 — 예: 「NEGOTIUM, 네고시움」).`;
 async function readOwnerScene(tenantId: string, rec: OwnerPhotoRecord, bytes: Buffer): Promise<{ record: OwnerPhotoRecord; calls: number }> {
   try {
     const { scene, calls } = await describeLocalPhoto(bytes, rec.mime, { id: rec.id });
@@ -1573,11 +1593,19 @@ app.post(
       return;
     }
     const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    // 「제품 화면」 표시(product — 제품 이름, 쉼표로 다른 이름) — 주면 이름이 맞아야 올린다.
+    const asked = typeof q.product === 'string' && q.product.trim() !== '';
+    const productScreen = asked ? cleanProductScreen(q.product) : null;
+    if (asked && !productScreen) {
+      res.status(400).json({ error: PRODUCT_SCREEN_INVALID });
+      return;
+    }
     try {
       const { record, existed } = await addOwnerPhoto(tenant.tenantId, bytes, {
         alt: typeof q.alt === 'string' ? q.alt : '',
         holder: q.holder,
         note: q.note,
+        ...(productScreen ? { productScreen } : {}),
       });
       const read = record.scene ? { record, calls: 0 } : await readOwnerScene(tenant.tenantId, record, bytes);
       res.status(existed ? 200 : 201).json({ photo: ownerPhotoView(tenant.tenantId, read.record), existed, sceneCalls: read.calls });
@@ -1587,19 +1615,33 @@ app.post(
   },
 );
 
+// 설명(alt)을 고치거나 「제품 화면」 표시(productScreen — { product } 또는 null로 빼기)를 바꾼다(둘 다 한 번에 줄 수 있다).
 app.patch('/api/owner-photos/:tenantId/:id', async (req, res) => {
   const tenant = await findTenant(req.params.tenantId);
   if (!tenant || !isOwnerPhotoId(req.params.id)) {
     res.status(404).json({ error: '그 업주 사진이 없어요.' });
     return;
   }
-  const alt = (req.body as Record<string, unknown> | undefined)?.alt;
-  if (typeof alt !== 'string') {
-    res.status(400).json({ error: '설명(alt)이 필요합니다.' });
+  const body = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<string, unknown>;
+  const alt = body.alt;
+  const hasProduct = Object.hasOwn(body, 'productScreen');
+  if (typeof alt !== 'string' && !hasProduct) {
+    res.status(400).json({ error: '설명(alt)이나 「제품 화면」 표시(productScreen)가 필요합니다.' });
     return;
   }
+  let productScreen: OwnerProductScreen | null = null;
+  if (hasProduct && body.productScreen !== null) {
+    const raw = body.productScreen && typeof body.productScreen === 'object' ? (body.productScreen as Record<string, unknown>).product : undefined;
+    productScreen = cleanProductScreen(raw);
+    if (!productScreen) {
+      res.status(400).json({ error: PRODUCT_SCREEN_INVALID });
+      return;
+    }
+  }
   try {
-    res.json({ photo: ownerPhotoView(tenant.tenantId, await updateOwnerPhotoAlt(tenant.tenantId, req.params.id, alt)) });
+    let rec = typeof alt === 'string' ? await updateOwnerPhotoAlt(tenant.tenantId, req.params.id, alt) : null;
+    if (hasProduct) rec = await setOwnerPhotoProductScreen(tenant.tenantId, req.params.id, productScreen);
+    res.json({ photo: ownerPhotoView(tenant.tenantId, rec!) });
   } catch (err) {
     res.status(ownerPhotoErrorStatus(err)).json({ error: err instanceof Error ? err.message : String(err) });
   }

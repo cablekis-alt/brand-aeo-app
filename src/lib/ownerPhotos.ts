@@ -34,6 +34,56 @@ export interface OwnerPhotoRights {
   note?: string
 }
 
+/**
+ * 「제품 화면」 표시(2026-11-07 설계 D1) — 회사가 준 제품 화면 캡처를 사진이 아니라 화면으로 쓴다(자동 채우기는 자리 글자가 그 제품과 화면
+ * 낱말을 함께 말하는 자리에만 넣는다 — src/lib/photoAutoPick.ts 업주 화면 단계). product는 제품 이름 한 줄(PRODUCT_SCREEN_MAX자까지) — 쉼표로
+ * 다른 이름을 덧붙인다(「NEGOTIUM, 네고시움」 — 앞이 대표 이름). 표시가 결정한다 — 장면이 화면으로 읽혀도 표시하지 않으면 제안만 한다.
+ */
+export interface OwnerProductScreen {
+  product: string
+}
+
+/** 제품 이름 글자 수 상한(쉼표 · 띄어쓰기 포함). */
+export const PRODUCT_SCREEN_MAX = 30
+/** 이름 하나의 비교 글자 최소 길이. */
+const PRODUCT_NAME_MIN = 2
+
+/** 제품 이름 비교용 글자 — 띄어쓰기 · 문장부호를 빼고 소문자로(「NEGOTIUM」 · 「negotium」 · 「Nego tium」은 같다). */
+export function productKey(s: string): string {
+  return s.normalize('NFC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+}
+
+/** 제품 이름들 — 쉼표로 나눈 이름 가운데 비교 글자가 2자 이상인 것(앞이 대표 이름). */
+export function productNames(product: string): { name: string; key: string }[] {
+  return product
+    .split(/[,，]/)
+    .map((raw) => raw.replace(/\s+/g, ' ').trim())
+    .map((name) => ({ name, key: productKey(name) }))
+    .filter((n) => n.key.length >= PRODUCT_NAME_MIN)
+}
+
+/** 대표 이름(첫 이름) — 칩 · 까닭 글자에 쓴다. 이름이 없으면 ''. */
+export function productLabel(product: string): string {
+  return productNames(product)[0]?.name ?? ''
+}
+
+/** 제품 이름 정리 — 한 줄 · 이름마다 띄어쓰기 정리 · 2자 미만 이름은 뺀다. 이름이 없거나 PRODUCT_SCREEN_MAX자를 넘으면 null. */
+export function cleanProductScreen(raw: unknown): OwnerProductScreen | null {
+  if (typeof raw !== 'string') return null
+  const product = productNames(raw.replace(/[\p{Cc}<>]/gu, ' '))
+    .map((n) => n.name)
+    .join(', ')
+  return product && product.length <= PRODUCT_SCREEN_MAX ? { product } : null
+}
+
+/**
+ * 장면이 화면으로 읽힌 사진의 제품 이름 제안 — 설명의 첫 로마자 낱말(「ADO2 첫 화면 — …」 → 「ADO2」, 「robots.txt 화면」 → 「robots.txt」).
+ * 없으면 ''. 제안일 뿐 — 사람이 고쳐 표시한다.
+ */
+export function productGuessFromAlt(alt: string): string {
+  return /[A-Za-z][A-Za-z0-9]*(?:[.+-][A-Za-z0-9]+)*/.exec(alt)?.[0] ?? ''
+}
+
 /** 보관한 업주 사진 하나(owner-photos.json). */
 export interface OwnerPhotoRecord {
   id: string
@@ -49,6 +99,8 @@ export interface OwnerPhotoRecord {
   /** 올릴 때 읽은 장면 — 키가 없거나 읽지 못하면 없다(sceneError). */
   scene?: PhotoScene
   sceneError?: string
+  /** 「제품 화면」 표시 — 있으면 사진이 아니라 그 제품의 화면 캡처다(사진 자리에 넣지 않는다). */
+  productScreen?: OwnerProductScreen
 }
 
 /** 화면에 주는 모양 — 앱 주소를 단다. */

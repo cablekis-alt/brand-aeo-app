@@ -31,6 +31,11 @@
  * 군산 지도 그림(src/lib/mapImage.ts — 2026-11-05) — 장소 목록 출처가 있는 프로필(군산각)의 지도 자리는, maps를 주면 카카오 지도 미리보기
  * 대신 앱이 OSM 데이터로 그린 지도로 채운다(표지는 자사 사이트 /map/의 장소에서 고른다). 늘 「확인 필요」, 같은 장소 묶음은 글 하나 · 작성자
  * 한 사람에게 한 번(브랜드 상한 없음), 아직 그리지 않은 묶음은 undrawn으로 두고 mapWanted로 청한다.
+ *
+ * 업주 사진의 「제품 화면」(2026-11-07 설계 D1~D7) — 업주 사진 보관함에서 「제품 화면」으로 표시한 캡처(AutoCandidate.screenProduct)는 사진
+ * 단계에 쓰지 않고, 자사 화면 단계 뒤의 업주 화면 단계가 제품 화면 자리(자리 글자가 그 제품 이름과 화면 낱말을 함께 말하는 빈 화면 자리 ·
+ * 사진 자리 — ownerScreenSlotProduct)에만 넣는다. 그런 사진 자리에는 실제 사진을 넣지 않는다(화면 몫). 늘 「확인 필요」, 같은 화면은 글
+ * 하나 · 작성자 한 사람에게 한 번(브랜드 상한 없음). 표시하지 않은 화면 캡처는 사진 자리에 넣지 않는다(ownerUnmarkedScreen).
  */
 import {
   canonicalPhotoSrc,
@@ -94,7 +99,7 @@ import {
   type ScreenVariant,
   type ScreenVariantChoice,
 } from './screenCapture.js'
-import { parseOwnerPhotoAppSrc } from './ownerPhotos.js'
+import { parseOwnerPhotoAppSrc, productKey, productLabel, productNames } from './ownerPhotos.js'
 import type { TourSource } from './tourPhotos.js'
 
 export { needsPhotoCredit }
@@ -131,7 +136,8 @@ const STOP_WORDS = new Set([
   '작은', '넓은', '좋은', '높은', '깊은', '같은', '많은', '어떤', '이런', '그런', '모든', '여러', '한눈에',
 ])
 
-export type AutoCandidateSkip = 'bad-src' | 'no-alt' | 'illustration' | 'people' | 'credit' | 'license' | 'duplicate'
+/** screen — 「제품 화면」으로 표시하지 않은 업주 사진인데 화면 캡처다(ownerUnmarkedScreen — 사진 자리에 넣지 않는다). */
+export type AutoCandidateSkip = 'bad-src' | 'no-alt' | 'illustration' | 'people' | 'credit' | 'license' | 'duplicate' | 'screen'
 
 export const AUTO_CANDIDATE_SKIP_TEXT: Record<AutoCandidateSkip, string> = {
   'bad-src': 'https 주소가 아님',
@@ -141,6 +147,7 @@ export const AUTO_CANDIDATE_SKIP_TEXT: Record<AutoCandidateSkip, string> = {
   credit: '출처를 확인하지 못한 공공 사진',
   license: '공공누리 제1유형이 아닌 공공 사진',
   duplicate: '같은 사진',
+  screen: '화면 캡처(「제품 화면」 표시 없음)',
 }
 
 /** 자동 채우기 후보 — 홈페이지 사진 하나(src/lib/sitePhotos.ts SitePhoto + 찾은 페이지) 또는 공공 사진 하나(PublicPhoto). */
@@ -157,6 +164,11 @@ export interface AutoCandidate {
   origin?: 'public' | 'owner'
   /** 업주 사진의 id(origin owner). */
   ownerPhotoId?: string
+  /**
+   * 업주 사진 보관함에서 「제품 화면」으로 표시한 캡처의 제품 이름(OwnerPhotoRecord.productScreen.product — 쉼표로 다른 이름, origin owner) —
+   * 사진 단계(①)에는 쓰지 않고, 자리 글자가 그 제품과 화면 낱말을 함께 말하는 자리에만 업주 화면 단계가 넣는다(2026-11-07 설계).
+   */
+  screenProduct?: string
   /** 공공 사진의 장소(장소 사전의 이름). */
   place?: string
   /** 공공 사진의 이용 허락 — 제1유형이면 'kogl-1', 아니면(제2~4유형 · 모름) null. */
@@ -186,11 +198,13 @@ export function publicCandidateFields(c: Pick<AutoCandidate, 'origin' | 'license
  * 자동으로 넣지 않는 후보인가 — 이유, 아니면 null. 서버도 같은 검사를 한다. ownedDomains는 브랜드 자사 사이트 — 그 주소의 사진은 공공
  * 사진 호스트여도 홈페이지 사진이다(needsPhotoCredit). 공공 사진의 설명은 장소 이름이라, 사람 낱말은 장소 이름(place, 없으면 장소 페이지
  * 주소의 이름)을 걷어 낸 글자에서만 본다 — 「새만금어린이랜드」 · 「먹방이와 친구들」의 사진이 「사람이 찍힘」으로 빠지지 않게. 장소 이름만으로는
- * 사진에 사람이 찍혔는지 알 수 없어, 넣은 공공 사진은 늘 「확인 필요」다(autoPickPhotos).
+ * 사진에 사람이 찍혔는지 알 수 없어, 넣은 공공 사진은 늘 「확인 필요」다(autoPickPhotos). 업주 사진은 names(브랜드 이름 · 다른 이름 · 표시한
+ * 제품 이름)를 걷어 낸 글자에서 본다 — 「에이아이오투오 …」의 「아이」가 「사람이 찍힘」으로 빠지지 않게(2026-11-07 설계 D6).
  */
 export function autoCandidateSkip(
   c: Pick<AutoCandidate, 'src' | 'alt' | 'credit' | 'origin' | 'license' | 'creditText' | 'place'> & { pageUrl?: string },
   ownedDomains?: readonly string[],
+  names: readonly string[] = [],
 ): AutoCandidateSkip | null {
   // 업주 사진(origin owner)은 앱 주소다(https가 아니다) — 주소 모양만 본다.
   if (c.origin === 'owner' ? !parseOwnerPhotoAppSrc(c.src) : !canonicalPhotoSrc(c.src)) return 'bad-src'
@@ -198,7 +212,8 @@ export function autoCandidateSkip(
   if (!alt) return 'no-alt'
   if (/^일러스트/.test(alt)) return 'illustration'
   const place = c.origin === 'public' ? c.place || placeNameOfUrl(c.pageUrl) : null
-  if (PEOPLE_PHOTO.test(place ? withoutPlaceName(alt, place) : alt)) return 'people'
+  const strip = c.origin === 'owner' ? names : place ? [place] : []
+  if (PEOPLE_PHOTO.test(strip.length ? strip.reduce((s, n) => withoutPlaceName(s, n), alt) : alt)) return 'people'
   if (c.origin === 'public') {
     if (c.license !== 'kogl-1') return 'license'
     return publicCandidateFields(c) ? null : 'credit'
@@ -353,6 +368,128 @@ export function isScreenSlot(slotKey: string): boolean {
  */
 export function isPeopleScene(slotKey: string, places: readonly string[] = []): boolean {
   return PEOPLE_SCENE.test(places.reduce((s, p) => withoutPlaceName(s, p), normSlotAlt(slotKey).toLowerCase()))
+}
+
+// ── 업주 사진의 「제품 화면」(2026-11-07 설계 D1~D7) ─────────────────────────────────────────────────────────────
+// 회사가 준 제품 화면 캡처(보관함에서 「제품 화면」으로 표시 — src/lib/ownerPhotos.ts OwnerProductScreen)는 사진이 아니라 화면이다. 자리 글자가
+// 그 제품 이름과 화면 낱말을 함께 말하는 자리(제품 화면 자리)에만 넣고, 그런 사진 자리에는 실제 사진을 넣지 않는다. 서버(server/index.ts
+// op auto)도 같은 함수로 다시 본다(ownerPickAllowed).
+
+/** 화면 자리 낱말 — 화면 · 스크린샷 · 캡처. */
+const OWNER_SCREEN_WORD = /화면|스크린\s?샷|캡처|캡쳐/
+/** 「화면」이지만 화면 캡처가 아닌 말 — 「한 화면에 담긴 장면」(한 장의 사진 안에). */
+const SCREEN_IDIOM = /한\s?화면에\s?(?:담|들어|모아|모인|잡)/g
+/** 실물 화면(사이니지 · 전광판 · TV)을 찍은 사진 자리 — 화면 캡처가 아니라 사진이다. */
+const DISPLAY_PHOTO = /사이니지|\bdid\b|전광판|티비|\btv\b|텔레비전|대형\s?화면/i
+/** 화면을 보는 사람의 직함 — 사람 낱말(PEOPLE_SCENE) 밖의 것(「구매 담당자」 · 「마케팅 팀장」). */
+const SCREEN_VIEWER = /담당자|실무자|팀장|팀원|대표|사장|원장|점주|마케터|관리자|운영자|동료|구매팀|마케팅팀/
+/** 사람이 화면을 보거나 띄워 둔 장면의 낱말. */
+const SCREEN_VIEWING = /모니터|노트북|태블릿|회의실|책상|띄워|띄운|살펴|들여다|바라보|보는|보며|보고\s?있|함께\s?보/
+/**
+ * 제품 화면과 맞지 않는 자리 맥락 — 자리 글자에 있으면 화면 설명에도 있어야 한다(다른 회사 · 기기 · 지도 앱 · AI 답변 · 검색 결과 화면). 한
+ * 묶음 안의 낱말이면 맞은 것으로 본다(「휴대폰」 자리 · 「스마트폰」 화면). 「AI 답변 준비도」는 AI 답변 화면이 아니다.
+ */
+const SCREEN_CONTEXT: readonly RegExp[] = [
+  /네이버|naver/i,
+  /카카오|kakao/i,
+  /구글|google/i,
+  /티맵|t\s?맵|tmap/i,
+  /인스타그램|instagram/i,
+  /유튜브|youtube/i,
+  /플레이스/,
+  /휴대폰|핸드폰|스마트폰|모바일|태블릿/,
+  /지도\s?(?:앱|어플)/,
+  /chat\s?gpt|챗\s?gpt|챗지피티|gemini|제미나이|perplexity|퍼플렉시티|copilot|코파일럿|클로드|claude|(?:ai|인공지능)\s?(?:답변|검색|챗봇)(?!\s?준비도)|답변\s?(?:화면|창)/i,
+  /검색\s?결과/,
+]
+/** 결과 화면 낱말(「검색 결과」는 아니다) — 자리와 화면 설명이 함께 말하거나 함께 말하지 않아야 한다(D2 — 「진단 결과 화면」 자리에 시작 화면). */
+const RESULT_WORD = /(?<!검색\s?)결과/
+/** 제품 화면 점수에서 빼는 낱말 — 화면이면 다 있는 말. */
+const OWNER_SCREEN_STOP = ['화면', '표시', '모습', '장면', '캡처', '스크린샷']
+/** 제품 화면은 장면 글자의 낱말이 이만큼 이상 설명과 맞아야 넣는다 — 낱말 하나만 같은 자리(지도 자리에 장소 안내 화면)를 막는다. */
+const OWNER_SCREEN_KEY_WORDS = 2
+
+/** 이름들(브랜드 · 제품)을 걷어 낸 비교 글자(장소 이름처럼 — withoutPlaceName, 소문자). */
+function withoutNames(text: string, names: readonly string[]): string {
+  return names.reduce((s, n) => withoutPlaceName(s, n), normSlotAlt(text).toLowerCase())
+}
+
+/**
+ * 자리가 사람이 화면을 보는 장면인가 — 사람 낱말(PEOPLE_SCENE)이 있거나, 직함(담당자 · 팀장 …)과 보는 · 띄워 둔 · 모니터 · 노트북 낱말이 함께
+ * 있다(「구매 담당자가 … 화면을 모니터에 띄워 놓고」). 브랜드 · 제품 이름을 걷고 본다(D6). 화면 안에서 입력하는 장면(「화면에서 구매 담당자가
+ * 품목을 입력하는」)은 화면 자리다.
+ */
+function screenViewerScene(slotKey: string, names: readonly string[]): boolean {
+  const t = withoutNames(slotKey, names)
+  return PEOPLE_SCENE.test(t) || (SCREEN_VIEWER.test(t) && SCREEN_VIEWING.test(t))
+}
+
+/**
+ * 제품 화면 자리인가 — 장면 글자가 그 제품 이름과 화면 낱말(화면 · 스크린샷 · 캡처)을 함께 말하고, 사람이 화면을 보는 장면 · 실물 화면(사이니지 ·
+ * 전광판) 사진 · 「한 화면에 담긴」 사진 자리가 아니다. 화면 자리(isScreenSlot)는 다른 이름도 보지만, 사진 자리는 대표 이름(첫 이름)이 있을 때만
+ * 연다 — 흔한 다른 이름(「세로형」)이 사진 자리를 화면 몫으로 가져가지 않게(설계 검토). 맞으면 대표 이름, 아니면 null. brandNames는 브랜드
+ * 이름 · 다른 이름(사람 낱말을 볼 때 걷는다).
+ */
+export function ownerScreenSlotProduct(slotKey: string, product: string, brandNames: readonly string[] = []): string | null {
+  const names = productNames(product)
+  if (!names.length) return null
+  const all = [...brandNames, ...names.map((n) => n.name)]
+  const rest = withoutNames(slotKey, all).replace(SCREEN_IDIOM, ' ')
+  if (!OWNER_SCREEN_WORD.test(rest) || DISPLAY_PHOTO.test(rest)) return null
+  const key = productKey(slotKey)
+  const open = isScreenSlot(slotKey) ? names : names.slice(0, 1)
+  if (!open.some((n) => key.includes(n.key))) return null
+  return screenViewerScene(slotKey, all) ? null : names[0]!.name
+}
+
+/**
+ * 제품 화면 설명이 자리와 어긋나는가 — context 자리 글자의 맥락 낱말(SCREEN_CONTEXT — 다른 회사 · 휴대폰 · 지도 앱 · AI 답변 · 검색 결과)이
+ * 화면 설명에 없음, phase 결과 화면 여부가 다름(D2). 브랜드 · 제품 이름은 걷고 본다. 맞으면 null.
+ */
+export function ownerScreenMismatch(slotKey: string, alt: string, product: string, brandNames: readonly string[] = []): 'context' | 'phase' | null {
+  const names = [...brandNames, ...productNames(product).map((n) => n.name)]
+  const slot = withoutNames(slotKey, names)
+  const shot = withoutNames(alt, names)
+  if (SCREEN_CONTEXT.some((re) => re.test(slot) && !re.test(shot))) return 'context'
+  return RESULT_WORD.test(slot) === RESULT_WORD.test(shot) ? null : 'phase'
+}
+
+/**
+ * 제품 화면과 자리의 설명 낱말 점수 — 사진과 같은 문턱(scoreSlot)에 더해 장면 글자의 낱말이 OWNER_SCREEN_KEY_WORDS개 이상 맞아야 한다. 브랜드 ·
+ * 제품 이름(다른 이름 포함)과 화면 낱말은 점수에 세지 않는다 — 같은 제품의 다른 화면을 가르고, 흔한 다른 이름(「AI 답변 준비도 진단」)이 점수를
+ * 부풀리지 않게.
+ */
+export function ownerScreenScore(slot: { key: string; caption: string; heading: string }, alt: string, product: string, stop: ReadonlySet<string> = new Set()): SlotScore {
+  const ostop = new Set([...stop, ...contentWords(productNames(product).map((n) => n.name).join(' ')), ...OWNER_SCREEN_STOP])
+  const score = scoreSlot(slot, alt, ostop)
+  const shot = contentWords(alt, ostop)
+  const keyHits = contentWords(slot.key, ostop).filter((w) => shot.some((p) => sameWord(w, p))).length
+  return { ...score, pass: score.pass && keyHits >= OWNER_SCREEN_KEY_WORDS }
+}
+
+/**
+ * 「제품 화면」으로 표시하지 않은 업주 사진이 화면 캡처인가 — 장면이 화면이거나, 장면을 읽지 못했고 설명이 화면 자리 글자다(isScreenSlotText —
+ * 「ADO2 첫 화면 — 네이버 지도 …」). 표시가 결정한다 — 이런 사진은 사진 자리에 넣지 않고, 보관함이 표시를 제안한다.
+ */
+export function ownerUnmarkedScreen(rec: { alt: string; scene?: Pick<PhotoScene, 'setting'> | null }): boolean {
+  return rec.scene ? rec.scene.setting === 'screen' : isScreenSlotText(cleanPhotoAlt(rec.alt))
+}
+
+/**
+ * 서버(server/index.ts op auto)가 자동 채우기 저장 때 업주 사진을 다시 본다 — 「제품 화면」으로 표시한 사진은 그 자리가 제품 화면 자리이고
+ * (ownerScreenSlotProduct) 맥락 · 결과 여부가 맞을 때만(ownerScreenMismatch), 표시하지 않은 사진은 화면 캡처가 아닐 때만(ownerUnmarkedScreen).
+ * 설명 낱말 점수(ownerScreenScore)는 설명 줄 · 소제목이 있어야 해 화면만 본다 — 서버는 종류가 맞는지를 다시 본다.
+ */
+export function ownerPickAllowed(
+  slotKey: string,
+  rec: { alt: string; scene?: Pick<PhotoScene, 'setting'> | null; productScreen?: { product: string } | null },
+  brandNames: readonly string[] = [],
+): boolean {
+  const product = rec.productScreen?.product
+  if (product && productNames(product).length) {
+    return ownerScreenSlotProduct(slotKey, product, brandNames) !== null && ownerScreenMismatch(slotKey, rec.alt, product, brandNames) === null
+  }
+  return !ownerUnmarkedScreen(rec)
 }
 
 /** 낱말 끝의 조사 하나를 뗀다(떼고 두 글자 이상 남을 때만). */
@@ -682,9 +819,9 @@ const NEIGHBORHOOD = /골목|거리|명소|구도심|원도심|동네|산책로|
 const NEAR_WORDS = '(?:의|에서)?(?:근처|주변|인근|주위|가까이|가까운|이웃)'
 const NEAR_OWN_FACILITY = new RegExp(`(?:${OWN_FACILITY.source})${NEAR_WORDS}`, 'g')
 
-/** 글자(placeKey 글자)에 브랜드 이름(MIN_PLACE_KEY자 이상)이나 자기 시설 낱말이 있는가. */
-function namesOwn(key: string, brandKey: string): boolean {
-  return (brandKey.length >= MIN_PLACE_KEY && key.includes(brandKey)) || OWN_FACILITY.test(key)
+/** 글자(placeKey 글자)에 브랜드 이름(MIN_PLACE_KEY자 이상)이나 자기 시설 낱말(facilityWords일 때)이 있는가. */
+function namesOwn(key: string, brandKey: string, facilityWords = true): boolean {
+  return (brandKey.length >= MIN_PLACE_KEY && key.includes(brandKey)) || (facilityWords && OWN_FACILITY.test(key))
 }
 
 /**
@@ -692,25 +829,27 @@ function namesOwn(key: string, brandKey: string): boolean {
  * 시설 낱말(OWN_FACILITY)이 있다. 설명 줄도 본다(2026-11-05 — 「일본식 가옥 앞 … 정원과 툇마루」 자리의 설명 줄이 독채를 말했는데 관광공사
  * 히로쓰가옥 사진이 들어갔다). 다만 장면 글자에 동네 장면 낱말(NEIGHBORHOOD — 골목 · 거리 · 명소 …)이 있고 브랜드 · 자기 시설 낱말이
  * 「근처 · 주변」 앞에만 나오면(또는 장면 글자에 없으면) 동네 자리다 — 「숙소 근처 골목」 · 설명 줄이 「숙소에서 걸어서 5분」인 골목 자리.
+ * facilityWords가 false면(시설 업이 아닌 B2B 브랜드) 자기 시설 낱말은 보지 않고 브랜드 이름만 본다 — 「매장」은 고객의 매장이다.
  */
-function ownFacility(slot: { key: string; caption: string }, brandKey: string): boolean {
+function ownFacility(slot: { key: string; caption: string }, brandKey: string, facilityWords = true): boolean {
   const key = placeKey(slot.key)
   const near = brandKey.length >= MIN_PLACE_KEY ? new RegExp(`${brandKey}${NEAR_WORDS}`, 'g') : null
   const rest = (near ? key.replace(near, ' ') : key).replace(NEAR_OWN_FACILITY, ' ')
   const street = NEIGHBORHOOD.test(normSlotAlt(slot.key).replace(DISTANCE_GEORI, ' '))
-  if (street && !namesOwn(rest, brandKey)) return false
-  return namesOwn(key, brandKey) || namesOwn(placeKey(slot.caption), brandKey)
+  if (street && !namesOwn(rest, brandKey, facilityWords)) return false
+  return namesOwn(key, brandKey, facilityWords) || namesOwn(placeKey(slot.caption), brandKey, facilityWords)
 }
 
 /**
  * 자기 시설(업주) 사진인가 — 홈페이지 사진(공공 사진 · 화면 · 지도가 아닌 사진)을 브랜드 자기 시설 자리(장면 글자만 본다 — 서버도 같은
  * 판정을 해야 해서 설명 줄은 보지 않는다)에 넣었다. 브랜드 전체 반복 상한(AUTO_PICK_RULES.brandRepeat)을 받지 않고 글 하나에 한 번 ·
  * 작성자 한 사람에게 한 번만 지킨다(2026-11-05 결정 D3 — 8명이 같은 숙소를 쓰니 같은 건물 사진이 서로 다른 블로그에 나오는 것은
- * 자연스럽다). 서버(server/contentDraft.ts saveAutoPhotoPicks)도 이 함수로 본다.
+ * 자연스럽다). 서버(server/contentDraft.ts saveAutoPhotoPicks)도 이 함수로 본다. B2B 브랜드(marketScope b2b — 시설 업이 아니다)는 「매장」 ·
+ * 「메뉴」 같은 자기 시설 낱말을 자기 시설로 보지 않고 브랜드 이름이 나온 자리만 본다(2026-11-07 설계 검토 — 「매장 안 사이니지」는 고객 매장).
  */
-export function ownPhotoExempt(p: Pick<PhotoPick, 'origin' | 'slot'>, brandName: string | undefined): boolean {
+export function ownPhotoExempt(p: Pick<PhotoPick, 'origin' | 'slot'>, brandName: string | undefined, marketScope?: string): boolean {
   if (p.origin !== undefined && p.origin !== 'site' && p.origin !== 'owner') return false
-  return ownFacility({ key: p.slot, caption: '' }, placeKey(brandName ?? ''))
+  return ownFacility({ key: p.slot, caption: '' }, placeKey(brandName ?? ''), marketScope !== 'b2b')
 }
 
 /** 글자의 지역 사진 견주기 낱말 — 내용어(stop 제외)와 글자 안의 장면 낱말(REGION_SCENE_WORDS). */
@@ -1060,6 +1199,30 @@ export interface AutoSlotRow {
   mapMiss?: 'no-points' | 'no-markers' | 'used' | 'removed'
   /** 비워 둔 까닭의 덧말 — 표지를 고르지 못한 까닭(mapChoiceOf why — 중립 글자), used · removed는 그 묶음의 표지. */
   mapMissWhy?: string
+  /**
+   * 제품 화면 자리(ownerScreenSlotProduct — 표시한 제품 가운데 자리가 말한 제품)의 대표 이름 — 업주 화면 단계가 볼 자리만(빈 화면 자리 · 사진
+   * 자리). 사진 자리면 사진 단계가 실제 사진을 넣지 않는다(화면 몫). 넣었으면 넣은 화면의 제품.
+   */
+  ownerScreenProduct?: string
+  /** 업주 화면 단계가 「제품 화면」을 넣었다(늘 「확인 필요」). */
+  ownerScreenPicked?: true
+  /** 제품 화면 자리를 비운 까닭 — words 맞는 화면 없음(맥락 · 결과 화면 여부 · 설명 낱말), used 이 글 · 작성자에게 이미 씀, full 글의 사진이 다 참. */
+  ownerScreenMiss?: 'words' | 'used' | 'full'
+}
+
+/** 제품 화면 자리의 까닭(자동 채우기 미리보기) — 넣었으면 자리의 제품 · 맞은 낱말 · 점수, 비웠으면 그 까닭. 업주 화면 단계가 본 자리가 아니면 null. */
+export function ownerScreenReason(row: Pick<AutoSlotRow, 'ownerScreenProduct' | 'ownerScreenPicked' | 'ownerScreenMiss' | 'score'>): string | null {
+  const product = row.ownerScreenProduct
+  if (!product) return null
+  if (row.ownerScreenPicked) return `자리의 제품 ${product} · 맞은 낱말 ${row.score?.words.join(' · ') || '—'} · ${row.score?.score ?? 0}(맞는지 확인)`
+  if (!row.ownerScreenMiss) return null
+  const why =
+    row.ownerScreenMiss === 'used'
+      ? '이 작성자에게 이미 씀'
+      : row.ownerScreenMiss === 'full'
+        ? `글의 사진 ${PHOTO_LIMITS.picks}장이 다 참`
+        : '맞는 화면 없음(결과 화면 여부 포함)'
+  return `제품 화면 자리(${product}) — ${why}`
 }
 
 /** 이미 넣은 자동 사진을 바꾸거나 뺄 것 — 저장할 때 서버가 그 자리에 같은 자동 사진이 아직 있을 때만 한다(server/contentDraft.ts). */
@@ -1102,6 +1265,8 @@ export interface AutoPickResult {
   usablePublic: number
   /** 자동으로 쓸 수 있는 관광공사 사진 수(3단계). */
   usableTour: number
+  /** 자동으로 쓸 수 있는 「제품 화면」(업주 사진 보관함에서 표시한 캡처) 수 — 사진 수(usable)에 세지 않는다. */
+  ownerScreens: number
   /**
    * 장소 없는 자리의 지역 사진(regionCandidates를 줄 때) — rows 본 자리 수, pool 지역 사진 수(이번에 받은 관광공사 사진 포함), matched
    * 자리 낱말이 맞은 사진 수, wanted 장면을 읽으려고 고른 사진 수(자리마다 REGION_SCENE_LIMITS.perSlot장까지).
@@ -1219,7 +1384,8 @@ export function tourPlacesWanted(result: Pick<AutoPickResult, 'articles'>, pages
         row.state === 'remove' ||
         Boolean(row.similar) ||
         (row.state === 'used' && (row.homeOnly || row.askTour))
-      if (!open || !row.places?.length || !placesRead(row.places, pagesRead)) continue
+      // 제품 화면 자리는 화면 몫이라 장소 사진을 찾지 않는다.
+      if (!open || row.ownerScreenProduct || !row.places?.length || !placesRead(row.places, pagesRead)) continue
       row.places.forEach((place, i) => (i === 0 ? first : rest).push(place))
     }
   }
@@ -1267,6 +1433,10 @@ export function autoPickPhotos(input: {
   others?: readonly { src: string; group?: string }[]
   /** 장면을 가르지 못하는 낱말을 뽑을 브랜드 이름(「스테이,머뭄」 — 브랜드 사진이면 모두 그 브랜드다). */
   brandName?: string
+  /** 브랜드의 다른 이름 — 업주 사진 · 제품 화면 자리의 사람 낱말을 볼 때 브랜드 이름과 함께 걷는다(「에이아이오투오」의 「아이」 — D6). */
+  brandAliases?: readonly string[]
+  /** 시장 범위 — b2b면 「매장」 같은 자기 시설 낱말 자리를 브랜드 상한 면제로 보지 않는다(ownPhotoExempt). */
+  marketScope?: string
   /** 브랜드 자사 사이트 — 그 주소의 사진은 공공 사진 호스트여도 홈페이지 사진이다(autoCandidateSkip). */
   ownedDomains?: readonly string[]
   /** 브랜드 페이지(brandPageUrl) — 한 호스트를 경로로 나눠 쓰는 브랜드의 화면 프로필을 찾는다(src/lib/screenCapture.ts screenProfileFor). */
@@ -1335,18 +1505,42 @@ export function autoPickPhotos(input: {
   }
   const skipped: AutoPickResult['skipped'] = []
   const usable: AutoCandidate[] = []
+  /** 브랜드 이름 · 다른 이름 — 업주 사진 · 제품 화면 자리의 사람 낱말을 볼 때 걷는다(D6). */
+  const brandNames = [...new Set([input.brandName ?? '', ...(input.brandAliases ?? [])])].filter((n) => productKey(n).length >= 2)
+  /** 「제품 화면」으로 표시한 업주 사진 — 사진 단계에는 넣지 않고 업주 화면 단계가 제품 화면 자리에만 넣는다(종류가 다르다). */
+  const ownerScreens: AutoCandidate[] = []
   const seen = new Set<string>()
   for (const raw of input.candidates) {
     const src = raw.origin === 'owner' ? (parseOwnerPhotoAppSrc(raw.src) ? raw.src : null) : canonicalPhotoSrc(raw.src)
-    const reason = autoCandidateSkip(raw, input.ownedDomains) ?? (src && seen.has(src) ? 'duplicate' : null)
+    const product = raw.origin === 'owner' && raw.screenProduct && productNames(raw.screenProduct).length ? raw.screenProduct : null
+    const names = product ? [...brandNames, ...productNames(product).map((n) => n.name)] : brandNames
+    // 표시하지 않은 화면 캡처(장면이 화면 · 장면을 못 읽었고 설명이 화면 자리 글자)는 사진 자리에 넣지 않는다 — 보관함이 표시를 제안한다.
+    const reason =
+      autoCandidateSkip(raw, input.ownedDomains, names) ??
+      (src && seen.has(src) ? 'duplicate' : null) ??
+      (raw.origin === 'owner' && !product && src && ownerUnmarkedScreen({ alt: raw.alt, scene: sceneOf(src) ?? null }) ? 'screen' : null)
     if (reason || !src) {
       skipped.push({ candidate: raw, reason: reason ?? 'bad-src' })
       continue
     }
     seen.add(src)
-    usable.push({ ...raw, src, alt: cleanPhotoAlt(raw.alt) })
+    const kept = { ...raw, src, alt: cleanPhotoAlt(raw.alt) }
+    if (product) ownerScreens.push(kept)
+    else usable.push(kept)
   }
-  usable.sort((a, b) => (a.src < b.src ? -1 : a.src > b.src ? 1 : 0))
+  const bySrc = (a: AutoCandidate, b: AutoCandidate) => (a.src < b.src ? -1 : a.src > b.src ? 1 : 0)
+  usable.sort(bySrc)
+  ownerScreens.sort(bySrc)
+  const ownerScreenSrcs = new Set(ownerScreens.map((c) => c.src))
+  const screenProducts = [...new Set(ownerScreens.map((c) => c.screenProduct!))]
+  /** 자리가 말한 표시한 제품(제품 화면 자리 — ownerScreenSlotProduct)의 대표 이름, 아니면 null. */
+  const slotProduct = (slotKey: string) => {
+    for (const product of screenProducts) {
+      const hit = ownerScreenSlotProduct(slotKey, product, brandNames)
+      if (hit) return hit
+    }
+    return null
+  }
 
   // 공공 사진 — 장소별로, 페이지의 사진 순서 그대로(대표 사진이 앞이다). 출처 붙이기는 설명 검사와 무관하게 제1유형 · 출처만 본다.
   const places = input.places ?? []
@@ -1546,10 +1740,12 @@ export function autoPickPhotos(input: {
     )
     let room = Math.max(0, PHOTO_LIMITS.picks - picks.length)
     // 다시 볼 자동 사진 — 장면으로 고를 때 「이미 넣은 자동 사진도 장면 확인」이면, 자리를 찾아 넣은(applied) 자동 사진(auto)만(화면 자리 ·
-    // 자사 화면 제외).
+    // 자사 화면 · 「제품 화면」으로 표시한 업주 사진 제외 — 화면 장면이라 사진 자리 장면과 견주면 늘 어긋난다).
     const recheckAt = new Map<number, PhotoPick>()
     if (scenes && input.recheckAuto) {
-      for (const m of match.applied) if (m.pick.auto && m.pick.origin !== 'screen' && !isScreenSlot(m.slot.key)) recheckAt.set(m.slot.line, m.pick)
+      for (const m of match.applied) {
+        if (m.pick.auto && m.pick.origin !== 'screen' && !isScreenSlot(m.slot.key) && !ownerScreenSrcs.has(m.pick.src)) recheckAt.set(m.slot.line, m.pick)
+      }
     }
 
     /** 다시 채우는 자리(refillCleared)에서 사람이 뺀 사진, 다시 보는 자동 사진의 자리에서 사람이 뺀 사진과 그 자동 사진 — 그 자리에는 고르지 않는다. */
@@ -1569,10 +1765,13 @@ export function autoPickPhotos(input: {
             : 'nomatch'
       const found = (state === 'nomatch' || old) && places.length ? slotPlaces({ key: slot.key, caption }, places) : []
       const screenKind = state === 'screen' ? screenKindOf(slot.key, screenProfile, input.brandName) : null
+      // 제품 화면 자리 — 빈 화면 자리와, 다시 보는 자동 사진이 없는 빈 사진 자리. 사진 자리면 사진 단계가 실제 사진을 넣지 않는다(화면 몫).
+      const product = screenProducts.length && (state === 'screen' || (state === 'nomatch' && !old)) ? slotProduct(slot.key) : null
       const row: AutoSlotRow = {
         slot,
         caption,
         state,
+        ...(product ? { ownerScreenProduct: product } : {}),
         ...(found.length ? { place: found[0]!, places: found } : {}),
         ...((state === 'nomatch' || state === 'screen') && cleared.length ? { refill: true as const } : {}),
         ...(old ? { old } : {}),
@@ -1588,6 +1787,8 @@ export function autoPickPhotos(input: {
       return row
     })
     const removed = (row: AutoSlotRow, src: string) => Boolean(removedAt.get(row)?.has(src))
+    /** 사진(①②③③b · 비슷한 사진)을 고를 빈 자리인가 — 제품 화면 자리(ownerScreenProduct)는 화면 몫이라 실제 사진을 넣지 않는다(설계 검토 high). */
+    const photoOpen = (row: AutoSlotRow) => row.state === 'nomatch' && !row.ownerScreenProduct
     /** own — 자기 시설(업주) 사진(ownPhotoExempt)이라 브랜드 상한을 받지 않는다(글 하나 · 작성자 한 사람에게 한 번은 그대로). */
     const isBlocked = (src: string, own = false) => {
       const later = heldLater(src, index, article.group)
@@ -1599,7 +1800,7 @@ export function autoPickPhotos(input: {
     }
     /** 이 자리에 넣는 이 후보가 자기 시설(업주) 사진인가 — 공공 사진(②③③b)은 아니다. */
     const ownPick = (row: AutoSlotRow, c: Pick<AutoCandidate, 'origin'>) =>
-      c.origin !== 'public' && ownPhotoExempt({ slot: row.slot.key }, input.brandName)
+      c.origin !== 'public' && ownPhotoExempt({ slot: row.slot.key }, input.brandName, input.marketScope)
     /** 사진을 넣을 자리가 남았나 — 다시 보는 자동 사진의 자리는 그 사진을 바꾸는 것이라 글의 사진 수 상한에 세지 않는다. */
     const hasRoom = (row: AutoSlotRow) => Boolean(row.old) || room > 0
     // 장면 — 자리가 바라는 장면(자리마다 한 번)과 장면 때문에 뺀 후보 수.
@@ -1723,7 +1924,7 @@ export function autoPickPhotos(input: {
     const fitStages = () => {
       // ① 홈페이지 사진 — 점수(설명 낱말 + 장면)가 높은 짝부터. 장면이 자리와 어긋나면 짝으로 두지 않는다.
       for (const row of rows) {
-        if (row.state !== 'nomatch') continue
+        if (!photoOpen(row)) continue
         const slotText = { key: row.slot.key, caption: row.caption, heading: row.slot.heading }
         const own = ownFacility({ key: row.slot.key, caption: row.caption }, brandKey)
         for (const candidate of usable) {
@@ -1774,7 +1975,7 @@ export function autoPickPhotos(input: {
       }
 
       for (const row of rows) {
-        if (row.state !== 'nomatch' || !row.places) continue
+        if (!photoOpen(row) || !row.places) continue
         publicOpts.set(row, new Map(row.places.map((place) => [place, optionsOf(row, publicByPlace.get(place) ?? [], 'public')])))
         if (tourOk(row)) tourOpts.set(row, new Map(row.places.map((place) => [place, optionsOf(row, tourByPlace.get(place) ?? [], 'tour')])))
       }
@@ -1782,7 +1983,7 @@ export function autoPickPhotos(input: {
       // ② 공공 사진 — 남은 자리를 앞에서부터, 자리의 장소(앞 장소부터) 페이지 사진 가운데 아직 쓰지 않은 첫 장(장면으로 고르면 장면이 가장
       // 잘 맞는 장, 같으면 페이지 순서).
       for (const row of rows) {
-        if (row.state !== 'nomatch' || !row.places || !hasRoom(row)) continue
+        if (!photoOpen(row) || !row.places || !hasRoom(row)) continue
         for (const place of row.places) {
           const open = optsAt(publicOpts, row, place).filter((o) => !isBlocked(o.candidate.src))
           if (!open.length) continue
@@ -1796,7 +1997,7 @@ export function autoPickPhotos(input: {
       // ③ 관광공사 사진 — 아직 빈 자리를 앞에서부터, 자리의 장소(앞 장소부터) 사진 가운데 브랜드에서 가장 덜 쓴 첫 장(장면으로 고르면 장면이
       // 가장 잘 맞는 장, 같으면 덜 쓴 장 · 받은 순서).
       for (const row of rows) {
-        if (row.state !== 'nomatch' || !row.places || !hasRoom(row) || !tourOk(row)) continue
+        if (!photoOpen(row) || !row.places || !hasRoom(row) || !tourOk(row)) continue
         for (const place of row.places) {
           const open = optsAt(tourOpts, row, place).filter((o) => !isBlocked(o.candidate.src))
           if (!open.length) continue
@@ -1817,7 +2018,7 @@ export function autoPickPhotos(input: {
       // 장면 점수에는 더하지 않는다) 사진을 장면 점수 순서로 넣는다(장소로 묶어 둘 이름이 없어서). 늘 「확인 필요」, 시간만 다르면 ④ 비슷한 사진.
       const regionRows: AutoSlotRow[] = []
       for (const row of rows) {
-        if (row.state !== 'nomatch' || row.places?.length || input.placesUnknown || !regionSlotOk(row)) continue
+        if (!photoOpen(row) || row.places?.length || input.placesUnknown || !regionSlotOk(row)) continue
         if (!hasRoom(row)) {
           if (input.regionCity) regionFull.add(row)
           continue
@@ -1891,7 +2092,7 @@ export function autoPickPhotos(input: {
     const similarStage = () => {
       for (const row of rows) {
         // 시간만 다른 자동 사진(soft)은 바꿀 비슷한 사진을 찾지 않는다 — 그 사진이 이미 비슷한 사진이다.
-        if (row.state !== 'nomatch' || !hasRoom(row) || row.oldFit?.soft || row.sceneSkips?.unread) continue
+        if (!photoOpen(row) || !hasRoom(row) || row.oldFit?.soft || row.sceneSkips?.unread) continue
         const rowPlaces = row.places ?? []
         const fromPlace = (m: Map<AutoSlotRow, Map<string, Options>>, stage: number) =>
           rowPlaces.flatMap((place, i) =>
@@ -1927,8 +2128,9 @@ export function autoPickPhotos(input: {
      * 코스는 첫 묶음 밖의 변형을 쓸 때 — 자리가 말한 조건의 변형을 쓰지 못했거나, 조건을 말하지 않는 자리에 조건 변형을 쓸 때 — 「확인
      * 필요」. 장소 안내는 소제목에만 나온 장소이거나 장면 글자가 장소를 둘 이상 말할 때, 잘라 찍은 화면(장소 안내 · 가이드)은 자리 글자의
      * 사실(시각 · 금액 · 요일 · 휴관 …)이 찍은 부분의 글자에 없을 때(factGaps) 「확인 필요」. 글의 사진 수(room)는 고치지 않는다 — finish가
-     * 사진 자리의 상태를 지금처럼 정하게(사진이 먼저다).
+     * 사진 자리의 상태를 지금처럼 정하게(사진이 먼저다). 쓰고 남은 글의 자리는 screenLeft로 업주 화면 단계에 넘긴다.
      */
+    let screenLeft: number | null = null
     const screenStage = () => {
       const screens = input.screens
       if (!screenProfile || (!screens && !mapsIn)) return
@@ -2103,6 +2305,77 @@ export function autoPickPhotos(input: {
         Object.assign(row, { state: saveAllowed ? 'filled' : 'preview', pick, ...(review ? { review: true } : {}) })
         if (saveAllowed) out.push(pick)
       }
+      screenLeft = left
+    }
+
+    /**
+     * 업주 화면(2026-11-07 설계 D3 · D4) — 자사 화면 단계 뒤에, 제품 화면 자리(ownerScreenProduct — 아직 빈 화면 자리와 사진 단계가 비워 둔 사진
+     * 자리) 가운데 「제품 화면」으로 표시한 업주 사진이 맞는 자리에, 설명 낱말 점수가 높은 짝부터 글에 남은 자리만큼 넣는다. 짝은 그 제품을 말하는
+     * 자리(ownerScreenSlotProduct)이고, 맥락 · 결과 화면 여부가 맞으며(ownerScreenMismatch), 낱말 점수가 문턱을 넘어야 한다(ownerScreenScore).
+     * 알아볼 수 있는 사람이 찍힌 화면 · 사람이 그 자리에서 뺀 화면은 고르지 않는다. 같은 화면은 글 하나 · 작성자 한 사람에게 한 번, 브랜드 상한은
+     * 받지 않는다(자사 화면과 같다). 늘 「확인 필요」. 글의 사진 수(room)는 고치지 않는다(자사 화면 단계와 같다).
+     */
+    const ownerScreenStage = () => {
+      if (!ownerScreens.length) return
+      let left = screenLeft ?? room
+      type OwnerPair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore }
+      const ownerPairs: OwnerPair[] = []
+      for (const row of rows) {
+        if (!row.ownerScreenProduct) continue
+        // 자사 화면 단계가 채웠거나 맡은 화면 자리(찍을 화면 · 지도 · 다 참 · 이미 씀)는 보지 않는다.
+        if (!((row.state === 'screen' && !row.screenPick && !row.mapPick) || (row.state === 'nomatch' && !row.old))) {
+          delete row.ownerScreenProduct
+          continue
+        }
+        row.ownerScreenMiss = 'words'
+        for (const candidate of ownerScreens) {
+          const product = candidate.screenProduct!
+          if (!ownerScreenSlotProduct(row.slot.key, product, brandNames) || removed(row, candidate.src)) continue
+          if (sceneOf(candidate.src)?.people === 'identifiable' || ownerScreenMismatch(row.slot.key, candidate.alt, product, brandNames)) continue
+          const score = ownerScreenScore({ key: row.slot.key, caption: row.caption, heading: row.slot.heading }, candidate.alt, product, stop)
+          if (score.pass) ownerPairs.push({ row, candidate, score })
+        }
+      }
+      const blocked = (src: string) =>
+        inArticle.has(src) || (article.group !== undefined && (groupUsed.get(article.group)?.get(src) ?? 0) + heldLater(src, index, article.group).group > 0)
+      for (;;) {
+        const open = ownerPairs.filter((p) => !p.row.ownerScreenPicked && left > 0 && !blocked(p.candidate.src))
+        if (!open.length) break
+        const best = open.sort(
+          (a, b) =>
+            b.score.score - a.score.score ||
+            a.row.slot.line - b.row.slot.line ||
+            (a.candidate.src < b.candidate.src ? -1 : a.candidate.src > b.candidate.src ? 1 : 0),
+        )[0]!
+        const { row, candidate } = best
+        const pick: AutoPickInput = {
+          slot: row.slot.key,
+          nth: row.slot.nth,
+          same: row.slot.same,
+          heading: row.slot.heading,
+          src: candidate.src,
+          alt: candidate.alt,
+          pageUrl: candidate.pageUrl,
+          auto: true,
+          origin: 'owner',
+          ownerPhotoId: candidate.ownerPhotoId!,
+        }
+        Object.assign(row, {
+          state: 'filled',
+          pick,
+          candidate,
+          score: best.score,
+          review: true,
+          ownerScreenPicked: true,
+          ownerScreenProduct: productLabel(candidate.screenProduct!),
+        })
+        delete row.ownerScreenMiss
+        out.push(pick)
+        left -= 1
+        inArticle.add(candidate.src)
+        countUse(candidate.src, article.group)
+      }
+      for (const p of ownerPairs) if (!p.row.ownerScreenPicked) p.row.ownerScreenMiss = left <= 0 ? 'full' : 'used'
     }
 
     // 맞는 사진이 있었는데 넣지 못한 자리 — 글이 다 찼거나 반복 상한에 걸렸다. 장소의 공공 사진이 모두 「제1유형 아님」으로 빠졌으면 license.
@@ -2116,7 +2389,8 @@ export function autoPickPhotos(input: {
     }
     const finish = (): AutoArticleResult => {
       for (const row of rows) {
-        if (row.state !== 'nomatch') continue
+        // 비워 둔 제품 화면 자리는 그 까닭(ownerScreenMiss)으로 둔다 — 사진을 고르지 않은 자리다.
+        if (row.state !== 'nomatch' || row.ownerScreenProduct) continue
         if (row.old) {
           // 다시 본 자동 사진 — 바꿀 사진이 없다. 시간만 다르면 비슷한 사진으로 두고, 아니면 뺀다(사람이 뺀 자리로 적지 않는다 — 이미 덜어 냈다).
           if (row.oldFit?.soft && row.oldScene) {
@@ -2166,11 +2440,12 @@ export function autoPickPhotos(input: {
       }
       return { actionId: article.actionId, generatedAt: article.generatedAt, rows, picks: out, replaces, credits }
     }
-    return { fitStages, similarStage, screenStage, finish }
+    return { fitStages, similarStage, screenStage, ownerScreenStage, finish }
   })
   for (const w of workers) w.fitStages()
   for (const w of workers) w.similarStage()
   for (const w of workers) w.screenStage()
+  for (const w of workers) w.ownerScreenStage()
   const articles = workers.map((w) => w.finish())
   // 지역 사진의 장면 — 자리를 돌아가며(첫째 자리의 1번 · 둘째 자리의 1번 …) 넣는다. 한 번 누를 때 REGION_SCENE_LIMITS.perRun장까지는 읽기
   // 쪽(src/lib/sitePhotos.ts loadScenesFor)이 REGION_SCENE_PLACE로 센다.
@@ -2189,6 +2464,7 @@ export function autoPickPhotos(input: {
     usable: usable.length,
     usablePublic,
     usableTour,
+    ownerScreens: ownerScreens.length,
     sceneWanted,
     screenWanted: [...screenWanted.values()],
     mapWanted: [...mapWanted.values()],
@@ -2213,8 +2489,8 @@ export function regionRowsWanted(result: Pick<AutoPickResult, 'articles'>): numb
 
 /** 미리보기 요약의 셈(src/components/PhotoAutoFill.tsx). */
 export interface AutoPreviewCounts {
-  /** 채울 자리(filled)와 그 가운데 공공 사진 · 관광공사 사진 · 확인 필요 · 비슷한 사진 · 장소 없는 자리 · 사람이 뺀 자리. */
-  filled: { all: number; public: number; tour: number; review: number; similar: number; placeless: number; refill: number }
+  /** 채울 자리(filled)와 그 가운데 공공 사진 · 관광공사 사진 · 제품 화면 · 확인 필요 · 비슷한 사진 · 장소 없는 자리 · 사람이 뺀 자리. */
+  filled: { all: number; public: number; tour: number; ownerScreen: number; review: number; similar: number; placeless: number; refill: number }
   /** 장면이 어긋나 바꿀 자동 사진(replace)과 그 가운데 확인 필요 · 비슷한 사진 · 장소 없는 자리. */
   replaced: { all: number; review: number; similar: number; placeless: number }
   /** 장면이 어긋나 뺄 자동 사진. */
@@ -2239,6 +2515,7 @@ export function autoPreviewCounts(rows: readonly AutoSlotRow[]): AutoPreviewCoun
       all: filled.length,
       public: filled.filter((r) => r.pick?.origin === 'public' && !r.candidate?.tour).length,
       tour: filled.filter((r) => r.candidate?.tour).length,
+      ownerScreen: filled.filter((r) => r.ownerScreenPicked).length,
       review: filled.filter((r) => r.review).length,
       similar: filled.filter((r) => r.similar).length,
       placeless: filled.filter((r) => r.placeless).length,

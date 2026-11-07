@@ -5680,6 +5680,15 @@ section.dash-card {
   opacity: 0;
   pointer-events: none;
 }
+/* 업주 사진 보관함(OwnerPhotoBox.tsx)의 사진 카드 — 설명 · 제품 이름 칸과 「제품 화면(캡처)」 표시는 보이고 눌려야 한다(위 규칙은 고르기 라디오를 숨긴다). */
+.photo-option.owner-photo-card {
+  cursor: default;
+}
+.photo-option.owner-photo-card input {
+  position: static;
+  opacity: 1;
+  pointer-events: auto;
+}
 .photo-option img {
   width: 100%;
   aspect-ratio: 4 / 3;

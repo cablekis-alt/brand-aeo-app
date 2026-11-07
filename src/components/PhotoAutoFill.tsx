@@ -30,6 +30,7 @@ import {
   mapMissText,
   mapPickReason,
   otherPhotoUses,
+  ownerScreenReason,
   photoStateKey,
   placesToRead,
   publicCandidateFields,
@@ -46,6 +47,7 @@ import {
   type AutoSlotState,
   type SceneSkip,
 } from '../lib/photoAutoPick'
+import { productLabel } from '../lib/ownerPhotos'
 import { kstDate } from '../lib/publishedUrl'
 import { REGION_SCENE_LIMITS, SCENE_SETTING_TEXT, sceneMeta, type PhotoScene, type SceneWant } from '../lib/photoScenes'
 import { isScreenKind, MAP_PREVIEW_ONLY_TEXT, SCREEN_SLOT_KIND_TEXT, screenAspectRatio, screenCaptureOrder, screenProfileFor, screenShotMeta } from '../lib/screenCapture'
@@ -237,13 +239,21 @@ export default function PhotoAutoFill({
       const sceneMap = new Map<string, PhotoScene>()
       const scenes = canRead ? sceneMap : null
       // 업주 사진 보관함(src/lib/ownerPhotos.ts) — 이 PC에 올린 업주 사진을 홈페이지 사진과 같은 후보로. 장면은 올릴 때 읽어 둔 것을 쓰고 여기서
-      // 새로 읽지 않는다(앱 주소라 장면 읽기 캐시에 없다). 웹(보관함 없음) · 읽기 실패면 없이 고른다.
+      // 새로 읽지 않는다(앱 주소라 장면 읽기 캐시에 없다). 웹(보관함 없음) · 읽기 실패면 없이 고른다. 「제품 화면」으로 표시한 캡처는 제품 이름을
+      // 실어 보낸다 — 사진 단계가 아니라 업주 화면 단계가 제품 화면 자리에만 넣는다.
       let ownerCandidates: AutoCandidate[] = []
       try {
         const box = await loadOwnerPhotos(tenantId)
         for (const p of box?.photos ?? []) {
           if (p.scene) sceneMap.set(p.src, p.scene)
-          ownerCandidates.push({ src: p.src, alt: p.alt, pageUrl: brand.brandPageUrl || pageUrl, origin: 'owner', ownerPhotoId: p.id })
+          ownerCandidates.push({
+            src: p.src,
+            alt: p.alt,
+            pageUrl: brand.brandPageUrl || pageUrl,
+            origin: 'owner',
+            ownerPhotoId: p.id,
+            ...(p.productScreen ? { screenProduct: p.productScreen.product } : {}),
+          })
         }
       } catch (e) {
         console.warn('[PhotoAutoFill] 업주 사진 목록을 읽지 못했습니다(업주 사진 없이 고릅니다)', e)
@@ -345,6 +355,8 @@ export default function PhotoAutoFill({
           placesUnknown: pub.placesFailed,
           others: otherPhotoUses(drafts, ids, groupOf),
           brandName: brand.brandName,
+          brandAliases: brand.aliases,
+          ...(brand.marketScope ? { marketScope: brand.marketScope } : {}),
           ownedDomains: brand.ownedDomains,
           ...(brand.brandPageUrl ? { brandPageUrl: brand.brandPageUrl } : {}),
           ...(scenes ? { scenes, sceneFailed: sceneSum.failed } : { knownScenes: sceneMap }),
@@ -706,6 +718,7 @@ export default function PhotoAutoFill({
   const hasScreenRows = rows.some((r) => r.row.screenPick)
   const filledMaps = rows.filter((r) => r.row.state === 'filled' && r.row.pick?.origin === 'osm-map').length
   const hasMapRows = rows.some((r) => r.row.mapPick)
+  const hasOwnerScreenRows = rows.some((r) => r.row.ownerScreenProduct)
   // 군산 지도 알림 — 장소 목록 · 웹 알림, 마지막 그리기 결과, 아직 그리지 않은 자리(그릴 수 있으면 「군산 지도 그리기」로).
   const undrawnRows = rows.filter((r) => r.row.state === 'undrawn').length
   const mapNote = preview?.maps
@@ -786,6 +799,7 @@ export default function PhotoAutoFill({
             수 있는 사진 {preview.result.usable}장
             {preview.result.usablePublic > 0 && ` · 장소 페이지의 공공 사진(공공누리 제1유형) ${preview.result.usablePublic}장`}
             {preview.result.usableTour > 0 && ` · 관광공사 사진(공공누리 제1유형) ${preview.result.usableTour}장`}
+            {preview.result.ownerScreens > 0 && ` · 업주 사진 보관함의 제품 화면 ${preview.result.ownerScreens}장`}
             {skippedByReason.length > 0 && ` — 뺀 사진: ${skippedByReason.join(' · ')}`}
           </p>
           <p className="doc-meta" style={{ margin: 0 }}>
@@ -793,6 +807,7 @@ export default function PhotoAutoFill({
             {counts.filled.public > 0 && ` (공공 사진 ${counts.filled.public})`}
             {counts.filled.tour > 0 && ` (관광공사 사진 ${counts.filled.tour})`}
             {filledScreens > 0 && ` (자사 화면 ${filledScreens})`}
+            {counts.filled.ownerScreen > 0 && ` (제품 화면 ${counts.filled.ownerScreen})`}
             {filledMaps > 0 && ` (${MAP_AREA_NAME} 지도 ${filledMaps})`}
             {counts.filled.review > 0 && ` (확인 필요 ${counts.filled.review})`}
             {counts.filled.similar > 0 && ` (비슷한 사진 ${counts.filled.similar})`}
@@ -845,6 +860,8 @@ export default function PhotoAutoFill({
             주세요. 사람이 고른 자리는 덮지 않고, 사람이 뺀 자리는 「사람이 뺀 자리도 다시 채우기」를 켰을 때만 다시 채웁니다.
             {hasScreenRows &&
               ' 자사 화면은 브랜드 웹사이트 화면을 이 PC에서 찍은 그림이에요 — 글에는 이 PC의 화면 주소만 적고, 복사 · 홈페이지용 .html로 내보낼 때 그림을 넣어요. 붙여 넣은 글에서 화면이 안 보이면 「사진 N장 받기」로 받은 파일을 그 자리에 올려 주세요.'}
+            {hasOwnerScreenRows &&
+              ' 제품 화면은 업주 사진 보관함에서 「제품 화면」으로 표시한 캡처예요 — 자리 글자가 그 제품과 화면을 함께 말하는 자리에만, 설명 낱말 · 결과 화면 여부가 맞을 때 넣고 늘 「확인 필요」예요(같은 화면은 작성자 한 사람에게 한 번). 그런 사진 자리에는 실제 사진을 넣지 않아요.'}
             {hasMapRows &&
               ` ${MAP_AREA_NAME} 지도는 자사 사이트 장소 목록의 장소를 앱이 OpenStreetMap 데이터로 그린 그림이에요(사이트 화면이 아니에요) — 표지와 위치 문장을 자리 글자로 골라 늘 「확인 필요」이니 썸네일과 까닭을 확인해 주세요. 내보낼 때 지도 바로 아래에 출처 줄(지도 데이터 © OpenStreetMap contributors · ODbL)이 붙고, 그 아래 줄이 위치 문장이에요.`}
           </p>
@@ -911,7 +928,7 @@ function sceneSkipsText(row: AutoSlotRow): string | null {
   return entries.length ? entries.map(([k, n]) => `${SCENE_SKIP_TEXT[k]} ${n}`).join(' · ') : null
 }
 
-/** 사진 한 장 — 썸네일 · 공공 사진 표시 · 설명 · 출처 · 장면. */
+/** 사진 한 장 — 썸네일 · 공공 사진 · 제품 화면 표시 · 설명 · 출처 · 장면. */
 function PhotoBrief({
   src,
   alt,
@@ -919,6 +936,7 @@ function PhotoBrief({
   publicPhoto,
   credit,
   scene,
+  productScreen,
 }: {
   src: string
   alt: string
@@ -926,6 +944,8 @@ function PhotoBrief({
   publicPhoto: boolean
   credit: { credit: string; license: PhotoLicense } | null
   scene?: PhotoScene
+  /** 업주 사진 보관함에서 「제품 화면」으로 표시한 캡처의 제품 이름(대표 이름). */
+  productScreen?: string
 }) {
   return (
     <span className="photo-auto-pick">
@@ -935,7 +955,8 @@ function PhotoBrief({
           <span className="status-pill st-info no-glyph" title={tour ? TOUR_SOURCES[tour].name : undefined}>
             {tour ? '관광공사 사진' : '공공 사진'}
           </span>
-        )}{' '}
+        )}
+        {productScreen && <span className="status-pill st-info no-glyph">제품 화면 · {productScreen}</span>}{' '}
         {alt}
         {credit && (
           <span className="doc-meta">
@@ -1001,6 +1022,7 @@ function screenWhy(row: AutoSlotRow): string {
   const sp = row.screenPick
   if (!sp && row.screenMiss === 'no-place') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 자리 글자 · 소제목에 사이트의 장소 이름이 없어 찍지 않아요(장소 이름을 넣거나 직접 골라요)`
   if (!sp && row.screenMiss === 'no-directory') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 사이트 장소 목록(sitemap.xml)을 읽지 못해 찍을 장소를 정하지 못했어요`
+  if (!sp && kind === 'none') return `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요) · 업주 사진 보관함에 「제품 화면」으로 올리면 채워요`
   if (!sp) return isScreenKind(kind) ? SCREEN_SLOT_KIND_TEXT[kind] : `${SCREEN_SLOT_KIND_TEXT[kind]} — 찍지 않아요(직접 찍거나 자리 글자를 고쳐요)`
   const facts = row.factGaps?.length ? ` · 자리 글자의 ${row.factGaps.map((g) => `「${g}」`).join(' ')}이(가) 찍은 화면에 없어요(맞는지 확인)` : ''
   const via = row.viaAction ? ' · 장소를 눌러 보는 화면 자리라 그 장소의 장소 안내로 대신해요(맞는지 확인)' : ''
@@ -1053,8 +1075,11 @@ function PreviewRow({ title, row, brandName }: { title: string | null; row: Auto
       publicPhoto={c.origin === 'public'}
       credit={publicCandidateFields(c)}
       {...(row.scene && row.state !== 'kept' ? { scene: row.scene } : {})}
+      {...(c.origin === 'owner' && c.screenProduct ? { productScreen: productLabel(c.screenProduct) } : {})}
     />
   ) : null
+  // 제품 화면 자리(업주 화면 단계가 본 자리) — 넣었으면 자리의 제품 · 맞은 낱말, 비웠으면 그 까닭(화면 자리의 「찍지 않아요」 대신).
+  const ownerWhy = ownerScreenReason(row)
   const screen = row.screenPick ? <ScreenBrief brandName={brandName} pick={row.screenPick} /> : null
   // 앱이 그린 군산 지도 — 그렸으면 썸네일(16:10), 아직이면 빈 자리. 늘 「확인 필요」 칩과 출처 줄.
   const map = row.mapPick ? <MapPickBrief {...(row.mapPick.drawn ? { src: row.mapPick.drawn.src } : {})} alt={row.mapPick.alt} caption={row.mapPick.caption} /> : null
@@ -1104,6 +1129,8 @@ function PreviewRow({ title, row, brandName }: { title: string | null; row: Auto
           ))
         ) : row.mapMiss ? (
           <span className="muted">{mapMissText(row)}</span>
+        ) : ownerWhy ? (
+          <span className={row.ownerScreenPicked ? undefined : 'muted'}>{ownerWhy}</span>
         ) : row.screenSlot ? (
           <span className={row.screenPick ? undefined : 'muted'}>{screenWhy(row)}</span>
         ) : row.placeless && c ? (

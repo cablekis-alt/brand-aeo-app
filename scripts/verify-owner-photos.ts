@@ -18,9 +18,13 @@ import net from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import {
+  cleanProductScreen,
   ownerPhotoAppSrc,
   ownerPhotoSize,
   parseOwnerPhotoAppSrc,
+  productGuessFromAlt,
+  productLabel,
+  productNames,
   sniffOwnerPhotoType,
 } from '../src/lib/ownerPhotos'
 import { photoCreditState, photoPickSrc, withPhotos, type PhotoPick } from '../src/lib/articlePhotos'
@@ -51,6 +55,21 @@ ok(
   SRC === '/api/owner-photos/vowner/0123456789abcdef.jpg' && parseOwnerPhotoAppSrc(SRC)?.id === '0123456789abcdef' &&
     parseOwnerPhotoAppSrc('/api/owner-photos/../0123456789abcdef.jpg') === null && parseOwnerPhotoAppSrc('/api/owner-photos/x/0123.jpg') === null &&
     parseOwnerPhotoAppSrc('https://x.example/a.jpg') === null,
+)
+// 「제품 화면」 표시(2026-11-07 설계 D1) — 제품 이름 한 줄(30자까지), 쉼표로 다른 이름, 띄어쓰기 · 문장부호 없이 소문자로 견준다, 이름마다 2자 이상.
+ok(
+  '제품 화면 이름 — 쉼표로 다른 이름 · 비교 글자 · 2자 미만 이름은 뺀다 · 30자 · 한 줄',
+  JSON.stringify(productNames('NEGOMATE, 네고 메이트')) === JSON.stringify([{ name: 'NEGOMATE', key: 'negomate' }, { name: '네고 메이트', key: '네고메이트' }]) &&
+    cleanProductScreen('  NEGOMATE ,  네고메이트 ')?.product === 'NEGOMATE, 네고메이트' &&
+    cleanProductScreen('A, NEGOMATE')?.product === 'NEGOMATE' &&
+    cleanProductScreen('NEGO\nMATE')?.product === 'NEGO MATE' &&
+    cleanProductScreen('x') === null && cleanProductScreen('') === null && cleanProductScreen('가'.repeat(31)) === null && cleanProductScreen(3) === null &&
+    productLabel('NEGOMATE, 네고메이트') === 'NEGOMATE',
+)
+ok(
+  '장면이 화면으로 읽힌 사진의 제품 이름 제안 — 설명의 첫 로마자 낱말',
+  productGuessFromAlt('ADO2 첫 화면 — 네이버 지도 URL을 넣고 시작하는 화면') === 'ADO2' && productGuessFromAlt('robots.txt 화면') === 'robots.txt' &&
+    productGuessFromAlt('WEBCHECK에 주소를 넣은 화면') === 'WEBCHECK' && productGuessFromAlt('가상 첫 화면') === '',
 )
 
 // 2) 사진 기록 · 내보내기
@@ -93,6 +112,7 @@ ok('업주 사진은 자기 시설 자리에서 브랜드 상한을 받지 않�
 const PORT = 4126
 const BASE = `http://127.0.0.1:${PORT}`
 const TENANT = 'vowner'
+const B2B = 'vownerb'
 const portFree = () =>
   new Promise<boolean>((resolve) => {
     const srv = net.createServer()
@@ -109,11 +129,20 @@ writeFileSync(
       tenantId: TENANT, brandName: '가상스테이', aliases: ['가상스테이'], ownedDomains: ['stay.example'], brandPageUrl: 'https://stay.example/s/stay', industry: '숙박', region: '가상시',
       engines: ['gemini'], questionBankSize: 4, questionBankVersion: 'v1', repeatsPerQuestion: 1, factGraph: [], competitors: [],
     },
+    {
+      tenantId: B2B, brandName: '에이아이랩', aliases: ['에이아이랩'], ownedDomains: ['lab.example'], industry: '소프트웨어', region: '국내', marketScope: 'b2b',
+      engines: ['gemini'], questionBankSize: 4, questionBankVersion: 'v1', repeatsPerQuestion: 1, factGraph: [], competitors: [],
+    },
   ]),
 )
 const draft = (id: string) => ({ actionId: id, generatedAt: AT, draft: { format: 'article', title: '가상 글', sections: [], gapCount: 0, usedFacts: [] } })
-writeFileSync(path.join(tenantDir, 'drafts.json'), JSON.stringify({ 'content:a': draft('content:a'), 'content:b': draft('content:b') }))
+const draftsOf = (ids: string[]) => Object.fromEntries(ids.map((id) => [id, draft(id)]))
+writeFileSync(path.join(tenantDir, 'drafts.json'), JSON.stringify(draftsOf(['a', 'b', 'c', 'd', 's', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'].map((x) => `content:${x}`))))
 writeFileSync(path.join(tenantDir, 'publish-settings.json'), JSON.stringify({ photoRights: { confirmedAt: AT } }))
+const b2bDir = path.join(dir, 'data', B2B)
+mkdirSync(b2bDir, { recursive: true })
+writeFileSync(path.join(b2bDir, 'drafts.json'), JSON.stringify(draftsOf(['content:a', 'content:b', 'content:c', 'content:d'])))
+writeFileSync(path.join(b2bDir, 'publish-settings.json'), JSON.stringify({ photoRights: { confirmedAt: AT } }))
 const env: Record<string, string | undefined> = {
   ...process.env,
   APP_DATA_DIR: dir,
@@ -134,17 +163,28 @@ if (!(await portFree())) {
   process.exit(1)
 }
 const server = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts'], { cwd: process.cwd(), env, stdio: 'ignore' })
-const upload = (bytes: Buffer, q: Record<string, string>, type = 'image/png') =>
-  fetch(`${BASE}/api/owner-photos/${TENANT}?${new URLSearchParams(q).toString()}`, { method: 'POST', headers: { 'Content-Type': type }, body: bytes }).then(async (r) => ({
+const upload = (bytes: Buffer, q: Record<string, string>, type = 'image/png', tenant = TENANT) =>
+  fetch(`${BASE}/api/owner-photos/${tenant}?${new URLSearchParams(q).toString()}`, { method: 'POST', headers: { 'Content-Type': type }, body: bytes }).then(async (r) => ({
     status: r.status,
     body: (await r.json().catch(() => ({}))) as Record<string, unknown>,
   }))
-const put = (body: unknown) =>
-  fetch(`${BASE}/api/content-draft/${TENANT}/photos`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({
+const put = (body: unknown, tenant = TENANT) =>
+  fetch(`${BASE}/api/content-draft/${tenant}/photos`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({
     status: r.status,
     body: (await r.json().catch(() => ({}))) as Record<string, unknown>,
   }))
-const stored = () => JSON.parse(readFileSync(path.join(tenantDir, 'drafts.json'), 'utf-8')) as Record<string, { photos?: Record<string, unknown>[] }>
+const patch = (photoId: string, body: unknown) =>
+  fetch(`${BASE}/api/owner-photos/${TENANT}/${photoId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({
+    status: r.status,
+    body: (await r.json().catch(() => ({}))) as { photo?: Record<string, unknown> },
+  }))
+const stored = (from = tenantDir) => JSON.parse(readFileSync(path.join(from, 'drafts.json'), 'utf-8')) as Record<string, { photos?: Record<string, unknown>[] }>
+/** 자동 채우기 저장에 보낼 업주 사진 한 장(화면이 보낸 주소 · 설명은 서버가 버린다). */
+const autoOwner = (actionId: string, slot: string, ownerPhotoId: string) => ({
+  actionId,
+  generatedAt: AT,
+  picks: [{ slot, nth: 1, same: 1, heading: '절', src: 'x', alt: 'x', pageUrl: 'x', auto: true, origin: 'owner', ownerPhotoId }],
+})
 try {
   let up = false
   for (let i = 0; i < 80 && !up; i += 1) {
@@ -191,6 +231,58 @@ try {
     articles: [{ actionId: 'content:b', generatedAt: AT, picks: [{ slot: '가상스테이 독채 앞 정원', nth: 1, same: 1, heading: '정원', src: 'x', alt: 'x', pageUrl: 'x', auto: true, origin: 'owner', ownerPhotoId: id }] }],
   })
   ok('자동 채우기 저장 — 업주 사진(자동 표시)', auto.status === 200 && auto.body.saved === 1 && stored()['content:b']?.photos?.[0]?.origin === 'owner' && stored()['content:b']?.photos?.[0]?.auto === true)
+
+  // 「제품 화면」 표시(2026-11-07 설계 D1) — 올릴 때 · 나중에 고치기(PATCH), 이름이 맞지 않으면 400.
+  const PRODUCT = 'NEGOMATE, 네고메이트'
+  const shotUp = await upload(Buffer.concat([PNG, Buffer.from('screen')]), { confirmed: '1', alt: 'NEGOMATE 협상 화면 — 공급사별 협상 로그와 조율 타임라인', holder: '회사', product: PRODUCT })
+  const shot = shotUp.body.photo as Record<string, unknown> | undefined
+  const shotId = String(shot?.id ?? '')
+  ok('올리기 — 「제품 화면」 표시와 제품 이름(쉼표로 다른 이름)', shotUp.status === 201 && (shot?.productScreen as Record<string, unknown> | undefined)?.product === PRODUCT)
+  ok('제품 이름이 맞지 않으면(2자 미만) 올리지 않는다', (await upload(Buffer.concat([PNG, Buffer.from('bad')]), { confirmed: '1', alt: '화면', holder: '회사', product: 'x' })).status === 400)
+  const cleared = await patch(shotId, { productScreen: null })
+  const marked = await patch(shotId, { productScreen: { product: PRODUCT } })
+  ok(
+    '나중에 고치기 — 표시 빼기(null) · 다시 표시 · 이름이 맞지 않거나 바꿀 것이 없으면 400',
+    cleared.status === 200 && cleared.body.photo?.productScreen === undefined && marked.status === 200 &&
+      (marked.body.photo?.productScreen as Record<string, unknown> | undefined)?.product === PRODUCT &&
+      (await patch(shotId, { productScreen: { product: 'y' } })).status === 400 && (await patch(shotId, {})).status === 400,
+  )
+  // 표시하지 않은 화면 캡처(장면이 화면) — 이 PC에 읽어 둔 장면을 목록에 적어 둔다(이 서버에는 Claude 키가 없다).
+  const listFile = path.join(tenantDir, 'owner-photos', 'owner-photos.json')
+  const box = JSON.parse(readFileSync(listFile, 'utf-8')) as { photos: Record<string, unknown>[] }
+  const SCREEN_ID = 'cccccccccccccccc'
+  box.photos.push({
+    id: SCREEN_ID, ext: 'png', mime: 'image/png', bytes: PNG.length, alt: '가상스테이 거실 소파와 테이블', uploadedAt: AT, rights: { confirmedAt: AT, holder: '업주' },
+    scene: { text: '예약 웹 화면', setting: 'screen', people: 'none', time: 'unknown', tags: ['화면'], model: 'test', describedAt: AT },
+  })
+  writeFileSync(listFile, JSON.stringify(box))
+  const kind = await put({
+    op: 'auto',
+    articles: [
+      autoOwner('content:c', 'NEGOMATE 화면에서 공급사별 협상 로그와 조율 타임라인이 표시된 모습', shotId),
+      autoOwner('content:d', '구매 담당자가 NEGOMATE 화면을 모니터에 띄워 놓고 공급사별 협상 로그를 확인하는 장면', shotId),
+      autoOwner('content:s', '가상스테이 거실 소파와 테이블', SCREEN_ID),
+    ],
+  })
+  ok(
+    '서버 다시 보기 — 제품 화면은 그 제품 · 화면 자리에만(사람이 화면을 보는 장면은 뺀다) · 표시 없는 화면 캡처는 사진 자리에 넣지 않는다',
+    kind.status === 200 && kind.body.saved === 1 && kind.body.skipped === 2 && stored()['content:c']?.photos?.[0]?.ownerPhotoId === shotId &&
+      !stored()['content:d']?.photos?.length && !stored()['content:s']?.photos?.length,
+  )
+  const SLOT_NEG = 'NEGOMATE 화면에서 품목, 목표가, 마감일을 입력하는 장면'
+  const capSave = await put({ op: 'auto', articles: ['e', 'f', 'g', 'h'].map((x) => autoOwner(`content:${x}`, SLOT_NEG, shotId)) })
+  ok('서버 — 제품 화면은 브랜드 상한(3)을 받지 않는다(D4)', capSave.status === 200 && capSave.body.saved === 4 && capSave.body.skipped === 0)
+  // (low) B2B 브랜드는 「매장」 자리를 자기 시설로 보지 않는다 — 같은 업주 사진 넷을 지역 브랜드는 모두, B2B 브랜드는 상한(3)까지.
+  const SHOP = '매장 안 디지털 사이니지 화면에 홍보 영상이 나오는 모습'
+  const shopAlt = { confirmed: '1', alt: '매장 안 디지털 사이니지 화면에 홍보 영상이 재생되는 모습', holder: '업주' }
+  const localShop = String(((await upload(Buffer.concat([PNG, Buffer.from('shop')]), shopAlt)).body.photo as Record<string, unknown> | undefined)?.id ?? '')
+  const b2bShop = String(((await upload(Buffer.concat([PNG, Buffer.from('shop')]), shopAlt, 'image/png', B2B)).body.photo as Record<string, unknown> | undefined)?.id ?? '')
+  const localSave = await put({ op: 'auto', articles: ['i', 'j', 'k', 'l'].map((x) => autoOwner(`content:${x}`, SHOP, localShop)) })
+  const b2bSave = await put({ op: 'auto', articles: ['a', 'b', 'c', 'd'].map((x) => autoOwner(`content:${x}`, SHOP, b2bShop)) }, B2B)
+  ok(
+    '(low) B2B 브랜드의 「매장」 자리는 브랜드 상한 면제가 아니다 — 지역 브랜드 4장 · B2B 브랜드 3장',
+    localSave.body.saved === 4 && b2bSave.body.saved === 3 && b2bSave.body.skipped === 1 && Object.values(stored(b2bDir)).filter((d) => d.photos?.length).length === 3,
+  )
   const q = new URLSearchParams({ actionId: 'content:a', generatedAt: AT, slot: '가상스테이 독채 앞 정원', nth: '1', heading: '정원' })
   const pf = await fetch(`${BASE}/api/content-draft/${TENANT}/photo-file?${q.toString()}`)
   ok('사진 받기 — 이 PC의 업주 사진 파일을 그대로', pf.status === 200 && pf.headers.get('content-type') === 'image/png' && Buffer.from(await pf.arrayBuffer()).equals(PNG))

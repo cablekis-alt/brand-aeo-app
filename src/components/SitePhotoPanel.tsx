@@ -15,7 +15,7 @@ import {
   type StoredDraft,
   type TenantSummary,
 } from '../lib/api'
-import type { OwnerPhotoView } from '../lib/ownerPhotos'
+import { productLabel, type OwnerPhotoView } from '../lib/ownerPhotos'
 import {
   canonicalPhotoSrc,
   isPhotoMedical,
@@ -128,6 +128,8 @@ interface PhotoOption {
   tour?: TourSource
   /** 업주 사진 보관함의 사진이면 그 id(src/lib/ownerPhotos.ts — src는 앱 주소). */
   ownerId?: string
+  /** 「제품 화면」으로 표시한 업주 사진이면 그 제품의 대표 이름 — 칩만 단다(직접 고르기는 막지 않는다). */
+  productScreen?: string
 }
 
 /** 사진 자리 바로 아랫줄의 설명(`*설명*`) — 장소를 찾을 때 쓴다. */
@@ -328,6 +330,7 @@ export default function SitePhotoPanel({
     pageUrl: brand.brandPageUrl || '',
     ownerId: p.id,
     where: '업주 사진 보관함',
+    ...(p.productScreen ? { productScreen: productLabel(p.productScreen.product) } : {}),
   }))
   const options: PhotoOption[] = [...siteOptions, ...ownerOptions]
   for (const o of publicOk ? [...(publicFound?.options ?? []), ...(tourFound?.options ?? [])] : []) {
@@ -1038,7 +1041,8 @@ export default function SitePhotoPanel({
                               {p.tour ? '관광공사 사진' : '공공 사진'}
                             </span>
                           )}
-                          {p.ownerId && <span className="status-pill st-info no-glyph">업주 사진</span>}{' '}
+                          {p.ownerId && <span className="status-pill st-info no-glyph">업주 사진</span>}
+                          {p.productScreen && <span className="status-pill st-info no-glyph">제품 화면 · {p.productScreen}</span>}{' '}
                           {p.alt || <span className="muted">설명 없음</span>}
                         </span>
                         {p.where && <span className="doc-meta">{p.where}</span>}

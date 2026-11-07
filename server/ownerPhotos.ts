@@ -5,6 +5,7 @@ import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { writeJsonAtomic } from './tenantWriteQueue.js';
 import { cleanPhotoAlt } from '../src/lib/articlePhotos.js';
 import {
+  cleanProductScreen,
   cleanRightsHolder,
   isOwnerPhotoId,
   OWNER_PHOTO_MAX,
@@ -16,6 +17,7 @@ import {
   type OwnerPhotoMime,
   type OwnerPhotoRecord,
   type OwnerPhotoView,
+  type OwnerProductScreen,
 } from '../src/lib/ownerPhotos.js';
 import { validScene, type PhotoScene } from '../src/lib/photoScenes.js';
 
@@ -76,7 +78,15 @@ async function loadRecords(tenantId: string): Promise<OwnerPhotoRecord[]> {
   }
   const parsed = JSON.parse(text) as { photos?: unknown };
   if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.photos)) throw new Error(`${tenantId}/owner-photos/${LIST_FILE}의 모양이 맞지 않습니다.`);
-  return parsed.photos.filter(validRecord);
+  // 「제품 화면」 표시가 모양이 틀리면 표시만 버린다(사진은 남긴다).
+  return parsed.photos.filter(validRecord).map((rec) => {
+    if (rec.productScreen === undefined) return rec;
+    const productScreen = cleanProductScreen(rec.productScreen?.product);
+    const copy: OwnerPhotoRecord = { ...rec };
+    if (productScreen) copy.productScreen = productScreen;
+    else delete copy.productScreen;
+    return copy;
+  });
 }
 
 /** 보관한 업주 사진(올린 차례) — 없거나 읽을 수 없으면 [](읽을 수 없으면 알린다). */
@@ -111,12 +121,13 @@ function updateRecords<T>(tenantId: string, task: (photos: OwnerPhotoRecord[]) =
 
 /**
  * 사진 하나를 보관한다 — 형식(앞 바이트) · 크기 · 장수를 보고, 파일 sha256 앞 16자를 id로 쓴다. 같은 사진이 이미 있으면 설명 · 권리만
- * 새로 적고(existed) 파일은 그대로 둔다. 권리 확인(holder)이 없으면 거절한다 — 화면이 확인을 받고 보낸다.
+ * 새로 적고(existed) 파일은 그대로 둔다. 권리 확인(holder)이 없으면 거절한다 — 화면이 확인을 받고 보낸다. productScreen(「제품 화면」 표시 —
+ * 정리한 것)을 주면 표시하고, 주지 않으면 이미 있던 사진의 표시는 그대로 둔다(빼기는 setOwnerPhotoProductScreen).
  */
 export async function addOwnerPhoto(
   tenantId: string,
   bytes: Buffer,
-  meta: { alt: string; holder: unknown; note?: unknown; now?: Date },
+  meta: { alt: string; holder: unknown; note?: unknown; productScreen?: OwnerProductScreen; now?: Date },
 ): Promise<{ record: OwnerPhotoRecord; existed: boolean }> {
   if (!bytes.length) throw new OwnerPhotoError('empty', '사진 파일이 비어 있어요.');
   if (bytes.length > OWNER_PHOTO_MAX_BYTES) throw new OwnerPhotoError('too-large', `사진 한 장은 ${Math.round(OWNER_PHOTO_MAX_BYTES / 1024 / 1024)}MB까지예요.`);
@@ -134,6 +145,7 @@ export async function addOwnerPhoto(
     if (had) {
       if (alt) had.alt = alt;
       had.rights = rights;
+      if (meta.productScreen) had.productScreen = meta.productScreen;
       return { record: { ...had }, existed: true };
     }
     if (photos.length >= OWNER_PHOTO_MAX) throw new OwnerPhotoError('too-many', `업주 사진은 브랜드마다 ${OWNER_PHOTO_MAX}장까지예요.`);
@@ -143,7 +155,17 @@ export async function addOwnerPhoto(
     const tmp = `${file}.${process.pid}.${randomUUID()}.tmp`;
     await writeFile(tmp, bytes);
     await rename(tmp, file);
-    const record: OwnerPhotoRecord = { id, ext, mime, bytes: bytes.length, ...(size ?? {}), alt, uploadedAt: now, rights };
+    const record: OwnerPhotoRecord = {
+      id,
+      ext,
+      mime,
+      bytes: bytes.length,
+      ...(size ?? {}),
+      alt,
+      uploadedAt: now,
+      rights,
+      ...(meta.productScreen ? { productScreen: meta.productScreen } : {}),
+    };
     photos.push(record);
     return { record: { ...record }, existed: false };
   });
@@ -155,6 +177,17 @@ export function updateOwnerPhotoAlt(tenantId: string, id: string, alt: string): 
     const rec = photos.find((p) => p.id === id);
     if (!rec) throw new OwnerPhotoError('not-found', '그 업주 사진이 없어요.');
     rec.alt = cleanPhotoAlt(alt);
+    return { ...rec };
+  });
+}
+
+/** 「제품 화면」 표시를 적거나(정리한 것) 뺀다(null) — 없으면 not-found. */
+export function setOwnerPhotoProductScreen(tenantId: string, id: string, productScreen: OwnerProductScreen | null): Promise<OwnerPhotoRecord> {
+  return updateRecords(tenantId, (photos) => {
+    const rec = photos.find((p) => p.id === id);
+    if (!rec) throw new OwnerPhotoError('not-found', '그 업주 사진이 없어요.');
+    if (productScreen) rec.productScreen = productScreen;
+    else delete rec.productScreen;
     return { ...rec };
   });
 }
