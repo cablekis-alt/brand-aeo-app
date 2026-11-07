@@ -16,6 +16,7 @@ import { articleTailMarkdown, brandSiteUrl, channelArticleParts, publishArticleO
 import { sourceKeyOf } from '../src/prompts/b9d-channel-adapt'
 import type { StoredDraft, TenantSummary } from '../src/lib/api'
 import type { PhotoPick } from '../src/lib/articlePhotos'
+import type { DraftBlock, DraftImage, DraftRole, DraftSection } from '../src/prompts/b9c-content-draft'
 import { MAP_CREDIT, mapAppSrc, mapVariantKey } from '../src/lib/mapImage'
 import { screenAppSrc } from '../src/lib/screenCapture'
 import { exportLeaks, inlineScreens, richCopyWithScreens, screenPlainText, screenPreviewHtml, screensDroppedText, type ScreenFetcher } from '../src/lib/screenExport'
@@ -391,7 +392,7 @@ const faqStored: StoredDraft = {
         { kind: 'text', role: 'action', body: '조식이 나오나요?' },
         { kind: 'text', role: 'quote', body: '체크인 전에 짐을 맡길 수 있나요?' },
       ], image: { alt: '가상스테이 정원' } },
-      { heading: '자주 묻는 질문 더', answers: 'v5-004', blocks: [
+      { heading: '예약 전 자주 묻는 질문', answers: 'v5-004', blocks: [
         { kind: 'text', role: 'action', body: '바비큐가 되나요?' },
         { kind: 'text', role: 'action', body: 'Q. 조식이 나오나요? A.' },
         { kind: 'gap', need: '조식 여부 — 팩트 그래프에 없음' },
@@ -403,7 +404,7 @@ const faqStored: StoredDraft = {
 }
 const faqSnapshot = JSON.stringify(faqStored)
 const faqPub = publishMarkdownOf(faqStored)
-ok('발행본 — 답 없는 FAQ 질문 · 빈 「A.」 · 문단 끝에 남은 질문 · 절 끝의 「다음과 같습니다」를 뺀다', faqPub === [
+ok('발행본 — 답 없는 FAQ 질문 · 빈 「A.」 · 문단 끝에 남은 질문 · 절 끝의 「다음과 같습니다」를 뺀다(물어볼 말 인용이 뒤따르는 질문은 남긴다)', faqPub === [
   '# 가상시 숙소 고르는 기준 3가지', '',
   '가상시 숙소는 여행 목적에 따라 고르면 됩니다.', '',
   '## 1. 무엇을 챙기나요?', '',
@@ -418,11 +419,12 @@ ok('발행본 — 답 없는 FAQ 질문 · 빈 「A.」 · 문단 끝에 남은 
   '**체크인은 몇 시인가요? 오후 3시부터입니다.**', '',
   '반려견과 갈 수 있나요? 반려동물은 함께 갈 수 없습니다.', '',
   '취소하면 어떻게 되나요? 당일 취소는 환불되지 않습니다.', '',
+  '조식이 나오나요?', '',
   '> 체크인 전에 짐을 맡길 수 있나요?', '',
   '![가상스테이 정원](#image-slot)', '',
 ].join('\n'))
-ok('질문이 모두 답 없이 남은 FAQ 절은 소제목째 빠지고 제목 수 · 번호가 맞는다', !faqPub.includes('자주 묻는 질문 더') && draftTitle(effectiveDraft(faqStored)) === '가상시 숙소 고르는 기준 3가지' && JSON.stringify([...faqPub.matchAll(/^## (\d+)\./gm)].map((m) => m[1])) === JSON.stringify(['1', '2', '3']))
-ok('작업용 원고는 그대로 — 고칠 자리가 보인다', workMarkdownOf(faqStored).includes('차 없이 가도 되나요?') && workMarkdownOf(faqStored).includes('Q. 주차가 되나요? A.') && workMarkdownOf(faqStored).includes('## 4. 자주 묻는 질문 더'))
+ok('질문이 모두 답 없이 남은 FAQ 절은 소제목째 빠지고 제목 수 · 번호가 맞는다', !faqPub.includes('예약 전 자주 묻는 질문') &&draftTitle(effectiveDraft(faqStored)) === '가상시 숙소 고르는 기준 3가지' && JSON.stringify([...faqPub.matchAll(/^## (\d+)\./gm)].map((m) => m[1])) === JSON.stringify(['1', '2', '3']))
+ok('작업용 원고는 그대로 — 고칠 자리가 보인다', workMarkdownOf(faqStored).includes('차 없이 가도 되나요?') && workMarkdownOf(faqStored).includes('Q. 주차가 되나요? A.') && workMarkdownOf(faqStored).includes('## 4. 예약 전 자주 묻는 질문'))
 ok('저장한 초안은 바꾸지 않는다', JSON.stringify(faqStored) === faqSnapshot)
 ok('고아 자리가 없는 글은 발행본 · 지문이 그대로', publishMarkdownOf(articleDraft) === '# 가상시 숙소 고르는 기준 2가지\n\n가상시 숙소는 여행 목적에 따라 고르면 됩니다.\n\n## 1. 지역은 어떻게 고르나요?\n\n**목적지에 가까운 곳이 편합니다.**\n\n![가상 골목 풍경](#image-slot)\n*골목 입구*\n\n## 2. 사례: 가상스테이\n\n가상스테이는 독채 두 동입니다.\n\n![가상스테이 정원](#image-slot)\n*A동과 B동 모두 독채입니다.*\n' && sourceKeyOf(publishMarkdownOf(articleDraft)) === '5r-sh7zac')
 const legacyFaq: StoredDraft = {
@@ -454,7 +456,7 @@ const faqEdited: StoredDraft = {
     '1박 10만 원입니다.', '',
     '**Q.** 조식이 나오나요? **A.**', '',
     '> **채워야 함:** 조식 여부', '',
-    '## 3. 자주 묻는 질문 더', '',
+    '## 3. 예약 전 자주 묻는 질문', '',
     '**바비큐가 되나요?**', '',
     '> **채워야 함:** 바비큐 여부', '',
   ].join('\n'),
@@ -473,6 +475,64 @@ ok('고친 글 발행본 — 목록 · 표 앞 안내 문장과 답 있는 질�
   '**요금은 얼마인가요?**', '',
   '1박 10만 원입니다.',
 ].join('\n'))
+
+// 6) 고아 덜기의 경계(2026-11-07 검토) — 진짜 내용은 남긴다: 숫자로 시작하는 문장 · 물어볼 말 인용으로 답한 질문 · 따옴표 속 예시
+//    질문 · 답 뒤의 되묻는 말 · FAQ가 아닌 절의 예시 질문 · 질문 소제목 아래 하위 소제목. 덜 때는 번호 꼬리표 · 따로 줄 「A.」 · 굵게
+//    짝 · 공식 출처까지 함께 맞추고, 사진 자리가 있는 절은 통째로 없애지 않는다(고른 사진이 이유 없이 빠지지 않게).
+const qaStored = (sections: DraftSection[]): StoredDraft => ({
+  actionId: 'content:qa',
+  generatedAt: '2026-11-07T09:00:00.000Z',
+  draft: { format: 'article', title: '가상 글 {N}가지', lead: '머리말입니다.', sections, gapCount: 0, usedFacts: [] },
+})
+const tx = (body: string, role?: DraftRole): DraftBlock => (role ? { kind: 'text', body, role } : { kind: 'text', body })
+const gapOf = (need: string): DraftBlock => ({ kind: 'gap', need })
+const sectionOf = (heading: string, blocks: DraftBlock[], image?: DraftImage): DraftSection => ({ heading, answers: '', blocks, ...(image ? { image } : {}) })
+const qaIntro = sectionOf('숙소는 어떤가요?', [tx('독채 두 동입니다.')])
+/** 둘째 절(## 2.)부터의 발행본. */
+const fromSecond = (md: string) => md.slice(md.indexOf('## 2.'))
+const faqPubOf = (blocks: DraftBlock[], heading = '자주 묻는 질문') => fromSecond(publishMarkdownOf(qaStored([qaIntro, sectionOf(heading, blocks)])))
+/** 「## 2. 소제목」 아래 문단들 — 문단마다 빈 줄. */
+const paras = (heading: string, ...lines: string[]) => [`## 2. ${heading}`, '', ...lines.flatMap((l) => [l, ''])].join('\n')
+/** 문단이 하나도 덜리지 않았는가 — 절 끝에 공식 출처 「참고:」 줄이 붙는 것은 따로 본다. */
+const unchanged = (blocks: DraftBlock[], heading = '자주 묻는 질문') =>
+  faqPubOf(blocks, heading).startsWith(paras(heading, ...blocks.map((b) => (b.role === 'key' ? `**${b.body}**` : b.role === 'quote' ? `> ${b.body}` : b.body ?? ''))))
+
+ok('숫자로 시작하는 문장도 따로 본다 — 답은 남고 답 없는 끝 질문만 빠진다', faqPubOf([tx('근대역사박물관은 월요일에 쉬나요? 네, 매주 월요일에 쉽니다. 3~10월에는 몇 시까지 여나요?'), tx('입장료는 얼마인가요? 성인 2,000원입니다.')]) === paras('자주 묻는 질문', '근대역사박물관은 월요일에 쉬나요? 네, 매주 월요일에 쉽니다.', '입장료는 얼마인가요? 성인 2,000원입니다.'))
+ok('다음 문단이 「…나요? 3~10월에는 …」이면 그것은 다음 질문 — 앞 질문은 답이 없다', faqPubOf([tx('월요일에 아이와 갈 만한 곳이 있나요?'), tx('근대역사박물관은 몇 시까지 입장할 수 있나요? 3~10월에는 17:30까지 입장합니다.')]) === paras('자주 묻는 질문', '근대역사박물관은 몇 시까지 입장할 수 있나요? 3~10월에는 17:30까지 입장합니다.'))
+const askAi = [tx('손님은 AI에 이렇게 묻습니다.', 'key'), tx('군산에서 아이와 묵기 좋은 독채는 어디인가요?'), tx('주차되는 원도심 숙소는 어디인가요?')]
+ok('FAQ가 아닌 절(손님이 AI에 던지는 질문)의 예시 질문은 그대로', unchanged(askAi, '손님이 AI 검색에 자주 던지는 질문'))
+ok('FAQ 절이라도 「이렇게 묻습니다」 뒤에 든 예시 질문은 그대로', unchanged(askAi))
+ok('「자주 묻는 질문을 …쓰세요」 절의 예시 질문은 그대로', unchanged([tx('AI는 질문 모양의 소제목을 잘 가져갑니다.'), tx('예를 들면 이런 질문입니다. 주차가 되나요? 아이와 가도 되나요?')], '손님이 자주 묻는 질문을 소제목으로 쓰세요'))
+ok('「FAQ 구조화 데이터」 절의 예시 질문은 그대로', unchanged([tx('FAQPage 스키마에 질문과 답을 짝지어 넣습니다.', 'key'), tx('질문은 손님이 실제로 묻는 말 그대로 씁니다. 예를 들면 주차가 되나요? 반려견과 갈 수 있나요?', 'action')], 'FAQ 구조화 데이터는 어떻게 넣나요?'))
+const askVendor = qaStored([qaIntro, sectionOf('업체에 꼭 물어볼 질문은 무엇인가요?', [tx('Q. 순위나 노출을 보장하나요?'), tx('Q. 효과는 어떤 데이터로 측정하나요?')]), sectionOf('정리', [tx('계약 전에 문서로 받아 두세요.')])])
+ok('FAQ가 아닌 절의 「Q.」 질문 목록은 그대로 — 절 · 제목 수도 그대로', publishMarkdownOf(askVendor).includes('## 2. 업체에 꼭 물어볼 질문은 무엇인가요?\n\nQ. 순위나 노출을 보장하나요?\n\nQ. 효과는 어떤 데이터로 측정하나요?\n\n## 3. 정리') && draftTitle(askVendor.draft) === '가상 글 3가지')
+ok('물어볼 말 인용이 답인 질문은 남는다', unchanged([tx('순위를 보장하나요? 보장하지 않습니다.'), tx('상담 때 무엇을 물어보면 되나요?', 'action'), tx('요금에 포함되는 범위를 서면으로 받을 수 있나요? 추가 비용이 생기는 조건은 무엇인가요?', 'quote')]))
+ok('문단 끝 질문도 물어볼 말 인용이 뒤따르면 남는다', unchanged([tx('자부담이 있나요? 지원 사업마다 달라 공고에서 확인해야 합니다. 요금은 어떻게 알 수 있나요?'), tx('우리 가게 기준으로 요금이 어떻게 매겨지나요?', 'quote')]))
+ok('질문과 답이 함께 든 인용은 다음 질문 — 앞 질문은 답이 없다', faqPubOf([tx('월요일에 가도 되나요?'), tx('하루에 꽃구경과 야경을 다 볼 수 있나요? 오전 꽃구경, 해 질 녘 야경 순서로 묶으면 됩니다.', 'quote')]) === paras('자주 묻는 질문', '> 하루에 꽃구경과 야경을 다 볼 수 있나요? 오전 꽃구경, 해 질 녘 야경 순서로 묶으면 됩니다.'))
+ok('답 끝의 따옴표 속 질문(물어볼 말)은 남는다', unchanged([tx('일정이 바뀌면 어떻게 하나요? 숙소에 이렇게 물어보세요. "날짜를 바꿀 수 있나요?"'), tx('노출은 어떻게 확인하나요? ChatGPT에 이렇게 물어보세요. “강남 파스타 맛집 추천해 줄래?”'), tx('주차되나요? 네, 됩니다.')]))
+ok('답 뒤의 되묻는 말(「…지 않나요?」)은 남는다', unchanged([tx('비용은 얼마인가요? 월 30만 원부터입니다. 생각보다 부담이 적지 않나요?'), tx('기간은 얼마나 걸리나요? 보통 두 달입니다.')]))
+ok('번호 꼬리표 「Q2.」는 질문과 함께 빠진다 — 꼬리표만 남지 않는다', faqPubOf([tx('Q1. 요금은 얼마인가요? A1. 월 10만 원입니다.'), tx('Q2. 주차가 되나요?'), gapOf('주차 여부')]) === paras('자주 묻는 질문', 'Q1. 요금은 얼마인가요? A1. 월 10만 원입니다.'))
+const englishQa = publishMarkdownOf(qaStored([qaIntro, sectionOf('FAQ', [tx('Q1. Is parking available? Yes, behind the building.'), tx('Q2. Can I bring my dog?'), gapOf('pets')]), sectionOf('What to pack', [tx('Pack light. Here is what you need:'), gapOf('list')])]))
+ok('영어 FAQ — 「Q2.」 질문 · 쌍점으로 끝나는 안내도 덜어낸다', englishQa.includes('## 2. FAQ\n\nQ1. Is parking available? Yes, behind the building.\n\n## 3. What to pack\n\nPack light.\n') && !englishQa.includes('Q2.'))
+ok('절 끝 「아래와 같습니다」도 뒤가 비면 뺀다', publishMarkdownOf(qaStored([qaIntro, sectionOf('무엇을 준비하나요?', [tx('짐은 가볍게 챙기세요.'), tx('준비물은 아래와 같습니다.'), gapOf('준비물')])])).endsWith('## 2. 무엇을 준비하나요?\n\n짐은 가볍게 챙기세요.\n'))
+const robotsQa = publishMarkdownOf(qaStored([qaIntro, sectionOf('자주 묻는 질문', [tx('효과는 언제 나오나요? 보통 몇 주 걸립니다.'), tx('robots.txt도 고쳐야 하나요?'), gapOf('robots 안내')]), sectionOf('robots.txt는 어떻게 고치나요?', [tx('robots.txt에서 크롤러를 허용합니다.')])]))
+ok('덜어낸 질문이 부른 공식 출처 「참고:」 줄은 붙이지 않고, 그 출처는 뒤 절이 받는다', robotsQa.includes('## 2. 자주 묻는 질문\n\n효과는 언제 나오나요? 보통 몇 주 걸립니다.\n\n## 3.') && robotsQa.slice(robotsQa.indexOf('## 3.')).includes('Google 검색 센터 — robots.txt 소개'))
+const photoFaq = qaStored([sectionOf('숙소는 어떤가요?', [tx('독채입니다.')], { alt: '정원' }), sectionOf('자주 묻는 질문', [tx('조식이 나오나요?'), gapOf('조식 여부')], { alt: '식당', caption: '1층 식당' })])
+ok('사진 자리가 있는 절은 고아 덜기로 통째로 없애지 않는다', publishMarkdownOf(photoFaq).endsWith('## 2. 자주 묻는 질문\n\n조식이 나오나요?\n\n![식당](#image-slot)\n*1층 식당*\n') && draftTitle(photoFaq.draft) === '가상 글 2가지')
+/** 고친 글 — 「## 2. 자주 묻는 질문」 아래 줄을 주고 발행본의 그 절부터. */
+const editedFaqOf = (...lines: string[]) => fromSecond(publishMarkdownOf({
+  ...qaStored([qaIntro]),
+  editedAt: '2026-11-07T10:00:00.000Z',
+  editedMarkdown: ['# 가상 글 2가지', '', '머리말입니다.', '', '## 1. 숙소는 어떤가요?', '', '독채 두 동입니다.', '', '## 2. 자주 묻는 질문', '', ...lines].join('\n'),
+})).trimEnd()
+const editedSame = (...lines: string[]) => editedFaqOf(...lines) === ['## 2. 자주 묻는 질문', '', ...lines].join('\n').trimEnd()
+ok('고친 글 — 굵은 번호 꼬리표 「**Q2.**」 질문은 꼬리표째 빠진다', editedFaqOf('**Q1.** 요금은 얼마인가요?', '', '월 10만 원입니다.', '', '**Q2.** 주차가 되나요?', '') === '## 2. 자주 묻는 질문\n\n**Q1.** 요금은 얼마인가요?\n\n월 10만 원입니다.')
+ok('고친 글 — 「### Q2.」 질문 소제목도 답이 없으면 빠진다', editedFaqOf('### Q1. 요금은 얼마인가요?', '', '월 10만 원입니다.', '', '### Q2. 주차가 되나요?', '') === '## 2. 자주 묻는 질문\n\n### Q1. 요금은 얼마인가요?\n\n월 10만 원입니다.')
+ok('고친 글 — 질문 줄 다음 문단은 되묻는 말로 시작해도 답이다', editedSame('**효과는 언제 나타나나요?**', '', '언제쯤일까요? 보통 몇 주 뒤부터 답변에 이름이 보입니다.', ''))
+ok('고친 글 — 질문 소제목 아래 하위 소제목과 답은 답이다', editedSame('### 요금은 얼마인가요?', '', '#### 기본 요금', '', '1박 10만 원입니다.', ''))
+const halfBold = editedFaqOf('주차가 되나요? **네, 건물 뒤에 있습니다. 요금은요?**', '')
+ok('고친 글 — 굵게 구간 끝의 질문을 덜어도 굵게 짝이 맞는다', halfBold === '## 2. 자주 묻는 질문\n\n주차가 되나요? **네, 건물 뒤에 있습니다.**' && markdownToHtml(halfBold).endsWith('<p>주차가 되나요? <strong>네, 건물 뒤에 있습니다.</strong></p>'))
+ok('고친 글 — 따로 줄의 빈 「A.」 · 「**A.**」는 답 없는 질문과 함께 빠진다', editedFaqOf('Q. 체크인은 몇 시인가요?', 'A. 오후 3시입니다.', '', 'Q. 주차가 되나요?', 'A.', '', '**Q.** 요금은 얼마인가요?', '', '**A.**', '') === '## 2. 자주 묻는 질문\n\nQ. 체크인은 몇 시인가요?\nA. 오후 3시입니다.')
 
 let failed = 0
 for (const [label, pass] of checks) {

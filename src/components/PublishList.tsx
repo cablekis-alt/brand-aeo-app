@@ -399,7 +399,7 @@ export default function PublishList({
                     ? channelStyleOf(row.target.badge) === 'listing-update'
                       ? '올릴 곳 형식이 바뀌었습니다 — 이미 등록된 업체라 새 등록 글이 아니라 소개 보강 글이 필요합니다.'
                       : '올릴 곳 형식이 바뀌었습니다.'
-                    : '원문이 바뀌었습니다(빈칸을 채웠거나 고쳤습니다).'}{' '}
+                    : '원문이 바뀌었습니다(빈칸을 채웠거나 고쳤거나, 앱 업데이트로 발행본 정리가 달라졌습니다).'}{' '}
                   {channelStyleOf(row.target.badge) === 'blog' &&
                     row.article.draft &&
                     articlePhotoFiles(row.article.draft, { settings, industry: tenant?.industry }).length > 0 &&
