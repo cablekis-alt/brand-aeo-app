@@ -174,6 +174,10 @@ export default function OwnerPhotoBox({
     try {
       await updateOwnerPhoto(tenantId, id, action)
       await refresh()
+      // 서버가 정리한 값(설명 · 제품 이름)을 보이게 — 이 사진의 고치던 글자를 놓는다.
+      const drop = (cur: Record<string, string>) => Object.fromEntries(Object.entries(cur).filter(([k]) => k !== id))
+      setEdits(drop)
+      setProducts(drop)
       setMessage(done)
     } catch (e) {
       setMessage(`✗ ${e instanceof Error ? e.message : String(e)}`)
@@ -227,8 +231,9 @@ export default function OwnerPhotoBox({
                         checked={p.screen}
                         onChange={(e) => {
                           setPendingAt(i, { screen: e.target.checked, ...(p.productTouched ? {} : { product: guess(p.alt) }) })
-                          // 제품 화면은 회사가 확인한다 — 허락한 사람이 기본값(업주)이면 회사로 바꾼다.
+                          // 제품 화면은 회사가 확인한다 — 허락한 사람이 기본값(업주)이면 회사로 바꾸고, 제품 화면 체크가 모두 풀리면 업주로 되돌린다(다른 값으로 고쳤으면 그대로).
                           if (e.target.checked && holder === '업주') setHolder('회사')
+                          if (!e.target.checked && holder === '회사' && !pending.some((x, j) => j !== i && x.screen)) setHolder('업주')
                         }}
                       />{' '}
                       제품 화면(캡처)
