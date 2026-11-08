@@ -75,6 +75,7 @@ import { AUTO_PICK_RULES, autoCandidateSkip, ownerPickAllowed, ownPhotoExempt, p
 import {
   findScreenVariant,
   isScreenShotId,
+  parseScreenAppSrc,
   photoRepeatKey,
   screenAlt,
   screenAppSrc,
@@ -93,7 +94,7 @@ import {
   screenFileForPick,
   screenShotView,
 } from './screens.js';
-import { MAP_CREDIT, isMapImageId, mapAppSrc } from '../src/lib/mapImage.js';
+import { MAP_CREDIT, isMapImageId, mapAppSrc, parseMapAppSrc } from '../src/lib/mapImage.js';
 import { loadMapPoints, MapPointsError, readMapPoints } from './mapPoints.js';
 import {
   drawMapVariant,
@@ -126,6 +127,7 @@ import {
   isOwnerPhotoId,
   OWNER_PHOTO_MAX_BYTES,
   ownerPhotoAppSrc,
+  parseOwnerPhotoAppSrc,
   PRODUCT_SCREEN_MAX,
   type OwnerPhotoRecord,
   type OwnerProductScreen,
@@ -1204,6 +1206,13 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         }
         return { ...p.place, same: p.same, src: p.src, alt: p.alt, pageUrl: p.pageUrl, confirmedAt: now, auto: true, ...(pub ?? ownSite(p.src)) };
       };
+      // 바꾸거나 뺄 자동 사진의 주소 — https 사진, 또는 이 브랜드의 앱 주소(업주 사진 · 자사 화면 · 앱이 그린 지도 — 저장된 모양 그대로, 검토
+      // 3차: 업주 사진을 바꾸거나 빼는 묶음이 통째로 400이었다). 쓰는 때에 그 자리의 자동 사진 주소와 같아야 바꾼다(saveAutoPhotoPicks).
+      const replaceSrcOf = (v: unknown): string | null => {
+        if (typeof v !== 'string') return null;
+        const app = parseOwnerPhotoAppSrc(v) ?? parseScreenAppSrc(v) ?? parseMapAppSrc(v);
+        return app ? (app.tenantId === tenant.tenantId ? v : null) : canonicalPhotoSrc(v);
+      };
       for (const item of list) {
         const r = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>;
         const id = typeof r.actionId === 'string' ? r.actionId : '';
@@ -1236,7 +1245,7 @@ app.put('/api/content-draft/:tenantId/photos', async (req, res) => {
         for (const raw of replaceList) {
           const x = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
           const place = placeOf(x.place);
-          const src = typeof x.src === 'string' ? canonicalPhotoSrc(x.src) : null;
+          const src = replaceSrcOf(x.src);
           if (!place || !src) {
             res.status(400).json({ error: '바꾸거나 뺄 자동 사진의 자리(place)와 사진 주소(src)가 필요합니다.' });
             return;

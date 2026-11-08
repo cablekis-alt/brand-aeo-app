@@ -1623,6 +1623,50 @@ ok(
   autoCandidateSkip({ src: oSrc(80), alt: '아이들이 체험 부스에서 노는 모습', pageUrl: 'https://lab.example/', origin: 'owner' }, [], ['아이랩', '아이']) === 'people',
 )
 
+// 19) 제품 화면 검토 3차(2026-11-08) — 화면과 서버(op auto)의 「표시한 제품」을 같게, 이미 넣은 업주 사진은 화면 자리에서도 다시 본다.
+// (medium) 사람 낱말(「직원별」)로 빠진 표시한 제품 화면도 표시는 표시다 — 서버는 표시한 모든 기록으로 제품을 만들어 그 화면 자리의 실제 사진을 받지 않는다.
+const negPeople = oScreen(11, NEG, 'NEGOMATE 협상 화면 — 직원별 공급사 협상 로그와 조율 타임라인')
+const v1 = oRun([oSlots('r1', [SLOT.negLog])], [negPeople, ownerLog, logPhoto], {
+  scenes: oScenes([logScene, [ownerLog.src, logScene[1]], [negPeople.src, SCREEN_SCENE]]),
+})
+const v1Row = v1.articles[0]!.rows[0]!
+ok(
+  '(3차) 사람 낱말로 빠진 표시한 제품 화면도 그 제품의 화면 자리는 화면 몫 — 실제 사진을 넣지 않는다(서버와 같은 기준 · 맞는 화면 없음)',
+  v1.skipped.some((s) => s.candidate.src === negPeople.src && s.reason === 'people') && !v1Row.pick && v1Row.ownerScreenProduct === 'NEGOMATE' &&
+    v1Row.ownerScreenMiss === 'words' && v1.articles[0]!.picks.length === 0 && !ownerPickAllowed(SLOT.negLog, { alt: ownerLog.alt, scene: logScene[1] }, OB_ALIASES, [NEG]),
+)
+// (medium) 이미 넣은 업주 사진 — 「제품 화면」 표시를 뺀 캡처(장면을 못 읽음)는 화면 자리 · 사진 자리 모두, 설명을 고쳐 자리와 맞지 않게 된 표시한
+// 제품 화면(시작 → 결과)은 화면 자리에서도 바꾸거나 뺀다(서버가 새로 받지 않는 사진 — ownerPickAllowed). 화면 자리에는 실제 사진을 넣지 않는다.
+const NEG_SCREEN_SLOT = 'NEGOMATE 앱 화면에 품목, 목표가, 마감일을 입력하는 장면'
+const placedOwner = (slot: string, c: AutoCandidate): PhotoPick => ({
+  slot, nth: 1, same: 1, heading: '절', src: c.src, alt: c.alt, pageUrl: c.pageUrl, confirmedAt: AT2, auto: true, origin: 'owner', ownerPhotoId: c.ownerPhotoId!,
+})
+const plainStart: AutoCandidate = { src: OS.negStart.src, alt: OS.negStart.alt, pageUrl: OS.negStart.pageUrl, origin: 'owner', ownerPhotoId: OS.negStart.ownerPhotoId! }
+const deskMemo = cand('deskmemo', '품목, 목표가, 마감일을 적은 메모와 노트북이 놓인 사무실 책상')
+const deskScene: [string, PhotoScene] = [deskMemo.src, sceneOfKind('interior', '사무실 책상 위 메모와 노트북, 사람 없음', ['메모', '노트북', '책상'])]
+const v2 = oRun(
+  [oSlots('r2', [NEG_SCREEN_SLOT, SLOT.negLog], { picks: [placedOwner(NEG_SCREEN_SLOT, OS.negStart), placedOwner(SLOT.negLog, OS.negLog)] })],
+  [plainStart, plainLog, deskMemo],
+  { scenes: new Map([deskScene]), recheckAuto: true },
+).articles[0]!
+ok(
+  '(3차) 다시 보기 — 「제품 화면」 표시를 뺀 캡처(장면을 못 읽음)는 화면 자리 · 사진 자리 모두 뺀다(화면 자리에 실제 사진을 넣지 않는다)',
+  isScreenSlot(NEG_SCREEN_SLOT) && v2.rows.every((r) => r.state === 'remove' && !r.pick) && v2.replaces.length === 2 && v2.replaces.every((x) => !x.pick) &&
+    v2.picks.length === 0 && !ownerPickAllowed(NEG_SCREEN_SLOT, { alt: plainStart.alt }, OB_ALIASES) && !ownerPickAllowed(SLOT.negLog, { alt: plainLog.alt }, OB_ALIASES),
+)
+const negNowResult = oScreen(1, NEG, 'NEGOMATE 결과 화면 — 공급사별 협상 결과 리포트와 협상 성공률 점수')
+const negStartNew = oScreen(12, NEG, 'NEGOMATE 시작 화면 — 품목 · 목표가 · 마감일을 입력하는 새 화면')
+const v3 = oRun([oSlots('r3', [NEG_SCREEN_SLOT], { picks: [placedOwner(NEG_SCREEN_SLOT, OS.negStart)] })], [negNowResult], { recheckAuto: true }).articles[0]!
+const v3b = oRun([oSlots('r3', [NEG_SCREEN_SLOT], { picks: [placedOwner(NEG_SCREEN_SLOT, OS.negStart)] })], [negNowResult, negStartNew], { recheckAuto: true }).articles[0]!
+const v3c = oRun([oSlots('r3', [NEG_SCREEN_SLOT], { picks: [placedOwner(NEG_SCREEN_SLOT, OS.negStart)] })], [OS.negStart], { recheckAuto: true }).articles[0]!
+ok(
+  '(3차) 다시 보기 — 화면 자리의 표시한 제품 화면이 자리와 맞지 않게 되면(시작 → 결과) 맞는 제품 화면으로 바꾸고, 없으면 뺀다 · 맞으면 그대로',
+  v3.rows[0]!.state === 'remove' && v3.rows[0]!.ownerScreenMisplaced === true && v3.replaces.length === 1 && !v3.replaces[0]!.pick &&
+    v3b.rows[0]!.state === 'replace' && v3b.replaces.length === 1 && v3b.replaces[0]!.src === OS.negStart.src && v3b.replaces[0]!.pick?.src === negStartNew.src &&
+    v3c.rows[0]!.state === 'kept' && v3c.replaces.length === 0 &&
+    !ownerPickAllowed(NEG_SCREEN_SLOT, { alt: negNowResult.alt, productScreen: { product: NEG } }, OB_ALIASES),
+)
+
 let failed = 0
 for (const [label, pass] of checks) {
   console.log(`${pass ? '✓' : '✗'} ${label}`)

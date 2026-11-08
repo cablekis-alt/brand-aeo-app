@@ -1323,14 +1323,14 @@ export interface AutoSlotRow {
   ownerScreenGaps?: string[]
   /** 찍지 않는 화면 자리(none · action · other · unrelated)의 제품 같은 이름(productLikeName) — 「제품 화면」으로 올리면 채울 수 있다고 알린다. */
   ownerScreenHint?: string
-  /** 다시 본 자동 사진이 이 자리와 맞지 않는 「제품 화면」이다(ownerScreenFits — 장면과 무관하게 바꾸거나 뺀다). */
+  /** 다시 본 자동 업주 사진이 이 자리와 맞지 않는 「제품 화면」(ownerScreenFits)이거나 표시하지 않은 화면 캡처다(ownerUnmarkedScreen — 장면과 무관하게 바꾸거나 뺀다). */
   ownerScreenMisplaced?: true
   /** 자리 글자가 화면을 말하는 사진 자리(제품 화면 자리가 아님)에 실제 사진을 넣었다 — 「확인 필요」(그 제품 화면을 아직 표시하지 않았을 수 있다). */
   screenWordPhoto?: true
 }
 
-/** 넣어 둔 「제품 화면」이 자리와 맞지 않을 때의 까닭 글자(ownerScreenMisplaced). */
-export const OWNER_SCREEN_MISPLACED_TEXT = '넣어 둔 「제품 화면」이 이 자리(제품 · 화면 · 사람 · 맥락 · 시작/결과)와 맞지 않아요'
+/** 넣어 둔 화면 캡처(업주 사진)가 자리와 맞지 않을 때의 까닭 글자(ownerScreenMisplaced). */
+export const OWNER_SCREEN_MISPLACED_TEXT = '넣어 둔 화면 캡처가 「제품 화면」 표시가 없거나 이 자리(제품 · 화면 · 사람 · 맥락 · 시작/결과)와 맞지 않아요'
 
 /**
  * 제품 화면 자리의 까닭(자동 채우기 미리보기) — 넣었으면 자리의 제품 · 맞은 낱말 · 점수 · 화면 설명에 없는 자리 낱말, 비웠으면 그 까닭(넣어
@@ -1642,10 +1642,18 @@ export function autoPickPhotos(input: {
   const brandNames = [...new Set([input.brandName ?? '', ...(input.brandAliases ?? [])])].filter((n) => productKey(n).length >= 2)
   /** 「제품 화면」으로 표시한 업주 사진 — 사진 단계에는 넣지 않고 업주 화면 단계가 제품 화면 자리에만 넣는다(종류가 다르다). */
   const ownerScreens: AutoCandidate[] = []
+  /**
+   * 업주 사진 보관함 기록(빠진 후보 포함) — 「제품 화면」으로 표시한 제품(markedProducts)은 서버(server/index.ts op auto)처럼 표시한 모든
+   * 기록으로 만들고(사람 낱말 · 중복으로 빠진 화면도 표시는 표시다), 이미 넣은 업주 사진은 이 기록으로 다시 본다(검토 3차).
+   */
+  const ownerBySrc = new Map<string, { alt: string; product: string | null }>()
+  const markedProducts: string[] = []
   const seen = new Set<string>()
   for (const raw of input.candidates) {
     const src = raw.origin === 'owner' ? (parseOwnerPhotoAppSrc(raw.src) ? raw.src : null) : canonicalPhotoSrc(raw.src)
     const product = raw.origin === 'owner' && raw.screenProduct && productNames(raw.screenProduct).length ? raw.screenProduct : null
+    if (product) markedProducts.push(product)
+    if (raw.origin === 'owner' && src && !ownerBySrc.has(src)) ownerBySrc.set(src, { alt: cleanPhotoAlt(raw.alt), product })
     const names = product ? [...brandNames, ...productNames(product).map((n) => n.name)] : brandNames
     // 표시하지 않은 화면 캡처(장면이 화면 · 장면을 못 읽었고 설명이 화면 자리 글자)는 사진 자리에 넣지 않는다 — 보관함이 표시를 제안한다.
     const reason =
@@ -1665,7 +1673,7 @@ export function autoPickPhotos(input: {
   usable.sort(bySrc)
   ownerScreens.sort(bySrc)
   const ownerScreenBySrc = new Map(ownerScreens.map((c) => [c.src, c]))
-  const screenProducts = [...new Set(ownerScreens.map((c) => c.screenProduct!))]
+  const screenProducts = [...new Set([...ownerScreens.map((c) => c.screenProduct!), ...markedProducts])]
   /** 자리가 말한 표시한 제품(제품 화면 자리 — productScreenSlotOf)의 대표 이름, 아니면 null. */
   const slotProduct = (slotKey: string) => productScreenSlotOf(slotKey, screenProducts, brandNames)
 
@@ -1868,16 +1876,20 @@ export function autoPickPhotos(input: {
     let room = Math.max(0, PHOTO_LIMITS.picks - picks.length)
     // 다시 볼 자동 사진 — 장면으로 고를 때 「이미 넣은 자동 사진도 장면 확인」이면, 자리를 찾아 넣은(applied) 자동 사진(auto)만(화면 자리 ·
     // 자사 화면 제외). 「제품 화면」으로 표시한 업주 사진은 그 자리에 맞는 종류면(ownerScreenFits) 다시 보지 않고 — 화면 장면이라 사진 자리
-    // 장면과 견주면 늘 어긋난다 — 맞지 않으면 장면과 무관하게 바꾸거나 뺀다(misplacedAt — 검토 2차).
+    // 장면과 견주면 늘 어긋난다 — 맞지 않으면 장면과 무관하게 바꾸거나 뺀다(misplacedAt — 검토 2차). 업주 사진은 보관함 기록으로 화면 자리에서도
+    // 다시 본다 — 맞지 않는 제품 화면 · 표시하지 않은 화면 캡처(ownerUnmarkedScreen — 표시를 뺀 캡처)는 서버가 새로 받지 않는 사진이다(검토 3차).
     const recheckAt = new Map<number, PhotoPick>()
     const misplacedAt = new Set<number>()
     if (scenes && input.recheckAuto) {
       for (const m of match.applied) {
-        if (!m.pick.auto || m.pick.origin === 'screen' || isScreenSlot(m.slot.key)) continue
+        if (!m.pick.auto || m.pick.origin === 'screen') continue
         const marked = ownerScreenBySrc.get(m.pick.src)
         if (marked && ownerScreenFits(m.slot.key, marked.alt, marked.screenProduct!, brandNames)) continue
+        const owner = m.pick.origin === 'owner' ? ownerBySrc.get(m.pick.src) : undefined
+        const misplaced = Boolean(marked) || Boolean(owner && !owner.product && ownerUnmarkedScreen({ alt: owner.alt, scene: sceneOf(m.pick.src) ?? null }))
+        if (!misplaced && isScreenSlot(m.slot.key)) continue
         recheckAt.set(m.slot.line, m.pick)
-        if (marked) misplacedAt.add(m.slot.line)
+        if (misplaced) misplacedAt.add(m.slot.line)
       }
     }
 
@@ -1885,6 +1897,8 @@ export function autoPickPhotos(input: {
     const removedAt = new Map<AutoSlotRow, Set<string>>()
     /** 화면 자리의 화면(코스 · 지도 — screenKindOf) — 자사 화면 단계가 채운다. */
     const screenOfRow = new Map<AutoSlotRow, ScreenDef>()
+    /** 화면 자리에서 다시 보는 업주 사진의 자리 — 바꿀 것은 제품 화면뿐이다(사진 단계 · 장소 사진은 화면 자리를 보지 않는다 — 검토 3차). */
+    const screenSlotOld = new Set<number>()
     const rows: AutoSlotRow[] = slots.map((slot) => {
       const caption = captionOf(lines, slot)
       const cleared = clearedAt(slot, article.cleared)
@@ -1896,7 +1910,8 @@ export function autoPickPhotos(input: {
           : isScreenSlot(slot.key)
             ? 'screen'
             : 'nomatch'
-      const found = (state === 'nomatch' || old) && places.length ? slotPlaces({ key: slot.key, caption }, places) : []
+      if (old && isScreenSlot(slot.key)) screenSlotOld.add(slot.line)
+      const found = (state === 'nomatch' || (old && !screenSlotOld.has(slot.line))) && places.length ? slotPlaces({ key: slot.key, caption }, places) : []
       const screenKind = state === 'screen' ? screenKindOf(slot.key, screenProfile, input.brandName) : null
       // 제품 화면 자리 — 빈 화면 자리 · 빈 사진 자리 · 다시 보는 자동 사진의 자리. 사진 자리면 사진 단계가 실제 사진을 넣지 않는다(화면 몫 —
       // 다시 보는 자동 실제 사진은 업주 화면 단계가 맞는 제품 화면으로 바꾼다, 검토 2차).
@@ -1924,8 +1939,11 @@ export function autoPickPhotos(input: {
       return row
     })
     const removed = (row: AutoSlotRow, src: string) => Boolean(removedAt.get(row)?.has(src))
-    /** 사진(①②③③b · 비슷한 사진)을 고를 빈 자리인가 — 제품 화면 자리(ownerScreenProduct)는 화면 몫이라 실제 사진을 넣지 않는다(설계 검토 high). */
-    const photoOpen = (row: AutoSlotRow) => row.state === 'nomatch' && !row.ownerScreenProduct
+    /**
+     * 사진(①②③③b · 비슷한 사진)을 고를 빈 자리인가 — 제품 화면 자리(ownerScreenProduct)는 화면 몫이라 실제 사진을 넣지 않는다(설계 검토 high).
+     * 화면 자리에서 다시 보는 업주 사진의 자리도 사진 자리가 아니다(검토 3차).
+     */
+    const photoOpen = (row: AutoSlotRow) => row.state === 'nomatch' && !row.ownerScreenProduct && !screenSlotOld.has(row.slot.line)
     /** own — 자기 시설(업주) 사진(ownPhotoExempt)이라 브랜드 상한을 받지 않는다(글 하나 · 작성자 한 사람에게 한 번은 그대로). */
     const isBlocked = (src: string, own = false) => {
       const later = heldLater(src, index, article.group)
@@ -2468,7 +2486,8 @@ export function autoPickPhotos(input: {
      * 사람에게 한 번, 브랜드 상한은 받지 않는다(자사 화면과 같다). 늘 「확인 필요」. 글의 사진 수(room)는 고치지 않는다(자사 화면 단계와 같다).
      */
     const ownerScreenStage = () => {
-      if (!ownerScreens.length) return
+      // 쓸 제품 화면이 없어도(모두 사람 낱말 등으로 빠짐) 표시한 제품의 화면 자리는 비운 까닭(맞는 화면 없음)을 단다(검토 3차).
+      if (!screenProducts.length) return
       let left = screenLeft ?? room
       type OwnerPair = { row: AutoSlotRow; candidate: AutoCandidate; score: SlotScore; gaps: string[] }
       const ownerPairs: OwnerPair[] = []

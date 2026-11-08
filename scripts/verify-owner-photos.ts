@@ -347,6 +347,31 @@ try {
     '(low) B2B 브랜드의 「매장」 자리는 브랜드 상한 면제가 아니다 — 지역 브랜드 4장 · B2B 브랜드 3장',
     localSave.body.saved === 4 && b2bSave.body.saved === 3 && b2bSave.body.skipped === 1 && Object.values(stored(b2bDir)).filter((d) => d.photos?.length).length === 3,
   )
+  // (3차 high) 다시 보기가 넣어 둔 자동 업주 사진을 바꾸거나 뺀다 — replaces의 src는 저장된 앱 주소 그대로다(https가 아니라고 묶음 전체를 400으로
+  // 거절하면 맞지 않는 제품 화면 · 표시를 뺀 캡처가 글에 남았다). 다른 브랜드의 앱 주소 · 모양이 다른 주소는 그대로 400.
+  const memoUp = await upload(Buffer.concat([PNG, Buffer.from('memo')]), { confirmed: '1', alt: '사무실 책상 위 모니터와 서류 더미, 낮', holder: '업주' })
+  const memoId = String((memoUp.body.photo as Record<string, unknown> | undefined)?.id ?? '')
+  const DESK = '사무실 책상 위 모니터와 서류'
+  const swapRes = await put({
+    op: 'auto',
+    articles: [
+      {
+        actionId: 'content:o',
+        generatedAt: AT,
+        replaces: [{ place: { slot: DESK, nth: 1, heading: '절' }, src: ownerPhotoAppSrc(TENANT, deskId, 'png'), pick: autoOwner('content:o', DESK, memoId).picks[0] }],
+      },
+      { actionId: 'content:c', generatedAt: AT, replaces: [{ place: { slot: SLOT_SHOT, nth: 1, heading: '절' }, src: ownerPhotoAppSrc(TENANT, shotId, 'png') }] },
+    ],
+  })
+  const otherTenant = await put({
+    op: 'auto',
+    articles: [{ actionId: 'content:o', generatedAt: AT, replaces: [{ place: { slot: DESK, nth: 1, heading: '절' }, src: ownerPhotoAppSrc('other', memoId, 'png') }] }],
+  })
+  ok(
+    '(3차 high) 다시 보기 — 넣어 둔 자동 업주 사진(앱 주소)을 바꾸고 · 빼고, 다른 브랜드의 앱 주소는 400',
+    swapRes.status === 200 && swapRes.body.replaced === 1 && swapRes.body.removed === 1 && stored()['content:o']?.photos?.[0]?.ownerPhotoId === memoId &&
+      !stored()['content:c']?.photos?.length && otherTenant.status === 400,
+  )
   const q = new URLSearchParams({ actionId: 'content:a', generatedAt: AT, slot: '가상스테이 독채 앞 정원', nth: '1', heading: '정원' })
   const pf = await fetch(`${BASE}/api/content-draft/${TENANT}/photo-file?${q.toString()}`)
   ok('사진 받기 — 이 PC의 업주 사진 파일을 그대로', pf.status === 200 && pf.headers.get('content-type') === 'image/png' && Buffer.from(await pf.arrayBuffer()).equals(PNG))
