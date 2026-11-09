@@ -13,7 +13,8 @@ import {
   libraryCount,
   libraryLayout,
   libraryPickOptions,
-  liveArticleIds,
+  libraryRecordTopic,
+  livePostsOf,
   LIBRARY_FALLBACK_NOTE,
   orphansShown,
   OUTSIDE_PICK,
@@ -23,9 +24,12 @@ import {
   shownSections,
   validLibraryPick,
   type LibraryLayout,
+  type LibrarySection,
 } from '../src/lib/contentLibraryOrder';
 import { topicArticleId } from '../src/lib/extraArticles';
 import { WRITER_PLAN_FORMAT, type PlanWriter, type WriterPlan, type WriterPlanArticle } from '../src/lib/probePlan';
+import { buildTenantStatus, type LedgerPostLike } from '../src/lib/publishStatus';
+import type { QuestionBank, QuestionSpec } from '../src/lib/types';
 
 const checks: [string, boolean, string | undefined][] = [];
 /** detail은 실패했을 때만 찍는다. */
@@ -111,15 +115,30 @@ const grouped = (layout: LibraryLayout<Draft>) => (layout.grouped ? layout : nul
 }
 
 // ── 작성자별로 묶기 ─────────────────────────────────────────────────────────
+// 원장 줄 — 주소 키 · 올린 날 · 기록 시각 · 뺀 까닭 · 그 글을 쓴 질문지 판(topic: 글만). 주소는 모두 가짜(example.test).
+let seq = 0;
+const post = (
+  articleId: string,
+  o: { key: string; on?: string | null; at?: string; removedAt?: string; reason?: 'mistake' | 'taken-down'; version?: string | null },
+): LedgerPostLike => ({
+  id: `p-${++seq}`,
+  url: `https://blog.example.test/${o.key}`,
+  key: `blog.example.test/${o.key}`,
+  publishedOn: o.on === undefined ? '2026-11-06' : o.on,
+  recordedAt: o.at ?? '2026-11-06T01:00:00.000Z',
+  articleId,
+  ...(o.removedAt ? { removedAt: o.removedAt, removedReason: o.reason ?? 'taken-down' } : {}),
+  ...(o.version !== undefined ? { topic: { bankVersion: o.version } } : {}),
+});
 const posts = [
-  { articleId: A2.id },
-  { articleId: A2.id, removedAt: '2026-11-08T00:00:00.000Z' },
-  { articleId: A3.id, removedAt: '2026-11-08T00:00:00.000Z' },
-  { articleId: B1.id },
-  { articleId: 'content:category-agnostic' },
+  post(A2.id, { key: 'a2', version: 'v9' }),
+  post(A2.id, { key: 'a2-wrong', removedAt: '2026-11-08T00:00:00.000Z', reason: 'mistake', version: 'v9' }),
+  post(A3.id, { key: 'a3', removedAt: '2026-11-08T00:00:00.000Z', version: 'v9' }),
+  post(B1.id, { key: 'b1', version: 'v9' }),
+  post('content:category-agnostic', { key: 'main' }),
 ];
-const live = liveArticleIds(posts);
-const layout = libraryLayout({ drafts, plan, planUnreadable: false, extras, livePostIds: live });
+const live = livePostsOf(plan, posts);
+const layout = libraryLayout({ drafts, plan, planUnreadable: false, extras, posts });
 const g = grouped(layout);
 {
   ok('묶기 — 배정과 추가 글 목록을 읽었으면 묶는다', g !== null);
@@ -142,12 +161,12 @@ const g = grouped(layout);
   ok('판 — 배정 글 id라도 다른 판(v8)으로 만든 글은 배정 밖', !ids(w3?.drafts ?? []).includes(C1.id) && ids(g?.sections[3].drafts ?? []).includes(C1.id));
   ok('판 — 추가 글 정의가 없는 배정 글 id도 배정 밖(판을 모른다)', !ids(w3?.drafts ?? []).includes(C2.id) && ids(g?.sections[3].drafts ?? []).includes(C2.id));
   ok('판 — 같은 판으로 다시 만들면 작성자 칸으로', (() => {
-    const fixed = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras: [...extras.filter((e) => e.id !== C1.id), def(C1.id, 'v9')], livePostIds: live }));
+    const fixed = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras: [...extras.filter((e) => e.id !== C1.id), def(C1.id, 'v9')], posts }));
     return same(ids(fixed?.sections.find((s) => s.pick === 'w3')?.drafts ?? []), [C1.id]);
   })());
   // 「목록에서 빼기」 한 추가 글도 정의는 남는다 — 콘텐츠 생성도 뺀 글까지 정의로 본다.
   const removedDef = grouped(
-    libraryLayout({ drafts, plan, planUnreadable: false, extras: extras.map((e) => (e.id === A2.id ? { ...e, removedAt: '2026-11-08T00:00:00.000Z' } : e)), livePostIds: live }),
+    libraryLayout({ drafts, plan, planUnreadable: false, extras: extras.map((e) => (e.id === A2.id ? { ...e, removedAt: '2026-11-08T00:00:00.000Z' } : e)), posts }),
   );
   ok('판 — 목록에서 뺀 추가 글도 그 작성자 칸에 남는다', ids(removedDef?.sections[0].drafts ?? []).includes(A2.id));
 }
@@ -159,45 +178,137 @@ const g = grouped(layout);
   ok('수 — w2: 2편 · 올림 1', s2?.drafts.length === 2 && s2.posted === 1 && s2.unmade === 0);
   ok('수 — 글이 없는 작성자도 칸이 있다(0편 · 아직 안 만든 글 2편)', s3?.drafts.length === 0 && s3.posted === 0 && s3.unmade === 2);
   ok('수 — 배정 밖: 4편 · 올림 1 · 아직 안 만든 글은 세지 않음', out?.drafts.length === 4 && out.posted === 1 && out.unmade === 0);
-  ok('수 — 내린 기록만 있는 글은 올린 글이 아니다', live !== null && !live.has(A3.id) && live.has(A2.id));
-  ok('수 — 원장을 못 읽으면(null) 올린 글 수도 null', liveArticleIds(null) === null);
+  ok('수 — 내린 기록 · 잘못 적은 주소만 있는 글은 올린 글이 아니다', live !== null && !live.any.has(A3.id) && live.any.has(A2.id) && live.planned.has(A2.id) && !live.planned.has(A3.id));
+  ok('수 — 원장을 못 읽으면(null) 올린 글 수도 null', livePostsOf(plan, null) === null);
+  ok('수 — 판을 모르는 기록이 없으면 올렸는지 미확인 0', s1?.unsure === 0 && s2?.unsure === 0 && out?.unsure === 0);
 
   ok('머리 — 작성자 칸 이름은 「w1 · 이름」', sectionTitle(s1) === 'w1 · 가상 작성자 하나');
   ok('머리 — 배정 밖 칸 이름', sectionTitle(out) === '배정 밖 글');
   ok('머리 — 편수 · 올림', sectionDetail(s1) === '3편 · 올림 1', sectionDetail(s1));
   ok('머리 — 아직 안 만든 글이 있으면 덧붙인다', sectionDetail(s3) === '0편 · 올림 0 · 아직 안 만든 글 2편', sectionDetail(s3));
-  const noLedger = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, livePostIds: null }));
+  const noLedger = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, posts: null }));
   ok('머리 — 원장을 못 읽으면 올림을 말하지 않는다(0으로 채우지 않음)', noLedger?.sections[0].posted === null && sectionDetail(noLedger.sections[0]) === '3편', noLedger ? sectionDetail(noLedger.sections[0]) : '');
   // 아직 안 만든 글 — 배정 글 가운데 그 작성자 칸에 들어간 초안이 없는 글. 다른 판으로 만든 글은 그 작성자 몫을 채우지 않는다.
-  const someMissing = grouped(libraryLayout({ drafts: drafts.filter((d) => d.actionId !== A2.id), plan, planUnreadable: false, extras, livePostIds: live }));
+  const someMissing = grouped(libraryLayout({ drafts: drafts.filter((d) => d.actionId !== A2.id), plan, planUnreadable: false, extras, posts }));
   ok('머리 — w1 한 편을 아직 안 만들었으면 「아직 안 만든 글 1편」', sectionDetail(someMissing!.sections[0]) === '2편 · 올림 0 · 아직 안 만든 글 1편', sectionDetail(someMissing!.sections[0]));
+}
+
+// ── 올림 — 발행 현황(buildTenantStatus 작성자 진행)과 같은 규칙 ─────────────────
+{
+  const sectionsWith = (extra: LedgerPostLike[], base: LedgerPostLike[] = posts) =>
+    grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, posts: [...base, ...extra] }))?.sections ?? [];
+  const w1Of = (list: LibrarySection<Draft>[]) => list.find((s) => s.pick === 'w1');
+
+  // 판을 모르는 기록(질문 은행이 초안보다 나중이라 판 null로 남은 기록) — 올림이 아니라 「올렸는지 미확인」.
+  const unknown = w1Of(sectionsWith([post(A1.id, { key: 'a1', version: null })]));
+  ok('판 — 판을 모르는 기록은 올림에 넣지 않고 「올렸는지 미확인」', unknown?.posted === 1 && unknown.unsure === 1, JSON.stringify(unknown && { posted: unknown.posted, unsure: unknown.unsure }));
+  ok('판 — 칸 머리에 「올렸는지 미확인 n」', unknown !== undefined && sectionDetail(unknown) === '3편 · 올림 1 · 올렸는지 미확인 1', unknown && sectionDetail(unknown));
+  // 다른 판으로 적은 기록 — 발행 현황은 그 줄을 배정 없음으로 본다.
+  const other = w1Of(sectionsWith([post(A1.id, { key: 'a1', version: 'v8' })]));
+  ok('판 — 다른 판(v8)으로 적은 기록은 올림도 미확인도 아니다', other?.posted === 1 && other.unsure === 0, JSON.stringify(other && { posted: other.posted, unsure: other.unsure }));
+  // 판이 맞는 기록이 하나라도 있으면 올림 — 판을 모르는 기록이 함께 있어도 미확인으로 두 번 세지 않는다.
+  const both = w1Of(sectionsWith([post(A1.id, { key: 'a1', version: null }), post(A1.id, { key: 'a1-tistory', version: 'v9' })]));
+  ok('판 — 판이 맞는 기록이 있으면 올림(미확인으로 세지 않음)', both?.posted === 2 && both.unsure === 0, JSON.stringify(both && { posted: both.posted, unsure: both.unsure }));
+  // 기록에 질문 스냅샷이 없는 topic: 기록(옛 기록) — 판을 모른다.
+  const noTopic = w1Of(sectionsWith([post(A1.id, { key: 'a1' })]));
+  ok('판 — 질문 스냅샷이 없는 기록도 판을 모른다(미확인)', noTopic?.posted === 1 && noTopic.unsure === 1);
+
+  // 같은 주소 · 같은 올린 날의 두 줄(자사 줄 · 블로그 채널 줄) 가운데 한 줄만 「글을 내렸어요」 — 그 편은 내린 것이다.
+  const own = post(A1.id, { key: 'a1-pair', version: 'v9', at: '2026-11-06T01:00:00.000Z' });
+  const chan = post(A1.id, { key: 'a1-pair', version: 'v9', at: '2026-11-06T01:05:00.000Z', removedAt: '2026-11-08T00:00:00.000Z' });
+  const pairDown = w1Of(sectionsWith([own, chan]));
+  ok('내림 — 같은 주소 · 같은 날 두 줄 중 한 줄만 내려도 그 편은 올림이 아니다', pairDown?.posted === 1, JSON.stringify(pairDown?.posted));
+  // 내린 뒤 같은 주소를 다시 적으면(내린 시각보다 나중 기록) 다시 올린 것이다.
+  const again = post(A1.id, { key: 'a1-pair', version: 'v9', at: '2026-11-09T00:00:00.000Z' });
+  ok('내림 — 내린 뒤 같은 주소를 다시 적으면 올림', w1Of(sectionsWith([own, chan, again]))?.posted === 2);
+  // 날짜 없는 옛 줄 — 같은 주소에 날짜 있는 줄이 있으면 뺀다(내린 날짜 있는 줄만 남는다).
+  const legacy = post(A1.id, { key: 'a1-legacy', on: null, version: 'v9', at: '2026-10-01T00:00:00.000Z' });
+  const datedDown = post(A1.id, { key: 'a1-legacy', version: 'v9', removedAt: '2026-11-08T00:00:00.000Z' });
+  ok('내림 — 날짜 있는 줄을 내렸으면 같은 주소의 날짜 없는 옛 줄은 올림이 아니다', w1Of(sectionsWith([legacy, datedDown]))?.posted === 1);
+
+  // 배정 밖 칸은 판과 상관없이 글 id로 센다 — 다른 판(v8)으로 만든 C1의 v8 기록도 올림.
+  const outside = sectionsWith([post(C1.id, { key: 'c1', version: 'v8' })]).find((s) => s.pick === OUTSIDE_PICK);
+  ok('배정 밖 — 판과 상관없이 살아 있는 기록이 있으면 올림', outside?.posted === 2 && outside.unsure === 0, JSON.stringify(outside && { posted: outside.posted, unsure: outside.unsure }));
+  ok('배정 밖 — 같은 주소 · 같은 날 한 줄만 내려도 올림이 아니다', sectionsWith([
+    post('content:category-agnostic', { key: 'main', at: '2026-11-06T02:00:00.000Z', removedAt: '2026-11-08T00:00:00.000Z' }),
+  ]).find((s) => s.pick === OUTSIDE_PICK)?.posted === 0);
+
+  // 발행 현황과 같은 수 — 작성자 글의 초안이 모두 그 칸에 있을 때(w1 · w2) 칸의 올림 · 미확인이 발행 현황 작성자 진행과 같다.
+  const mixed = [
+    ...posts,
+    post(A1.id, { key: 'a1', version: null }),
+    own,
+    chan,
+    post(B2.id, { key: 'b2', version: 'v8' }),
+  ];
+  const lib = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, posts: mixed }))?.sections ?? [];
+  const status = buildTenantStatus({ tenantId: plan.tenantId, brand: '가상펜션', ownedDomains: [], posts: mixed, plan, planUnreadable: false, checks: {} }).writers;
+  for (const key of ['w1', 'w2']) {
+    const s = lib.find((x) => x.pick === key);
+    const w = status.find((x) => x.key === key);
+    ok(`발행 현황과 같은 수 — ${key} 올림 · 미확인`, s !== undefined && w !== undefined && s.posted === w.posted && s.unsure === w.unsure, JSON.stringify({ lib: s && [s.posted, s.unsure], status: w && [w.posted, w.unsure] }));
+  }
+}
+
+// ── 보관함 「올렸어요」의 질문 스냅샷 — 콘텐츠 생성과 같은 판 ──────────────────
+{
+  const spec = (questionId: string, text: string): QuestionSpec => ({
+    questionId,
+    text,
+    category: 'category-agnostic',
+    industry: '숙박',
+    region: '가상시',
+    containsBrandName: false,
+    version: 'v10',
+  });
+  // 질문지가 v10으로 올라간 뒤 — 은행이 초안보다 나중에 만들어졌다.
+  const newerBank: QuestionBank = { version: 'v10', generatedAt: '2026-11-10T00:00:00.000Z', questions: [spec('q-001', '바뀐 가상 질문 1'), spec('q-002', '바뀐 가상 질문 2')] };
+  const fullDefs = [{ id: A1.id, bankVersion: 'v9', questionIds: A1.questionIds, questionTexts: A1.questionTexts }];
+  const snap = libraryRecordTopic(A1.id, fullDefs, newerBank, dA1.generatedAt);
+  ok(
+    '기록 — 추가 글 정의가 있으면 그 정의의 판 · 문장(지금 은행이 아님)',
+    same(snap, { bankVersion: 'v9', questionIds: A1.questionIds, questionTexts: A1.questionTexts }),
+    JSON.stringify(snap),
+  );
+  const recorded = post(A1.id, { key: 'a1', version: snap?.bankVersion ?? null });
+  const after = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, posts: [...posts, recorded] }))?.sections[0];
+  const st = buildTenantStatus({ tenantId: plan.tenantId, brand: '가상펜션', ownedDomains: [], posts: [...posts, recorded], plan, planUnreadable: false, checks: {} }).writers[0];
+  ok('기록 — 그렇게 적은 기록은 질문지가 바뀐 뒤에도 보관함 · 발행 현황 모두 올림', after?.posted === 2 && after.unsure === 0 && st?.posted === 2 && st.unsure === 0);
+  ok('기록 — 정의가 없으면 지금처럼 질문 은행으로(은행이 초안보다 나중이면 판 없음)', libraryRecordTopic(C2.id, fullDefs, newerBank, dNoDef.generatedAt)?.bankVersion === null);
+  const olderBank: QuestionBank = { ...newerBank, version: 'v9', generatedAt: '2026-10-01T00:00:00.000Z' };
+  ok(
+    '기록 — 정의가 없고 은행이 초안보다 앞서면 그 은행의 판',
+    same(libraryRecordTopic(A1.id, [], olderBank, dA1.generatedAt), { bankVersion: 'v9', questionIds: ['q-001', 'q-002'], questionTexts: ['바뀐 가상 질문 1', '바뀐 가상 질문 2'] }),
+  );
+  ok('기록 — 추가 글 목록을 못 읽었으면(null) 질문 은행으로', libraryRecordTopic(A1.id, null, newerBank, dA1.generatedAt)?.bankVersion === null);
+  ok('기록 — topic: 글이 아니면 스냅샷 없음', libraryRecordTopic('content:category-agnostic', fullDefs, olderBank, dMain.generatedAt) === undefined);
 }
 
 // ── 배정 밖 글이 없으면 그 칸도 없다 ─────────────────────────────────────────
 {
-  const onlyPlan = grouped(libraryLayout({ drafts: [dA1, dB1], plan, planUnreadable: false, extras, livePostIds: live }));
+  const onlyPlan = grouped(libraryLayout({ drafts: [dA1, dB1], plan, planUnreadable: false, extras, posts }));
   ok('배정 밖 — 글이 없으면 칸을 만들지 않는다', same(onlyPlan?.sections.map((s) => s.pick), ['w1', 'w2', 'w3']));
   ok('배정 밖 — 그때 고르기에도 없다', !libraryPickOptions(onlyPlan!).some((o) => o.value === OUTSIDE_PICK));
 }
 
 // ── 운영 기간이 지난 배정도 묶는다(발행 현황의 작성자 칸과 같다) ───────────────
 {
-  const expired = grouped(libraryLayout({ drafts, plan: { ...plan, activeUntil: '2026-01-31' }, planUnreadable: false, extras, livePostIds: live }));
+  const expired = grouped(libraryLayout({ drafts, plan: { ...plan, activeUntil: '2026-01-31' }, planUnreadable: false, extras, posts }));
   ok('기간 — 마지막 날이 지난 배정도 같은 칸으로 묶는다', same(expired?.sections.map((s) => s.pick), ['w1', 'w2', 'w3', OUTSIDE_PICK]));
 }
 
 // ── 짐작하지 않기 — 한 목록(지금 순서)으로 ────────────────────────────────────
 {
-  const noPlan = libraryLayout({ drafts, plan: null, planUnreadable: false, extras, livePostIds: live });
+  const noPlan = libraryLayout({ drafts, plan: null, planUnreadable: false, extras, posts });
   ok('배정 없음 — 묶지 않고 지금처럼 최근 순 · 안내 없음', !noPlan.grouped && same(ids(noPlan.drafts), ids(recentFirst(drafts))) && noPlan.fallback === null);
   ok('배정 없음 — 추가 글 목록을 못 읽어도 안내 없음(지금과 같다)', (() => {
-    const l = libraryLayout({ drafts, plan: null, planUnreadable: false, extras: null, livePostIds: null });
+    const l = libraryLayout({ drafts, plan: null, planUnreadable: false, extras: null, posts: null });
     return !l.grouped && l.fallback === null;
   })());
-  const noExtras = libraryLayout({ drafts, plan, planUnreadable: false, extras: null, livePostIds: live });
+  const noExtras = libraryLayout({ drafts, plan, planUnreadable: false, extras: null, posts });
   ok('추가 글 목록을 못 읽음 — 묶지 않고 모든 글을 최근 순', !noExtras.grouped && same(ids(noExtras.drafts), ids(recentFirst(drafts))));
   ok('추가 글 목록을 못 읽음 — 이유를 밝힌다', !noExtras.grouped && noExtras.fallback === 'extras-unreadable' && LIBRARY_FALLBACK_NOTE['extras-unreadable'].includes('최근 순'));
-  const badPlan = libraryLayout({ drafts, plan: null, planUnreadable: true, extras, livePostIds: live });
+  const badPlan = libraryLayout({ drafts, plan: null, planUnreadable: true, extras, posts });
   ok('배정을 못 읽음 — 묶지 않고 모든 글을 최근 순 · 이유', !badPlan.grouped && badPlan.drafts.length === drafts.length && badPlan.fallback === 'plan-unreadable');
   ok('못 읽음 — 고르기는 「전체」 하나', libraryPickOptions(noExtras).length === 1 && libraryPickOptions(noExtras)[0].value === '');
 }
@@ -219,20 +330,20 @@ const g = grouped(layout);
   ok('고르기 — 배정 밖 값은 작성자 키가 될 수 없는 글자', !/^[A-Za-z0-9_-]+$/.test(OUTSIDE_PICK));
   ok('고르기 — 있는 작성자는 그대로', validLibraryPick(layout, 'w2') === 'w2' && validLibraryPick(layout, OUTSIDE_PICK) === OUTSIDE_PICK);
   ok('고르기 — 다시 읽은 뒤 없는 작성자면 전체로', validLibraryPick(layout, 'w9') === '');
-  const onlyPlan = libraryLayout({ drafts: [dA1], plan, planUnreadable: false, extras, livePostIds: live });
+  const onlyPlan = libraryLayout({ drafts: [dA1], plan, planUnreadable: false, extras, posts });
   ok('고르기 — 배정 밖 글이 없어졌으면 전체로', validLibraryPick(onlyPlan, OUTSIDE_PICK) === '');
-  ok('고르기 — 묶지 않은 화면(배정 없음 · 못 읽음)이면 전체로', validLibraryPick(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, livePostIds: live }), 'w1') === '');
+  ok('고르기 — 묶지 않은 화면(배정 없음 · 못 읽음)이면 전체로', validLibraryPick(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, posts }), 'w1') === '');
   ok('고르기 — 글이 없는 작성자도 고를 수 있다', validLibraryPick(layout, 'w3') === 'w3' && shownSections(layout, 'w3').length === 1 && shownSections(layout, 'w3')[0].drafts.length === 0);
 
   ok('보이는 칸 — 전체면 모든 칸', same(shownSections(layout, '').map((s) => s.pick), ['w1', 'w2', 'w3', OUTSIDE_PICK]));
   ok('보이는 칸 — 작성자를 고르면 그 칸만', same(shownSections(layout, 'w2').map((s) => s.pick), ['w2']));
   ok('보이는 칸 — 배정 밖 글만', same(shownSections(layout, OUTSIDE_PICK).map((s) => s.pick), [OUTSIDE_PICK]));
   ok('보이는 칸 — 없는 값이면 전체', shownSections(layout, 'w9').length === 4);
-  ok('보이는 칸 — 묶지 않은 화면은 칸이 없다', shownSections(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, livePostIds: live }), '').length === 0);
+  ok('보이는 칸 — 묶지 않은 화면은 칸이 없다', shownSections(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, posts }), '').length === 0);
 
   ok('주소만 남은 기록 — 전체에서만', orphansShown(layout, '') && !orphansShown(layout, 'w1') && !orphansShown(layout, OUTSIDE_PICK));
   ok('주소만 남은 기록 — 없는 값으로 남은 고르기는 전체로 보고 보인다', orphansShown(layout, 'w9'));
-  ok('주소만 남은 기록 — 배정 없는 브랜드는 늘 보인다(지금과 같다)', orphansShown(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, livePostIds: live }), 'w1'));
+  ok('주소만 남은 기록 — 배정 없는 브랜드는 늘 보인다(지금과 같다)', orphansShown(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, posts }), 'w1'));
 }
 
 // ── 「글 N편」 안내 ──────────────────────────────────────────────────────────
@@ -241,7 +352,7 @@ const g = grouped(layout);
   ok('글 수 — 작성자를 고르면 그 작성자 글과 전체', same(libraryCount(layout, 'w1'), { scope: 'w1', shown: 3, total: 9 }));
   ok('글 수 — 배정 밖 글', same(libraryCount(layout, OUTSIDE_PICK), { scope: '배정 밖', shown: 4, total: 9 }));
   ok('글 수 — 없는 값이면 전체', same(libraryCount(layout, 'w9'), { scope: null, shown: 9, total: 9 }));
-  ok('글 수 — 배정 없음이면 지금처럼 모든 글', same(libraryCount(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, livePostIds: live }), ''), { scope: null, shown: 9, total: 9 }));
+  ok('글 수 — 배정 없음이면 지금처럼 모든 글', same(libraryCount(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, posts }), ''), { scope: null, shown: 9, total: 9 }));
 }
 
 let failed = 0;

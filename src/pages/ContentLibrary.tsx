@@ -23,7 +23,7 @@ import {
   libraryCount,
   libraryLayout,
   libraryPickOptions,
-  liveArticleIds,
+  libraryRecordTopic,
   orphansShown,
   sectionDetail,
   sectionTitle,
@@ -31,7 +31,7 @@ import {
   validLibraryPick,
 } from '../lib/contentLibraryOrder'
 import type { ExtraArticle } from '../lib/extraArticles'
-import { recordOnlyHits, topicSnapshotFor } from '../lib/gapActions'
+import { recordOnlyHits } from '../lib/gapActions'
 import { postChannelLabel, summarizePost, TIER_LABEL, type PostTier } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { QuestionBank } from '../lib/types'
@@ -123,9 +123,14 @@ export default function ContentLibrary() {
   const extras = extrasState?.key === key ? extrasState : null
   // 배정이 있으면 추가 글 정의까지 받은 뒤에 그린다 — 한 목록으로 그렸다가 묶이면 글이 한꺼번에 자리를 옮긴다.
   const loading = state?.key !== key || !probe.loaded || (probe.plan !== null && extras === null)
-  // 작성자 고르기 — 브랜드마다 따로 둔다(브랜드를 바꾸면 전체). 다시 읽은 뒤 없는 값이면 전체로 본다(validLibraryPick).
-  const [writerPick, setWriterPick] = useState<{ tenantId: string; value: string } | null>(null)
-  const pickedValue = writerPick && writerPick.tenantId === key ? writerPick.value : ''
+  // 작성자 고르기 — 지금 브랜드의 값. 브랜드를 바꾸면 전체로 돌아간다(앞 브랜드로 돌아와도 그때 고른 작성자를 되살리지 않는다). 렌더
+  // 중에 앞 브랜드와 견줘 비운다 — 이펙트에서 비우면 한 번은 옛 값으로 그린다. 다시 읽은 뒤 없는 값이면 전체로 본다(validLibraryPick).
+  const [writerPick, setWriterPick] = useState('')
+  const [pickTenant, setPickTenant] = useState(key)
+  if (pickTenant !== key) {
+    setPickTenant(key)
+    setWriterPick('')
+  }
 
   // 올린 글 주소(집행 원장) · 집행 상태 — 데스크톱 · 로컬 전용(웹은 칸을 숨긴다).
   const published = usePublishedPosts(key)
@@ -228,8 +233,9 @@ export default function ContentLibrary() {
           busy={published.busy}
           targetLabel={postChannelLabel}
           onRecord={async (url, publishedOn, chosen) => {
-            // 초안이 없는 기록(stored 없음)은 쓸 때의 시각을 몰라 id만 남는다.
-            const topic = topicSnapshotFor(articleId, bank, stored?.generatedAt)
+            // 추가 글은 그 정의의 판 · 문장을 싣는다(콘텐츠 생성과 같은 판 — 발행 현황이 작성자 글로 센다). 정의가 없으면 질문 은행으로
+            // 보고, 초안이 없는 기록(stored 없음)은 쓸 때의 시각을 몰라 id만 남는다.
+            const topic = libraryRecordTopic(articleId, extras?.list ?? null, bank, stored?.generatedAt)
             const r = await published.record({
               url,
               articleId,
@@ -266,9 +272,10 @@ export default function ContentLibrary() {
     plan: probe.plan,
     planUnreadable: probe.corrupt || probe.error !== null,
     extras: extras?.list ?? null,
-    livePostIds: canRecord ? liveArticleIds(published.posts) : null,
+    // 칸 머리의 올림은 발행 현황과 같은 규칙으로 센다(같은 주소 · 같은 날 묶음 · 배정 판으로 쓴 기록만).
+    posts: canRecord ? published.posts : null,
   })
-  const pick = validLibraryPick(layout, pickedValue)
+  const pick = validLibraryPick(layout, writerPick)
   const count = libraryCount(layout, pick)
   // 묶지 못한 이유 — 배정이 없는 브랜드는 fallback이 null이라 안내가 없다(지금과 같다).
   const fallback = layout.grouped ? null : layout.fallback
@@ -466,7 +473,7 @@ export default function ContentLibrary() {
             <div className="filters">
               <label className="library-pick">
                 <span>작성자</span>
-                <select value={pick} onChange={(e) => setWriterPick({ tenantId: tenant.tenantId, value: e.target.value })}>
+                <select value={pick} onChange={(e) => setWriterPick(e.target.value)}>
                   {libraryPickOptions(layout).map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
