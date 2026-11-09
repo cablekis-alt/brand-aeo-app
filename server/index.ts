@@ -177,6 +177,7 @@ import { IndexChecksError, setIndexCheck } from './indexChecks.js';
 import { readPublishStatus } from './publishStatus.js';
 import { commitPostImport, listBlogPosts, PostImportError, readBlogSources, readPostForImport, saveBlogSources } from './postImport.js';
 import { getRunHistory, MAX_RUN_WEEKS } from './runHistory.js';
+import { addExternalPost, ExternalPostsError, getExternalHistory, listExternalPosts, readOtherLedgers, updateExternalPost } from './externalPosts.js';
 import {
   addPublishedPost,
   patchPublishedPost,
@@ -2726,6 +2727,79 @@ app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
   } catch (err) {
     const status = err instanceof IndexChecksError || err instanceof PublishedPostsError ? err.status : 500;
     res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 앱 밖 글(server/externalPosts.ts) — 앱에서 만들지 않은 글의 주소를 브랜드마다 따로 적어 인용을 추적한다(data/<tenant>/external-posts.json).
+// 원장 · 집행 상태는 읽기만 한다. 데스크톱·로컬 전용이다(Vercel 함수는 12/12 — 웹은 404를 「이 환경에는 없음」으로 읽고 절을 숨긴다). 쓰기는
+// 고객 브랜드만 받는다(경쟁사 · 지운 · 없는 브랜드는 404). 오류: 400 요청 모양 · 글 주소 아님, 409 같은 브랜드 원장이 이김 · 되살릴 수 없음,
+// 500 파일이 깨짐(쓰지 않는다).
+function sendExternalError(res: import('express').Response, err: unknown) {
+  const known = err instanceof ExternalPostsError || err instanceof PublishedPostsError;
+  res.status(known ? err.status : 500).json({ error: err instanceof Error ? err.message : String(err), ...(known ? err.detail : {}) });
+}
+
+/** 앱 밖 글을 쓸 수 있는 고객 브랜드와 다른 고객 브랜드 id들 — 경쟁사(비교용) · 지운 · 없는 브랜드면 null. */
+async function externalWriteTarget(tenantId: string): Promise<{ tenant: TenantConfig; others: string[] } | null> {
+  const tenants = await loadRuntimeTenants();
+  const tenant = tenants.find((t) => t.tenantId === tenantId);
+  if (!tenant || tenant.cohortOnly) return null;
+  return { tenant, others: tenants.filter((t) => !t.cohortOnly && t.tenantId !== tenantId).map((t) => t.tenantId) };
+}
+
+app.get('/api/external-posts/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json({ posts: await listExternalPosts(tenant.tenantId) });
+  } catch (err) {
+    sendExternalError(res, err);
+  }
+});
+
+app.post('/api/external-posts/:tenantId', async (req, res) => {
+  const target = await externalWriteTarget(req.params.tenantId);
+  if (!target) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    // 다른 브랜드 원장은 이 브랜드의 쓰기 줄에 들어가기 전에 읽는다(줄 안에서 다른 줄을 기다리지 않는다).
+    const others = await readOtherLedgers(target.others);
+    res.json(await addExternalPost(target.tenant.tenantId, req.body ?? {}, others));
+  } catch (err) {
+    sendExternalError(res, err);
+  }
+});
+
+app.patch('/api/external-posts/:tenantId/:postId', async (req, res) => {
+  const target = await externalWriteTarget(req.params.tenantId);
+  if (!target) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await updateExternalPost(target.tenant.tenantId, req.params.postId, req.body ?? {}));
+  } catch (err) {
+    sendExternalError(res, err);
+  }
+});
+
+// 앱 밖 글 인용 이력 — 앱 글 이력과 같은 계산(그 브랜드 측정 답변 · 정확 일치 · 판정 없는 주는 확인 불가). 저장하지 않고 요청마다 계산한다.
+app.get('/api/external-history/:tenantId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  const weeks = Number(req.query.weeks);
+  try {
+    res.json(await getExternalHistory(store, tenant, Number.isFinite(weeks) && weeks > 0 ? weeks : 12));
+  } catch (err) {
+    sendExternalError(res, err);
   }
 });
 
