@@ -12,7 +12,8 @@ import {
   type PublicPhotoFields,
 } from './articlePhotos'
 import { publishMarkdownOf } from './draftGaps'
-import { downloadBlob, safeFileName } from './markdownFile'
+import { downloadBlob } from './fileDownload'
+import { safeFileName } from './markdownFile'
 import { MAP_CREDIT } from './mapImage'
 import { fetchPage } from './aeo/fetchPage'
 import { findPlace, placeKey, placeNameOfPath, publicCandidateFields, type AutoCandidate, type AutoPickResult } from './photoAutoPick'

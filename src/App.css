@@ -9164,3 +9164,255 @@ tr.ms-run-child td:nth-child(2) {
 .ps-removed td {
   opacity: 0.55;
 }
+/*
+ * ── 주소 한꺼번에 등록(src/components/PostImportPanel.tsx) ─────────────────
+ * 발행 현황 위에 접힌 상자. 붙여 넣기 · 저장한 블로그를 나란히(좁으면 위아래로), 읽은 주소는 한 표 — 열이 아홉이라 좁은 창에서는 표 상자
+ * 안에서만 옆으로 민다. 색은 모두 공용 토큰이라 라이트 · 다크가 함께 바뀐다.
+ */
+.pi-panel {
+  margin: 0 0 18px;
+  padding: 12px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--card);
+}
+.pi-panel > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  cursor: pointer;
+}
+.pi-panel[open] > summary {
+  margin-bottom: 12px;
+}
+.pi-panel > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pi-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+.pi-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.pi-body {
+  display: grid;
+  gap: 12px;
+}
+.pi-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .pi-inputs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.pi-box {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  background: var(--paper);
+}
+.pi-box h3 {
+  margin: 0;
+  font-size: 13.5px;
+}
+.pi-label {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.pi-textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  font-size: 13px;
+}
+.pi-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.pi-source-input {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-size: 13px;
+}
+.pi-sources,
+.pi-list-notes {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.pi-sources li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+}
+.pi-sources a {
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+.pi-list-notes li {
+  overflow-wrap: anywhere;
+  color: var(--ink-2);
+}
+.pi-list-notes li.error {
+  color: var(--bad);
+}
+.pi-platform {
+  font-size: 12px;
+  color: var(--muted);
+}
+.pi-empty {
+  margin: 0;
+  font-size: 13px;
+}
+.pi-note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.pi-ignored {
+  margin-top: 4px;
+}
+.pi-ignored > summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.pi-ignored ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  overflow-wrap: anywhere;
+}
+.pi-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 24px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.pi-progress progress {
+  width: 160px;
+  accent-color: var(--accent);
+}
+.pi-table-wrap {
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  padding-top: 0;
+}
+/* 열 너비를 정해 두고 칸 안에서 줄을 바꾼다 — 데스크톱 앱 기본 창(1360px, 표 상자 안쪽 약 990px)에 아홉 열이 다 들어온다. */
+.pi-table {
+  width: 100%;
+  min-width: 960px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.pi-col-check { width: 4%; }
+.pi-col-brand { width: 8%; }
+.pi-col-writer { width: 9%; }
+.pi-col-article { width: 24%; }
+.pi-col-url { width: 12%; }
+.pi-col-platform { width: 7%; }
+.pi-col-date { width: 12%; }
+.pi-col-score { width: 8%; }
+.pi-col-state { width: 16%; }
+.pi-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--card);
+  box-shadow: inset 0 -1px 0 var(--ink);
+}
+.pi-table th,
+.pi-table td {
+  padding: 8px 5px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.pi-table tbody tr {
+  cursor: default;
+}
+.pi-table tbody tr.pi-blocked td {
+  background: var(--surface-2);
+}
+.pi-table select {
+  width: 100%;
+  padding: 5px 4px;
+  font-size: 12.5px;
+}
+.pi-url a {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+  color: var(--accent);
+}
+.pi-date {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 140px;
+  padding: 4px 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+}
+/* 날짜 고르기 단추 · 달력도 다크 테마를 따른다(토큰과 같은 조건). */
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .pi-date {
+    color-scheme: dark;
+  }
+}
+@media screen {
+  :root[data-theme='dark'] .pi-date {
+    color-scheme: dark;
+  }
+}
+.pi-table .chip {
+  white-space: normal;
+}
+.pi-sub-line {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.pi-sub-line.warn {
+  color: var(--warn);
+}
+.pi-sub-line.error {
+  color: var(--bad);
+}
+.pi-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}

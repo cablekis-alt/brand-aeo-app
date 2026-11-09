@@ -16,7 +16,8 @@ import {
 import { loadQuestionAnalyses, loadQuestionBank, loadRawAnswers, type RawAnswer } from '../lib/api'
 import { resolveBankVersion } from '../lib/bankVersion'
 import { ENGINE_LABEL, weekLabel } from '../lib/format'
-import { downloadCsv, safeFileName } from '../lib/markdownFile'
+import { downloadCsv } from '../lib/fileDownload'
+import { safeFileName } from '../lib/markdownFile'
 import type { QuestionRepeatAnalysis, QuestionSpec } from '../lib/types'
 import { useWeeklyPage } from '../lib/useWeeklyPage'
 

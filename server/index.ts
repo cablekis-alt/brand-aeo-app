@@ -175,6 +175,7 @@ import { queueTenantWrite } from './tenantWriteQueue.js';
 import { getPublishedHistory } from './publishedHistory.js';
 import { IndexChecksError, setIndexCheck } from './indexChecks.js';
 import { readPublishStatus } from './publishStatus.js';
+import { commitPostImport, listBlogPosts, PostImportError, readBlogSources, readPostForImport, saveBlogSources } from './postImport.js';
 import { getRunHistory, MAX_RUN_WEEKS } from './runHistory.js';
 import {
   addPublishedPost,
@@ -2725,6 +2726,66 @@ app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
   } catch (err) {
     const status = err instanceof IndexChecksError || err instanceof PublishedPostsError ? err.status : 500;
     res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 주소 한꺼번에 등록(server/postImport.ts) — 작성자들이 보낸 글 주소 · 저장한 블로그의 새 글을 읽어 고객 브랜드의 앱 글과 짝짓고, 사람이
+// 확인한 줄을 원장에 적는다(「올렸어요」와 같은 길). 데스크톱·로컬 전용이다(Vercel 함수는 12/12 — 웹은 404를 「데스크톱 앱에서만」으로
+// 읽는다). 바깥 페이지는 내부 주소를 막은 읽기로만 받는다. 오류: 400 요청 모양 · 글 주소 아님 · 저장하지 않은 블로그, 500 파일이 깨짐.
+function sendImportError(res: import('express').Response, err: unknown) {
+  const status = err instanceof PostImportError ? err.status : 500;
+  res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+}
+
+/**
+ * 콘텐츠 보관함 「올렸어요」가 질문 은행 글(추가 글 정의가 없는 topic:)의 판을 볼 때 쓰는 은행 — GET /api/question-bank(판 지정 없음)가
+ * 주는 것과 같다: 설정한 판의 은행, 그 은행이 없거나 경쟁사 편집이 고쳐 만든 것이면 마지막으로 잰 은행. 둘 다 없으면 null(판 없음).
+ */
+async function shownQuestionBank(tenant: TenantConfig) {
+  const bank = await store.getQuestionBank(tenant.tenantId, tenant.questionBankVersion);
+  if (bank && !bank.derivedFrom) return bank;
+  const measured = (await scorecardsFor(tenant.tenantId)).at(-1)?.questionBankVersion;
+  const last = measured && measured !== tenant.questionBankVersion ? await store.getQuestionBank(tenant.tenantId, measured) : null;
+  return last ?? bank;
+}
+
+app.get('/api/blog-sources', async (_req, res) => {
+  try {
+    res.json({ sources: await readBlogSources() });
+  } catch (err) {
+    sendImportError(res, err);
+  }
+});
+
+app.put('/api/blog-sources', async (req, res) => {
+  try {
+    res.json({ sources: await saveBlogSources(req.body) });
+  } catch (err) {
+    sendImportError(res, err);
+  }
+});
+
+app.post('/api/post-import/list', async (req, res) => {
+  try {
+    res.json(await listBlogPosts((req.body ?? {}).source, await loadRuntimeTenants()));
+  } catch (err) {
+    sendImportError(res, err);
+  }
+});
+
+app.post('/api/post-import/read', async (req, res) => {
+  try {
+    res.json(await readPostForImport((req.body ?? {}).url, await loadRuntimeTenants()));
+  } catch (err) {
+    sendImportError(res, err);
+  }
+});
+
+app.post('/api/post-import/commit', async (req, res) => {
+  try {
+    res.json(await commitPostImport(req.body, await loadRuntimeTenants(), shownQuestionBank));
+  } catch (err) {
+    sendImportError(res, err);
   }
 });
 

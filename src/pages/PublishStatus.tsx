@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import PostImportPanel from '../components/PostImportPanel'
 import { loadPublishStatus, saveIndexCheck } from '../lib/api'
-import { downloadCsv, safeFileName } from '../lib/markdownFile'
+import { downloadCsv } from '../lib/fileDownload'
+import { safeFileName } from '../lib/markdownFile'
+import { todayKst } from '../lib/publishedUrl'
 import { monthDay } from '../lib/publishTracking'
 import {
   emptyStateOf,
@@ -222,6 +225,8 @@ export default function PublishStatus() {
         고객 브랜드에 올린 글을 한 표로 봅니다. 네이버 · 구글은 지금 직접 검색해 확인합니다 — 「네이버에서 확인」 · 「구글에서 확인」으로 검색 창을 연 뒤
         본 결과대로 「노출됨 · 색인됨」 또는 「아직」을 누르세요. 누르지 않은 글은 「미확인」입니다. 올린 뒤 3 · 7 · 14일째에 다시 봅니다.
       </p>
+      {/* 작성자들이 보낸 주소를 한꺼번에 적는다 — 적으면 이 표를 다시 읽는다. 오늘은 서버가 센 날(읽기 전이면 이 PC의 한국 날짜). */}
+      <PostImportPanel today={today || todayKst()} onRegistered={() => setReloadKey((k) => k + 1)} />
 
       {!state.loaded && <p className="muted">발행 현황을 불러오는 중…</p>}
       {state.error && (

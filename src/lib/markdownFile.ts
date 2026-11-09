@@ -16,36 +16,9 @@ import { articleSources, sourcesLine, type OfficialSource } from './officialSour
  * 두 화면이 같은 부품을 쓰는 이유: 측정 전에 질문을 골라 쓰는 글과 측정 후 실행 항목에서 쓰는
  * 글은 **만드는 방식이 같다**. 다른 것은 질문을 어디서 고르느냐뿐이다. 두 벌로 두면 빈칸
  * 채우기 같은 기능이 한쪽에만 생긴다.
+ *
+ * 내려받기(downloadHtml · downloadCsv · downloadBlob)는 src/lib/fileDownload.ts에 있다 — 이 파일은 DOM 없이 서버도 쓴다(draftTitle).
  */
-/**
- * 완성된 HTML 문서를 .html로 내려받는다(src/lib/htmlFile.ts가 만든 문자열). 글 내보내기는 「블로그는 복사 · 홈페이지는
- * .html」이라 .md 파일은 내지 않는다 — 일반 사용자는 .md를 열기 어렵고, 블로그 편집기에 붙이면 # · ** 기호가 남는다(2026-10-20).
- */
-export function downloadHtml(filename: string, html: string): void {
-  downloadTextFile(filename, html, 'text/html;charset=utf-8')
-}
-
-/** CSV를 .csv로 내려받는다(BOM은 만드는 쪽이 붙인다 — src/lib/answerInsights.ts answersCsv). */
-export function downloadCsv(filename: string, csv: string): void {
-  downloadTextFile(filename, csv, 'text/csv;charset=utf-8')
-}
-
-function downloadTextFile(filename: string, text: string, mime: string): void {
-  downloadBlob(filename, new Blob([text], { type: mime }))
-}
-
-/** 파일 하나를 내려받는다(글자 · 사진 공통). */
-export function downloadBlob(filename: string, blob: Blob): void {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  // 즉시 해제하면 브라우저가 저장을 시작하기 전에 사라질 수 있다.
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
 
 /** 파일 이름에 쓸 수 없는 글자를 덜어낸다. 한글·숫자·점·하이픈은 남긴다. */
 export function safeFileName(s: string): string {

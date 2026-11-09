@@ -102,9 +102,9 @@ function charsetFromMeta(bytes: Uint8Array): string | null {
  * 한국 사이트는 Content-Type에 charset을 빼고 <meta charset="EUC-KR">만 두는 경우가 흔하다.
  * UTF-8로 고정 디코딩하면 본문 전체가 깨져 콘텐츠·EEAT 채점이 무의미해진다(실측: 삼성서울병원).
  * 단서 우선순위: 헤더 charset → meta charset → UTF-8 엄격 디코딩 성공 여부.
- * 마지막 단계에서 UTF-8이 아니면 euc-kr로 본다 — 한국 사이트에서 압도적으로 흔한 대안이다.
+ * 마지막 단계에서 UTF-8이 아니면 euc-kr로 본다 — 한국 사이트에서 압도적으로 흔한 대안이다. 주소 한꺼번에 등록(server/postImport.ts)도 쓴다.
  */
-function decodeBody(bytes: Uint8Array, contentType: string): string {
+export function decodeBody(bytes: Uint8Array, contentType: string): string {
   if (bytes.byteLength === 0) return '';
   const declared = charsetFromContentType(contentType) ?? charsetFromMeta(bytes);
   if (declared) return new TextDecoder(declared, { fatal: false }).decode(bytes);

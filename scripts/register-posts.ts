@@ -36,14 +36,17 @@ import { copyFile, mkdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { AddPostInput, PublishedPost, TopicSnapshot } from '../server/publishedPosts'
+import type { AddPostInput, PublishedPost } from '../server/publishedPosts'
 import { findRedirectedCopies, looksVirtualized, writeRedirects } from '../server/probeQuestions'
 import type { StoredDraft } from '../src/lib/api'
-import { effectiveDraft } from '../src/lib/draftGaps'
-import { extraTopicSnapshot, normalizeExtraArticles, type ExtraArticle } from '../src/lib/extraArticles'
-import { draftTitle } from '../src/lib/markdownFile'
-import { parseWriterPlan, type WriterPlan, type WriterPlanArticle } from '../src/lib/probePlan'
-import { ARTICLE_URL_REASON, isArticleUrl, todayKst, trackingKey } from '../src/lib/publishedUrl'
+import { normalizeExtraArticles } from '../src/lib/extraArticles'
+import { planRegistration, type CsvRow, type RegisterItem } from '../src/lib/postRegistration'
+import { parseWriterPlan } from '../src/lib/probePlan'
+import { todayKst } from '../src/lib/publishedUrl'
+
+// 계획 규칙(줄 검사 · 기록 만들기)은 앱의 「주소 한꺼번에 등록」과 함께 쓰는 모듈(src/lib/postRegistration.ts)에 있다 — 이 스크립트를
+// 부르는 쪽(scripts/verify-register-posts.ts)은 예전처럼 여기서 가져간다.
+export { normalizeDay, planRegistration, type CsvRow, type RegisterItem, type RegisterPlan, type RegisterPlanInput } from '../src/lib/postRegistration'
 
 /** 원장 · 집행 상태 · 배정 · 초안 · 추가 글 파일 — 서버가 쓰는 자리와 같다. */
 export const REGISTER_FILES = {
@@ -53,15 +56,6 @@ export const REGISTER_FILES = {
   drafts: 'drafts.json',
   extras: 'extra-articles.json',
 } as const
-
-export interface CsvRow {
-  /** CSV 줄 번호(1부터 — 머리글 포함). */
-  line: number
-  writer: string
-  article: string
-  url: string
-  postedOn: string
-}
 
 /** 따옴표 칸(엑셀이 쉼표 · 줄바꿈이 든 칸을 감싼다)을 읽는다. 빈 줄은 건너뛴다. */
 function csvRecords(text: string): { line: number; cells: string[] }[] {
@@ -129,159 +123,6 @@ export function parseRegisterCsv(text: string): { rows: CsvRow[]; errors: string
     rows.push({ line: rec.line, writer, article, url, postedOn })
   }
   return { rows, errors }
-}
-
-/** 올린 날 — 2026-11-02 · 2026.11.2 · 2026/11/02를 YYYY-MM-DD로. 실제 날짜가 아니면 null. */
-export function normalizeDay(raw: string): string | null {
-  const m = /^(\d{4})[-./](\d{1,2})[-./](\d{1,2})\.?$/.exec(raw.trim())
-  if (!m) return null
-  const day = `${m[1]}-${m[2]!.padStart(2, '0')}-${m[3]!.padStart(2, '0')}`
-  const t = Date.parse(`${day}T00:00:00Z`)
-  return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === day ? day : null
-}
-
-/** 더할 기록 하나 — addPublishedPost에 그대로 넘긴다. */
-export interface RegisterItem {
-  line: number
-  article: WriterPlanArticle
-  input: AddPostInput & {
-    url: string
-    articleId: string
-    targetActionId: string
-    via: 'own'
-    articleTitle: string
-    draftGeneratedAt: string
-    publishedOn: string
-    publishedOnChosen: true
-    markDone: true
-    topic: TopicSnapshot
-  }
-  key: string
-}
-
-export interface RegisterPlanInput {
-  plan: WriterPlan
-  drafts: Record<string, StoredDraft>
-  /** 추가 글 정의 전부(뺀 글 포함). */
-  extras: ExtraArticle[]
-  /** 지금 원장(옛 기록 포함 — server/publishedPosts.ts readPublishedPosts). */
-  posts: PublishedPost[]
-  rows: CsvRow[]
-  /** 오늘(KST). */
-  today: string
-}
-
-export interface RegisterPlan {
-  items: RegisterItem[]
-  /** 이미 그 글의 주소로 적혀 있어 건너뛴 줄. */
-  skipped: string[]
-  errors: string[]
-  warnings: string[]
-}
-
-/** CSV 줄을 기록으로 — 걸린 줄은 errors(하나라도 있으면 쓰지 않는다), 이미 적힌 줄은 skipped. */
-export function planRegistration(input: RegisterPlanInput): RegisterPlan {
-  const items: RegisterItem[] = []
-  const skipped: string[] = []
-  const errors: string[] = []
-  const warnings: string[] = []
-  const seenKeys = new Map<string, number>()
-  const seenArticles = new Map<string, number>()
-  const actives = input.posts.filter((p) => !p.removedAt && !p.legacy)
-  for (const row of input.rows) {
-    const at = `${row.line}행`
-    const article = row.article.startsWith('topic:')
-      ? input.plan.articles.find((a) => a.id === row.article)
-      : input.plan.articles.find((a) => a.name === row.article)
-    if (!article) {
-      errors.push(`${at}: 배정 글이 아닙니다 — ${row.article} (글 id나 배정표의 주제 이름을 그대로 적어 주세요)`)
-      continue
-    }
-    const who = `${article.writer.key} · ${article.writer.name}`
-    if (row.writer !== article.writer.key && row.writer !== article.writer.name) {
-      errors.push(`${at}: 「${article.name}」은 ${who}의 글입니다 — 적힌 작성자 ${row.writer}`)
-      continue
-    }
-    const url = row.url.trim()
-    const check = isArticleUrl(url)
-    if (!check.ok) {
-      errors.push(`${at}: ${ARTICLE_URL_REASON[check.reason]} — ${url}`)
-      continue
-    }
-    const key = trackingKey(url)!
-    const day = normalizeDay(row.postedOn)
-    if (!day) {
-      errors.push(`${at}: 올린 날이 YYYY-MM-DD 날짜가 아닙니다 — ${row.postedOn}`)
-      continue
-    }
-    if (day > input.today) {
-      errors.push(`${at}: 올린 날(${day})이 오늘(${input.today})보다 뒤입니다.`)
-      continue
-    }
-    if (day < '2020-01-01') {
-      errors.push(`${at}: 올린 날(${day})이 너무 이릅니다.`)
-      continue
-    }
-    const draft = input.drafts[article.id]
-    if (!draft) {
-      errors.push(`${at}: 「${article.name}」은 초안이 없습니다 — 작성자에게 준 글이 맞는지 확인해 주세요.`)
-      continue
-    }
-    const twin = seenKeys.get(key)
-    if (twin !== undefined) {
-      errors.push(`${at}: 같은 주소가 ${twin}행에도 있습니다 — ${url}`)
-      continue
-    }
-    seenKeys.set(key, row.line)
-    // 앱과 같은 판단(server/publishedPosts.ts addPublishedPost) — 다른 글의 주소면 거절, 이 글 자사 줄에 이미 있으면 그 기록이다.
-    const known = actives.filter((p) => p.key === key)
-    const other = known.find((p) => p.articleId !== article.id)
-    if (other) {
-      errors.push(`${at}: 이 주소는 이미 다른 글 ${other.articleTitle ? `「${other.articleTitle}」` : other.articleId}의 올린 주소로 적혀 있습니다 — ${url}`)
-      continue
-    }
-    // 집행 상태 파일에만 있던 옛 주소는 앱이 다시 적을 때 원장으로 옮긴다 — 여기서 옮기면 새 줄이 아니라 확인이 어긋나므로 앱에 맡긴다.
-    if (input.posts.some((p) => p.legacy && !p.removedAt && p.key === key && p.targetActionId === article.id)) {
-      errors.push(`${at}: 「${article.name}」에 예전 방식으로 적힌 주소입니다 — 앱의 올리기 목록에서 그 줄의 올린 날을 고쳐 주세요. ${url}`)
-      continue
-    }
-    const own = known.find((p) => p.targetActionId === article.id)
-    if (own) {
-      const on = own.publishedOn
-      skipped.push(`${at}: 「${article.name}」에 이미 적힌 주소입니다(올린 날 ${on ?? '모름'}) — 건너뜀${on && on !== day ? `. 날짜가 다르면 앱에서 고쳐 주세요(CSV ${day})` : ''}`)
-      continue
-    }
-    if (known.length > 0) warnings.push(`${at}: 「${article.name}」의 채널 줄에 적힌 주소입니다 — 자사 줄에도 더합니다(앱의 「올렸어요」와 같다).`)
-    const sameArticle = seenArticles.get(article.id)
-    if (sameArticle !== undefined) warnings.push(`${at}: 「${article.name}」을 ${sameArticle}행에서도 다른 주소로 적었습니다 — 두 주소 모두 그 글의 기록이 됩니다.`)
-    else if (actives.some((p) => p.articleId === article.id && p.targetActionId === article.id && p.key !== key)) {
-      warnings.push(`${at}: 「${article.name}」에는 이미 다른 주소가 적혀 있습니다 — 이 주소도 더합니다.`)
-    }
-    seenArticles.set(article.id, row.line)
-    const def = input.extras.find((x) => x.id === article.id)
-    if (def?.removedAt) warnings.push(`${at}: 「${article.name}」은 추가 글 목록에서 뺀 글입니다 — 기록은 남지만 올리기 목록에는 보이지 않습니다.`)
-    const topic = def
-      ? extraTopicSnapshot(def)
-      : { bankVersion: input.plan.bankVersion, questionIds: [...article.questionIds], questionTexts: [...article.questionTexts] }
-    items.push({
-      line: row.line,
-      article,
-      key,
-      input: {
-        url,
-        articleId: article.id,
-        targetActionId: article.id,
-        via: 'own',
-        articleTitle: draftTitle(effectiveDraft(draft)),
-        draftGeneratedAt: draft.generatedAt,
-        publishedOn: day,
-        publishedOnChosen: true,
-        markDone: true,
-        topic,
-      },
-    })
-  }
-  return { items, skipped, errors, warnings }
 }
 
 /** 원장에 차례로 더한다 — 첫 실패에서 멈추고 그때까지 더한 수와 이유를 돌려준다. add는 server/publishedPosts.ts addPublishedPost. */

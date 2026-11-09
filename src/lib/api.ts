@@ -8,6 +8,7 @@ import type { PublishSettings } from './publishSettings'
 import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './extraArticles'
 import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { IndexCheckRecord, IndexEngine, IndexState, PublishStatus } from './publishStatus'
+import type { BlogListResult, BlogSource, CommitItem, CommitResult, PostImportRead } from './postImport'
 import type { AnswerEvidence } from './answerEvidence'
 import { validScene, type PhotoScene } from './photoScenes'
 import { isMapImageId, normalizeMapPoints, parseMapAppSrc, type MapPoint } from './mapImage'
@@ -751,6 +752,63 @@ export async function saveIndexCheck(tenantId: string, postId: string, engine: I
     body: JSON.stringify({ engine, state }),
   })
   return body.record
+}
+
+/**
+ * 주소 한꺼번에 등록(server/postImport.ts)의 저장한 블로그. **null은 "이 환경에는 기능이 없다"(웹 — 라우트 404)**는 뜻이고, 그 밖의 실패는
+ * 이유와 함께 throw한다.
+ */
+export async function loadBlogSources(): Promise<BlogSource[] | null> {
+  let res: Response
+  try {
+    res = await fetch('/api/blog-sources')
+  } catch (err) {
+    throw new PublishedPostsRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  if (res.status === 404) return null
+  const body = (await res.json().catch(() => null)) as { sources?: BlogSource[]; error?: string } | null
+  if (!res.ok || !body || !Array.isArray(body.sources)) throw new PublishedPostsRequestError(body?.error || `저장한 블로그를 읽지 못했습니다 (HTTP ${res.status})`)
+  return body.sources
+}
+
+/** 저장한 블로그를 통째로 저장한다(더하기 · 빼기 모두). 서버가 홈 주소로 맞춘 목록을 돌려준다. 실패하면 이유와 함께 throw한다. */
+export async function saveBlogSources(urls: string[]): Promise<BlogSource[]> {
+  const body = await postsRequest<{ sources: BlogSource[] }>('/api/blog-sources', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sources: urls }),
+  })
+  return body.sources
+}
+
+/** 저장한 블로그 하나의 새 글(고객 브랜드 원장에 아직 없는 글 주소). signal로 멈춘다. */
+export function listImportBlogPosts(source: string, signal?: AbortSignal): Promise<BlogListResult> {
+  return postsRequest<BlogListResult>('/api/post-import/list', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source }),
+    signal,
+  })
+}
+
+/** 글 주소 하나를 읽어 앱 글 후보와 원장 기록을 받는다(페이지를 읽지 못하면 ok:false · 이유). signal로 멈춘다. */
+export function readImportPost(url: string, signal?: AbortSignal): Promise<PostImportRead> {
+  return postsRequest<PostImportRead>('/api/post-import/read', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+    signal,
+  })
+}
+
+/** 사람이 확인한 줄을 원장에 적는다 — 줄마다 결과(새로 적음 · 이미 있던 기록 · 걸림과 이유). 요청 자체가 실패하면 throw한다. */
+export async function commitPostImport(items: CommitItem[]): Promise<CommitResult[]> {
+  const body = await postsRequest<{ results: CommitResult[] }>('/api/post-import/commit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items }),
+  })
+  return body.results
 }
 
 /** 실패하면 null. 화면은 이전 상태를 되돌리고 사용자에게 알린다(조용히 삼키지 않는다). */
