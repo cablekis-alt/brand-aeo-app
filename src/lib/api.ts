@@ -633,6 +633,35 @@ export async function loadPublishedHistory(tenantId: string, weeks = 12): Promis
   return body
 }
 
+/**
+ * 앱 밖 글 인용 이력의 한 행(server/externalPosts.ts ExternalHistoryRow) — 계산에 넘긴 원장 모양(post — 앱 글 표와 같은 칸 계산)과 앱 밖
+ * 줄(external — 상태 · 옮긴 날)을 함께 싣는다. post는 원장 기록이 아니다: 앱 밖 글 절에만 쓴다.
+ */
+export interface ExternalHistoryRow extends PostHistory {
+  external: ExternalPostView
+}
+export interface ExternalHistory {
+  weeks: HistoryWeek[]
+  posts: ExternalHistoryRow[]
+}
+
+/** 앱 밖 글 인용 이력 읽기. null은 이 환경에 기능이 없다(웹 — 라우트 404). 그 밖의 실패는 이유와 함께 throw한다. */
+export async function loadExternalHistory(tenantId: string, weeks = 12): Promise<ExternalHistory | null> {
+  let res: Response
+  try {
+    res = await fetch(`/api/external-history/${encodeURIComponent(tenantId)}?weeks=${weeks}`)
+  } catch (err) {
+    throw new PublishedPostsRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  const body = (await res.json().catch(() => null)) as (ExternalHistory & { error?: unknown }) | null
+  const error = typeof body?.error === 'string' ? body.error : null
+  if (res.status === 404 && !error?.startsWith('tenant not found')) return null
+  if (!res.ok || !body || !Array.isArray(body.weeks) || !Array.isArray(body.posts)) {
+    throw new PublishedPostsRequestError(error || `앱 밖 글 인용 이력을 읽지 못했습니다 (HTTP ${res.status})`)
+  }
+  return body
+}
+
 /** 측정 회차별 보기(server/runHistory.ts) — 서버 타입과 같은 모양이다. */
 export interface RunPoint {
   kind: 'run' | 'week-file'

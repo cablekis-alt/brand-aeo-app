@@ -1,4 +1,5 @@
-import type { HistoryCell, HistoryWeek, PostHistory, PublishedHistory } from '../lib/api'
+import type { ReactNode } from 'react'
+import type { HistoryCell, HistoryWeek, PostHistory, PublishedHistory, PublishedPost } from '../lib/api'
 import {
   distinctPostings,
   freshNoCiteNote,
@@ -28,6 +29,29 @@ const TIER_CLASS: Record<PostTier, string> = {
 
 const shortDate = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`
 
+/** 칸을 끊은 까닭이 「내림」이 아니라 같은 브랜드에서 앱 글로 옮긴 것인 행(앱 밖 글 — D12). 옮긴 날을 모르면 movedOn null. */
+export interface MovedPosting {
+  movedOn: string | null
+  /** 앱 글 표가 이 주소를 세기 시작한 날 — 이 날부터 이 표는 칸을 비운다(옮긴 날보다 앞설 수 있다 — 앱 글의 올린 날). */
+  countsFrom: string
+}
+
+/** 옮긴 행에서 「내림 · 올린 뒤 판단할 측정 없음」 대신 쓰는 판단 칸. */
+const MOVED_TIER_LABEL = '앱 글로 옮김 · 옮기기 전 판단할 측정 없음'
+
+/*
+ * 표 아래 설명 — 공통 문장과 앱 글에만 맞는 문장(실증 처치 · 올린 곳 묶기 · 고친 글)을 나눠 둔다. 앱 밖 글 표는 앱 글 문장 대신 자기 설명을
+ * 넘긴다(description). 기본(앱 글 표) 문장은 나누기 전과 한 글자도 다르지 않다.
+ */
+const PROBE_NOTE =
+  ' 「실증」은 점수에 넣지 않는 실험 질문(실증 · 점수 제외)의 인용으로, 「이름 없는」에 넣지 않고 따로 셉니다 — 실증을 더한 주에도 이름 없는 질문 숫자를 그 전 주와 견줄 수 있습니다.'
+const PROBE_TREATMENT_NOTE = ' 실증을 맡은 글(처치)이 실증 답에 인용되는지가 실험 결과이며, 단일 측정은 흔들리니 2번 이상 같은 방향일 때만 결론을 냅니다.'
+const APP_POST_NOTE =
+  '같은 주소 · 같은 올린 날을 여러 줄(자사 블로그 · 채널)에 적은 기록은 한 행으로 묶고 올린 곳을 함께 적습니다. ' +
+  '기존 글을 고쳤다고 남긴 글은 칸에 「고친 뒤」(고친 글을 본 측정) · 「고친 날 측정」(고치기 전후 불명)을 적습니다. 고친 날이 든 ' +
+  '주는 칸 숫자가 그 주 올린 뒤 회차 전체이고, 꼬리에 고친 뒤 회차 몫만 따로 적습니다. 판단 칸에 고친 뒤 결과를 따로 적습니다 — ' +
+  '판단(여러 주 인용 등)은 올린 날 기준 그대로입니다.'
+
 /** "2026-W42" → 그 주 목요일을 7일 단위로 센 값 — 측정 사이 빈 주를 찾는 데만 쓴다(52주 · 53주 해 모두 맞다). */
 const weekSerial = (weekOf: string) => {
   const t = isoWeekThursday(weekOf)
@@ -40,8 +64,11 @@ const weekSerial = (weekOf: string) => {
  * 읽은 주는 질문 유형을 확인 불가로 둔다. 「인용 없음」은 그 주 AI 답변 인용에서 찾지 못했다는 뜻이다. 실증 질문의 인용은 이름 없는
  * 질문에 넣지 않고 「실증」으로 따로 적는다 — 실증을 측정한 주가 있는 브랜드에서만(withProbe).
  */
-function cellView(c: HistoryCell | null, withProbe: boolean): { main: string; sub: string[]; cls: string; title: string } {
+function cellView(c: HistoryCell | null, withProbe: boolean, moved: MovedPosting | null): { main: string; sub: string[]; cls: string; title: string } {
   if (!c) return { main: '확인 불가', sub: [], cls: 'muted', title: '그 주 판정 기록이 없습니다' }
+  if (c.afterRemoval && moved) {
+    return { main: '앱 글 표에서', sub: [], cls: 'muted', title: '앱 글로 옮긴 주소입니다 — 이 측정은 「올린 글 인용 추적」 표가 셉니다(두 표가 같은 측정을 두 번 세지 않게 여기서는 비웁니다)' }
+  }
   if (c.afterRemoval) return { main: '내린 뒤', sub: [], cls: 'muted', title: '글을 내린 뒤에 한 측정이라 세지 않습니다' }
   if (c.timing === 'before') return { main: '—', sub: [], cls: 'muted', title: '올리기 전에 한 측정이라 세지 않습니다' }
   const unsure = c.timing === 'during' || c.timing === 'ambiguous'
@@ -92,8 +119,26 @@ function cellView(c: HistoryCell | null, withProbe: boolean): { main: string; su
  * 그래프 핀과 같은 셈), 열은 측정 주차(언급률 2번 P3). 묶인 줄은 올린 곳을 칩으로 함께 보인다. 글 바로 옆 열은 글별 판단이다 —
  * 좁은 화면에서 주차 열을 밀어도 보이게. 「여러 주 인용」은 올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 붙인다 — 같은 주 회차는
  * 한 주로 센다. 측정 조건이 바뀌었거나 확인할 수 없는 주는 ◆, 측정하지 않은 주는 「…」, 여러 번 잰 주는 머리글에 「·3회」.
+ *
+ * 앱 밖 글 표(퍼포먼스 「앱 밖 글 인용 추적」)도 이 표를 쓴다 — 첫 열 머리글(header) · 앱 글 전용 설명 문장 대신 넣을 설명(description) ·
+ * 앱 글로 옮긴 행(movedOf — 「내림」 대신 「앱 글로 옮김(날짜)」, 옮긴 뒤 칸은 「앱 글 표에서」)을 넘긴다. 셋 다 주지 않으면 앱 글 표 그대로다.
  */
-export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { history: PublishedHistory; maxWeeks?: number }) {
+export default function PublishedHistoryTable({
+  history,
+  maxWeeks = 8,
+  header: firstHeader = '올린 글',
+  description,
+  movedOf,
+}: {
+  history: PublishedHistory
+  maxWeeks?: number
+  /** 첫 열 머리글. */
+  header?: string
+  /** 표 아래 설명에서 앱 글에만 맞는 문장(실증 처치 · 올린 곳 묶기 · 고친 글)을 대신할 설명. 주지 않으면 앱 글 설명 그대로. */
+  description?: ReactNode
+  /** 칸을 끊은 까닭이 앱 글로 옮긴 것인 행(앱 밖 글). 주지 않거나 null이면 원장의 「내림」 그대로. */
+  movedOf?: (post: PublishedPost) => MovedPosting | null
+}) {
   const start = Math.max(0, history.weeks.length - maxWeeks)
   const weeks = history.weeks.slice(start)
   // 측정 사이 빈 주 — 주차 열 사이에 틈을 둔다.
@@ -105,6 +150,7 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
 
   const row = ({ item: p, places }: Posting<PostHistory>) => {
     const removedOn = p.post.removedAt ? kstDate(p.post.removedAt) : null
+    const moved = movedOf?.(p.post) ?? null
     const summary = summarizePost(p.cells, history.weeks, removedOn)
     // 고친 글 — 마지막으로 고친 뒤의 결과를 따로 적고, 칸마다 고친 뒤 · 고친 날 측정인지 밝힌다(옛 글 · 새 글을 가르려고).
     const sinceEdit = summarizeSinceEdit(p.post, p.cells, history.weeks)
@@ -119,7 +165,10 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
           <div className="doc-meta">
             {p.post.publishedOn ? `${shortDate(p.post.publishedOn)} 올림` : '올린 날 모름'}
             {p.post.edits && p.post.edits.length > 0 && ` · ${p.post.edits.map((e) => shortDate(e.editedOn)).join(' · ')} 고침`}
-            {removedOn && ` · ${shortDate(removedOn)} 내림`}
+            {moved
+              ? ` · 앱 글로 옮김(${moved.movedOn ? shortDate(moved.movedOn) : '날짜 모름'})` +
+                (moved.movedOn && moved.countsFrom < moved.movedOn ? ` · ${shortDate(moved.countsFrom)}부터 앱 글 표에서 셈` : '')
+              : removedOn && ` · ${shortDate(removedOn)} 내림`}
           </div>
           {places.length > 1 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
@@ -132,7 +181,7 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
           )}
         </td>
         <td className="cell-text history-tier">
-          <span className={`status-pill ${TIER_CLASS[summary.tier]}`}>{TIER_LABEL[summary.tier]}</span>
+          <span className={`status-pill ${TIER_CLASS[summary.tier]}`}>{moved && summary.tier === 'removed' ? MOVED_TIER_LABEL : TIER_LABEL[summary.tier]}</span>
           {summary.measuredAfter > 0 && (
             <div className="doc-meta">
               올린 뒤 측정한 주 {summary.measuredAfter} · 인용된 주 {summary.citedWeeks}
@@ -155,7 +204,7 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
           {summary.citedBeforePublish && <div className="doc-meta">올리기 전 측정에서 이미 인용됨 — 올린 날을 확인하세요</div>}
         </td>
         {cells.flatMap((c, i) => {
-          const v = cellView(c, withProbe)
+          const v = cellView(c, withProbe, moved)
           // 고친 글이면 이 칸이 고친 글을 본 측정인지 — 올린 뒤 · 내리기 전 칸에만 붙인다. 고치기 전 회차가 섞인 주는 고친 뒤 몫을 따로 적는다.
           const editNote = c && !c.afterRemoval && c.timing === 'after' ? weekEditNote(p.post, c, weeks[i]!) : null
           if (editNote) v.sub.push(editNote)
@@ -210,7 +259,7 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
         <table className="history-table">
           <thead>
             <tr>
-              <th>올린 글</th>
+              <th>{firstHeader}</th>
               <th className="cell-text">판단</th>
               {weeks.flatMap(header)}
             </tr>
@@ -222,15 +271,12 @@ export default function PublishedHistoryTable({ history, maxWeeks = 8 }: { histo
         숫자는 그 주소가 정확히 인용된 AI 응답 수입니다(한 응답에 여러 번 나와도 1). 「이름 없는 질문」은 브랜드 이름을 넣지 않은
         질문(containsBrandName=false)으로, 점수가 쓰는 「카테고리 무관 질문」과 정의가 다릅니다(옛 질문지에서는 일부 질문이 두 기준에서 갈립니다). 「인용 없음」은 그 주 분석에서
         찾지 못했다는 뜻입니다.
-        {withProbe &&
-          ' 「실증」은 점수에 넣지 않는 실험 질문(실증 · 점수 제외)의 인용으로, 「이름 없는」에 넣지 않고 따로 셉니다 — 실증을 더한 주에도 이름 없는 질문 숫자를 그 전 주와 견줄 수 있습니다. 실증을 맡은 글(처치)이 실증 답에 인용되는지가 실험 결과이며, 단일 측정은 흔들리니 2번 이상 같은 방향일 때만 결론을 냅니다.'}{' '}
+        {withProbe && PROBE_NOTE}
+        {withProbe && description === undefined && PROBE_TREATMENT_NOTE}{' '}
         같은 주에 여러 번 잰 주는 「3회 중 1회」처럼 회차 단위로 적고(한 회차라도 인용되면 그 주는 인용),
         응답 수는 아래 줄에 합으로 적습니다. 「여러 주 인용」은 올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 붙입니다 — 단일 측정은
-        흔들립니다. 자주 잴수록 한 주가 인용으로 잡힐 기회가 늘어, 판단 옆에 회차 수를 함께 적습니다.
-        같은 주소 · 같은 올린 날을 여러 줄(자사 블로그 · 채널)에 적은 기록은 한 행으로 묶고 올린 곳을 함께 적습니다.
-        기존 글을 고쳤다고 남긴 글은 칸에 「고친 뒤」(고친 글을 본 측정) · 「고친 날 측정」(고치기 전후 불명)을 적습니다. 고친 날이 든
-        주는 칸 숫자가 그 주 올린 뒤 회차 전체이고, 꼬리에 고친 뒤 회차 몫만 따로 적습니다. 판단 칸에 고친 뒤 결과를 따로 적습니다 —
-        판단(여러 주 인용 등)은 올린 날 기준 그대로입니다.
+        흔들립니다. 자주 잴수록 한 주가 인용으로 잡힐 기회가 늘어, 판단 옆에 회차 수를 함께 적습니다.{' '}
+        {description === undefined ? APP_POST_NOTE : description}{' '}
         ◆는 직전 측정과 측정 조건(수집 엔진 · 판정 엔진 · 모델 · 질문지 · 반복 횟수)이 달라졌거나, 한쪽에만 기록이 있어 같은지 확인할 수
         없는(「… 기록 없음」) 주입니다 — 엔진이나 반복 횟수가 바뀌면 응답 수 자체가 달라져 숫자를 그대로 견줄 수 없고, 보정하지
         않았습니다. 해당 항목은 주차 머리글에 마우스를 올리면 보입니다.

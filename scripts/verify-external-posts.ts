@@ -13,6 +13,10 @@
  *
  * 색인 표시(index-checks.json)는 같은 주소 키로 앱 글 줄과 이어받는 것이 의도라(C15) 이 격리 검사 범위 밖이다.
  *
+ * 3단계 — 퍼포먼스 「앱 밖 글 인용 추적」 절(src/lib/useExternalHistory.ts · src/pages/Performance.tsx)은 jsdom과 가짜 fetch로 그린다.
+ * 웹(라우트 없음 404) · 앱 밖 글 0편이면 절을 숨기고(C19), 절이 있어도 나머지 화면(집행 핀 · 「집행」 칸 · 올린 글 표)은 한 글자도 바뀌지
+ * 않아야 한다. 머리말은 자사 인용률과 더해 보이는 말을 쓰지 않는다(C1). 앱 글로 옮긴 행은 「내림」이 아니라 「앱 글로 옮김(날짜)」이다(D12).
+ *
  *   npx tsx scripts/verify-external-posts.ts
  */
 import { spawn } from 'node:child_process'
@@ -22,6 +26,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import type { QuestionBank, RunMeta } from '../server/store'
 import type { QuestionRepeatAnalysis } from '../server/types'
+import type { ExternalHistory as ClientExternalHistory } from '../src/lib/api'
 import type { WeeklyScorecard } from '../src/prompts/b8-report'
 
 const checks: [string, boolean][] = []
@@ -105,6 +110,27 @@ ok(`정적 검사 — 측정 · 집계 · 원장 · 이력 · 보고서 · 실�
 const directLeaks = DIRECT_ROOTS.filter((r) => existsSync(path.resolve(repo, r))).filter((r) => importsOf(path.resolve(repo, r)).some((f) => newAbs.includes(f)))
 ok(`정적 검사 — 콘텐츠 보관함 · 질문 은행 화면은 앱 밖 글 모듈을 직접 불러오지 않는다${directLeaks.length ? `: ${directLeaks.join(', ')}` : ''}`, directLeaks.length === 0)
 ok('정적 검사 — 검사가 실제로 잡는다(서버 진입점의 닫힘에는 새 모듈이 있다)', newAbs.every((n) => closureOf('server/index.ts').has(n)))
+
+// 3단계 — 앱 밖 글 이력을 읽는 화면 hook. 화면 전용이라 서버 닫힘에는 없고, 퍼포먼스 화면만 불러온다.
+const hookAbs = path.resolve(repo, 'src/lib/useExternalHistory.ts')
+ok('정적 검사 — 3단계 hook(src/lib/useExternalHistory.ts)이 있다', existsSync(hookAbs))
+const hookLeaks = [
+  ...CLOSED_ROOTS.filter((r) => existsSync(path.resolve(repo, r)) && closureOf(r).has(hookAbs)),
+  ...DIRECT_ROOTS.filter((r) => existsSync(path.resolve(repo, r)) && importsOf(path.resolve(repo, r)).includes(hookAbs)),
+]
+ok(`정적 검사 — 측정 · 원장 · 보고서 · 실행 계획 · 앱 글 화면은 앱 밖 글 이력 hook을 불러오지 않는다${hookLeaks.length ? `: ${hookLeaks.join(', ')}` : ''}`, hookLeaks.length === 0)
+ok('정적 검사 — (대조) 퍼포먼스 화면의 닫힘에는 hook이 있다', closureOf('src/pages/Performance.tsx').has(hookAbs))
+{
+  // 퍼포먼스 본문(집행 핀 · 「집행」 칸 · 올린 글 표)은 원장 이력만 쓴다 — 앱 밖 글 이력은 그 아래 절 컴포넌트만 읽는다(본문 함수 밖).
+  const src = readFileSync(path.resolve(repo, 'src/pages/Performance.tsx'), 'utf-8')
+  const start = src.indexOf('function ExternalHistorySection(')
+  const end = src.indexOf('export default function Performance(')
+  const calls = [...src.matchAll(/useExternalHistory\(/g)].map((m) => m.index)
+  ok(
+    '정적 검사 — 퍼포먼스 본문은 앱 밖 글 이력을 읽지 않는다(hook은 본문 앞에 둔 앱 밖 글 절 컴포넌트에서 한 번만 부른다)',
+    start >= 0 && end > start && calls.length === 1 && calls.every((i) => i > start && i < end),
+  )
+}
 
 // ── 공용 가짜 데이터 ─────────────────────────────────────────────────────────────
 const answer = (questionId: string, startedAt: string, cites: string[] = [], extra: Partial<QuestionRepeatAnalysis> = {}) =>
@@ -190,6 +216,8 @@ const xRow = (id: string, url: string, key: string, over: Record<string, unknown
   ...over,
 })
 const xFile = (posts: unknown[], keyRule = 3) => JSON.stringify({ version: 1, keyRule, posts }, null, 2)
+/** 3) 인용 이력 검사가 만든 실제 응답(선을 넘는 모양 그대로) — 5) 퍼포먼스 절 검사가 화면에 넘긴다. */
+let uiFixture: { history: ClientExternalHistory; ids: Record<string, string> } | null = null
 
 try {
   const ext = await import('../server/externalPosts')
@@ -412,6 +440,7 @@ try {
   ]
   writeData(H, 'published-posts.json', JSON.stringify({ version: 1, keyRule: 3, posts: HLEDGER }, null, 2))
   const hist = await ext.getExternalHistory(histStore, tenantH, 12)
+  uiFixture = { history: JSON.parse(JSON.stringify(hist)) as ClientExternalHistory, ids }
   const rowOf = (id: string) => hist.posts.find((p) => p.post.id === id)
   const weekIndex = (w: string) => hist.weeks.findIndex((x) => x.weekOf === w)
   const cellOf = (id: string, w: string) => rowOf(id)?.cells[weekIndex(w)] ?? null
@@ -712,6 +741,243 @@ try {
   server.kill()
   await new Promise((r) => setTimeout(r, 800))
   rmSync(dir, { recursive: true, force: true })
+}
+
+// ── 5) 퍼포먼스 「앱 밖 글 인용 추적」 절(3단계) — 화면은 jsdom, 응답은 가짜 fetch ─────────────────────────────
+// 응답은 3)이 계산한 실제 이력(옮긴 행 · 내렸다 다시 올린 행 · 날짜 모름 포함)을 JSON으로 한 번 돌린 것이다(선을 넘는 모양 그대로).
+{
+  const realFetch = globalThis.fetch
+  try {
+    if (!uiFixture) throw new Error('3) 인용 이력 검사가 끝나지 않아 화면 검사를 하지 못했다')
+    const { history: XH, ids: xid } = uiFixture
+    const React = await import('react')
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { JSDOM } = await import('jsdom')
+    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://127.0.0.1/' })
+    // 화면 파일은 jsx 자동 변환을 전제로 하는데 tsx는 고전 변환으로 읽는다 — React를 전역에 둔다. react-dom/client는 읽을 때 DOM을 본다.
+    Object.assign(globalThis, { React, window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true })
+    const { createRoot } = await import('react-dom/client')
+    const { MemoryRouter } = await import('react-router-dom')
+    const { TenantContext } = await import('../src/context/tenant-context')
+    const { default: Performance } = await import('../src/pages/Performance')
+    const { default: PublishedHistoryTable } = await import('../src/components/PublishedHistoryTable')
+    const { loadExternalHistory } = await import('../src/lib/api')
+    const { externalMovedOf, ownedExternalHosts, useExternalHistory } = await import('../src/lib/useExternalHistory')
+    type TenantSummary = import('../src/lib/api').TenantSummary
+
+    // 가짜 fetch — 길(경로)마다 정한 응답. 정하지 않은 길은 Express · Vercel처럼 JSON이 아닌 404다.
+    type Reply = { status: number; body: unknown } | 'network'
+    let routes: Record<string, Reply> = {}
+    const asked: string[] = []
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      asked.push(url)
+      const reply = routes[url.split('?')[0]!] ?? { status: 404, body: 'Not Found' }
+      if (reply === 'network') throw new TypeError('fetch failed')
+      const json = typeof reply.body !== 'string'
+      return new Response(json ? JSON.stringify(reply.body) : String(reply.body), { status: reply.status, headers: { 'Content-Type': json ? 'application/json' : 'text/html' } })
+    }) as typeof fetch
+    const thrown = (p: Promise<unknown>) => p.then(() => null, (e: unknown) => (e instanceof Error ? e.message : String(e)))
+    const XPATH = '/api/external-history/vext-ui'
+
+    // (가) 읽기 — 웹 404만 null(기능 없음), 그 밖의 실패는 이유와 함께 throw
+    routes = { [XPATH]: { status: 404, body: 'Not Found' } }
+    ok('3단계 읽기 — 웹(라우트 없음 404)은 null', (await loadExternalHistory('vext-ui')) === null)
+    routes = { [XPATH]: { status: 404, body: { error: 'tenant not found: vext-ui' } } }
+    ok('3단계 읽기 — 브랜드가 없다는 404는 null이 아니라 오류', (await thrown(loadExternalHistory('vext-ui')))?.startsWith('tenant not found') === true)
+    routes = { [XPATH]: { status: 500, body: { error: '앱 밖 글 파일(external-posts.json)이 깨져 있어 읽지도 쓰지도 않았습니다: 가상' } } }
+    ok('3단계 읽기 — 500은 서버가 준 이유로 throw', (await thrown(loadExternalHistory('vext-ui')))?.includes('깨져 있어') === true)
+    routes = { [XPATH]: 'network' }
+    ok('3단계 읽기 — 서버에 닿지 못하면 throw', (await thrown(loadExternalHistory('vext-ui')))?.includes('닿지 못했습니다') === true)
+    routes = { [XPATH]: { status: 200, body: XH } }
+    const loaded = await loadExternalHistory('vext-ui', 52)
+    ok('3단계 읽기 — 200은 응답 그대로 · 주 수를 넘긴다', loaded?.posts.length === XH.posts.length && asked.at(-1) === `${XPATH}?weeks=52`)
+
+    // (나) hook — available은 웹(라우트 없음)에서만 false, 읽기 실패는 available true + error
+    const host = dom.window.document.getElementById('root')!
+    const root = createRoot(host)
+    const settle = () => React.act(async () => new Promise((r) => setTimeout(r, 30)))
+    let mountKey = 0
+    const mount = async (el: React.ReactElement) => {
+      mountKey += 1
+      await React.act(async () => root.render(React.createElement(React.Fragment, { key: mountKey }, el)))
+      await settle()
+      await settle()
+    }
+    const Probe = ({ tenantId }: { tenantId: string }) => {
+      const h = useExternalHistory(tenantId)
+      return React.createElement('pre', { id: 'probe' }, JSON.stringify({ available: h.available, loading: h.loading, error: h.error, posts: h.history?.posts.length ?? null }))
+    }
+    const probed = async (tenantId: string) => {
+      await mount(React.createElement(Probe, { tenantId }))
+      return JSON.parse(dom.window.document.getElementById('probe')?.textContent ?? 'null') as { available: boolean; loading: boolean; error: string | null; posts: number | null }
+    }
+    const askedBefore = asked.length
+    const none = await probed('')
+    ok('3단계 hook — 브랜드가 없으면(경쟁사 보기) 읽지 않고 available false', none.available === false && asked.length === askedBefore)
+    routes = { [XPATH]: { status: 404, body: 'Not Found' } }
+    const webState = await probed('vext-ui')
+    ok('3단계 hook — 웹 404면 available false · 불러오기 끝 · 오류 없음', webState.available === false && webState.loading === false && webState.error === null && webState.posts === null)
+    routes = { [XPATH]: { status: 500, body: { error: '가상 깨짐' } } }
+    const failState = await probed('vext-ui')
+    ok('3단계 hook — 읽기 실패는 available true · error에 이유', failState.available === true && failState.error === '가상 깨짐' && failState.posts === null)
+    routes = { [XPATH]: { status: 200, body: XH } }
+    const okState = await probed('vext-ui')
+    ok('3단계 hook — 200이면 이력 · available true', okState.available === true && okState.loading === false && okState.posts === XH.posts.length)
+
+    // (다) 옮김 · 자사 주소 — 화면이 쓰는 순수 함수
+    const rowOf = (id: string) => XH.posts.find((p) => p.post.id === id)!
+    const movedOf = externalMovedOf(XH)
+    const movedJson = (id: string) => JSON.stringify(movedOf(rowOf(id).post))
+    ok('3단계 옮김 — 앱 글로 옮긴 행은 옮긴 날 · 앱 글 표가 세기 시작한 날', movedJson(xid.moved!) === '{"movedOn":"2026-10-27","countsFrom":"2026-10-27"}')
+    ok('3단계 옮김 — 앱 글 올린 날이 옮긴 날보다 앞이면 세기 시작한 날이 앞선다', movedJson(xid.early!) === '{"movedOn":"2026-11-04","countsFrom":"2026-10-12"}')
+    ok('3단계 옮김 — 추적 중 · 날짜 모름 · 내린 · 다시 올린 행은 null', [xid.sameDay!, xid.noDate!, xid.repostOld!, xid.repostNew!].every((id) => movedOf(rowOf(id).post) === null))
+    const movedRow = rowOf(xid.moved!)
+    const removedFirst = (removedAt: string) => ({ ...XH, posts: [{ ...movedRow, external: { ...movedRow.external, state: 'removed' as const, removedAt, removedReason: 'taken-down' as const } }] })
+    ok('3단계 옮김 — 앱 글로 옮기기 전에 「글을 내림」으로 뺀 행은 내림 그대로(null)', externalMovedOf(removedFirst('2026-10-20T03:00:00.000Z'))(movedRow.post) === null)
+    ok('3단계 옮김 — 옮긴 뒤에 뺀 행은 옮김(칸을 끊은 까닭이 옮김)', externalMovedOf(removedFirst('2026-11-01T03:00:00.000Z'))(movedRow.post)?.movedOn === '2026-10-27')
+    const uiTenant: TenantSummary = {
+      tenantId: 'vext-ui',
+      brandName: '가상 스테이',
+      aliases: [],
+      ownedDomains: ['fake.tistory.com', 'blog.naver.com'],
+      industry: '숙박',
+      region: '가상시',
+      engines: ['gemini'],
+      questionBankSize: 2,
+      competitors: [],
+    }
+    const naverRow = { ...movedRow, post: { ...movedRow.post, url: 'https://blog.naver.com/fakeblog/224400000009' } }
+    ok(
+      '3단계 자사 주소 — 이 브랜드 자사 주소에 있는 글의 호스트만 · 여럿이 쓰는 플랫폼(blog.naver.com)은 자사 주소 칸에 있어도 뺀다(C2와 같은 규칙)',
+      JSON.stringify(ownedExternalHosts([...XH.posts, naverRow], uiTenant)) === '["fake.tistory.com"]',
+    )
+    ok('3단계 자사 주소 — 자사 주소가 아니면 빈 목록', ownedExternalHosts(XH.posts, { ...uiTenant, ownedDomains: ['other.example'] }).length === 0)
+
+    // (라) 성과 표 — 머리글 · 설명 · 옮긴 행. 기본(앱 글 표)은 그대로다.
+    const probeHistory = { ...XH, weeks: XH.weeks.map((w) => ({ ...w, responses: { ...w.responses, probe: 1 } })) }
+    const appHtml = renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: probeHistory }))
+    const extHtml = renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: probeHistory, header: '앱 밖 글', description: '가상 앱 밖 글 설명.', movedOf }))
+    const APP_ONLY = ['같은 주소 · 같은 올린 날을 여러 줄(자사 블로그 · 채널)에 적은 기록은', '기존 글을 고쳤다고 남긴 글은', '실증을 맡은 글(처치)']
+    ok('3단계 성과 표 기본 — 머리글 「올린 글」 · 앱 글 설명 그대로(묶기 · 고친 글 · 실증 처치)', appHtml.includes('<th>올린 글</th>') && APP_ONLY.every((s) => appHtml.includes(s)) && !appHtml.includes('가상 앱 밖 글 설명.'))
+    ok(
+      '3단계 성과 표 앱 밖 — 머리글 「앱 밖 글」 · 앱 글 전용 문장 대신 넘긴 설명 · 공통 문장(숫자 · 실증 · ◆)은 그대로',
+      extHtml.includes('<th>앱 밖 글</th>') &&
+        !extHtml.includes('<th>올린 글</th>') &&
+        APP_ONLY.every((s) => !extHtml.includes(s)) &&
+        extHtml.includes('가상 앱 밖 글 설명.') &&
+        extHtml.includes('숫자는 그 주소가 정확히 인용된') &&
+        extHtml.includes('「실증」은 점수에 넣지 않는') &&
+        extHtml.includes('◆는 직전 측정과'),
+    )
+    const rowsWith = (html: string, url: string) => html.split('<tr>').filter((s) => s.includes(`href="${url}"`))
+    const movedTr = rowsWith(extHtml, 'https://fake.tistory.com/h/4')[0] ?? ''
+    ok('3단계 옮긴 행 — 「앱 글로 옮김(10/27)」, 「내림」 · 「내린 뒤」 대신 옮긴 뒤 칸은 「앱 글 표에서」', movedTr.includes('앱 글로 옮김(10/27)') && !movedTr.includes('내림') && !movedTr.includes('내린 뒤') && movedTr.includes('앱 글 표에서'))
+    ok('3단계 (대조) 옮김을 넘기지 않으면 같은 행이 「10/27 내림」 — 위 검사는 movedOf가 바꾼 것이다', (rowsWith(appHtml, 'https://fake.tistory.com/h/4')[0] ?? '').includes('10/27 내림'))
+    const earlyTr = rowsWith(extHtml, 'https://fake.tistory.com/h/6')[0] ?? ''
+    ok('3단계 앱 글 올린 날이 앞선 행 — 옮긴 날과 앱 글 표가 세기 시작한 날을 함께 적는다', earlyTr.includes('앱 글로 옮김(11/4)') && earlyTr.includes('10/12부터 앱 글 표에서 셈'))
+    const repostTrs = rowsWith(extHtml, 'https://fake.tistory.com/h/3')
+    ok('3단계 내렸다 다시 올린 주소 — 두 행, 내린 행은 「10/10 내림」 · 「내린 뒤」 그대로', repostTrs.length === 2 && repostTrs.some((s) => s.includes('10/10 내림') && s.includes('내린 뒤') && !s.includes('앱 글로 옮김')))
+    const noAfter = { ...XH, posts: [{ ...movedRow, cells: movedRow.cells.map((c) => (c ? { ...c, afterRemoval: true } : c)) }] }
+    const noAfterHtml = renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: noAfter, header: '앱 밖 글', description: '', movedOf }))
+    ok('3단계 옮기기 전 측정이 없는 행 — 판단 칸은 「내림」이 아니라 「앱 글로 옮김」', noAfterHtml.includes('앱 글로 옮김 · 옮기기 전 판단할 측정 없음') && !noAfterHtml.includes('내림 · 올린 뒤'))
+
+    // (마) 퍼포먼스 화면 — 절을 숨기는 때 · 문구 · 나머지 화면은 그대로
+    const uiCard = (tenantId: string, weekOf: string, score: number) => ({
+      tenantId,
+      weekOf,
+      aeoScore: { current: score },
+      mentionRate: 0.2,
+      shareOfMention: 0.3,
+      avgRecommendationRank: 2,
+      factualityScore: 0.9,
+      brandOwnedCitationRate: 0.1,
+      judgeEngine: 'gemini',
+      hallucinationFlags: [],
+    })
+    const appPost = {
+      id: 'p-uiapp000001',
+      url: 'https://fake.tistory.com/app/1',
+      key: 'fake.tistory.com/app/1',
+      publishedOn: '2026-10-20',
+      publishedOnSource: 'user',
+      recordedAt: '2026-10-20T01:00:00.000Z',
+      articleId: 'content:a',
+      targetActionId: 'content:a',
+      via: 'own',
+      articleTitle: '가상 앱 글',
+    }
+    const baseRoutes = (): Record<string, Reply> => ({
+      '/api/scorecards/vext-ui': { status: 200, body: XH.weeks.map((w, i) => uiCard('vext-ui', w.weekOf, 20 + i)) },
+      '/api/scorecards/vext-comp': { status: 200, body: XH.weeks.map((w, i) => uiCard('vext-comp', w.weekOf, 30 + i)) },
+      '/api/published-history/vext-ui': { status: 200, body: { weeks: XH.weeks, posts: [{ post: appPost, cells: XH.weeks.map(() => null) }] } },
+    })
+    const ctx = (tenant: TenantSummary, viewing: TenantSummary | null) => ({
+      tenants: [tenant],
+      tenantId: viewing?.tenantId ?? tenant.tenantId,
+      setTenantId: () => {},
+      tenant: viewing ?? tenant,
+      customer: tenant,
+      viewing,
+      viewCompetitor: async () => {},
+      exitCompetitorView: () => {},
+      loading: false,
+      error: null,
+      reloadTenants: async () => [tenant],
+    })
+    const show = async (external: Reply, tenant = uiTenant, viewing: TenantSummary | null = null) => {
+      routes = { ...baseRoutes(), [XPATH]: external }
+      await mount(
+        React.createElement(
+          TenantContext.Provider,
+          { value: ctx(tenant, viewing) },
+          React.createElement(MemoryRouter, { initialEntries: ['/performance'] }, React.createElement(Performance)),
+        ),
+      )
+      return host.innerHTML
+    }
+    const HEAD = '앱 밖 글 인용 추적'
+    const sectionText = () => dom.window.document.getElementById('external')?.textContent ?? ''
+    const web = await show({ status: 404, body: 'Not Found' })
+    ok(
+      '3단계 (준비) 퍼포먼스 화면에 올린 글 표 · 집행 핀(앱 글 1편) · 「집행」 칸이 그려진다',
+      web.includes('올린 글 인용 추적') && (web.match(/class="exec-pin/g)?.length ?? 0) === 1 && web.includes('「가상 앱 글」') && web.includes('>집행</th>'),
+    )
+    ok('3단계 퍼포먼스 — 웹(라우트 없음 404)이면 절을 숨긴다', !web.includes(HEAD))
+    const empty = await show({ status: 200, body: { weeks: XH.weeks, posts: [] } })
+    ok('3단계 퍼포먼스 — 앱 밖 글 0편이면 절을 숨기고 화면이 웹과 한 글자도 다르지 않다', !empty.includes(HEAD) && empty === web)
+    const full = await show({ status: 200, body: XH })
+    const section = dom.window.document.getElementById('external')
+    ok(
+      '3단계 퍼포먼스 — 앱 밖 글이 있으면 올린 글 표 바로 아래에 절',
+      section?.querySelector('h3')?.textContent === HEAD && full.includes('id="published"') && full.indexOf('id="published"') < full.indexOf('id="external"'),
+    )
+    ok(
+      '3단계 퍼포먼스 머리말 — 이 브랜드 측정 답변 기준(C19) · 점수 · 집행 핀 · 보고서 · 실행 계획에는 넣지 않음',
+      sectionText().includes('이 브랜드 측정 답변 기준') && sectionText().includes('점수 · 집행 핀') && sectionText().includes('정기진단 보고서') && sectionText().includes('실행 계획에는 넣지 않습니다'),
+    )
+    ok(
+      '3단계 퍼포먼스 자사 주소 — 중립 문구(들어갈 수 있음 · 더하지 않음), 「이미 자사 인용률에 들어 있다」고 단정하지 않음(C1)',
+      sectionText().includes('fake.tistory.com') && sectionText().includes('자사 인용률에도 들어갈 수 있습니다') && sectionText().includes('둘을 더하지 않습니다') && !sectionText().includes('이미 자사 인용률'),
+    )
+    ok('3단계 퍼포먼스 — 절에 합계 줄이 없다(자사 인용 KPI와 더해 보이지 않게)', section?.querySelector('tfoot') === null && !sectionText().includes('합계'))
+    ok('3단계 퍼포먼스 — 표 머리글 「앱 밖 글」 · 옮긴 행 「앱 글로 옮김(10/27)」', section?.querySelector('th')?.textContent === '앱 밖 글' && sectionText().includes('앱 글로 옮김(10/27)'))
+    const rest = host.cloneNode(true) as HTMLElement
+    rest.querySelector('#external')?.remove()
+    ok('3단계 퍼포먼스 — 절을 빼면 나머지 화면(집행 핀 · 「집행」 칸 · 올린 글 표 · 스코어카드)이 웹과 한 글자도 다르지 않다', rest.innerHTML === web)
+    const broken = await show({ status: 500, body: { error: '앱 밖 글 파일(external-posts.json)이 깨져 있어 읽지도 쓰지도 않았습니다: 가상' } })
+    ok('3단계 퍼포먼스 — 앱 밖 글 파일이 깨졌으면 절에 이유를 보인다(조용히 숨기지 않는다)', broken.includes(HEAD) && sectionText().includes('앱 밖 글 기록: 앱 밖 글 파일(external-posts.json)이 깨져'))
+    await show({ status: 200, body: XH }, { ...uiTenant, ownedDomains: ['other.example'] })
+    ok('3단계 퍼포먼스 — 자사 주소 글이 없으면 자사 주소 문구가 없다', sectionText().includes(HEAD) && !sectionText().includes('자사 인용률에도'))
+    const askedComp = asked.length
+    const comp = await show({ status: 200, body: XH }, uiTenant, { ...uiTenant, tenantId: 'vext-comp', brandName: '가상 경쟁사' })
+    ok('3단계 퍼포먼스 — 경쟁사 보기에서는 앱 밖 글을 읽지도 보이지도 않는다', comp.includes('주간 스코어카드') && !comp.includes(HEAD) && !asked.slice(askedComp).some((u) => u.includes('/api/external-history/')))
+    await React.act(async () => root.unmount())
+  } catch (err) {
+    ok(`퍼포먼스 절 검사가 예외 없이 끝난다: ${err instanceof Error ? err.stack : String(err)}`, false)
+  } finally {
+    globalThis.fetch = realFetch
+  }
 }
 
 let failed = 0

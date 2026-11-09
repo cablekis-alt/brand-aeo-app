@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import PublishedHistoryTable from '../components/PublishedHistoryTable'
-import { loadCohortTrend, loadEngineTrend, type CohortTrendPoint, type EngineTrendPoint } from '../lib/api'
+import { loadCohortTrend, loadEngineTrend, type CohortTrendPoint, type EngineTrendPoint, type TenantSummary } from '../lib/api'
 import { useTenant } from '../context/useTenant'
 import { ENGINE_LABEL, formatPct, formatRank, judgeLabel, weekLabel } from '../lib/format'
 import { factFlagSummary } from '../lib/alerts'
 import { executionMarks, executionsPerSlot, postingLegend } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
+import { externalMovedOf, ownedExternalHosts, useExternalHistory } from '../lib/useExternalHistory'
 import { useRunHistory } from '../lib/useRunHistory'
 import RunTrendPanel from '../components/RunTrendPanel'
 import { kstStamp } from '../lib/runTrend'
@@ -36,6 +37,59 @@ function execCellText(row: { count: number; unsure: number } | undefined): strin
 
 function maxScore(history: WeeklyScorecard[]): number {
   return Math.max(100, ...history.map((card) => card.aeoScore.current))
+}
+
+/** 앱 밖 글 표 아래 설명 — 앱 글 표의 앱 글 전용 문장(실증 처치 · 올린 곳 묶기 · 고친 글) 자리에 들어간다. */
+const EXTERNAL_TABLE_NOTE =
+  '앱 밖 글은 올린 시각을 모릅니다 — 올린 날에 한 측정은 「전후 불명」으로 두고, 올린 날을 모르는 글은 올리기 전 · 뒤를 가리지 않습니다' +
+  '(「올린 날 모름」). 늦게 추적을 시작해도 지난 측정까지 거슬러 셉니다. 같은 글도 주소가 다르면(티스토리 숫자 주소와 제목 주소, 원본과 네이버 ' +
+  '사본) 따로 셉니다. 내렸다 다시 올린 주소는 올린 날마다 한 행입니다. 같은 브랜드에서 앱 글로 옮긴 주소는 앱 글 표가 세기 시작한 측정부터 ' +
+  '이 표에서 비웁니다(「앱 글 표에서」) — 두 표가 같은 측정을 두 번 세지 않습니다.'
+
+/**
+ * 앱 밖 글 인용 추적(2026-11-10 설계 · C1 · C19 · D12) — 앱에서 만들지 않은 글(발행 현황 「주소 한꺼번에 등록」에서 앱 밖 글로 추적한 주소).
+ * 앱 밖 글 이력은 이 절만 읽는다 — 아래 본문의 집행 핀 · 「집행」 칸 · 올린 글 표는 원장 이력만 쓴다(scripts/verify-external-posts.ts).
+ * 웹(라우트 없음) · 불러오는 중 · 앱 밖 글 0편이면 절을 숨긴다. 읽기에 실패하면 이유를 보인다(깨진 파일을 조용히 숨기지 않는다).
+ *
+ * 자사 주소에 있는 글이어도 「이미 자사 인용률에 들어 있다」고 말하지 않는다 — 자사 여부는 판정이 정하고(주소 일치가 아니다), 자사 주소로
+ * 등록한 때와 「지난 측정에도 적용」 여부에 따라 지난 측정에는 없을 수 있다(C1). 그래서 합계도 두지 않는다(브랜드 소유 출처 KPI와 더해 보이지 않게).
+ */
+function ExternalHistorySection({ tenant }: { tenant: TenantSummary }) {
+  const external = useExternalHistory(tenant.tenantId)
+  const h = external.history
+  const movedOf = useMemo(() => (h ? externalMovedOf(h) : undefined), [h])
+  const ownedDomains = tenant.ownedDomains
+  const owned = useMemo(
+    () => (h ? ownedExternalHosts(h.posts, { tenantId: tenant.tenantId, brandName: tenant.brandName, ownedDomains }) : []),
+    [h, tenant.tenantId, tenant.brandName, ownedDomains],
+  )
+  if (!external.available) return null
+  if (external.error) {
+    return (
+      <section id="external">
+        <h3>앱 밖 글 인용 추적</h3>
+        <p className="error">앱 밖 글 기록: {external.error}</p>
+      </section>
+    )
+  }
+  if (!h || h.posts.length === 0) return null
+  return (
+    <section id="external">
+      <h3>앱 밖 글 인용 추적</h3>
+      <p className="hint" style={{ marginTop: 0 }}>
+        앱에서 만들지 않은 글입니다(발행 현황 「주소 한꺼번에 등록」에서 앱 밖 글로 추적한 주소). 이 브랜드 측정 답변 기준으로, 측정마다 그
+        주소가 AI 답변에 인용됐는지 셉니다 — 같은 주소를 다른 브랜드에도 추적했으면 브랜드 화면마다 숫자가 다를 수 있습니다. 점수 · 집행 핀 ·
+        「집행」 칸 · 정기진단 보고서 · 실행 계획에는 넣지 않습니다.
+      </p>
+      {owned.length > 0 && (
+        <p className="hint">
+          이 표의 {owned.join(' · ')} 글은 지금 이 브랜드의 자사 주소에 있습니다. 자사 주소로 등록한 뒤의 측정에서는, 판정이 자사로 본 인용이
+          자사 인용률에도 들어갈 수 있습니다. 이 표는 그것과 따로 글 주소가 인용된 응답 수를 셉니다. 둘을 더하지 않습니다.
+        </p>
+      )}
+      <PublishedHistoryTable history={h} header="앱 밖 글" description={EXTERNAL_TABLE_NOTE} movedOf={movedOf} />
+    </section>
+  )
 }
 
 export default function Performance() {
@@ -393,6 +447,8 @@ export default function Performance() {
               )}
             </section>
           )}
+
+          {!viewing && tenant && <ExternalHistorySection tenant={tenant} />}
 
           {card.hallucinationFlags.length > 0 && (
             <section className="panel warn">
