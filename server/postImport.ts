@@ -47,7 +47,7 @@ import {
   type PostImportRead,
 } from '../src/lib/postImport.js';
 import { importRecordInput, normalizeDay, postedDayProblem, writerUnknownOf } from '../src/lib/postRegistration.js';
-import type { WriterPlan } from '../src/lib/probePlan.js';
+import { writerArticle, type WriterPlan } from '../src/lib/probePlan.js';
 import { ARTICLE_URL_REASON, isArticleUrl, todayKst, trackingKey } from '../src/lib/publishedUrl.js';
 import type { QuestionBank } from '../src/lib/types.js';
 import type { StoredDraft } from '../src/lib/api.js';
@@ -388,6 +388,7 @@ interface CorpusEntry {
   titleGrams: Set<string>;
   bodyGrams: Set<string>;
   writer: { key: string; name: string } | null;
+  bankUnknown: boolean;
   writerUnknown: boolean;
 }
 
@@ -470,6 +471,7 @@ async function tenantCorpus(t: TenantConfig, brand: string): Promise<CorpusEntry
       titleGrams: bigrams(text.title),
       bodyGrams: bigrams(text.body),
       writer: assigned ? { key: assigned.article.writer.key, name: assigned.article.writer.name } : null,
+      bankUnknown: assigned?.bankUnknown ?? false,
       writerUnknown,
     });
   }
@@ -608,6 +610,7 @@ export async function readPostForImport(rawUrl: unknown, tenants: TenantConfig[]
       body: round(body),
       titleScore: round(title),
       writer: d.writer,
+      bankUnknown: d.bankUnknown,
       writerUnknown: d.writerUnknown,
       otherUrls: ledger.otherUrls.get(`${d.tenantId}
 ${d.articleId}`) ?? 0,
@@ -824,8 +827,10 @@ async function commitOne(
   if (verdict.kind === 'already') return { ...base, status: 'existing' };
   if (verdict.kind === 'other') return fail(otherRecordMessage(verdict.record));
   const owner = await ownerContext(tenant.tenantId);
-  // 질문 은행 글(추가 글 정의가 없는 topic:)만 질문 은행으로 판을 본다(보관함 「올렸어요」와 같다).
-  const needsBank = item.articleId.startsWith('topic:') && !(owner.extras ?? []).some((e) => e.id === item.articleId);
+  // 배정 밖 질문 은행 글(추가 글 정의가 없고 배정에도 없는 topic:)만 질문 은행으로 판을 본다(보관함 「올렸어요」와 같다). 판 미확인 배정 글은
+  // 배정 파일의 판으로 적으므로 은행을 읽지 않는다.
+  const needsBank =
+    item.articleId.startsWith('topic:') && !(owner.extras ?? []).some((e) => e.id === item.articleId) && !writerArticle(owner.plan, item.articleId);
   const built = importRecordInput({
     plan: owner.plan,
     planUnreadable: owner.planUnreadable,

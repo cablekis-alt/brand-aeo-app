@@ -29,6 +29,7 @@ import type { QuestionBank } from './types'
  * 일 한 번이라 한 줄만 「글을 내렸어요」여도 그 편은 내린 것이고, 작성자 칸은 배정 판으로 쓴 기록(planArticleOf)만 올림으로 센다. 판을
  * 모르는 기록뿐이면 「올렸는지 미확인」으로 따로 보인다(0으로도 올림으로도 채우지 않는다). 보관함에서 적는 기록에는 추가 글 정의의 판을
  * 싣는다(libraryRecordTopic) — 콘텐츠 생성에서 적은 기록과 같은 판이 남아, 질문지 판이 바뀐 뒤에 적어도 두 화면의 수가 갈라지지 않는다.
+ * 판 미확인 글은 작성자 기록(주소 한꺼번에 등록 · CLI — src/lib/postRegistration.ts writerRecordInput)과 같이 배정 파일의 판을 싣는다.
  *
  * ── 짐작하지 않기 ───────────────────────────────────────────────────────────
  * 배정을 읽지 못했거나(깨진 파일 · 읽기 실패) 추가 글 목록을 읽지 못했으면(읽기 실패 · 깨진 목록) 묶지 않고 지금처럼 모든 글을 최근 순으로
@@ -47,8 +48,9 @@ export function recentFirst<D extends LibraryDraftLike>(drafts: readonly D[]): D
   return [...drafts].sort((a, b) => (b.editedAt ?? b.generatedAt).localeCompare(a.editedAt ?? a.generatedAt))
 }
 
-/** 「판 미확인」 표시의 풀이 — 글 카드의 툴팁 · 화면 읽기 프로그램 글자. */
-export const BANK_UNKNOWN_NOTE = '질문 은행에서 만든 글이라 어느 질문지 판으로 썼는지 모릅니다 — 배정 글 id라 이 작성자 칸에 둡니다.'
+/** 「판 미확인」 표시의 풀이 — 보관함 글 카드 · 주소 한꺼번에 등록 작성자 칸의 툴팁 · 화면 읽기 프로그램 글자. */
+export const BANK_UNKNOWN_NOTE =
+  '질문 은행에서 만든 글이라 어느 질문지 판으로 썼는지 모릅니다 — 배정 글 id라 그 작성자 글로 보고, 올린 주소는 배정 파일의 판으로 적습니다.'
 
 /** 「배정 밖 글」 고르기 값 — 작성자 키(영문 · 숫자 · _ · -)가 될 수 없는 글자로 둔다. */
 export const OUTSIDE_PICK = ':outside'
@@ -117,17 +119,45 @@ export function livePostsOf(plan: WriterPlan | null, posts: readonly LedgerPostL
   return { any: new Set(rows.map((r) => r.articleId)), planned, unsure }
 }
 
+type TopicDef = Pick<ExtraArticle, 'id' | 'bankVersion' | 'questionIds' | 'questionTexts'>
+
 /**
- * 보관함 「올렸어요」가 기록에 싣는 질문 스냅샷 — 추가 글 정의가 있으면 그 정의의 판 · 문장(콘텐츠 생성 recordInputOf와 같다), 없으면
- * 지금처럼 질문 은행으로 본다(topicSnapshotFor — 은행이 초안보다 나중이면 판 없음). 지금 은행으로만 보면 질문지 판이 바뀐 뒤에 적은
- * 배정 글 기록이 판 없음이 되어 발행 현황이 그 글을 「올렸는지 미확인」으로 센다. 추가 글 목록을 읽지 못했으면(null) 질문 은행으로.
+ * 배정 글의 기록에 싣는 질문 스냅샷 — 추가 글 정의가 있으면 그 정의의 판 · 문장, 없으면(판 미확인 — 질문 은행에서 만든 글) 배정 파일의
+ * 판 · 문장. 작성자 기록(src/lib/postRegistration.ts writerRecordInput — CLI · 주소 한꺼번에 등록)과 보관함 「올렸어요」가 이 한 식을 쓴다.
+ */
+export function writerTopicSnapshot(article: WriterPlanArticle, plan: WriterPlan, extras: readonly TopicDef[]): TopicSnapshot {
+  const def = extras.find((x) => x.id === article.id)
+  return def ? extraTopicSnapshot(def) : { bankVersion: plan.bankVersion, questionIds: [...article.questionIds], questionTexts: [...article.questionTexts] }
+}
+
+/**
+ * 배정 글(assignedArticle — 배정 판으로 만든 글 · 판 미확인 글)이면 작성자 기록과 같은 스냅샷(writerTopicSnapshot), 아니면(배정에 없음 · 다른
+ * 판으로 만든 글 · 배정이나 추가 글 목록이 없음) null. 보관함 「올렸어요」(libraryRecordTopic) · 질문 은행 「올렸어요」
+ * (src/pages/QuestionBank.tsx — null이면 지금처럼 질문 은행 판)가 이 식으로 배정 글을 가른다.
+ */
+export function assignedTopicSnapshot(plan: WriterPlan | null, extras: readonly TopicDef[] | null, articleId: string): TopicSnapshot | null {
+  if (!plan || !extras) return null
+  const assigned = assignedArticle(plan, new Map(extras.map((e) => [e.id, e])), articleId)
+  return assigned ? writerTopicSnapshot(assigned.article, plan, extras) : null
+}
+
+/**
+ * 보관함 「올렸어요」가 기록에 싣는 질문 스냅샷 — 배정 글(작성자 칸의 초안)은 주소 한꺼번에 등록 · CLI가 같은 글에 적는 작성자 기록과 같은
+ * 스냅샷(assignedTopicSnapshot — 추가 글 정의의 판 · 문장, 정의가 없으면(판 미확인) 배정 파일의 판 · 문장). 질문 은행 판을 실으면 같은 글이
+ * 적은 길에 따라 발행 현황 · 보관함 칸에서 올림 · 미확인 · 배정 밖으로 갈라진다. 그 밖에는 추가 글 정의가 있으면 그 정의의 판 · 문장(콘텐츠
+ * 생성 recordInputOf와 같다 — 다른 판으로 만든 글도), 없으면 지금처럼 질문 은행으로 본다(topicSnapshotFor — 은행이 초안보다 나중이면 판
+ * 없음). 추가 글 목록을 읽지 못했거나(null) 배정이 없거나 읽지 못했으면(null — 작성자 칸이 없다) · 초안이 없는 기록(주소만 남은 기록)이면
+ * 배정 글로 가르지 않는다.
  */
 export function libraryRecordTopic(
   articleId: string,
-  extras: readonly Pick<ExtraArticle, 'id' | 'bankVersion' | 'questionIds' | 'questionTexts'>[] | null,
+  extras: readonly TopicDef[] | null,
   bank: QuestionBank | null,
   draftGeneratedAt: string | undefined,
+  plan: WriterPlan | null,
 ): TopicSnapshot | undefined {
+  const assigned = draftGeneratedAt ? assignedTopicSnapshot(plan, extras, articleId) : null
+  if (assigned) return assigned
   const def = extras?.find((e) => e.id === articleId)
   return def ? extraTopicSnapshot(def) : topicSnapshotFor(articleId, bank, draftGeneratedAt)
 }

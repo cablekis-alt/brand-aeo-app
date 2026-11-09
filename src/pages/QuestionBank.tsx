@@ -8,6 +8,7 @@ import {
   loadActionStates,
   loadContentBriefs,
   loadContentDrafts,
+  loadExtraArticles,
   loadQuestionBank,
   saveActionState,
   tagQuestionBankStages,
@@ -16,10 +17,13 @@ import {
   type ActionStatus,
   type StoredBrief,
   type StoredDraft,
+  type TopicSnapshot,
 } from '../lib/api'
+import { assignedTopicSnapshot } from '../lib/contentLibraryOrder'
 import { effectiveDraft } from '../lib/draftGaps'
 import { recordOnlyHits, topicSnapshotFor, type GapAction } from '../lib/gapActions'
 import { draftTitle } from '../lib/markdownFile'
+import { writerArticle } from '../lib/probePlan'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
 import { useProbePlan } from '../lib/useProbePlan'
 import { STAGE_LABEL, stageOf } from '../lib/journeyStage'
@@ -154,7 +158,8 @@ export default function QuestionBankPage() {
   )
   const action = pickedQuestions.length > 0 ? actionFromQuestions(pickedQuestions) : null
   const savedStatus = action ? (states?.[action.id]?.status ?? 'todo') : 'todo'
-  const canRecord = published.available && states !== null
+  // 배정을 받은 뒤에 적는다 — 배정 글인지에 따라 기록에 싣는 질문 스냅샷이 다르다(아래 onRecord).
+  const canRecord = published.available && states !== null && probe.loaded
   const setStatus = async (status: ActionStatus) => {
     if (!tenant || !action) return
     const id = tenant.tenantId
@@ -420,7 +425,8 @@ export default function QuestionBankPage() {
                     <h4 style={{ margin: '12px 0 4px' }}>올린 곳</h4>
                     <p className="hint" style={{ marginTop: 0 }}>
                       이 글을 올린 주소와 올린 날, 겨냥한 질문을 기록해 둡니다 — 주차별 인용 결과는 이 기록으로 냅니다(결과 화면은
-                      다음 단계에서 붙습니다). 질문 은행 판은 이 초안을 쓸 때의 판이라고 확인될 때만 함께 남깁니다.
+                      다음 단계에서 붙습니다). 질문 은행 판은 이 초안을 쓸 때의 판이라고 확인될 때만 함께 남깁니다(작성자 배정 글은
+                      콘텐츠 보관함과 같은 배정 판으로 남깁니다).
                     </p>
                     <ExecutionStatusButtons label={action.title} status={savedStatus} onChange={(s) => void setStatus(s)} />
                     {statusError && <p className="error">{statusError}</p>}
@@ -434,6 +440,22 @@ export default function QuestionBankPage() {
                       busy={published.busy}
                       onRecord={async (url, publishedOn, chosen) => {
                         const stored = drafts[action.id]
+                        // 배정 글(작성자 배정에 있는 글 id)은 콘텐츠 보관함 · 주소 한꺼번에 등록 · CLI와 같은 질문 스냅샷 — 추가 글 정의의 판,
+                        // 정의가 없으면(판 미확인) 배정 파일의 판(src/lib/contentLibraryOrder.ts assignedTopicSnapshot). 지금 은행 판을 실으면
+                        // 같은 글이 적은 화면에 따라 발행 현황에서 올림 · 미확인 · 배정 밖으로 갈린다. 추가 글 목록을 읽지 못하면 어느 판인지
+                        // 가를 수 없어 적지 않는다(주소 한꺼번에 등록과 같다).
+                        let assigned: TopicSnapshot | null = null
+                        if (writerArticle(probe.plan, action.id)) {
+                          const unread = '추가 글 목록을 읽지 못해 이 글의 질문지 판을 확인하지 못했습니다 — 적지 않았습니다.'
+                          let listed: Awaited<ReturnType<typeof loadExtraArticles>>
+                          try {
+                            listed = await loadExtraArticles(tenant.tenantId)
+                          } catch (err) {
+                            return `${unread} (${err instanceof Error ? err.message : String(err)})`
+                          }
+                          if (!listed || listed.corrupt) return unread
+                          assigned = assignedTopicSnapshot(probe.plan, listed.articles, action.id)
+                        }
                         const r = await published.record({
                           url,
                           articleId: action.id,
@@ -444,8 +466,8 @@ export default function QuestionBankPage() {
                           publishedOn,
                           publishedOnChosen: chosen,
                           markDone: true,
-                          // 질문 id의 뜻은 은행 판마다 바뀐다 — 지금 은행이 이 초안을 쓸 때의 판일 때만 판 · 문장을 고정한다.
-                          topic: topicSnapshotFor(action.id, bank, stored?.generatedAt),
+                          // 질문 id의 뜻은 은행 판마다 바뀐다 — 배정 글이 아니면 지금 은행이 이 초안을 쓸 때의 판일 때만 판 · 문장을 고정한다.
+                          topic: assigned ?? topicSnapshotFor(action.id, bank, stored?.generatedAt),
                         })
                         if (!r.ok) return r.error
                         if (r.states) setStatesState((prev) => (prev && prev.key !== tenant.tenantId ? prev : { key: tenant.tenantId, value: r.states! }))

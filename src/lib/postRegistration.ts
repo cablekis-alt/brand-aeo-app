@@ -10,15 +10,16 @@
  *     질문 은행(src/lib/contentLibraryOrder.ts libraryRecordTopic)(libraryRecordInput).
  * 앱은 보관함과 같은 규칙으로 배정 글을 가린다(assignedArticle — 배정에 있고, 그 추가 글을 배정 판으로 만들었거나 추가 글 정의가 없다).
  * 추가 글 정의가 없는 배정 글(질문 은행에서 만든 글 — 보관함의 「판 미확인」)은 CLI와 같이 배정 파일의 스냅샷으로 작성자 기록을 적는다 — 두
- * 길이 같은 글에 같은 기록을 남긴다. CLI는 작성자 · 글을 사람이 적으므로 배정표의 글이면 작성자 기록이다(planRegistration — 예전 그대로).
- * 다른 판으로 만든 추가 글은 앱에서는 배정 밖(보관함 기록)이다.
+ * 길이 같은 글에 같은 기록을 남긴다. 보관함 · 질문 은행 「올렸어요」도 배정 글에는 같은 스냅샷을 싣는다(contentLibraryOrder.ts
+ * assignedTopicSnapshot — 줄은 그 화면 그대로 직접 줄). CLI는 작성자 · 글을 사람이 적으므로 배정표의 글이면 작성자 기록이다
+ * (planRegistration — 예전 그대로). 다른 판으로 만든 추가 글은 앱에서는 배정 밖(보관함 기록)이다.
  *
  * 서버가 import하므로 상대 import는 .js로 쓰고, DOM을 쓰는 모듈은 끌어오지 않는다(내려받기는 src/lib/fileDownload.ts).
  */
 import type { StoredDraft, TopicSnapshot } from './api.js'
-import { assignedArticle, libraryRecordTopic } from './contentLibraryOrder.js'
+import { assignedArticle, libraryRecordTopic, writerTopicSnapshot } from './contentLibraryOrder.js'
 import { effectiveDraft } from './draftGaps.js'
-import { extraTopicSnapshot, type ExtraArticle } from './extraArticles.js'
+import type { ExtraArticle } from './extraArticles.js'
 import { draftTitle } from './markdownFile.js'
 import type { WriterPlan, WriterPlanArticle } from './probePlan.js'
 import { ARTICLE_URL_REASON, isArticleUrl, trackingKey } from './publishedUrl.js'
@@ -122,10 +123,7 @@ export function writerRecordInput(args: {
   day: string
 }): WriterRegisterInput {
   const { article, plan, draft } = args
-  const def = args.extras.find((x) => x.id === article.id)
-  const topic = def
-    ? extraTopicSnapshot(def)
-    : { bankVersion: plan.bankVersion, questionIds: [...article.questionIds], questionTexts: [...article.questionTexts] }
+  const topic = writerTopicSnapshot(article, plan, args.extras)
   return {
     url: args.url,
     articleId: article.id,
@@ -142,6 +140,8 @@ export function writerRecordInput(args: {
 
 /** 배정 밖 글의 기록(콘텐츠 보관함 「올렸어요」와 같다). 추가 글 목록을 읽지 못했으면(null) 질문 은행으로 본다(보관함과 같다). */
 export function libraryRecordInput(args: {
+  /** 배정 — 없거나 읽지 못했으면 null(보관함과 같다). */
+  plan: WriterPlan | null
   articleId: string
   draft: StoredDraft
   extras: readonly ExtraArticle[] | null
@@ -149,7 +149,7 @@ export function libraryRecordInput(args: {
   url: string
   day: string
 }): RegisterInput {
-  const topic = libraryRecordTopic(args.articleId, args.extras, args.bank, args.draft.generatedAt)
+  const topic = libraryRecordTopic(args.articleId, args.extras, args.bank, args.draft.generatedAt, args.plan)
   return {
     url: args.url,
     articleId: args.articleId,
@@ -201,7 +201,7 @@ export function importRecordInput(args: {
   if (assigned && plan && extras) {
     return { input: writerRecordInput({ article: assigned.article, plan, draft: args.draft, extras, url: args.url, day: args.day }) }
   }
-  return { input: libraryRecordInput({ articleId, draft: args.draft, extras, bank: args.bank, url: args.url, day: args.day }) }
+  return { input: libraryRecordInput({ plan, articleId, draft: args.draft, extras, bank: args.bank, url: args.url, day: args.day }) }
 }
 
 /** CSV 한 줄의 기록 — addPublishedPost에 그대로 넘긴다. */

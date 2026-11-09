@@ -13,6 +13,7 @@
  */
 import {
   assignedArticle,
+  assignedTopicSnapshot,
   BANK_UNKNOWN_NOTE,
   libraryCount,
   libraryLayout,
@@ -329,7 +330,7 @@ const g = grouped(layout);
   // 질문지가 v10으로 올라간 뒤 — 은행이 초안보다 나중에 만들어졌다.
   const newerBank: QuestionBank = { version: 'v10', generatedAt: '2026-11-10T00:00:00.000Z', questions: [spec('q-001', '바뀐 가상 질문 1'), spec('q-002', '바뀐 가상 질문 2')] };
   const fullDefs = [{ id: A1.id, bankVersion: 'v9', questionIds: A1.questionIds, questionTexts: A1.questionTexts }];
-  const snap = libraryRecordTopic(A1.id, fullDefs, newerBank, dA1.generatedAt);
+  const snap = libraryRecordTopic(A1.id, fullDefs, newerBank, dA1.generatedAt, plan);
   ok(
     '기록 — 추가 글 정의가 있으면 그 정의의 판 · 문장(지금 은행이 아님)',
     same(snap, { bankVersion: 'v9', questionIds: A1.questionIds, questionTexts: A1.questionTexts }),
@@ -339,14 +340,81 @@ const g = grouped(layout);
   const after = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, posts: [...posts, recorded] }))?.sections[0];
   const st = buildTenantStatus({ tenantId: plan.tenantId, brand: '가상펜션', ownedDomains: [], posts: [...posts, recorded], plan, planUnreadable: false, checks: {} }).writers[0];
   ok('기록 — 그렇게 적은 기록은 질문지가 바뀐 뒤에도 보관함 · 발행 현황 모두 올림', after?.posted === 2 && after.unsure === 0 && st?.posted === 2 && st.unsure === 0);
-  ok('기록 — 정의가 없으면 지금처럼 질문 은행으로(은행이 초안보다 나중이면 판 없음)', libraryRecordTopic(C2.id, fullDefs, newerBank, dNoDef.generatedAt)?.bankVersion === null);
+  // 검토 반영(2026-11-09)으로 바뀐 기대 — 예전 기대 「정의가 없으면 질문 은행으로」는 판 미확인 배정 글(C2)로 보았다. 이제 배정에 없는 글만
+  // 질문 은행으로 보고(아래), 판 미확인 배정 글은 작성자 기록(주소 한꺼번에 등록 · CLI)과 같은 배정 파일의 판으로 적는다.
+  const qBank = (version: string, generatedAt: string): QuestionBank => ({
+    version,
+    generatedAt,
+    questions: ['q-001', 'q-002', 'q-006', 'q-007', 'q-008'].map((id) => spec(id, `${version} 가상 질문 ${id}`)),
+  });
+  ok(
+    '기록 — 배정에 없는 글은 정의가 없으면 지금처럼 질문 은행으로(은행이 초안보다 나중이면 판 없음)',
+    libraryRecordTopic('topic:q-007+q-008', fullDefs, qBank('v10', '2026-11-10T00:00:00.000Z'), dTopic.generatedAt, plan)?.bankVersion === null,
+  );
+  ok(
+    '기록 — 배정에 없는 글은 정의가 없고 은행이 초안보다 앞서면 그 은행의 판',
+    libraryRecordTopic('topic:q-007+q-008', fullDefs, qBank('v9', '2026-10-01T00:00:00.000Z'), dTopic.generatedAt, plan)?.bankVersion === 'v9',
+  );
   const olderBank: QuestionBank = { ...newerBank, version: 'v9', generatedAt: '2026-10-01T00:00:00.000Z' };
   ok(
-    '기록 — 정의가 없고 은행이 초안보다 앞서면 그 은행의 판',
-    same(libraryRecordTopic(A1.id, [], olderBank, dA1.generatedAt), { bankVersion: 'v9', questionIds: ['q-001', 'q-002'], questionTexts: ['바뀐 가상 질문 1', '바뀐 가상 질문 2'] }),
+    '기록 — 배정이 없는 브랜드는 정의가 없고 은행이 초안보다 앞서면 그 은행의 판 · 문장',
+    same(libraryRecordTopic(A1.id, [], olderBank, dA1.generatedAt, null), { bankVersion: 'v9', questionIds: ['q-001', 'q-002'], questionTexts: ['바뀐 가상 질문 1', '바뀐 가상 질문 2'] }),
   );
-  ok('기록 — 추가 글 목록을 못 읽었으면(null) 질문 은행으로', libraryRecordTopic(A1.id, null, newerBank, dA1.generatedAt)?.bankVersion === null);
-  ok('기록 — topic: 글이 아니면 스냅샷 없음', libraryRecordTopic('content:category-agnostic', fullDefs, olderBank, dMain.generatedAt) === undefined);
+  ok('기록 — 추가 글 목록을 못 읽었으면(null) 질문 은행으로', libraryRecordTopic(A1.id, null, newerBank, dA1.generatedAt, plan)?.bankVersion === null);
+  ok('기록 — topic: 글이 아니면 스냅샷 없음', libraryRecordTopic('content:category-agnostic', fullDefs, olderBank, dMain.generatedAt, plan) === undefined);
+  // 다른 판(v8)으로 만든 배정 글 id(C1 — 배정 밖 칸)는 지금처럼 그 정의의 판 · 문장이다(배정 파일의 판으로 바꾸지 않는다).
+  const c1Def = { id: C1.id, bankVersion: 'v8', questionIds: C1.questionIds, questionTexts: ['v8 가상 질문 하나', 'v8 가상 질문 둘'] };
+  ok(
+    '기록 — 다른 판으로 만든 배정 글 id는 지금처럼 그 정의의 판 · 문장(배정 파일의 판이 아님)',
+    same(libraryRecordTopic(C1.id, [...fullDefs, c1Def], qBank('v9', '2026-10-01T00:00:00.000Z'), dOldBank.generatedAt, plan), {
+      bankVersion: 'v8',
+      questionIds: C1.questionIds,
+      questionTexts: c1Def.questionTexts,
+    }),
+  );
+
+  // 판 미확인 배정 글(C2 — 정의 없음)의 「올렸어요」 — 작성자 칸에 둔 글이므로 주소 한꺼번에 등록 · CLI(src/lib/postRegistration.ts
+  // writerRecordInput)와 같은 배정 파일의 판 · 문장을 싣는다. 질문 은행이 초안보다 나중(판 없음)이든, 초안보다 앞선 다른 판(v10)이든 같다.
+  const planSnap = { bankVersion: 'v9', questionIds: C2.questionIds, questionTexts: C2.questionTexts };
+  const unknownSnaps = [qBank('v10', '2026-11-10T00:00:00.000Z'), qBank('v9', '2026-10-01T00:00:00.000Z'), qBank('v10', '2026-10-01T00:00:00.000Z'), null].map((b) =>
+    libraryRecordTopic(C2.id, fullDefs, b, dNoDef.generatedAt, plan),
+  );
+  ok('기록 — 판 미확인 배정 글은 배정 파일의 판 · 문장(작성자 기록과 같다 — 질문 은행과 상관없이)', unknownSnaps.every((s) => same(s, planSnap)), JSON.stringify(unknownSnaps));
+  ok(
+    '기록 — 초안이 없는 기록(주소만 남은 기록 — 작성자 칸에 없는 글)은 지금처럼 판 없음',
+    libraryRecordTopic(C2.id, fullDefs, qBank('v9', '2026-10-01T00:00:00.000Z'), undefined, plan)?.bankVersion === null,
+  );
+  ok('기록 — 배정이 없거나 못 읽었으면(null) 배정 글 id라도 질문 은행으로(작성자 칸이 없다)', libraryRecordTopic(C2.id, fullDefs, qBank('v9', '2026-10-01T00:00:00.000Z'), dNoDef.generatedAt, null)?.bankVersion === 'v9');
+  const c2Recorded = post(C2.id, { key: 'c2', version: unknownSnaps[0]?.bankVersion ?? null });
+  const w3After = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, posts: [...posts, c2Recorded] }))?.sections.find((s) => s.pick === 'w3');
+  const w3Status = buildTenantStatus({ tenantId: plan.tenantId, brand: '가상펜션', ownedDomains: [], posts: [...posts, c2Recorded], plan, planUnreadable: false, checks: {} }).writers.find(
+    (w) => w.key === 'w3',
+  );
+  ok(
+    '기록 — 그렇게 적은 판 미확인 글 기록은 보관함 w3 칸 · 발행 현황 모두 올림 1(미확인 아님 — 앱 등록 · CLI로 적은 것과 같은 셈)',
+    w3After?.posted === 1 && w3After.unsure === 0 && w3Status?.posted === 1 && w3Status.unsure === 0,
+    JSON.stringify({ lib: w3After && [w3After.posted, w3After.unsure], status: w3Status && [w3Status.posted, w3Status.unsure] }),
+  );
+
+  // 질문 은행 「올렸어요」(src/pages/QuestionBank.tsx)도 배정 글에는 같은 스냅샷(assignedTopicSnapshot) — 배정 글이 아니면(배정에 없음 · 다른
+  // 판으로 만든 글 · 배정이나 추가 글 목록이 없음) null이라 화면은 지금처럼 질문 은행 판을 싣는다.
+  const withC1 = [...fullDefs, c1Def];
+  ok(
+    '질문 은행 기록 — 판 미확인 배정 글은 보관함 「올렸어요」와 같은 배정 파일의 판 · 문장',
+    same(assignedTopicSnapshot(plan, withC1, C2.id), planSnap) && same(assignedTopicSnapshot(plan, withC1, C2.id), libraryRecordTopic(C2.id, withC1, qBank('v10', '2026-10-01T00:00:00.000Z'), dNoDef.generatedAt, plan)),
+    JSON.stringify(assignedTopicSnapshot(plan, withC1, C2.id)),
+  );
+  ok(
+    '질문 은행 기록 — 배정 판으로 만든 배정 글은 그 정의의 판 · 문장',
+    same(assignedTopicSnapshot(plan, withC1, A1.id), { bankVersion: 'v9', questionIds: A1.questionIds, questionTexts: A1.questionTexts }),
+  );
+  ok(
+    '질문 은행 기록 — 다른 판으로 만든 글 · 배정에 없는 글 · 배정이나 추가 글 목록이 없으면 null(지금처럼 질문 은행 판)',
+    assignedTopicSnapshot(plan, withC1, C1.id) === null &&
+      assignedTopicSnapshot(plan, withC1, 'topic:q-007+q-008') === null &&
+      assignedTopicSnapshot(null, withC1, C2.id) === null &&
+      assignedTopicSnapshot(plan, null, C2.id) === null,
+  );
 }
 
 // ── 배정 밖 글이 없으면 그 칸도 없다 ─────────────────────────────────────────

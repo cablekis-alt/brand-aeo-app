@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { commitPostImport, listImportBlogPosts, loadBlogSources, readImportPost, saveBlogSources } from '../lib/api'
+import { BANK_UNKNOWN_NOTE } from '../lib/contentLibraryOrder'
 import {
   autoPick,
   checkedByDefault,
@@ -594,7 +595,17 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                             />
                           </td>
                           <td>{candidate?.brand ?? '—'}</td>
-                          <td className={candidate?.writer ? undefined : 'muted'}>{candidate ? writerText(candidate) : '—'}</td>
+                          <td className={candidate?.writer ? undefined : 'muted'}>
+                            {candidate ? writerText(candidate) : '—'}
+                            {/* 판 미확인 — 질문 은행에서 만든 배정 글. 등록하면 배정 파일의 판으로 적으므로 보관함 작성자 칸과 같은 표시를 단다. */}
+                            {candidate?.bankUnknown && (
+                              <span className="pi-sub-line">
+                                <span className="chip warn" title={BANK_UNKNOWN_NOTE}>
+                                  판 미확인<span className="sr-only"> — {BANK_UNKNOWN_NOTE}</span>
+                                </span>
+                              </span>
+                            )}
+                          </td>
                           <td>
                             {ok ? (
                               <>

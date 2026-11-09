@@ -236,9 +236,10 @@ export default function ContentLibrary() {
           busy={published.busy}
           targetLabel={postChannelLabel}
           onRecord={async (url, publishedOn, chosen) => {
-            // 추가 글은 그 정의의 판 · 문장을 싣는다(콘텐츠 생성과 같은 판 — 발행 현황이 작성자 글로 센다). 정의가 없으면 질문 은행으로
-            // 보고, 초안이 없는 기록(stored 없음)은 쓸 때의 시각을 몰라 id만 남는다.
-            const topic = libraryRecordTopic(articleId, extras?.list ?? null, bank, stored?.generatedAt)
+            // 추가 글은 그 정의의 판 · 문장을 싣는다(콘텐츠 생성과 같은 판 — 발행 현황이 작성자 글로 센다). 판 미확인 배정 글(작성자 칸의
+            // 정의 없는 글)은 주소 한꺼번에 등록 · CLI와 같은 배정 파일의 판, 그 밖에 정의가 없으면 질문 은행으로 보고, 초안이 없는
+            // 기록(stored 없음)은 쓸 때의 시각을 몰라 id만 남는다.
+            const topic = libraryRecordTopic(articleId, extras?.list ?? null, bank, stored?.generatedAt, probe.plan)
             const r = await published.record({
               url,
               articleId,

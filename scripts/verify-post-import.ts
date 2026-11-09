@@ -538,6 +538,7 @@ try {
     body,
     titleScore: 0.5,
     writer: null,
+    bankUnknown: false,
     writerUnknown: false,
     otherUrls: 0,
   })
@@ -749,6 +750,36 @@ try {
       JSON.stringify(appNoDef.input.topic) === JSON.stringify({ bankVersion: 'v9', questionIds: A1.questionIds, questionTexts: A1.questionTexts }),
     { cli: cliNoDef.items[0]?.input, app: appNoDef },
   )
+  // 같은 판 미확인 글을 콘텐츠 보관함 「올렸어요」(libraryRecordInput — 보관함과 같은 질문 스냅샷 식)로 적어도 판이 같아야 한다. 질문 은행 판(v3)을
+  // 실으면 같은 글을 앱 등록 · CLI로 적었을 때와 발행 현황 · 보관함 칸의 셈이 갈라진다. 줄은 보관함 그대로 직접 줄이다.
+  const libNoDef = pr.libraryRecordInput({ plan, articleId: A1.id, draft: DRAFT_A1, extras: extrasNoA1, bank: BANK, url: A1_URL, day: '2026-11-01' })
+  ok(
+    '보관함 「올렸어요」 — 판 미확인 배정 글은 앱 등록 · CLI와 같은 질문 스냅샷(배정 파일 v9 — 질문 은행 v3이 아님) · 직접 줄',
+    libNoDef.via === 'direct' && 'input' in appNoDef && JSON.stringify(libNoDef.topic) === JSON.stringify(appNoDef.input.topic),
+    { lib: libNoDef.topic, app: 'input' in appNoDef ? appNoDef.input.topic : appNoDef },
+  )
+  // 한 규칙 — 세 길(콘텐츠 보관함 「올렸어요」가 부르는 libraryRecordTopic · CLI planRegistration · 주소 한꺼번에 등록 importRecordInput)이 같은
+  // 글에 같은 질문 스냅샷을 싣는다. 판 미확인 배정 글은 배정 파일의 판(v9), 배정 판으로 만든 글은 그 정의의 판, 다른 판(v8)으로 만든 글은
+  // 예전 그대로 그 정의의 판이다(앱에서는 배정 밖 · CLI는 작성자 기록이지만 스냅샷은 같다). 질문 은행(v3)이 초안보다 앞서도 은행을 싣지 않는다.
+  const { libraryRecordTopic } = await import('../src/lib/contentLibraryOrder')
+  const snapOf = (a: typeof A1, version: string) => ({ bankVersion: version, questionIds: a.questionIds, questionTexts: a.questionTexts })
+  const threeWays = [
+    { label: '판 미확인(정의 없음) 배정 글', article: A1, writer: 'w1', defs: extrasNoA1, draft: DRAFT_A1, want: snapOf(A1, 'v9') },
+    { label: '배정 판(v9)으로 만든 배정 글', article: A1, writer: 'w1', defs: extras, draft: DRAFT_A1, want: snapOf(A1, 'v9') },
+    { label: '다른 판(v8)으로 만든 글', article: A2, writer: 'w2', defs: extras, draft: DRAFT_A2, want: snapOf(A2, 'v8') },
+  ]
+  for (const c of threeWays) {
+    const url = `${FIX}/post/three-ways`
+    const lib = libraryRecordTopic(c.article.id, c.defs, BANK, c.draft.generatedAt, plan)
+    const cliRun = reg.planRegistration({ plan, drafts: DRAFTS_A, extras: c.defs, posts: [], rows: [{ line: 2, writer: c.writer, article: c.article.id, url, postedOn: '2026-11-01' }], today })
+    const app = pr.importRecordInput({ plan, planUnreadable: false, extras: c.defs, bank: BANK, draft: c.draft, articleId: c.article.id, url, day: '2026-11-01' })
+    const want = JSON.stringify(c.want)
+    ok(
+      `한 규칙 — ${c.label}: 보관함 「올렸어요」 = CLI = 주소 한꺼번에 등록의 질문 스냅샷`,
+      JSON.stringify(lib) === want && JSON.stringify(cliRun.items[0]?.input.topic) === want && 'input' in app && JSON.stringify(app.input.topic) === want,
+      { lib, cli: cliRun.items[0]?.input.topic ?? cliRun.errors, app },
+    )
+  }
   ok('올린 날 검사 — 오늘 뒤 · 너무 이른 날은 CLI와 같은 문구', pr.postedDayProblem('2999-01-01', today)?.includes('오늘') === true && pr.postedDayProblem('2019-12-31', today)?.includes('너무 이릅니다') === true && pr.postedDayProblem('2026-11-01', today) === null)
 
   // ── 8. 내부 주소 막기(이 프로세스 — 시험 깃발 없음) ─────────────────────────
@@ -864,6 +895,12 @@ try {
     '읽기 — 추가 글 정의가 없는 배정 글(판 미확인): 「맞음」 · 그 작성자(w2 — 보관함 작성자 칸 · 등록 기록과 같다)',
     ra3.ok && stateOf(ra3) === 'match' && ra3.candidates[0]!.articleId === A3.id && ra3.candidates[0]!.writer?.key === 'w2' && ra3.candidates[0]!.writerUnknown === false,
     ra3,
+  )
+  // 등록하면 배정 파일의 판으로 적으므로 화면이 「판 미확인」을 함께 보인다(보관함 작성자 칸의 표시와 같다).
+  ok(
+    '읽기 — 판 미확인 배정 글 후보만 「판 미확인」(판을 아는 배정 글 · 다른 판으로 만든 글은 아님)',
+    ra3.ok && ra3.candidates[0]!.bankUnknown === true && ra1.ok && ra1.candidates[0]!.bankUnknown === false && ra2.ok && ra2.candidates[0]!.bankUnknown === false,
+    { a3: ra3.ok && ra3.candidates[0], a1: ra1.ok && ra1.candidates[0], a2: ra2.ok && ra2.candidates[0] },
   )
   const rb1 = (await read(`${FIX}/post/b1-euckr`)).body
   ok('읽기 — EUC-KR 페이지(머리글에 charset 없음, meta로) · 다른 브랜드 글 · 날짜 모름(null)', rb1.ok && stateOf(rb1) === 'match' && rb1.candidates[0]!.tenantId === 'vpi-b' && rb1.post.title === '바다 전망 여관' && rb1.post.publishedOn === null, rb1)
@@ -1055,6 +1092,13 @@ try {
       ledgerOf('vpi-b').posts.some((p) => p.url === `${FIX}/post/b1-copy`),
     partial,
   )
+  // 판 미확인 배정 글(A3)은 배정 파일의 스냅샷으로 적으므로 질문 은행을 읽지 않는다 — 은행 파일이 잠겨 있어도 걸리지 않는다(위의 Q5처럼
+  // 배정 밖 질문 은행 글만 은행을 읽는다).
+  const a3Again = await sp.commitPostImport({ items: [{ tenantId: 'vpi-a', articleId: A3.id, url: `${FIX}/post/a3-again`, publishedOn: '2026-11-05' }] }, inProcTenants, throwingBank).then(
+    (r) => r,
+    (err: unknown) => `요청 전체가 실패함: ${err instanceof Error ? err.message : String(err)}`,
+  )
+  ok('등록 — 판 미확인 배정 글은 질문 은행을 읽지 않는다(은행 파일이 잠겨 있어도 등록)', typeof a3Again !== 'string' && a3Again.results[0]?.status === 'added', a3Again)
 } catch (err) {
   ok('예외 없이 끝남', false, err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err))
 } finally {

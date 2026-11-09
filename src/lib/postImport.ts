@@ -642,6 +642,8 @@ export interface ImportCandidate {
   titleScore: number
   /** 작성자(콘텐츠 보관함 규칙 — 배정에 있고, 그 추가 글을 배정 판으로 만들었거나 추가 글 정의가 없다(판 미확인)). 배정 밖 글이면 null. */
   writer: { key: string; name: string } | null
+  /** 판 미확인 — 추가 글 정의가 없는 배정 글(질문 은행에서 만든 글). 어느 질문지 판으로 썼는지 모르지만 등록하면 배정 파일의 판으로 적는다. */
+  bankUnknown: boolean
   /** 배정이나 추가 글 목록을 읽지 못해 작성자를 모른다(「미확인」). */
   writerUnknown: boolean
   /** 이 글의 자사 · 직접 줄에 이미 적힌 다른 주소 수 — 0이 아니면 같은 글을 또 올렸는지 확인하게 알린다(그래도 더할 수 있다). */
