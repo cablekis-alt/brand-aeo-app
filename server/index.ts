@@ -2712,8 +2712,9 @@ app.get('/api/publish-status', async (_req, res) => {
 });
 
 // 색인 확인 표시 — { engine: 'naver' | 'google', state: 'shown' | 'not-yet' | null }(server/indexChecks.ts). null은 미확인으로 되돌린다.
-// 고객 브랜드의 원장에 있는 기록만 받는다(경쟁사 · 없는 기록은 404, 본문이 틀리면 400, 내린 · 뺀 글은 409, 파일이 깨졌으면 500 — 쓰지
-// 않는다). 같은 주소를 적은 다른 고객 브랜드의 기록도 이어받는다(범위 변형 두 브랜드에 같은 글).
+// 고객 브랜드의 원장에 있는 기록 · 살아 있는 앱 밖 글 줄(x- id)만 받는다(경쟁사 · 없는 기록은 404, 본문이 틀리면 400, 내린 · 뺀 · 앱 글로
+// 옮긴 줄은 409, 파일이 깨졌으면 500 — 쓰지 않는다). 같은 주소를 적은 다른 고객 브랜드의 기록도 이어받는다(범위 변형 두 브랜드에 같은 글 ·
+// 같은 주소의 앱 글 줄과 앱 밖 줄).
 app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
   const tenants = await loadRuntimeTenants();
   const tenant = tenants.find((t) => t.tenantId === req.params.tenantId);
@@ -2725,7 +2726,7 @@ app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
   try {
     res.json(await setIndexCheck(tenant.tenantId, req.params.postId, req.body, others));
   } catch (err) {
-    const status = err instanceof IndexChecksError || err instanceof PublishedPostsError ? err.status : 500;
+    const status = err instanceof IndexChecksError || err instanceof PublishedPostsError || err instanceof ExternalPostsError ? err.status : 500;
     res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
@@ -2804,8 +2805,10 @@ app.get('/api/external-history/:tenantId', async (req, res) => {
 });
 
 // 주소 한꺼번에 등록(server/postImport.ts) — 작성자들이 보낸 글 주소 · 저장한 블로그의 새 글을 읽어 고객 브랜드의 앱 글과 짝짓고, 사람이
-// 확인한 줄을 원장에 적는다(「올렸어요」와 같은 길). 데스크톱·로컬 전용이다(Vercel 함수는 12/12 — 웹은 404를 「데스크톱 앱에서만」으로
-// 읽는다). 바깥 페이지는 내부 주소를 막은 읽기로만 받는다. 오류: 400 요청 모양 · 글 주소 아님 · 저장하지 않은 블로그, 500 파일이 깨짐.
+// 확인한 줄을 원장에 적는다(「올렸어요」와 같은 길). 앱에서 만들지 않은 글은 앱 밖 글 목록(server/externalPosts.ts)이나 무시 목록
+// (server/postImportIgnored.ts)에 적는다 — 원장은 바꾸지 않는다. 데스크톱·로컬 전용이다(Vercel 함수는 12/12 — 웹은 404를 「데스크톱
+// 앱에서만」으로 읽는다). 바깥 페이지는 내부 주소를 막은 읽기로만 받는다. 오류: 400 요청 모양 · 글 주소 아님 · 저장하지 않은 블로그, 500 파일이
+// 깨짐.
 function sendImportError(res: import('express').Response, err: unknown) {
   const status = err instanceof PostImportError ? err.status : 500;
   res.status(status).json({ error: err instanceof Error ? err.message : String(err) });

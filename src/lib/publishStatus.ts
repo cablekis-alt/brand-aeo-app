@@ -23,9 +23,18 @@
  * 올린 뒤 3 · 7 · 14일째에 다시 본다. 그날이 지났는데 그날 이후에 본 기록이 없고 노출 · 색인도 아니면 「오늘 다시 볼 글」이다. 14일째에 보고도
  * 아직이면 「14일 지남」으로 둔다.
  *
+ * ── 앱 밖 글 줄(2026-11-10) ──────────────────────────────────────────────────
+ * 앱에서 만들지 않은 글(손글 — src/lib/externalPosts.ts · data/<tenant>/external-posts.json)도 한 줄로 보인다(origin 'external'). 원장과 따로
+ * 읽어 넘기므로 작성자 진행(배정 글 · 원장 줄만 센다)은 그대로다. 작성자 칸은 「앱 밖 글」 — 배정 파일을 못 읽어도 「미확인」이 아니다(C12).
+ * 다시 볼 날은 올린 날과 추적을 시작한 날 가운데 늦은 날부터 센다(recheckFrom — 오래된 손글이 등록하자마자 「14일 지남」으로 쏟아지지 않게,
+ * D4. 올린 날을 모르면 추적을 시작한 날부터). 같은 브랜드에 앱 글로 옮긴 줄은 「앱 글로 옮김」으로 쉰다(뺀 글처럼 — D12). 색인 표시는 주소의
+ * 상태라 같은 주소 키의 앱 글 줄과 서로 이어받는다(C15). 요약은 같은 주소가 어느 브랜드에서든 앱 글이면 앱 글로 센다(앱 글 a + 앱 밖 b =
+ * 올린 글).
+ *
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다.
  */
-import { todayKst } from './publishedUrl.js'
+import type { ExternalPostView } from './externalPosts.js'
+import { kstDate, todayKst } from './publishedUrl.js'
 import { planWriters, writerArticle, type PlanWriter, type WriterPlan, type WriterPlanArticle } from './probePlan.js'
 
 export const INDEX_CHECKS_FORMAT = 'index-checks/1'
@@ -111,21 +120,38 @@ const PLATFORMS: { key: Exclude<PlatformKey, 'owned' | 'other'>; label: string; 
 /** 자사 주소 칸(「site.example」 · 「https://site.example/」 모양)의 호스트. */
 const ownedHost = (raw: string) => raw.trim().toLowerCase().replace(/^https?:\/\//, '').split(/[/?#:]/)[0]!.replace(/^www\./, '').replace(/\.$/, '')
 
-/** 올린 주소의 플랫폼 — 알려진 플랫폼 → 브랜드 자사 사이트(하위 도메인 포함) → 그 밖(호스트). http(s) 주소가 아니면 null. */
-export function platformOf(url: string, ownedDomains: readonly string[]): Platform | null {
-  let host: string
+/** http(s) 주소의 호스트(소문자 · www. 뗌). 주소가 아니면 null. */
+function hostOfUrl(url: string): string | null {
   try {
     const u = new URL(url.trim())
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return null
-    host = u.hostname.toLowerCase().replace(/^www\./, '')
+    return u.hostname.toLowerCase().replace(/^www\./, '')
   } catch {
-    // 주소로 읽히지 않는 값 — 플랫폼을 모른다.
+    // 주소로 읽히지 않는 값 — 호스트를 모른다.
     return null
   }
+}
+
+const ownedBy = (host: string, ownedDomains: readonly string[]) => ownedDomains.some((d) => ownedHost(d) && under(host, ownedHost(d)))
+
+/** 올린 주소의 플랫폼 — 알려진 플랫폼 → 브랜드 자사 사이트(하위 도메인 포함) → 그 밖(호스트). http(s) 주소가 아니면 null. */
+export function platformOf(url: string, ownedDomains: readonly string[]): Platform | null {
+  const host = hostOfUrl(url)
+  if (host === null) return null
   const known = PLATFORMS.find((p) => p.test(host))
   if (known) return { key: known.key, label: known.label }
-  if (ownedDomains.some((d) => ownedHost(d) && under(host, ownedHost(d)))) return { key: 'owned', label: '자사 사이트' }
+  if (ownedBy(host, ownedDomains)) return { key: 'owned', label: '자사 사이트' }
   return { key: 'other', label: host }
+}
+
+/**
+ * 주소가 이 브랜드의 자사 주소 칸(하위 도메인 포함)에 드는가 — 알려진 플랫폼을 먼저 보지 않는다(platformOf와 다르다: 티스토리 블로그를
+ * 자사 주소로 넣은 브랜드면 그 블로그 글도 자사 주소다). 앱 밖 글을 붙일 브랜드를 미리 고를 때 쓴다(src/lib/postImport.ts ownedBrandsOf — 여럿이
+ * 함께 쓰는 플랫폼 호스트는 그쪽이 뺀다). http(s) 주소가 아니면 false.
+ */
+export function ownedUrl(url: string, ownedDomains: readonly string[]): boolean {
+  const host = hostOfUrl(url)
+  return host !== null && ownedBy(host, ownedDomains)
 }
 
 // ── 한 편으로 묶기 ───────────────────────────────────────────────────────────
@@ -146,6 +172,10 @@ export interface LedgerPostLike {
 }
 
 export type RemovedReason = 'mistake' | 'taken-down'
+/** 표의 줄이 빠진 까닭 — 원장 · 앱 밖 글의 빼기(mistake · taken-down)와, 같은 브랜드에 앱 글로 옮겨 쉬는 앱 밖 줄(moved — at은 옮긴 한국 날짜). */
+export type RowRemovedReason = RemovedReason | 'moved'
+/** 줄의 출처 — app 원장(앱 글), external 앱 밖 글(src/lib/externalPosts.ts). */
+export type RowOrigin = 'app' | 'external'
 
 export interface Posting<P extends LedgerPostLike = LedgerPostLike> {
   /** 대표 줄 — 살아 있는 편은 가장 이른 올린 날의 줄. */
@@ -267,7 +297,9 @@ export interface PublishStatusRow {
   /** 브랜드 이름(범위 변형이면 꼬리표까지 — src/lib/brandVariant.ts brandLabel). */
   brand: string
   kind: 'posted' | 'unposted'
-  /** 확인 기록을 적는 원장 줄(대표). 아직 안 올린 글이면 null. */
+  /** 원장(앱 글) · 앱 밖 글. 아직 안 올린 배정 글은 app. */
+  origin: RowOrigin
+  /** 확인 기록을 적는 원장 줄(대표) · 앱 밖 글 줄(x- id). 아직 안 올린 글이면 null. */
   postId: string | null
   /** 주소 키 — 같은 주소의 줄(다른 고객 브랜드 포함)은 표시 하나를 함께 쓴다. 아직 안 올린 글이면 null. */
   key: string | null
@@ -284,7 +316,11 @@ export interface PublishStatusRow {
   url: string | null
   /** 올린 날(한국 날짜). 모르면 null. */
   publishedOn: string | null
-  removed: { reason: RemovedReason; at: string } | null
+  /** 다시 볼 날(3 · 7 · 14일째)을 세는 날 — 앱 글은 올린 날, 앱 밖 글은 올린 날과 추적을 시작한 날 가운데 늦은 날(모르면 추적을 시작한 날). */
+  recheckFrom: string | null
+  /** 앱 밖 글 — 추적을 시작한 한국 날짜. 앱 글 · 아직 안 올린 글은 null. */
+  trackedOn: string | null
+  removed: { reason: RowRemovedReason; at: string } | null
   naver: IndexCheck | null
   google: IndexCheck | null
   /** 보이는 확인 기록을 다른 고객 브랜드의 같은 주소 줄에서 표시했으면 그 브랜드 이름. */
@@ -319,6 +355,8 @@ export interface TenantIssue {
 export interface PublishStatus {
   /** 서버가 센 오늘(한국 날짜). */
   today: string
+  /** 고객 브랜드(경쟁사 · 지운 브랜드 빼고, 설정 순) — 줄이 없는 브랜드도. 앱 밖 글을 붙일 브랜드를 고를 때 쓴다. */
+  brands: { tenantId: string; brand: string }[]
   rows: PublishStatusRow[]
   writers: WriterSummary[]
   issues: TenantIssue[]
@@ -335,46 +373,83 @@ export interface TenantStatusInput {
   checks: Record<string, IndexCheckRecord>
   /** 다른 고객 브랜드의 확인 기록(브랜드 이름과 함께) — 같은 주소의 기록을 함께 본다. 없으면 이 브랜드 기록만. */
   others?: readonly (TenantChecks & { brand: string })[]
+  /** 이 브랜드의 앱 밖 글(상태 · 옮긴 날을 붙인 줄 — src/lib/externalPosts.ts externalViews). 없으면 앱 글 줄만. */
+  external?: readonly ExternalPostView[]
 }
 
+/** 늦은 날(둘 다 없으면 null). */
+const laterDay = (a: string | null, b: string | null) => (a && b ? (a > b ? a : b) : (a ?? b))
+
 /**
- * 한 브랜드의 줄과 작성자 진행. 올린 글은 올린 날이 늦은 순(모르면 뒤), 그 뒤에 아직 안 올린 배정 글(배정표 순 — 작성자 순, 작성자 안에서는
- * 번호 순). 배정 글이 살아 있는 편 없이 내린 글뿐이면 아직 안 올린 줄로도 보인다. 배정 판이 아닌 판으로 쓴 글은 배정 글로 세지 않는다.
+ * 한 브랜드의 줄과 작성자 진행. 올린 글(앱 글 · 앱 밖 글)은 올린 날이 늦은 순(모르면 뒤), 그 뒤에 아직 안 올린 배정 글(배정표 순 — 작성자 순,
+ * 작성자 안에서는 번호 순). 배정 글이 살아 있는 편 없이 내린 글뿐이면 아직 안 올린 줄로도 보인다. 배정 판이 아닌 판으로 쓴 글은 배정 글로
+ * 세지 않는다. 작성자 진행은 원장 줄만 센다(앱 밖 글은 넣지 않는다).
  */
 export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStatusRow[]; writers: WriterSummary[] } {
   const { tenantId, brand, plan } = input
   const own: TenantChecks = { tenantId, checks: input.checks }
   const others = input.others ?? []
+  /** 보이는 확인 기록 — 뺀 줄은 제 줄 기록만, 살아 있는 줄은 같은 주소 키의 기록(다른 고객 브랜드 포함) 가운데 가장 나중 것. */
+  const indexOf = (ids: readonly string[], key: string, publishedOn: string | null, removed: boolean) => {
+    const found = removed ? findIndexRecord(own, [], ids, null) : findIndexRecord(own, others, ids, key)
+    const record = found ? freshIndexRecord(found.record, publishedOn) : null
+    const from = found && found.tenantId !== tenantId && (record?.naver || record?.google) ? found.tenantId : null
+    return { naver: record?.naver ?? null, google: record?.google ?? null, checkFrom: from ? (others.find((o) => o.tenantId === from)?.brand ?? from) : null }
+  }
   const postings = postingsOf(input.posts)
-  const posted = postings
-    .map(({ post, ids, removed }): PublishStatusRow => {
-      const match = planArticleOf(plan, post)
-      const assigned = match === 'bank-unknown' ? null : match
-      const found = removed ? findIndexRecord(own, [], ids, null) : findIndexRecord(own, others, ids, post.key)
-      const record = found ? freshIndexRecord(found.record, post.publishedOn) : null
-      const from = found && found.tenantId !== tenantId && (record?.naver || record?.google) ? found.tenantId : null
-      return {
-        rowKey: `${tenantId}|${post.id}`,
-        tenantId,
-        brand,
-        kind: 'posted',
-        postId: post.id,
-        key: post.key,
-        articleId: post.articleId,
-        title: post.articleTitle?.trim() || assigned?.name || null,
-        writer: assigned ? { ...assigned.writer } : null,
-        writerUnknown: input.planUnreadable ? 'plan-unreadable' : match === 'bank-unknown' ? 'bank-unknown' : null,
-        postedUnknown: false,
-        platform: platformOf(post.url, input.ownedDomains),
-        url: post.url,
-        publishedOn: post.publishedOn,
-        removed,
-        naver: record?.naver ?? null,
-        google: record?.google ?? null,
-        checkFrom: from ? (others.find((o) => o.tenantId === from)?.brand ?? from) : null,
-      }
-    })
-    .sort((a, b) => (b.publishedOn ?? '').localeCompare(a.publishedOn ?? ''))
+  const appRows = postings.map(({ post, ids, removed }): PublishStatusRow => {
+    const match = planArticleOf(plan, post)
+    const assigned = match === 'bank-unknown' ? null : match
+    return {
+      rowKey: `${tenantId}|${post.id}`,
+      tenantId,
+      brand,
+      kind: 'posted',
+      origin: 'app',
+      postId: post.id,
+      key: post.key,
+      articleId: post.articleId,
+      title: post.articleTitle?.trim() || assigned?.name || null,
+      writer: assigned ? { ...assigned.writer } : null,
+      writerUnknown: input.planUnreadable ? 'plan-unreadable' : match === 'bank-unknown' ? 'bank-unknown' : null,
+      postedUnknown: false,
+      platform: platformOf(post.url, input.ownedDomains),
+      url: post.url,
+      publishedOn: post.publishedOn,
+      recheckFrom: post.publishedOn,
+      trackedOn: null,
+      removed,
+      ...indexOf(ids, post.key, post.publishedOn, removed !== null),
+    }
+  })
+  // 앱 밖 글 — 작성자는 늘 「앱 밖 글」(배정 파일과 상관없다), 다시 볼 날은 올린 날 · 추적 시작일 가운데 늦은 날부터, 앱 글로 옮긴 줄은 쉰다.
+  const externalRows = (input.external ?? []).map((x): PublishStatusRow => {
+    const trackedOn = kstDate(x.trackedAt)
+    const removed: PublishStatusRow['removed'] =
+      x.state === 'removed' && x.removedReason ? { reason: x.removedReason, at: x.removedAt ?? '' } : x.state === 'moved' ? { reason: 'moved', at: x.movedOn ?? '' } : null
+    return {
+      rowKey: `${tenantId}|${x.id}`,
+      tenantId,
+      brand,
+      kind: 'posted',
+      origin: 'external',
+      postId: x.id,
+      key: x.key,
+      articleId: `external:${x.id}`,
+      title: x.title,
+      writer: null,
+      writerUnknown: null,
+      postedUnknown: false,
+      platform: platformOf(x.url, input.ownedDomains),
+      url: x.url,
+      publishedOn: x.publishedOn,
+      recheckFrom: laterDay(x.publishedOn, trackedOn),
+      trackedOn,
+      removed,
+      ...indexOf([x.id], x.key, x.publishedOn, removed !== null),
+    }
+  })
+  const posted = [...appRows, ...externalRows].sort((a, b) => (b.publishedOn ?? '').localeCompare(a.publishedOn ?? ''))
   // 배정 글의 진행 — 살아 있는 줄 가운데 배정 판으로 쓴 글만 올린 것으로 센다. 판을 모르는 글은 「올렸는지 미확인」으로 따로 둔다.
   const liveRows = postings.flatMap((p) => p.live).map((p) => ({ articleId: p.articleId, match: planArticleOf(plan, p) }))
   const live = new Set(liveRows.filter((p) => p.match !== null && p.match !== 'bank-unknown').map((p) => p.articleId))
@@ -387,6 +462,7 @@ export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStat
         tenantId,
         brand,
         kind: 'unposted',
+        origin: 'app',
         postId: null,
         key: null,
         articleId: a.id,
@@ -397,6 +473,8 @@ export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStat
         platform: null,
         url: null,
         publishedOn: null,
+        recheckFrom: null,
+        trackedOn: null,
         removed: null,
         naver: null,
         google: null,
@@ -454,8 +532,12 @@ export function sameUrlBrands(rows: PublishStatusRow[]): Map<string, string[]> {
   return new Map([...byKey].filter(([, brands]) => brands.length > 1))
 }
 
-/** 작성자 칸 — 「w1 · 이름」, 배정 밖 글은 「배정 없음」, 배정 파일을 못 읽었으면 「미확인」. */
-export function writerLabel(row: Pick<PublishStatusRow, 'writer' | 'writerUnknown'>): string {
+/** 작성자 칸에 쓰는 값 — origin이 없는 줄(옛 모양)은 앱 글로 본다. */
+type WriterCell = Pick<PublishStatusRow, 'writer' | 'writerUnknown'> & { origin?: RowOrigin }
+
+/** 작성자 칸 — 앱 밖 글은 「앱 밖 글」(먼저 본다 — C12), 「w1 · 이름」, 배정 밖 글은 「배정 없음」, 배정 파일을 못 읽었으면 「미확인」. */
+export function writerLabel(row: WriterCell): string {
+  if (row.origin === 'external') return '앱 밖 글'
   if (row.writer) return `${row.writer.key} · ${row.writer.name}`
   return row.writerUnknown ? '미확인' : '배정 없음'
 }
@@ -565,10 +647,18 @@ export interface RowRecheck {
 
 const NO_RECHECK: RowRecheck = { due: false, engines: [], nextOn: null, over: false, label: '', note: '' }
 
-/** 줄의 다시 볼 날 — 두 엔진을 합친다. 아직 안 올린 글 · 뺀 글은 다시 보지 않는다(빈 칸). */
-export function rowRecheck(row: Pick<PublishStatusRow, 'kind' | 'removed' | 'publishedOn' | 'naver' | 'google'>, today: string): RowRecheck {
+/**
+ * 줄의 다시 볼 날 — 두 엔진을 합친다. 아직 안 올린 글 · 뺀 글은 다시 보지 않는다(빈 칸). 기준일은 줄의 recheckFrom(앱 밖 글은 추적을 시작한
+ * 날보다 이르지 않다 — D4)이고, 그 칸이 없는 줄(옛 모양)은 올린 날이다. 칸 · 요약 · 「오늘 다시 볼 글」 거르기가 모두 이 함수를 지나 같은
+ * 기준일을 쓴다(C14).
+ */
+export function rowRecheck(
+  row: Pick<PublishStatusRow, 'kind' | 'removed' | 'publishedOn' | 'naver' | 'google'> & { recheckFrom?: string | null },
+  today: string,
+): RowRecheck {
   if (row.kind !== 'posted' || row.removed) return NO_RECHECK
-  const per = INDEX_ENGINES.map((engine) => ({ engine, r: recheckOf(row.publishedOn, row[engine], today) }))
+  const from = row.recheckFrom === undefined ? row.publishedOn : row.recheckFrom
+  const per = INDEX_ENGINES.map((engine) => ({ engine, r: recheckOf(from, row[engine], today) }))
   const due = per.filter((p) => p.r.kind === 'due')
   if (due.length > 0) {
     const over = due.some((p) => p.r.kind === 'due' && p.r.over)
@@ -597,6 +687,10 @@ export function indexStateLabel(engine: IndexEngine, check: IndexCheck | null): 
 
 export interface StatusSummary {
   posted: number
+  /** 올린 글 가운데 앱 글 — 같은 주소가 어느 브랜드에서든 앱 글이면 앱 글이다(app + external = posted). */
+  app: number
+  /** 올린 글 가운데 앱 밖 글로만 추적하는 주소. */
+  external: number
   naverShown: number
   googleShown: number
   /** 한 엔진이라도 미확인인 글. */
@@ -606,7 +700,8 @@ export interface StatusSummary {
 
 /**
  * 맨 위 요약 — 살아 있는 올린 글만, 서로 다른 주소로 센다(아직 안 올린 글 · 뺀 글은 빼고). 범위 변형 두 브랜드에 같은 글 주소를 적으면
- * 모든 브랜드 보기에서 두 줄이지만 올린 글은 하나다. 같은 주소의 줄 가운데 하나라도 그 상태면 센다.
+ * 모든 브랜드 보기에서 두 줄이지만 올린 글은 하나다. 같은 주소의 줄 가운데 하나라도 그 상태면 센다. 앱 글 · 앱 밖 글도 같은 주소로 한
+ * 번만 — 한 브랜드에서라도 앱 글이면 앱 글로 센다(C12).
  */
 export function summarizeStatus(rows: PublishStatusRow[], today: string): StatusSummary {
   const pages = new Map<string, PublishStatusRow[]>()
@@ -616,8 +711,11 @@ export function summarizeStatus(rows: PublishStatusRow[], today: string): Status
     pages.set(k, [...(pages.get(k) ?? []), r])
   }
   const count = (test: (r: PublishStatusRow) => boolean) => [...pages.values()].filter((same) => same.some(test)).length
+  const app = count((r) => r.origin !== 'external')
   return {
     posted: pages.size,
+    app,
+    external: pages.size - app,
     naverShown: count((r) => r.naver?.state === 'shown'),
     googleShown: count((r) => r.google?.state === 'shown'),
     unknown: count((r) => r.naver === null || r.google === null),
@@ -629,7 +727,7 @@ export type StateFilter = '' | IndexState | 'unknown'
 export interface StatusFilter {
   /** '' = 모든 브랜드. */
   tenantId: string
-  /** '' = 모두, 'none' = 배정 없음, 'unknown' = 미확인, 그 밖은 writerFilterValue. */
+  /** '' = 모두, 'none' = 배정 없음, 'unknown' = 미확인, 'external' = 앱 밖 글, 그 밖은 writerFilterValue. */
   writer: string
   naver: StateFilter
   google: StateFilter
@@ -638,8 +736,9 @@ export interface StatusFilter {
   showRemoved: boolean
 }
 
-/** 작성자 거르기 값 — 같은 키라도 브랜드마다 사람이 다를 수 있어 이름까지 붙인다. */
-export function writerFilterValue(row: Pick<PublishStatusRow, 'writer' | 'writerUnknown'>): string {
+/** 작성자 거르기 값 — 같은 키라도 브랜드마다 사람이 다를 수 있어 이름까지 붙인다. 앱 밖 글은 먼저 'external'(작성자 칸과 같은 순서). */
+export function writerFilterValue(row: WriterCell): string {
+  if (row.origin === 'external') return 'external'
   if (row.writer) return `${row.writer.key}\n${row.writer.name}`
   return row.writerUnknown ? 'unknown' : 'none'
 }
@@ -752,8 +851,12 @@ export function csvCell(v: string | number | null): string {
 
 const REMOVED_LABEL: Record<RemovedReason, string> = { 'taken-down': '내림', mistake: '잘못 적은 주소' }
 
-/** 표의 「다시 볼 날」 칸 — 뺀 글은 뺀 이유, 오늘 다시 볼 글은 어느 엔진인지 · 14일 지남까지(표의 칩 · 아래 줄과 같은 글자). */
+/**
+ * 표의 「다시 볼 날」 칸 — 뺀 글은 뺀 이유(앱 글로 옮겨 쉬는 앱 밖 줄은 「앱 글로 옮김(옮긴 날)」 — D12), 오늘 다시 볼 글은 어느 엔진인지 ·
+ * 14일 지남까지(표의 칩 · 아래 줄과 같은 글자).
+ */
 export function recheckCell(row: PublishStatusRow, today: string): string {
+  if (row.removed?.reason === 'moved') return `앱 글로 옮김(${row.removed.at || '날짜 모름'})`
   if (row.removed) return REMOVED_LABEL[row.removed.reason]
   const r = rowRecheck(row, today)
   return r.note ? `${r.label} (${r.note})` : r.label

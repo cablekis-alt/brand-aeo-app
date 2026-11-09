@@ -45,4 +45,5 @@ server/engine-pricing.json
 server/tourapi-cache.json
 server/photo-scenes.json
 server/blog-sources.json
+server/post-import-ignored.json
 .claude/launch.json

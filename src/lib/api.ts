@@ -9,6 +9,9 @@ import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './ext
 import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { IndexCheckRecord, IndexEngine, IndexState, PublishStatus } from './publishStatus'
 import type { BlogListResult, BlogSource, CommitItem, CommitResult, PostImportRead } from './postImport'
+// 앱 밖 글 모듈은 타입으로만 불러온다 — 정기진단 보고서가 이 파일을 불러오므로 런타임 import가 생기면 보고서가 앱 밖 글 모듈을 끌어온다
+// (scripts/verify-external-posts.ts 정적 검사).
+import type { ExternalPostView, ExternalRemovedReason } from './externalPosts'
 import type { AnswerEvidence } from './answerEvidence'
 import { validScene, type PhotoScene } from './photoScenes'
 import { isMapImageId, normalizeMapPoints, parseMapAppSrc, type MapPoint } from './mapImage'
@@ -801,14 +804,34 @@ export function readImportPost(url: string, signal?: AbortSignal): Promise<PostI
   })
 }
 
-/** 사람이 확인한 줄을 원장에 적는다 — 줄마다 결과(새로 적음 · 이미 있던 기록 · 걸림과 이유). 요청 자체가 실패하면 throw한다. */
-export async function commitPostImport(items: CommitItem[]): Promise<CommitResult[]> {
-  const body = await postsRequest<{ results: CommitResult[] }>('/api/post-import/commit', {
+/**
+ * 사람이 확인한 줄을 적는다 — 앱 글은 원장에, 앱 밖 글은 고른 브랜드들의 앱 밖 글 목록에, 무시는 앱 전체 무시 목록에. 줄마다 결과(새로 적음 ·
+ * 이미 있던 기록 · 걸림과 이유 — 앱 밖 글은 브랜드마다)가 줄 순서대로 온다. warnings는 적은 뒤의 일(등록한 주소의 무시 풀기)이 실패한 것.
+ * 요청 자체가 실패하면 throw한다.
+ */
+export async function commitPostImport(items: CommitItem[]): Promise<{ results: CommitResult[]; warnings: string[] }> {
+  const body = await postsRequest<{ results: CommitResult[]; warnings?: string[] }>('/api/post-import/commit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ items }),
   })
-  return body.results
+  return { results: body.results, warnings: body.warnings ?? [] }
+}
+
+/**
+ * 앱 밖 글 한 줄 고치기(server/externalPosts.ts) — 올린 날(null이면 모름) · 빼기(잘못 적음 · 글을 내림) · 되살리기(잘못 적음으로 뺀 줄만). 그
+ * 브랜드 줄에만 적용된다. 실패하면 서버가 준 이유와 함께 throw한다.
+ */
+export async function patchExternalPost(
+  tenantId: string,
+  postId: string,
+  patch: { publishedOn: string | null } | { remove: ExternalRemovedReason } | { restore: true },
+): Promise<{ post: ExternalPostView; posts: ExternalPostView[] }> {
+  return postsRequest(`/api/external-posts/${encodeURIComponent(tenantId)}/${encodeURIComponent(postId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  })
 }
 
 /** 실패하면 null. 화면은 이전 상태를 되돌리고 사용자에게 알린다(조용히 삼키지 않는다). */

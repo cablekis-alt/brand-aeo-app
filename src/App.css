@@ -9164,6 +9164,74 @@ tr.ms-run-child td:nth-child(2) {
 .ps-removed td {
   opacity: 0.55;
 }
+/* 앱 밖 글 줄의 「관리」(src/pages/PublishStatus.tsx ExternalManage) — 제목 칸 안의 작은 단추, 펼치면 칸 위에 뜨는 상자. */
+.ps-manage {
+  position: relative;
+  display: inline-block;
+  margin-left: 6px;
+}
+.ps-manage > summary {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink-2);
+  font-size: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.ps-manage > summary::-webkit-details-marker {
+  display: none;
+}
+.ps-manage > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.ps-manage-body {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 4px);
+  left: 0;
+  display: grid;
+  gap: 10px;
+  width: 300px;
+  max-width: 80vw;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  box-shadow: var(--shadow-raise);
+  color: var(--ink);
+  font-size: 12.5px;
+}
+.ps-manage-body fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
+.ps-manage-body legend {
+  padding: 0 4px;
+  font-weight: 700;
+}
+.ps-manage-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.ps-manage-brands {
+  display: grid;
+  gap: 2px;
+  max-height: 140px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
 /*
  * ── 주소 한꺼번에 등록(src/components/PostImportPanel.tsx) ─────────────────
  * 발행 현황 위에 접힌 상자. 붙여 넣기 · 저장한 블로그를 나란히(좁으면 위아래로), 읽은 주소는 한 표 — 열이 아홉이라 좁은 창에서는 표 상자
@@ -9412,4 +9480,35 @@ tr.ms-run-child td:nth-child(2) {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
+}
+/* 앱 밖 글로 추적할 브랜드(고객 브랜드 모두 — 많으면 상자 안에서 스크롤). */
+.pi-brands {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
+.pi-brands legend {
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.pi-brands ul {
+  display: grid;
+  gap: 2px;
+  max-height: 160px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+  font-size: 12.5px;
+}
+.pi-brand-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+.pi-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }

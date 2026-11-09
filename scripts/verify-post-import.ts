@@ -153,9 +153,12 @@ const EXTRAS_A = {
 }
 
 const FIX_PORT = 4191
+/** 글이 51편 넘는 둘째 가짜 블로그(새 글 찾기에서 50편으로 자르기 전에 앱 밖 글 · 무시한 글을 빼는지). */
+const FIX2_PORT = 4193
 // 4190은 fetch 규격의 막힌 포트(bad port)라 쓰지 않는다.
 const API_PORT = 4192
 const FIX = `http://127.0.0.1:${FIX_PORT}`
+const FIX2 = `http://127.0.0.1:${FIX2_PORT}`
 const API = `http://127.0.0.1:${API_PORT}`
 const TAKEN_URL = `${FIX}/post/taken`
 const LEDGER_A = {
@@ -218,6 +221,12 @@ const PAGES: Record<string, () => { status?: number; type?: string; body: string
   '/post/comp': () => ({ body: page({ title: '경쟁 여관 이야기', text: TEXT_COMP, head: jsonLd('2026-11-05T10:00:00+09:00') }) }),
   '/post/taken': () => ({ body: page({ title: '반려견 숙소', text: TEXT_C2, head: jsonLd('2026-10-20T10:00:00+09:00') }) }),
   '/post/empty': () => ({ body: page({ title: '사진만 있는 글', text: ['사진'], head: jsonLd('2026-11-05T10:00:00+09:00') }) }),
+  // 앱에서 만들지 않은 손글(앱 밖 글) — 앱 글과 본문이 겹치는 손글 · 날짜 없는 손글 · 무시할 글 · 앱 글로 적었다가 내린 · 잘못 적은 주소.
+  '/post/hand-c2': () => ({ body: page({ title: '가상 손글 반려견 숙소', text: TEXT_C2, head: jsonLd('2026-11-02T10:00:00+09:00') }) }),
+  '/post/hand-new': () => ({ body: page({ title: '가상 손글 등산', text: TEXT_OTHER }) }),
+  '/post/q5-copy': () => ({ body: page({ title: '비 오는 날 전시관', text: TEXT_Q5, head: jsonLd('2026-11-05T10:00:00+09:00') }) }),
+  '/post/down': () => ({ body: page({ title: '가상 내린 글', text: TEXT_OTHER, head: jsonLd('2026-11-01T10:00:00+09:00') }) }),
+  '/post/wrong': () => ({ body: page({ title: '가상 잘못 적은 글', text: TEXT_OTHER, head: jsonLd('2026-11-01T10:00:00+09:00') }) }),
   // 같은 글의 다른 주소 — 정식 주소(canonical)를 밝힌 페이지, 다른 사이트를 정식 주소로 적은 페이지(따르지 않는다), 블로그 홈으로 넘기는 지운 글.
   '/amp/a1': () => ({ body: page({ title: '원도심 걸어서 다니는 가상시 숙소', text: TEXT_A1, head: `<link rel="canonical" href="${FIX}/post/a1">${jsonLd('2026-11-01T10:00:00+09:00')}` }) }),
   '/post/canon-other': () => ({ body: page({ title: '반려견 숙소 고르기', text: TEXT_C2, head: `<link rel="canonical" href="http://elsewhere.example/post/c2">${jsonLd('2026-11-03T08:00:00+09:00')}` }) }),
@@ -283,6 +292,19 @@ function fixtureHandler(req: IncomingMessage, res: ServerResponse) {
   res.end(r.body)
 }
 
+/** 둘째 블로그 — 사이트맵에 글 52편(/many/1 … /many/52, 번호 없는 주소라 목록 순서 그대로). */
+const MANY = Array.from({ length: 52 }, (_, i) => `${FIX2}/many/${i + 1}`)
+function fixture2Handler(req: IncomingMessage, res: ServerResponse) {
+  const url = new URL(req.url ?? '/', FIX2)
+  if (url.pathname === '/sitemap.xml') {
+    res.writeHead(200, { 'Content-Type': 'application/xml' })
+    res.end(`<?xml version="1.0" encoding="UTF-8"?><urlset>${MANY.map((u) => `<url><loc>${u}</loc></url>`).join('')}</urlset>`)
+    return
+  }
+  res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' })
+  res.end('<html><body>없는 글</body></html>')
+}
+
 const portFree = (port: number) =>
   new Promise<boolean>((resolve) => {
     const srv = net.createServer()
@@ -296,6 +318,7 @@ const put = (file: string, value: unknown) => {
 }
 
 let fixture: ReturnType<typeof createServer> | null = null
+let fixture2: ReturnType<typeof createServer> | null = null
 let server: ReturnType<typeof spawn> | null = null
 try {
   const pi = await import('../src/lib/postImport')
@@ -618,6 +641,136 @@ try {
       pi.otherUrlsNow({ ...cA, otherUrls: 2 }, 'fake.tistory.com/1', 3, [reg1, { ...reg1, seq: 6 }]) === 3,
   )
 
+  // ── 5b. 앱 밖 글 · 무시(2026-11-10 — 설계 B안 · 검토 C2 · C4 · C5 · C6 · C10 · C13 · 결정 D2 · D3 · D13 · D14) ─────
+  // 앱에서 만들지 않은 글(손글)은 「앱 밖 글로 추적…」(브랜드 여러 곳 · 날짜 모름)이나 「무시 — 새 글 찾기에서 숨김」으로 적는다. 이미 추적 중 ·
+  // 무시한 주소를 다시 읽으면 본문이 겹치는 앱 글을 자동으로 고르지 않는다 — 고르면 「이대로 등록」 한 번에 손글이 앱 글로 적히고 앱 밖 줄이
+  // 조용히 쉰다(C6).
+  const trackedRec = (tenantId: string, over: Partial<import('../src/lib/postImport').TrackedRecord> = {}) => ({
+    tenantId,
+    brand: `${tenantId} 브랜드`,
+    postId: 'x-aaaaaaaaaaaa',
+    key: 'fake.tistory.com/1',
+    state: 'live' as const,
+    publishedOn: '2026-10-01',
+    trackedAt: '2026-11-01T00:00:00.000Z',
+    ...over,
+  })
+  const withState = (r: import('../src/lib/postImport').PostImportRead, over: Record<string, unknown>) => ({ ...r, ...over }) as import('../src/lib/postImport').PostImportRead
+  const rTracked = withState(rMatch, { tracked: [trackedRec('t2')] })
+  ok(
+    'C6 — 앱 밖 글로 추적 중인 주소는 본문이 맞는 앱 글을 고르지 않고(앱 밖 글로) 미리 체크하지 않는다 · 상태 「앱 밖 글로 추적 중」',
+    pi.checkedByDefault(rMatch) && pi.initialChoice(rTracked).mode === 'external' && !pi.checkedByDefault(rTracked) &&
+      pi.choiceStateOf(rTracked, pi.initialChoice(rTracked)).state === 'tracked' && pi.ROW_STATE_LABEL.tracked === '앱 밖 글로 추적 중',
+  )
+  ok(
+    'C6 — 앱 글로 옮겨 쉬는 앱 밖 줄도 추적 기록이다(앱 글을 자동으로 고르지 않는다)',
+    pi.initialChoice(withState(rMatch, { tracked: [trackedRec('t1', { state: 'moved' })] })).mode === 'external' && !pi.checkedByDefault(withState(rMatch, { tracked: [trackedRec('t1', { state: 'moved' })] })),
+  )
+  ok(
+    'D12 — 같은 브랜드에서 앱 밖 글로 추적 중인 주소를 그 브랜드의 앱 글로 고르면 「앱 글로 옮김」(다른 브랜드의 앱 글 · 앱 글 아님은 옮김이 아니다)',
+    pi.movesExternal(rTracked, { tenantId: 't2', articleId: 'a' })?.tenantId === 't2' && pi.movesExternal(rTracked, { tenantId: 't1', articleId: 'a' }) === null &&
+      pi.movesExternal(rTracked, null) === null && pi.movesExternal(withState(rMatch, { tracked: [trackedRec('t2', { state: 'moved' })] }), { tenantId: 't2', articleId: 'a' }) === null,
+  )
+  const rIgnored = withState(rMatch, { ignoredAt: '2026-11-08T00:00:00.000Z' })
+  ok(
+    'C6 — 무시한 주소는 「무시함」으로 고르고 미리 체크하지 않는다',
+    pi.initialChoice(rIgnored).mode === 'ignore' && !pi.checkedByDefault(rIgnored) && pi.choiceStateOf(rIgnored, pi.initialChoice(rIgnored)).state === 'ignored',
+  )
+  const rStateUnknown = withState(rMatch, { stateUnknown: ['무시 목록'] })
+  ok('앱 밖 글 · 무시 여부를 다 보지 못하면(파일을 읽지 못함) 앱 글을 고르되 미리 체크하지 않는다', pi.initialChoice(rStateUnknown).mode === 'app' && !pi.checkedByDefault(rStateUnknown))
+  ok('옛 읽기 결과(앱 밖 글 칸 없음)는 예전 그대로', pi.initialChoice(rMatch).mode === 'app' && pi.checkedByDefault(rMatch) && pi.choiceStateOf(rMatch, pi.initialChoice(rMatch)).state === 'match')
+  // D13 — 고른 브랜드의 원장만 막는다. 화면 · 서버 · 시험이 externalRegistrationCheck 하나를 쓴다.
+  const ledgerRow = (over: Record<string, unknown> = {}) => ({ key: 'fake.tistory.com/1', recordedAt: '2026-10-20T01:00:00.000Z', publishedOn: '2026-10-20', ...over })
+  const rCross = withState(rNone, {
+    appLedgers: [
+      { tenantId: 't1', brand: '가상스테이', posts: [ledgerRow()] },
+      { tenantId: 't3', brand: '가상내림', posts: [ledgerRow({ removedAt: '2026-10-25T00:00:00.000Z', removedReason: 'taken-down' })] },
+      { tenantId: 't4', brand: '가상잘못', posts: [ledgerRow({ removedAt: '2026-10-25T00:00:00.000Z', removedReason: 'mistake' })] },
+    ],
+  })
+  const ext = (tenantIds: string[], dateUnknown = false) => ({ mode: 'external' as const, tenantIds, dateUnknown })
+  const { externalRegistrationCheck } = await import('../src/lib/externalPosts')
+  const sharedLedgers = (rCross as { appLedgers: { tenantId: string; posts: { key: string; recordedAt: string }[] }[] }).appLedgers
+  ok(
+    'D13 · C5 — 고른 브랜드의 원장이 이기면 막고(살아 있는 줄 · 내린 줄), 잘못 적은 줄 · 다른 브랜드의 앱 글은 막지 않는다 — 화면이 서버와 같은 함수',
+    pi.externalBrandState(rCross, 't1') === 'blocked' && pi.externalBrandState(rCross, 't3') === 'blocked' && pi.externalBrandState(rCross, 't4') === 'open' &&
+      pi.externalBrandState(rCross, 't2') === 'open' &&
+      ['t1', 't2', 't3', 't4'].every((t) => (pi.externalBrandState(rCross, t) === 'blocked') === externalRegistrationCheck(t, 'fake.tistory.com/1', sharedLedgers).blocked) &&
+      pi.choiceBlockReason(rCross, ext(['t1'])) !== null && pi.choiceBlockReason(rCross, ext(['t2', 't4'])) === null,
+  )
+  ok('D13 — 다른 브랜드에 앱 글로 적힌 주소는 「같은 주소: ○○의 앱 글」로 알린다(그 브랜드 이름)', pi.sameUrlAppBrands(rCross, ['t2']).join() === '가상스테이,가상내림' && pi.sameUrlAppBrands(rCross, ['t1']).join() === '가상내림')
+  ok(
+    '앱 밖 글로 추적 — 브랜드를 하나 이상 골라야 하고, 이미 추적 중인 브랜드는 「추적 중」(새로 고를 브랜드가 아니다)',
+    pi.choiceBlockReason(rNone, ext([])) !== null && pi.externalBrandState(withState(rNone, { tracked: [trackedRec('t2')] }), 't2') === 'tracked' &&
+      pi.choiceBlockReason(withState(rNone, { tracked: [trackedRec('t2')] }), ext(['t2'])) !== null,
+  )
+  ok(
+    '무시 — 이미 앱 글(원장에 살아 있는 줄)이나 앱 밖 글로 적힌 주소는 무시하지 않는다 · 이미 무시한 주소는 할 일이 없다',
+    pi.choiceBlockReason(rAlready, { mode: 'ignore' }) !== null && pi.choiceBlockReason(rOther, { mode: 'ignore' }) !== null &&
+      pi.choiceBlockReason(withState(rNone, { tracked: [trackedRec('t2')] }), { mode: 'ignore' }) !== null && pi.choiceBlockReason(rIgnored, { mode: 'ignore' }) !== null &&
+      pi.choiceBlockReason(rNone, { mode: 'ignore' }) === null && !pi.ignoreOptionAllowed(rAlready) && pi.ignoreOptionAllowed(rNone),
+  )
+  ok(
+    'D14 — 「읽지 못함」 줄은 무시할 수 있다(사이트맵에 남은 지운 글) · 앱 글 · 앱 밖 글로는 적지 않는다',
+    pi.choiceBlockReason(rFail, { mode: 'ignore' }) === null && pi.ignoreOptionAllowed(rFail) && pi.choiceBlockReason(rFail, ext(['t1'])) !== null &&
+      pi.choiceBlockReason(rFail, { mode: 'app', pick: null }) !== null && pi.choiceStateOf(rFail, { mode: 'ignore' }).state === 'ignore',
+  )
+  ok('앱 글 고르기는 예전 규칙 그대로(이미 등록됨 · 다른 글 · 고른 글 없음은 막는다)', pi.choiceBlockReason(rMatch, { mode: 'app', pick: pi.autoPick(rMatch) }) === null && pi.choiceBlockReason(rAlready, { mode: 'app', pick: pi.autoPick(rAlready) }) !== null && pi.choiceBlockReason(rOther, { mode: 'app', pick: pi.autoPick(rOther) }) !== null && pi.choiceBlockReason(rMatch, { mode: 'app', pick: null }) !== null)
+  // C2 · D2 — 붙일 브랜드 미리 고르기: 자사 주소가 정확히 한 고객 브랜드일 때만(알려진 플랫폼 호스트도 직접 맞추고, 공유 플랫폼은 빼고).
+  const brandCfg = [
+    { tenantId: 'web-like', brand: '가상스테이', ownedDomains: ['stay-fake.example', 'staymeomoom-fake.tistory.com'] },
+    { tenantId: 'gun-like', brand: '가상군산', ownedDomains: ['gun-fake.example', 'blog.naver.com/fakeblog'] },
+    { tenantId: 'twin-a', brand: '가상쌍둥이', ownedDomains: ['twin-fake.example'] },
+    { tenantId: 'twin-b', brand: '가상쌍둥이 · 전국형', ownedDomains: ['https://www.twin-fake.example/'] },
+  ]
+  ok('C2 — 알려진 플랫폼(티스토리) 호스트가 한 브랜드의 자사 주소면 그 브랜드', pi.ownedBrandsOf('https://staymeomoom-fake.tistory.com/3', brandCfg).map((b) => b.tenantId).join() === 'web-like')
+  ok('C2 — 공유 플랫폼(blog.naver.com)은 자사 주소 칸에 있어도 고르지 않는다', pi.ownedBrandsOf('https://blog.naver.com/fakeblog/224400000001', brandCfg).length === 0)
+  ok('C2 — 범위 변형 두 브랜드의 자사 주소면 둘 다(그래서 미리 고르지 않는다)', pi.ownedBrandsOf('https://twin-fake.example/post/1', brandCfg).length === 2)
+  const owned1 = [{ tenantId: 't2', brand: '가상스테이' }]
+  ok(
+    'D2 — 자사 주소인 브랜드가 정확히 하나면 미리 고른다(줄 체크는 사람이) · 둘이면 · 원장이 이기거나 이미 추적 중이면 비운다',
+    pi.externalDefaultBrands(withState(rNone, { ownedBrands: owned1 })).join() === 't2' && !pi.checkedByDefault(withState(rNone, { ownedBrands: owned1 })) &&
+      pi.externalDefaultBrands(withState(rNone, { ownedBrands: [...owned1, { tenantId: 't5', brand: '가상스테이 · 전국형' }] })).length === 0 &&
+      pi.externalDefaultBrands(withState(rCross, { ownedBrands: [{ tenantId: 't1', brand: '가상스테이' }] })).length === 0 &&
+      pi.externalDefaultBrands(withState(rNone, { ownedBrands: owned1, tracked: [trackedRec('t2')] })).length === 0 &&
+      pi.externalDefaultBrands(rFail).length === 0,
+  )
+  // 등록 요청 — 옛 요청(kind 없음)은 앱 글, 앱 밖 글은 브랜드 여러 곳을 한 항목(tenantIds)으로(C13), 무시는 주소만.
+  const parse = (items: unknown[]) => pi.parseCommitItems({ items })
+  const legacyItem = { tenantId: 't1', articleId: 'a', url: 'https://fake.tistory.com/1', publishedOn: '2026-11-01' }
+  const parsedLegacy = parse([legacyItem])
+  ok('등록 요청 — kind가 없는 옛 요청(CLI · 옛 화면)은 앱 글로 받는다', parsedLegacy.ok && parsedLegacy.items[0]?.kind === 'app' && JSON.stringify({ ...parsedLegacy.items[0], kind: undefined }) === JSON.stringify({ ...legacyItem, kind: undefined }))
+  const extItem = { kind: 'external', tenantIds: ['t1', 't2'], url: 'https://fake.tistory.com/9', title: null, publishedOn: null, publishedOnSource: 'unknown' }
+  const parsedExt = parse([extItem, { kind: 'ignore', url: 'https://fake.tistory.com/8', alsoUrls: ['https://m.fake.tistory.com/8'] }])
+  ok(
+    '등록 요청 — 앱 밖 글(브랜드 여러 곳 · 날짜 모름 · 제목 없음)과 무시를 받는다',
+    parsedExt.ok && parsedExt.items[0]?.kind === 'external' && parsedExt.items[1]?.kind === 'ignore' && JSON.stringify((parsedExt.items[0] as { tenantIds?: string[] }).tenantIds) === '["t1","t2"]',
+  )
+  ok(
+    '등록 요청 — 앱 밖 글 브랜드가 없거나 겹치면 · 모르는 kind · 무시에 주소가 없으면 400',
+    !parse([{ ...extItem, tenantIds: [] }]).ok && !parse([{ ...extItem, tenantIds: ['t1', 't1'] }]).ok && !parse([{ ...extItem, tenantIds: 't1' }]).ok &&
+      !parse([{ kind: 'nope', url: 'https://fake.tistory.com/1' }]).ok && !parse([{ kind: 'ignore' }]).ok && !parse([{ ...extItem, publishedOnSource: 'guess' }]).ok,
+  )
+  // C13 — 한 줄을 고객 브랜드 39곳으로 펼쳐도 한 항목이고, 화면 묶음은 줄 수 · JSON 크기(서버 한도 100KB) 안이다.
+  const brands39 = Array.from({ length: 39 }, (_, i) => `vpi-brand-${String(i).padStart(2, '0')}`)
+  const longWp = (i: number) => `https://fakewriter.wordpress.com/2026/11/07/${'%ea%b0%80%ec%83%81'.repeat(40)}-${i}/`
+  const bigItems = Array.from({ length: 100 }, (_, i) => ({
+    kind: 'external' as const,
+    tenantIds: brands39,
+    url: longWp(i),
+    title: '가'.repeat(200),
+    publishedOn: '2026-11-01',
+    publishedOnSource: 'page' as const,
+    alsoUrls: [`${longWp(i)}?p=${i}`],
+  }))
+  const chunks = pi.commitChunks(bigItems)
+  const utf8 = (v: unknown) => new TextEncoder().encode(JSON.stringify(v)).length
+  ok(
+    'C13 — 39 브랜드로 펼친 줄도 한 항목 · 묶음은 40줄 이하 · 서버 상한(100줄) · JSON 100KB 안 · 순서 그대로',
+    chunks.flat().length === 100 && chunks.flat().every((c, i) => c === bigItems[i]) && chunks.every((c) => c.length <= 40 && utf8({ items: c }) <= pi.COMMIT_MAX_BYTES) &&
+      pi.COMMIT_MAX_BYTES < 100 * 1024 && chunks.every((c) => parse(c).ok),
+  )
+
   // ── 6. 저장한 블로그 · 목록 읽기 ───────────────────────────────────────────
   const ns = (raw: string) => pi.normalizeBlogSource(raw)
   ok(
@@ -803,11 +956,13 @@ try {
   ok('설치본 — 그 define으로 묶으면 묶음에 깃발 이름이 남지 않는다', bundled.outputFiles.length === 1 && !bundled.outputFiles[0]!.text.includes('POST_IMPORT_TEST_LOOPBACK') && bundled.outputFiles[0]!.text.includes('addressBlocked'))
 
   // ── 9. 서버 길(가짜 블로그 + 임시 데이터 폴더) ──────────────────────────────
-  for (const port of [FIX_PORT, API_PORT]) {
+  for (const port of [FIX_PORT, FIX2_PORT, API_PORT]) {
     if (!(await portFree(port))) throw new Error(`포트 ${port}을 다른 프로그램이 쓰고 있어 확인하지 못했습니다.`)
   }
   fixture = createServer(fixtureHandler)
   await new Promise<void>((resolve) => fixture!.listen(FIX_PORT, '127.0.0.1', () => resolve()))
+  fixture2 = createServer(fixture2Handler)
+  await new Promise<void>((resolve) => fixture2!.listen(FIX2_PORT, '127.0.0.1', () => resolve()))
 
   // 이 프로세스에서 깃발을 켜면 같은 주소가 읽힌다 — 깃발이 루프백만 연다(사설 주소는 그대로 막힘).
   process.env.POST_IMPORT_TEST_LOOPBACK = '1'
@@ -831,7 +986,14 @@ try {
     competitors: [],
     ...over,
   })
-  put(path.join(appRoot, 'tenants.overlay.json'), [tenant('vpi-a', '가상스테이'), tenant('vpi-b', '가상여관'), tenant('vpi-comp', '가상경쟁', { cohortOnly: true })])
+  // vpi-b는 가짜 블로그 호스트(127.0.0.1)를 자사 주소로 가졌다(앱 밖 글 브랜드 미리 고르기 — C2). vpi-gone은 지운 브랜드(툼스톤)다.
+  put(path.join(appRoot, 'tenants.overlay.json'), [
+    tenant('vpi-a', '가상스테이'),
+    tenant('vpi-b', '가상여관', { ownedDomains: ['vpi-b.example', '127.0.0.1'] }),
+    tenant('vpi-comp', '가상경쟁', { cohortOnly: true }),
+    tenant('vpi-gone', '가상지움'),
+  ])
+  put(path.join(appRoot, 'tenants.deleted.json'), ['vpi-gone'])
   const dirA = path.join(appRoot, 'data', 'vpi-a')
   put(path.join(dirA, 'probe-plan.json'), PLAN)
   put(path.join(dirA, 'drafts.json'), DRAFTS_A)
@@ -1099,11 +1261,161 @@ try {
     (err: unknown) => `요청 전체가 실패함: ${err instanceof Error ? err.message : String(err)}`,
   )
   ok('등록 — 판 미확인 배정 글은 질문 은행을 읽지 않는다(은행 파일이 잠겨 있어도 등록)', typeof a3Again !== 'string' && a3Again.results[0]?.status === 'added', a3Again)
+
+  // ── 10. 앱 밖 글 · 무시 — 서버 길(2026-11-10) ───────────────────────────────
+  type XRow = { id: string; key: string; url: string; publishedOn: string | null; publishedOnSource: string; title: string | null; removedAt?: string }
+  const extFile = (id: string) => path.join(appRoot, 'data', id, 'external-posts.json')
+  const extOf = (id: string): XRow[] => (existsSync(extFile(id)) ? (JSON.parse(readFileSync(extFile(id), 'utf8')) as { posts: XRow[] }).posts : [])
+  const ignoredFile = path.join(appRoot, 'post-import-ignored.json')
+  const ignoredKeys = () => (existsSync(ignoredFile) ? (JSON.parse(readFileSync(ignoredFile, 'utf8')) as { ignored: { keys: string[] }[] }).ignored.flatMap((e) => e.keys) : [])
+  const ledgerTextB = readFileSync(path.join(appRoot, 'data', 'vpi-b', 'published-posts.json'), 'utf8')
+  const statesTextB = readFileSync(path.join(appRoot, 'data', 'vpi-b', 'action-states.json'), 'utf8')
+  // (가) C6 — 이미 앱 밖 글로 추적 중인 손글을 다시 읽으면 본문이 맞는 앱 글을 고르지 않는다.
+  put(
+    extFile('vpi-b'),
+    JSON.stringify({ version: 1, keyRule: 3, posts: [{ id: 'x-bbbbbbbbbb01', url: `${FIX}/post/hand-c2`, key: '127.0.0.1/post/hand-c2', title: '가상 손글', publishedOn: '2026-11-02', publishedOnSource: 'page', trackedAt: '2026-11-03T01:00:00.000Z' }] }),
+  )
+  const rHand = (await read(`${FIX}/post/hand-c2`)).body
+  ok(
+    'C6 — 서버: 추적 중인 손글을 다시 읽으면 tracked(브랜드 · 줄)를 싣고, 맞는 앱 글 후보가 있어도 고르지 않고 미리 체크하지 않는다',
+    rHand.ok && rHand.tracked?.length === 1 && rHand.tracked[0]!.tenantId === 'vpi-b' && rHand.tracked[0]!.brand === '가상여관' && rHand.tracked[0]!.state === 'live' &&
+      rHand.candidates[0]?.articleId === C2_ID && stateOf(rHand) === 'match' && pi.initialChoice(rHand).mode === 'external' && !pi.checkedByDefault(rHand) &&
+      pi.checkedByDefault({ ...rHand, tracked: [] }),
+    rHand,
+  )
+  ok(
+    'C2 — 서버: 글 주소 호스트가 한 고객 브랜드의 자사 주소면 ownedBrands에 그 브랜드(미리 고르기 — 추적 중인 브랜드는 빼고)',
+    rHand.ok && JSON.stringify(rHand.ownedBrands) === JSON.stringify([{ tenantId: 'vpi-b', brand: '가상여관' }]) && pi.externalDefaultBrands(rHand).length === 0,
+    rHand.ok ? rHand.ownedBrands : rHand,
+  )
+  // (나) D13 — 다른 브랜드의 앱 글 주소: 그 브랜드만 막고 「같은 주소」로 알린다(화면 계산이 서버 거절과 같은 함수).
+  const rTakenX = (await read(TAKEN_URL)).body
+  ok(
+    'D13 — 서버: 읽기 결과의 원장 줄(appLedgers)로 고른 브랜드만 막는다 · 다른 브랜드는 「같은 주소: 가상스테이의 앱 글」',
+    rTakenX.ok && pi.externalBrandState(rTakenX, 'vpi-a') === 'blocked' && pi.externalBrandState(rTakenX, 'vpi-b') === 'open' &&
+      pi.sameUrlAppBrands(rTakenX, ['vpi-b']).join() === '가상스테이' && pi.externalDefaultBrands(rTakenX).join() === 'vpi-b',
+    rTakenX,
+  )
+  // (다) 한 요청에 세 종류 — 옛 앱 글 줄 · 앱 밖 글(브랜드 둘) · 무시. 결과는 줄마다 제자리에(C13).
+  const batch = await commit([
+    { tenantId: 'vpi-a', articleId: C2_ID, url: `${FIX}/post/c2-app`, publishedOn: '2026-11-03' },
+    { kind: 'external', tenantIds: ['vpi-a', 'vpi-b'], url: TAKEN_URL, title: '가상 손글', publishedOn: '2026-11-02', publishedOnSource: 'page' },
+    { kind: 'ignore', url: TAKEN_URL, alsoUrls: [] },
+    { kind: 'external', tenantIds: ['vpi-a', 'vpi-b'], url: MANY[1], title: null, publishedOn: null, publishedOnSource: 'unknown' },
+    { kind: 'ignore', url: MANY[0], alsoUrls: [`${MANY[0]}?from=rss`] },
+    { kind: 'ignore', url: `${FIX}/missing`, alsoUrls: [] },
+    { kind: 'external', tenantIds: ['vpi-comp', 'vpi-gone', 'vpi-nope'], url: `${FIX}/post/hand-new`, title: '가상 손글 등산', publishedOn: '2026-11-04', publishedOnSource: 'user' },
+    { kind: 'external', tenantIds: ['vpi-a'], url: `${FIX}/post/hand-new`, title: '가상 손글 등산', publishedOn: '2999-01-01', publishedOnSource: 'user' },
+  ])
+  type Res = import('../src/lib/postImport').CommitResult
+  const res = (batch.body.results ?? []) as Res[]
+  const xTenants = (r: Res | undefined) => (r && r.kind === 'external' ? r.tenants : [])
+  ok(
+    'C13 — 한 요청에 앱 글 · 앱 밖 글 · 무시 — 결과는 줄마다 제자리(kind · 상태 순서 그대로)',
+    batch.status === 200 && res.map((r) => r.kind).join() === 'app,external,ignore,external,ignore,ignore,external,external' &&
+      res.map((r) => r.status).join() === 'added,partial,error,added,added,added,error,error',
+    batch.body,
+  )
+  ok(
+    'D13 — 앱 밖 글을 두 브랜드에: 원장에 앱 글로 가진 브랜드(vpi-a)는 걸리고(이유), 다른 브랜드(vpi-b)는 적고 「같은 주소」 브랜드를 알린다',
+    xTenants(res[1]).map((t) => `${t.tenantId}:${t.status}`).join() === 'vpi-a:error,vpi-b:added' && (xTenants(res[1])[0]?.error ?? '').includes('앱 글') &&
+      JSON.stringify(xTenants(res[1])[1]?.alsoAppIn) === '["가상스테이"]',
+    res[1],
+  )
+  ok(
+    '앱 밖 글 — 두 브랜드에 한 줄씩(날짜 모름 · 제목 없음) · 경쟁사 · 지운 · 없는 브랜드는 그 브랜드만 걸림 · 오늘 뒤 날짜는 400 이유',
+    extOf('vpi-a').map((p) => p.key).join() === '127.0.0.1/many/2' && extOf('vpi-a')[0]?.publishedOn === null && extOf('vpi-a')[0]?.publishedOnSource === 'unknown' && extOf('vpi-a')[0]?.title === null &&
+      extOf('vpi-b').map((p) => p.key).sort().join() === ['127.0.0.1/many/2', '127.0.0.1/post/hand-c2', '127.0.0.1/post/taken'].sort().join() &&
+      xTenants(res[6]).every((t) => t.status === 'error') && xTenants(res[6]).length === 3 && !existsSync(extFile('vpi-comp')) && !existsSync(extFile('vpi-gone')) &&
+      (res[7]?.error ?? '').includes('오늘'),
+    { a: extOf('vpi-a'), b: extOf('vpi-b'), r6: res[6], r7: res[7] },
+  )
+  ok(
+    '무시 — 앱 글로 적힌 주소는 거절(이유) · 「읽지 못함」 주소(D14)와 목록 주소는 무시 목록에(읽을 때 나온 주소 모양 모두)',
+    (res[2]?.error ?? '').includes('앱 글') && !ignoredKeys().includes('127.0.0.1/post/taken') && ignoredKeys().includes('127.0.0.1/many/1') && ignoredKeys().includes('127.0.0.1/missing') &&
+      existsSync(ignoredFile) && !existsSync(path.join(appRoot, 'data', 'post-import-ignored.json')),
+    { r2: res[2], keys: ignoredKeys() },
+  )
+  ok('앱 밖 글 · 무시는 원장 · 집행 상태에 쓰지 않는다(vpi-b 원장 한 글자도 그대로)', readFileSync(path.join(appRoot, 'data', 'vpi-b', 'published-posts.json'), 'utf8') === ledgerTextB && readFileSync(path.join(appRoot, 'data', 'vpi-b', 'action-states.json'), 'utf8') === statesTextB)
+  // (라) 새 글 찾기 — 50편으로 자르기 전에 앱 밖 글 · 무시한 글을 뺀다. 경쟁사 · 지운 브랜드의 앱 밖 글은 빼지 않는다(C16).
+  put(extFile('vpi-comp'), JSON.stringify({ version: 1, keyRule: 3, posts: [{ id: 'x-cccccccccc01', url: MANY[2], key: '127.0.0.1/many/3', title: null, publishedOn: null, publishedOnSource: 'unknown', trackedAt: '2026-11-03T01:00:00.000Z' }] }))
+  put(extFile('vpi-gone'), JSON.stringify({ version: 1, keyRule: 3, posts: [{ id: 'x-dddddddddd01', url: MANY[3], key: '127.0.0.1/many/4', title: null, publishedOn: null, publishedOnSource: 'unknown', trackedAt: '2026-11-03T01:00:00.000Z' }] }))
+  await post('/api/blog-sources', { sources: [FIX, 'https://fakewriter.tistory.com', FIX2] }, 'PUT')
+  type List = import('../src/lib/postImport').BlogListResult
+  const many1 = await post<List>('/api/post-import/list', { source: FIX2 })
+  ok(
+    '새 글 찾기 — 52편 블로그에서 앱 밖 글 1편 · 무시한 글 1편을 50편으로 자르기 전에 뺀다(50편 모두 돌려줌) · 뺀 수를 알린다',
+    many1.status === 200 && many1.body.found === 52 && many1.body.newUrls.length === 50 && many1.body.older === 0 && many1.body.hiddenExternal === 1 && many1.body.hiddenIgnored === 1 &&
+      !many1.body.newUrls.includes(MANY[0]!) && !many1.body.newUrls.includes(MANY[1]!),
+    many1.body,
+  )
+  ok('C16 — 경쟁사(비교용) · 지운 브랜드의 앱 밖 글 주소는 새 글 찾기에 다시 나온다', many1.body.newUrls.includes(MANY[2]!) && many1.body.newUrls.includes(MANY[3]!), many1.body.newUrls.slice(0, 5))
+  put(path.join(appRoot, 'tenants.deleted.json'), [])
+  const many2 = await post<List>('/api/post-import/list', { source: FIX2 })
+  ok('C16 — 지운 브랜드를 되살리면 그 브랜드의 앱 밖 글 주소가 다시 빠진다(파일이 남아 있다)', many2.body.hiddenExternal === 2 && !many2.body.newUrls.includes(MANY[3]!) && many2.body.newUrls.length === 49, many2.body)
+  // (마) 추적 중인 주소는 무시하지 않는다 · 무시한 주소를 등록하면 무시가 풀린다.
+  const ignoreTracked = await commit([{ kind: 'ignore', url: MANY[1], alsoUrls: [] }])
+  ok('무시 — 앱 밖 글로 추적 중인 주소는 거절(이유)', ignoreTracked.body.results?.[0]?.status === 'error' && (ignoreTracked.body.results?.[0]?.error ?? '').includes('앱 밖 글'), ignoreTracked.body)
+  // 화면은 적을 주소(정식 주소)로 적고 붙여 넣은 주소 모양을 alsoUrls로 함께 보낸다 — 그 가운데 하나라도 무시 목록에 있으면 그 줄이 풀린다.
+  const unignore = await commit([{ kind: 'external', tenantIds: ['vpi-a'], url: MANY[0], title: '가상 손글', publishedOn: '2026-11-01', publishedOnSource: 'user', alsoUrls: [`${MANY[0]}?from=rss`] }])
+  const many3 = await post<List>('/api/post-import/list', { source: FIX2 })
+  ok(
+    '무시한 주소를 앱 밖 글로 등록하면 무시가 풀린다(읽을 때 나온 주소 모양 모두로) — 새 글 찾기에서는 앱 밖 글로 빠진다',
+    unignore.body.results?.[0]?.status === 'added' && !ignoredKeys().includes('127.0.0.1/many/1') && ignoredKeys().includes('127.0.0.1/missing') && many3.body.hiddenIgnored === 0 && many3.body.hiddenExternal === 3,
+    { unignore: unignore.body, keys: ignoredKeys(), list: many3.body },
+  )
+  // (바) C6 — 무시한 주소를 다시 읽으면 「무시함」 · 미리 체크하지 않는다(맞는 앱 글이 있어도).
+  const ignoreQ5 = await commit([{ kind: 'ignore', url: `${FIX}/post/q5-copy`, alsoUrls: [] }])
+  const rQ5 = (await read(`${FIX}/post/q5-copy`)).body
+  ok(
+    'C6 — 서버: 무시한 주소를 다시 읽으면 ignoredAt · 무시로 고르고 미리 체크하지 않는다(맞는 앱 글 후보가 있어도)',
+    ignoreQ5.body.results?.[0]?.status === 'added' && rQ5.ok && typeof rQ5.ignoredAt === 'string' && stateOf(rQ5) === 'match' && pi.initialChoice(rQ5).mode === 'ignore' &&
+      !pi.checkedByDefault(rQ5) && pi.checkedByDefault({ ...rQ5, ignoredAt: null }),
+    rQ5,
+  )
+  ok('무시 — 같은 주소를 다시 무시하면 그대로(이미 무시함)', (await commit([{ kind: 'ignore', url: `${FIX}/post/q5-copy`, alsoUrls: [] }])).body.results?.[0]?.status === 'existing')
+  // (사) C5 — 같은 브랜드 원장에 「글을 내렸어요」로 뺀 앱 글 주소는 앱 밖 글로 적지 않는다(쉼과 같은 기준), 「잘못 적음」은 적는다.
+  const addApp = async (url: string, articleId: string) =>
+    post<{ post: { id: string } }>('/api/published-posts/vpi-a', { articleId, targetActionId: articleId, via: 'own', url, publishedOn: '2026-11-01', publishedOnChosen: true })
+  const downRec = await addApp(`${FIX}/post/down`, 'content:c1-097')
+  const wrongRec = await addApp(`${FIX}/post/wrong`, 'content:c1-096')
+  await post(`/api/published-posts/vpi-a/${downRec.body.post.id}`, { remove: 'taken-down' }, 'PATCH')
+  await post(`/api/published-posts/vpi-a/${wrongRec.body.post.id}`, { remove: 'mistake' }, 'PATCH')
+  const rDown = (await read(`${FIX}/post/down`)).body
+  const rWrong = (await read(`${FIX}/post/wrong`)).body
+  const cDown = await commit([
+    { kind: 'external', tenantIds: ['vpi-a'], url: `${FIX}/post/down`, title: '가상 내린 글', publishedOn: '2026-11-01', publishedOnSource: 'page' },
+    { kind: 'external', tenantIds: ['vpi-a'], url: `${FIX}/post/wrong`, title: '가상 잘못 적은 글', publishedOn: '2026-11-01', publishedOnSource: 'page' },
+  ])
+  ok(
+    'C5 — 내린 앱 글 주소: 화면(읽기 결과)과 서버가 같은 기준으로 막는다(「내린 기록」 안내) · 잘못 적은 주소는 둘 다 받는다',
+    rDown.ok && rWrong.ok && pi.externalBrandState(rDown, 'vpi-a') === 'blocked' && pi.externalBrandState(rWrong, 'vpi-a') === 'open' &&
+      xTenants(cDown.body.results?.[0]).map((t) => t.status).join() === 'error' && (xTenants(cDown.body.results?.[0])[0]?.error ?? '').includes('내린 기록') &&
+      cDown.body.results?.[1]?.status === 'added',
+    { rDown: rDown.ok && rDown.appLedgers, results: cDown.body.results },
+  )
+  // (아) 무시 목록의 키 규칙(C11) · 깨진 무시 목록.
+  put(ignoredFile, { format: 'post-import-ignored/1', keyRule: 0, ignored: [{ url: `${MANY[4]}?fbclid=fake`, urls: [`${MANY[4]}?fbclid=fake`], keys: ['stale-key'], ignoredAt: '2026-11-01T00:00:00.000Z' }] })
+  const many4 = await post<List>('/api/post-import/list', { source: FIX2 })
+  ok('C11 — 무시 목록의 키 규칙이 다르면 읽을 때 주소로 키를 다시 계산한다(새 글 찾기에서 빠진다)', many4.body.hiddenIgnored === 1 && !many4.body.newUrls.includes(MANY[4]!), many4.body)
+  const BROKEN_IGNORED = '{"format":"post-import-ignored/1","ignored":['
+  put(ignoredFile, BROKEN_IGNORED)
+  const many5 = await post<List>('/api/post-import/list', { source: FIX2 })
+  const brokenIgnore = await commit([{ kind: 'ignore', url: MANY[5], alsoUrls: [] }])
+  const rUnknown = (await read(`${FIX}/post/hand-new`)).body
+  ok(
+    '깨진 무시 목록 — 새 글 찾기는 숨기지 않고 알린다 · 무시는 걸림(파일 그대로) · 읽기는 무시 여부를 모른다고 싣는다(미리 체크하지 않음)',
+    many5.status === 200 && many5.body.hiddenIgnored === 0 && many5.body.newUrls.includes(MANY[4]!) && many5.body.errors.some((e) => e.includes('무시 목록')) &&
+      brokenIgnore.body.results?.[0]?.status === 'error' && readFileSync(ignoredFile, 'utf8') === BROKEN_IGNORED &&
+      rUnknown.ok && (rUnknown.stateUnknown ?? []).some((s) => s.includes('무시 목록')),
+    { list: many5.body, ignore: brokenIgnore.body, read: rUnknown },
+  )
 } catch (err) {
   ok('예외 없이 끝남', false, err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err))
 } finally {
   server?.kill()
   fixture?.close()
+  fixture2?.close()
   await new Promise((r) => setTimeout(r, 800))
   rmSync(tmp, { recursive: true, force: true })
 }

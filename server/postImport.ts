@@ -12,6 +12,7 @@ import type { ExtraArticle } from '../src/lib/extraArticles.js';
 import { assignedArticle } from '../src/lib/contentLibraryOrder.js';
 import { draftTitle } from '../src/lib/markdownFile.js';
 import { effectiveDraft } from '../src/lib/draftGaps.js';
+import { externalViews, parseExternalAddInput } from '../src/lib/externalPosts.js';
 import {
   BLOG_SOURCES_MAX,
   CANDIDATE_LIMIT,
@@ -20,12 +21,15 @@ import {
   POST_PLATFORM_LABEL,
   bigrams,
   blogListTargets,
+  commitItemKeys,
   draftMatchText,
+  externalCommitStatus,
   jaccard,
   listedPostUrls,
   newestFirst,
   normalizeBlogSource,
   otherListHosts,
+  ownedBrandsOf,
   parseCommitItems,
   parseFeedLinks,
   parsePostHtml,
@@ -38,13 +42,21 @@ import {
   urlVerdict,
   withoutTrailingText,
   wpListPageUrl,
+  type AppCommitItem,
+  type AppCommitResult,
+  type AppLedger,
   type BlogListResult,
   type BlogSource,
-  type CommitItem,
   type CommitResult,
+  type ExternalCommitItem,
+  type ExternalCommitResult,
+  type ExternalTenantResult,
+  type IgnoreCommitItem,
+  type IgnoreCommitResult,
   type ImportCandidate,
   type KnownRecord,
   type PostImportRead,
+  type TrackedRecord,
 } from '../src/lib/postImport.js';
 import { importRecordInput, normalizeDay, postedDayProblem, writerUnknownOf } from '../src/lib/postRegistration.js';
 import { writerArticle, type WriterPlan } from '../src/lib/probePlan.js';
@@ -54,9 +66,11 @@ import type { StoredDraft } from '../src/lib/api.js';
 import { decodeBody } from './aeo/collectPage.js';
 import { isPrivateIp, publicCollectorError } from './aeo/networkSafety.js';
 import { PIPELINE_DATA_DIR, stateFilePath } from './appPaths.js';
+import { addExternalPost, ExternalPostsError, readExternalPosts, readOtherLedgers, type TenantLedger } from './externalPosts.js';
 import { readExtraArticles } from './extraArticles.js';
+import { addIgnored, ignoredAtByKey, readIgnored, unignoreKeys } from './postImportIgnored.js';
 import { PROBE_PLAN_FILE, readProbePlan } from './probePlanStore.js';
-import { addPublishedPost, readPublishedPosts } from './publishedPosts.js';
+import { addPublishedPost, readPublishedPosts, type PublishedPost } from './publishedPosts.js';
 import { writeJsonAtomic } from './tenantWriteQueue.js';
 import type { TenantConfig } from './types.js';
 
@@ -67,9 +81,11 @@ import type { TenantConfig } from './types.js';
  *   읽기  POST /api/post-import/read { url } — 글 페이지를 읽어 제목 · 올린 날 · 본문을 뽑고, 고객 브랜드(경쟁사 빼고) 모든 초안과 맞춰
  *         후보 셋과 그 주소가 원장에 적힌 기록을 돌려준다. 페이지 HTML · 본문은 돌려주지 않는다.
  *   목록  POST /api/post-import/list { source } — 저장한 블로그의 글 목록(RSS · 사이트맵 · 워드프레스 공개 API)에서 아직 고객 브랜드 원장에
- *         살아 있지 않은 글 주소.
+ *         살아 있지 않고, 앱 밖 글로 추적하지도 무시하지도 않은 글 주소.
  *   등록  POST /api/post-import/commit { items } — 줄마다 다시 검사하고(고객 브랜드 · 그 브랜드의 초안 · 글 주소 · 다른 글의 주소 아님 ·
  *         올린 날 ≤ 오늘) 그 브랜드의 쓰기 줄에서 addPublishedPost(「올렸어요」와 같은 길)로 적는다. 한 줄이 걸려도 나머지는 적는다.
+ *         앱 밖 글 줄(kind 'external')은 고른 브랜드마다 앱 밖 글 목록(server/externalPosts.ts — 원장과 따로)에, 무시 줄(kind 'ignore')은 앱 전체
+ *         무시 목록(server/postImportIgnored.ts)에 적는다. 결과는 줄마다 제자리에(앱 밖 글은 브랜드마다).
  *   저장한 블로그  GET/PUT /api/blog-sources — 앱 전체에 한 목록(stateFilePath('blog-sources.json'), 아래 주석).
  *
  * ── 바깥 페이지 읽기 ───────────────────────────────────────────────────────
@@ -485,9 +501,13 @@ const customersOf = (tenants: TenantConfig[]) => tenants.filter((t) => !t.cohort
 /**
  * 이 주소(추적 키들 — 붙여 넣은 · 읽은 · 적을 주소)가 고객 브랜드 원장에 적힌 기록(살아 있는 줄 · 옛 기록)과, 글마다 이 주소들 말고 이미 적힌
  * 자사 · 직접 주소 수(CLI의 「이 글에는 이미 다른 주소가 적혀 있습니다」와 같은 셈 — 같은 글을 두 곳에 올렸는지 사람이 보게). 원장을 읽지 못한
- * 브랜드는 로그를 남기고 건너뛴다.
+ * 브랜드는 로그를 남기고 건너뛴다. appLedgers는 이 주소들의 원장 줄(뺀 줄 포함 — 앱 밖 글로 적을 수 있는지를 화면이 서버와 같은 함수로 가린다,
+ * D13)에서 그 판정이 보는 칸만, byTenant는 브랜드마다 읽은 원장(앱 밖 줄이 앱 글로 옮겨 쉬는지 볼 때 쓴다).
  */
-async function ledgerView(customers: TenantConfig[], keys: readonly string[]): Promise<{ known: KnownRecord[]; otherUrls: Map<string, number> }> {
+async function ledgerView(
+  customers: TenantConfig[],
+  keys: readonly string[],
+): Promise<{ known: KnownRecord[]; otherUrls: Map<string, number>; appLedgers: AppLedger[]; byTenant: Map<string, PublishedPost[]> }> {
   const wanted = new Set(keys);
   const parts = await Promise.all(
     customers.map(async (t) => {
@@ -500,9 +520,20 @@ async function ledgerView(customers: TenantConfig[], keys: readonly string[]): P
     }),
   );
   const known: KnownRecord[] = [];
+  const appLedgers: AppLedger[] = [];
   const urlsOf = new Map<string, Set<string>>();
   for (const { t, posts } of parts) {
     const brand = brandLabel(t, customers);
+    const rows = posts
+      .filter((p) => wanted.has(p.key))
+      .map((p) => ({
+        key: p.key,
+        recordedAt: p.recordedAt,
+        publishedOn: p.publishedOn,
+        ...(p.removedAt ? { removedAt: p.removedAt } : {}),
+        ...(p.removedReason ? { removedReason: p.removedReason } : {}),
+      }));
+    if (rows.length > 0) appLedgers.push({ tenantId: t.tenantId, brand, posts: rows });
     for (const p of posts) {
       if (p.removedAt) continue;
       if (wanted.has(p.key)) {
@@ -523,7 +554,49 @@ ${p.articleId}`;
       }
     }
   }
-  return { known, otherUrls: new Map([...urlsOf].map(([at, keys]) => [at, keys.size])) };
+  return {
+    known,
+    otherUrls: new Map([...urlsOf].map(([at, keys]) => [at, keys.size])),
+    appLedgers,
+    byTenant: new Map(parts.map(({ t, posts }) => [t.tenantId, posts])),
+  };
+}
+
+/**
+ * 이 주소(추적 키들)의 앱 밖 기록과 무시 여부(C6 — 원장 기록 known과 따로 싣는다). 앱 밖 글은 고객 브랜드마다 그 쓰기 줄에서 읽고(뺀 줄은
+ * 빼고, 같은 브랜드 원장이 이겨 쉬는 줄은 moved), 무시 목록은 앱 전체에 하나다. 읽지 못한 파일은 stateUnknown으로 알린다 — 그 줄은 미리
+ * 체크하지 않는다(짐작하지 않는다).
+ */
+async function trackState(
+  customers: TenantConfig[],
+  keys: readonly string[],
+  ledgers: ReadonlyMap<string, PublishedPost[]>,
+): Promise<{ tracked: TrackedRecord[]; ignoredAt: string | null; stateUnknown: string[] }> {
+  const wanted = new Set(keys);
+  const stateUnknown: string[] = [];
+  const parts = await Promise.all(
+    customers.map(async (t): Promise<TrackedRecord[]> => {
+      const brand = brandLabel(t, customers);
+      try {
+        return externalViews(await readExternalPosts(t.tenantId), ledgers.get(t.tenantId) ?? [])
+          .filter((v) => wanted.has(v.key) && v.state !== 'removed')
+          .map((v) => ({ tenantId: t.tenantId, brand, postId: v.id, key: v.key, state: v.state === 'moved' ? 'moved' : 'live', publishedOn: v.publishedOn, trackedAt: v.trackedAt }));
+      } catch (err) {
+        console.warn(`[postImport] ${t.tenantId} 앱 밖 글 파일을 읽지 못해 이 브랜드의 앱 밖 기록은 보지 않았습니다:`, err);
+        stateUnknown.push(`${brand}의 앱 밖 글 파일`);
+        return [];
+      }
+    }),
+  );
+  let ignoredAt: string | null = null;
+  try {
+    const at = ignoredAtByKey(await readIgnored());
+    ignoredAt = keys.map((k) => at.get(k)).filter((d): d is string => d !== undefined).sort()[0] ?? null;
+  } catch (err) {
+    console.warn('[postImport] 무시 목록을 읽지 못해 무시 여부를 보지 않았습니다:', err);
+    stateUnknown.push('무시 목록');
+  }
+  return { tracked: parts.flat(), ignoredAt, stateUnknown };
 }
 
 // ── 읽기 ────────────────────────────────────────────────────────────────────
@@ -596,7 +669,9 @@ export async function readPostForImport(rawUrl: unknown, tenants: TenantConfig[]
     return fail(`앱 글을 모으지 못해 짝짓지 않았습니다 — ${reasonOf(err)}`);
   }
   const titleGrams = bigrams(parsed.title);
-  const ledger = await ledgerView(customers, [...new Set([key, readKey, recordKey])]);
+  const keys = [...new Set([key, readKey, recordKey])];
+  const ledger = await ledgerView(customers, keys);
+  const state = await trackState(customers, keys, ledger.byTenant);
   const round = (n: number) => Math.round(n * 1000) / 1000;
   const candidates: ImportCandidate[] = corpus
     .map((d) => ({ d, body: jaccard(bodyGrams, d.bodyGrams), title: jaccard(titleGrams, d.titleGrams) }))
@@ -620,6 +695,7 @@ ${d.articleId}`) ?? 0,
     ok: true,
     url,
     key,
+    readUrl,
     recordUrl,
     recordKey,
     urlNote: notes.length > 0 ? `${notes.join(' · ')}.` : null,
@@ -627,6 +703,14 @@ ${d.articleId}`) ?? 0,
     post: { title: parsed.title, publishedOn: parsed.publishedOn, dateText: parsed.dateText, dateProblem: parsed.dateProblem, bodyChars: parsed.body.length },
     candidates,
     known: ledger.known,
+    tracked: state.tracked,
+    ignoredAt: state.ignoredAt,
+    ownedBrands: ownedBrandsOf(
+      recordUrl,
+      customers.map((t) => ({ tenantId: t.tenantId, brand: brandLabel(t, customers), ownedDomains: t.ownedDomains ?? [] })),
+    ),
+    appLedgers: ledger.appLedgers,
+    stateUnknown: state.stateUnknown,
   };
 }
 
@@ -687,24 +771,38 @@ export function saveBlogSources(body: unknown, now = new Date()): Promise<BlogSo
 
 // ── 새 글 찾기 ──────────────────────────────────────────────────────────────
 
-/** 고객 브랜드 원장에 살아 있는 주소의 추적 키(옛 기록 포함). 원장을 읽지 못한 브랜드는 로그를 남기고 건너뛴다. */
-async function recordedKeys(customers: TenantConfig[]): Promise<Set<string>> {
-  const keys = new Set<string>();
+/**
+ * 이미 적힌 주소의 추적 키 — 고객 브랜드 원장에 살아 있는 주소(옛 기록 포함, recorded)와 앱 밖 글로 추적하는(빼지 않은 — 앱 글로 옮겨 쉬는 줄
+ * 포함) 주소(external). 경쟁사 · 지운 브랜드는 보지 않는다(C16 — 그 브랜드의 앱 밖 글 주소는 새 글 찾기에 다시 나온다). 원장을 읽지 못한
+ * 브랜드는 로그만 남기고(예전과 같다), 앱 밖 글 파일을 읽지 못한 브랜드는 errors로 알린다. 브랜드마다 그 쓰기 줄에서 하나씩 읽는다 — 다른 줄
+ * 안에서 부르지 않는다(C18).
+ */
+async function writtenKeys(customers: TenantConfig[]): Promise<{ recorded: Set<string>; external: Set<string>; errors: string[] }> {
+  const recorded = new Set<string>();
+  const external = new Set<string>();
+  const errors: string[] = [];
   for (const t of customers) {
     try {
-      for (const p of await readPublishedPosts(t.tenantId)) if (!p.removedAt) keys.add(p.key);
+      for (const p of await readPublishedPosts(t.tenantId)) if (!p.removedAt) recorded.add(p.key);
     } catch (err) {
       console.warn(`[postImport] ${t.tenantId} 원장을 읽지 못해 이 브랜드의 기록은 빼지 않았습니다:`, err);
     }
+    try {
+      for (const p of await readExternalPosts(t.tenantId)) if (!p.removedAt) external.add(p.key);
+    } catch (err) {
+      console.warn(`[postImport] ${t.tenantId} 앱 밖 글 파일을 읽지 못해 이 브랜드의 앱 밖 글은 빼지 않았습니다:`, err);
+      errors.push(`${brandLabel(t, customers)}의 앱 밖 글 파일을 읽지 못해 그 브랜드의 앱 밖 글도 보입니다 — ${reasonOf(err)}`);
+    }
   }
-  return keys;
+  return { recorded, external, errors };
 }
 
 const FEED_ACCEPT = 'application/rss+xml,application/atom+xml,application/xml;q=0.9,text/xml;q=0.9,*/*;q=0.5';
 
 /**
  * 저장한 블로그 하나의 새 글 — 목록(RSS · 사이트맵 · 워드프레스 공개 API)을 읽어 이 블로그의 글 주소만 모으고(listedPostUrls — www. · m.는
- * 떼고 보고, 목록을 실제로 받은 곳(리디렉션 뒤)의 호스트도 같은 블로그), 고객 브랜드 원장에 살아 있는 주소를 뺀다. 최근 글부터
+ * 떼고 보고, 목록을 실제로 받은 곳(리디렉션 뒤)의 호스트도 같은 블로그), 고객 브랜드 원장에 살아 있는 주소 · 앱 밖 글로 추적 중인 주소 ·
+ * 무시한 주소를 뺀다(자르기 전에 — 뺀 앱 밖 글 · 무시한 글 수는 알린다). 최근 글부터
  * NEW_URLS_MAX편만 돌려준다(작성자의 원래 블로그는 글이 천 편을 넘는다 — 11-09 실측 1043편). 읽지 못한 목록은 errors로 알린다(다른 목록으로
  * 하나라도 읽었으면 404는 알리지 않는다 — 그 밖 블로그는 RSS · feed · 사이트맵 가운데 있는 것만 쓴다). 목록은 읽었는데 이 블로그 글이 하나도
  * 없고 다른 사이트 글 주소만 있으면(워드프레스에 연결한 도메인 · 옮긴 블로그) 그 주소로 저장하라고 알린다. 저장하지 않은 블로그는 400.
@@ -778,14 +876,42 @@ export async function listBlogPosts(rawSource: unknown, tenants: TenantConfig[])
   if (others.length > 0) {
     errors.push({ text: `목록의 글 주소가 다른 주소(${others.join(' · ')})에 있습니다 — 그 주소로 블로그를 저장해 주세요.`, notFound: false });
   }
-  const recorded = await recordedKeys(customersOf(tenants));
-  const fresh = newestFirst(posts.filter((u) => !recorded.has(trackingKey(u) ?? '')));
+  // 앱 글로 기록한 주소 · 앱 밖 글로 추적 중인 주소 · 무시한 주소는 NEW_URLS_MAX편으로 자르기 전에 뺀다(뺀 수는 알린다 — 앱 글은 예전처럼
+  // 세지 않는다). 무시 목록을 읽지 못하면 숨기지 않고 알린다.
+  const written = await writtenKeys(customersOf(tenants));
+  for (const text of written.errors) errors.push({ text, notFound: false });
+  let ignored = new Map<string, string>();
+  try {
+    ignored = ignoredAtByKey(await readIgnored());
+  } catch (err) {
+    console.warn('[postImport] 무시 목록을 읽지 못해 무시한 글도 보입니다:', err);
+    errors.push({ text: `무시 목록을 읽지 못해 무시한 글도 보입니다 — ${reasonOf(err)}`, notFound: false });
+  }
+  let hiddenExternal = 0;
+  let hiddenIgnored = 0;
+  const fresh = newestFirst(
+    posts.filter((u) => {
+      const k = trackingKey(u) ?? '';
+      if (written.recorded.has(k)) return false;
+      if (written.external.has(k)) {
+        hiddenExternal += 1;
+        return false;
+      }
+      if (ignored.has(k)) {
+        hiddenIgnored += 1;
+        return false;
+      }
+      return true;
+    }),
+  );
   return {
     source: norm.url,
     platform: norm.platform,
     found: posts.length,
     newUrls: fresh.slice(0, NEW_URLS_MAX),
     older: Math.max(0, fresh.length - NEW_URLS_MAX),
+    hiddenExternal,
+    hiddenIgnored,
     errors: errors.filter((e) => !(anyRead && e.notFound)).map((e) => e.text),
   };
 }
@@ -799,13 +925,13 @@ function otherRecordMessage(r: KnownRecord): string {
 }
 
 async function commitOne(
-  item: CommitItem,
+  item: AppCommitItem,
   customers: TenantConfig[],
   bankFor: (tenant: TenantConfig) => Promise<QuestionBank | null>,
   today: string,
-): Promise<CommitResult> {
-  const base = { tenantId: item.tenantId, articleId: item.articleId, url: item.url };
-  const fail = (error: string): CommitResult => ({ ...base, status: 'error', error });
+): Promise<AppCommitResult> {
+  const base = { kind: 'app' as const, tenantId: item.tenantId, articleId: item.articleId, url: item.url };
+  const fail = (error: string): AppCommitResult => ({ ...base, status: 'error', error });
   const tenant = customers.find((t) => t.tenantId === item.tenantId);
   if (!tenant) return fail('고객 브랜드를 찾지 못했습니다(없는 브랜드 · 비교용 경쟁사에는 적지 않습니다).');
   const check = isArticleUrl(item.url);
@@ -851,28 +977,131 @@ async function commitOne(
 }
 
 /**
+ * 앱 밖 글 한 줄 — 고른 브랜드마다 앱 밖 글 목록에 적는다(server/externalPosts.ts addExternalPost — 원장은 읽기만). 올린 날 · 제목 · 주소는 줄마다
+ * 한 번 먼저 검사한다(브랜드마다 같은 400을 되풀이하지 않는다). 그 브랜드의 원장이 이기면 그 브랜드만 걸리고(409 — C5), 다른 브랜드의 앱 글은
+ * 막지 않고 알린다(alsoAppIn — D13). 경쟁사 · 지운 · 없는 브랜드는 그 브랜드만 걸린다. ledgers는 브랜드 쓰기 줄 밖에서 미리 읽은 원장(C18).
+ */
+async function commitExternal(item: ExternalCommitItem, customers: TenantConfig[], ledgers: readonly TenantLedger[]): Promise<ExternalCommitResult> {
+  const input = { url: item.url, title: item.title, publishedOn: item.publishedOn, publishedOnSource: item.publishedOnSource };
+  const checked = parseExternalAddInput(input);
+  if (!checked.ok) return { kind: 'external', url: item.url, status: 'error', error: checked.error, tenants: [] };
+  const brandOf = (tenantId: string) => {
+    const t = customers.find((c) => c.tenantId === tenantId);
+    return t ? brandLabel(t, customers) : tenantId;
+  };
+  const tenants: ExternalTenantResult[] = [];
+  for (const tenantId of item.tenantIds) {
+    if (!customers.some((c) => c.tenantId === tenantId)) {
+      tenants.push({ tenantId, brand: tenantId, status: 'error', error: '고객 브랜드를 찾지 못했습니다(없는 브랜드 · 지운 브랜드 · 비교용 경쟁사에는 적지 않습니다).' });
+      continue;
+    }
+    try {
+      const r = await addExternalPost(tenantId, input, ledgers);
+      tenants.push({
+        tenantId,
+        brand: brandOf(tenantId),
+        status: r.existing ? 'existing' : 'added',
+        postId: r.post.id,
+        ...(r.alsoAppIn.length > 0 ? { alsoAppIn: r.alsoAppIn.map(brandOf) } : {}),
+      });
+    } catch (err) {
+      if (!(err instanceof ExternalPostsError)) console.error(`[postImport] ${tenantId} 앱 밖 글 등록 중 오류 — 이 브랜드만 걸림으로 둡니다:`, err);
+      tenants.push({ tenantId, brand: brandOf(tenantId), status: 'error', error: reasonOf(err) });
+    }
+  }
+  return { kind: 'external', url: item.url, status: externalCommitStatus(tenants), tenants };
+}
+
+/**
+ * 무시 줄들 — 앱 전체 무시 목록에 한 번에 적는다. 이미 앱 글(원장에 살아 있는 줄) · 앱 밖 글로 적힌 주소는 거절한다(새 글 찾기에서 이미 빠진다).
+ * 「읽지 못함」 줄의 주소도 받는다(D14). 브랜드 파일은 무시 목록 쓰기 줄에 들어가기 전에 읽는다(C18 — 그 줄 안에서는 무시 목록만 다룬다).
+ */
+async function commitIgnores(list: readonly { i: number; item: IgnoreCommitItem }[], customers: TenantConfig[]): Promise<{ i: number; result: IgnoreCommitResult }[]> {
+  const written = await writtenKeys(customers);
+  const out: { i: number; result: IgnoreCommitResult }[] = [];
+  const toAdd: { i: number; item: IgnoreCommitItem }[] = [];
+  for (const { i, item } of list) {
+    const fail = (error: string) => out.push({ i, result: { kind: 'ignore', url: item.url, status: 'error', error } });
+    const check = isArticleUrl(item.url);
+    const keys = commitItemKeys(item);
+    if (!check.ok) fail(ARTICLE_URL_REASON[check.reason]);
+    else if (keys.some((k) => written.recorded.has(k))) fail('이미 앱 글로 적힌 주소라 무시하지 않았습니다(새 글 찾기에서 이미 빠집니다).');
+    else if (keys.some((k) => written.external.has(k))) fail('이미 앱 밖 글로 추적 중인 주소라 무시하지 않았습니다(새 글 찾기에서 이미 빠집니다) — 추적을 그만두려면 발행 현황에서 빼 주세요.');
+    else toAdd.push({ i, item });
+  }
+  if (toAdd.length === 0) return out;
+  try {
+    const statuses = await addIgnored(toAdd.map(({ item }) => ({ urls: [item.url, ...(item.alsoUrls ?? [])] })));
+    toAdd.forEach(({ i, item }, j) => out.push({ i, result: { kind: 'ignore', url: item.url, status: statuses[j] ?? 'error' } }));
+  } catch (err) {
+    console.warn('[postImport] 무시 목록에 적지 못했습니다:', err);
+    for (const { i, item } of toAdd) out.push({ i, result: { kind: 'ignore', url: item.url, status: 'error', error: `무시 목록에 적지 못했습니다 — ${reasonOf(err)}` } });
+  }
+  return out;
+}
+
+/**
  * 등록 — 줄마다 다시 검사하고 적는다(한 줄씩 차례로 — 같은 브랜드의 쓰기 줄에 선다). 걸린 줄은 그 줄만 error(한 줄에서 예외가 나도 — 파일
  * 잠김 등 — 그 줄만이다. 앞 줄은 이미 적혔으므로 요청 전체를 실패로 돌리면 적힌 줄이 「못 적음」으로 보인다), 이미 그 글의 기록이면
  * existing(원장을 바꾸지 않는다 — 날짜도). 본문 모양이 틀리면 400. bankFor는 질문 은행 글의 판을 볼 은행(GET /api/question-bank와 같다).
+ *
+ * 앱 글 · 앱 밖 글 줄을 먼저 차례로 적고, 무시 줄은 그 뒤에 한 번에(브랜드 쓰기가 끝난 뒤 · 줄 밖에서 — C18), 마지막에 이번에 적은 주소의
+ * 무시를 푼다(그 줄의 주소 모양 모두 — C11). 결과는 줄 순서 그대로다(C13). 무시를 풀지 못했으면 warnings로 알린다(적은 기록은 그대로).
  */
 export async function commitPostImport(
   body: unknown,
   tenants: TenantConfig[],
   bankFor: (tenant: TenantConfig) => Promise<QuestionBank | null>,
   now = Date.now(),
-): Promise<{ results: CommitResult[] }> {
+): Promise<{ results: CommitResult[]; warnings: string[] }> {
   const parsed = parseCommitItems(body);
   if (!parsed.ok) throw new PostImportError(parsed.error, 400);
   const customers = customersOf(tenants);
   const today = todayKst(now);
-  const results: CommitResult[] = [];
-  for (const item of parsed.items) {
+  const results: (CommitResult | null)[] = parsed.items.map(() => null);
+  const warnings: string[] = [];
+  /** 이번에 앱 글 · 앱 밖 글로 적은 주소의 추적 키 — 끝에 무시를 푼다. */
+  const registered = new Set<string>();
+  // 다른 브랜드 원장(「같은 주소」 알림) — 앱 밖 글 줄이 처음 나올 때 모두 읽고, 그 뒤 앱 글을 새로 적은 브랜드만 다시 읽는다. 브랜드 쓰기
+  // 줄에 들어가기 전에 읽는다(C18 — 줄 안에서 다른 줄을 기다리지 않는다).
+  let ledgers: TenantLedger[] | null = null;
+  const stale = new Set<string>();
+  for (const [i, item] of parsed.items.entries()) {
+    if (item.kind === 'ignore') continue;
+    if (item.kind === 'app') {
+      let r: AppCommitResult;
+      try {
+        r = await commitOne(item, customers, bankFor, today);
+      } catch (err) {
+        console.error(`[postImport] ${item.tenantId} ${item.articleId} 등록 중 오류 — 이 줄만 걸림으로 둡니다:`, err);
+        r = { kind: 'app', tenantId: item.tenantId, articleId: item.articleId, url: item.url, status: 'error', error: `등록하지 못했습니다 — ${reasonOf(err)}` };
+      }
+      if (r.status === 'added') stale.add(item.tenantId);
+      if (r.status !== 'error') for (const k of commitItemKeys(item)) registered.add(k);
+      results[i] = r;
+      continue;
+    }
+    if (ledgers === null) {
+      ledgers = await readOtherLedgers(customers.map((t) => t.tenantId));
+      stale.clear();
+    } else if (stale.size > 0) {
+      const fresh = await readOtherLedgers([...stale]);
+      ledgers = [...ledgers.filter((l) => !stale.has(l.tenantId)), ...fresh];
+      stale.clear();
+    }
+    const r = await commitExternal(item, customers, ledgers);
+    if (r.status !== 'error') for (const k of commitItemKeys(item)) registered.add(k);
+    results[i] = r;
+  }
+  const ignores = parsed.items.flatMap((item, i) => (item.kind === 'ignore' ? [{ i, item }] : []));
+  if (ignores.length > 0) for (const { i, result } of await commitIgnores(ignores, customers)) results[i] = result;
+  if (registered.size > 0) {
     try {
-      results.push(await commitOne(item, customers, bankFor, today));
+      await unignoreKeys([...registered]);
     } catch (err) {
-      console.error(`[postImport] ${item.tenantId} ${item.articleId} 등록 중 오류 — 이 줄만 걸림으로 둡니다:`, err);
-      results.push({ tenantId: item.tenantId, articleId: item.articleId, url: item.url, status: 'error', error: `등록하지 못했습니다 — ${reasonOf(err)}` });
+      console.warn('[postImport] 등록한 주소의 무시를 풀지 못했습니다:', err);
+      warnings.push(`등록한 주소의 무시를 풀지 못했습니다 — ${reasonOf(err)}. 그 주소는 새 글 찾기에서 계속 숨을 수 있습니다.`);
     }
   }
-  return { results };
+  return { results: results.map((r, i) => r ?? { kind: 'ignore', url: parsed.items[i]!.url, status: 'error', error: '처리하지 못했습니다.' }), warnings };
 }

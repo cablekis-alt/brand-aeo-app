@@ -19,6 +19,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import net from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import type { ExternalPostView } from '../src/lib/externalPosts'
 import { parseWriterPlan } from '../src/lib/probePlan'
 import { todayKst, trackingKey } from '../src/lib/publishedUrl'
 import {
@@ -34,12 +35,14 @@ import {
   markLabel,
   naverSearchUrl,
   orderRows,
+  ownedUrl,
   parseIndexCheckInput,
   parseIndexChecksFile,
   platformOf,
   postingsOf,
   publishStatusCsv,
   publishStatusFileName,
+  recheckCell,
   recheckOf,
   rowRecheck,
   sameUrlBrands,
@@ -49,6 +52,7 @@ import {
   unpostedLabel,
   validFilter,
   withIndexRecord,
+  writerFilterValue,
   writerLabel,
   type IndexCheck,
   type IndexCheckRecord,
@@ -561,6 +565,133 @@ ok(
     markLabel(twoRows[0]!, 'naver', 'shown', shown('2026-11-04')) === '가상스테이 「가상 글 하나」 티스토리 네이버 노출됨 — 지금 표시됨, 다시 누르면 확인일을 오늘로',
 )
 
+// ── 11) 앱 밖 글 줄(2026-11-10 — src/lib/externalPosts.ts, 설계 B안 · 검토 C2 · C12 · C14 · C15 · 결정 D4 · D12) ──────────
+// 앱에서 만들지 않은 글(손글)도 발행 현황에 한 줄로 보이되, 작성자 진행 · 원장과 섞이지 않는다. 작성자 칸은 「앱 밖 글」(배정 파일을 못
+// 읽어도 「미확인」이 아니다), 다시 볼 날은 올린 날과 추적을 시작한 날 가운데 늦은 날부터(오래된 손글이 등록하자마자 「14일 지남」으로 쏟아지지
+// 않게), 같은 브랜드에 앱 글로 옮긴 줄은 「앱 글로 옮김」으로 쉰다(뺀 글처럼 숨김).
+const xview = (id: string, url: string, over: Partial<ExternalPostView> = {}): ExternalPostView => ({
+  id,
+  url,
+  key: trackingKey(url)!,
+  title: '가상 손글',
+  publishedOn: '2026-09-01',
+  publishedOnSource: 'page',
+  trackedAt: '2026-11-09T01:00:00.000Z',
+  state: 'live',
+  movedOn: null,
+  appCountsFrom: null,
+  ...over,
+})
+const HAND_OLD = 'https://hand.tistory.com/1'
+const HAND_NODATE = 'https://hand.tistory.com/2'
+const HAND_MOVED = 'https://hand.tistory.com/3'
+const HAND_WRONG = 'https://hand.tistory.com/4'
+const HAND_DOWN = 'https://hand.tistory.com/5'
+const externalIn = [
+  xview('x-aaaaaaaaaa01', HAND_OLD),
+  xview('x-aaaaaaaaaa02', HAND_NODATE, { title: null, publishedOn: null, publishedOnSource: 'unknown', trackedAt: '2026-11-08T03:00:00.000Z' }),
+  xview('x-aaaaaaaaaa03', HAND_MOVED, { state: 'moved', movedOn: '2026-11-07', appCountsFrom: '2026-11-07' }),
+  xview('x-aaaaaaaaaa04', HAND_WRONG, { state: 'removed', removedAt: '2026-11-08T00:00:00.000Z', removedReason: 'mistake' }),
+  xview('x-aaaaaaaaaa05', HAND_DOWN, { state: 'removed', removedAt: '2026-11-08T00:00:00.000Z', removedReason: 'taken-down' }),
+]
+const withExternal = buildTenantStatus({
+  tenantId: 'vpub-a',
+  brand: '가상스테이',
+  ownedDomains: owned,
+  posts: ledgerA,
+  plan,
+  planUnreadable: false,
+  checks: {
+    'p-aaaaaaaaaaa1': rec('p-aaaaaaaaaaa1', NAVER, { naver: shown('2026-10-24') }),
+    'p-aaaaaaaaaaa4': rec('p-aaaaaaaaaaa4', OWN, { google: notYet('2026-10-30') }),
+  },
+  external: externalIn,
+})
+const xrow = (id: string) => withExternal.rows.find((r) => r.postId === id)
+ok(
+  '앱 밖 글 — 살아 있는 줄은 올린 글 한 줄(origin external) · 작성자 칸 「앱 밖 글」 · 제목 없으면 null(화면은 「제목 미확인」)',
+  xrow('x-aaaaaaaaaa01')?.kind === 'posted' && xrow('x-aaaaaaaaaa01')?.origin === 'external' && writerLabel(xrow('x-aaaaaaaaaa01')!) === '앱 밖 글' &&
+    xrow('x-aaaaaaaaaa01')?.writer === null && xrow('x-aaaaaaaaaa01')?.writerUnknown === null && xrow('x-aaaaaaaaaa02')?.title === null &&
+    xrow('x-aaaaaaaaaa01')?.platform?.label === '티스토리' && xrow('x-aaaaaaaaaa01')?.rowKey === 'vpub-a|x-aaaaaaaaaa01' &&
+    withExternal.rows.filter((r) => r.origin === 'app' && r.kind === 'posted').length === built.rows.filter((r) => r.kind === 'posted').length,
+)
+ok('앱 밖 글 — 작성자 진행(올림 n/배정)은 그대로(앱 밖 글을 세지 않는다)', JSON.stringify(withExternal.writers) === JSON.stringify(built.writers))
+const unreadablePlan = buildTenantStatus({ tenantId: 'vpub-e', brand: '깨진배정', ownedDomains: [], posts: [post('p-e1', NAVER, { articleId: A1 })], plan: null, planUnreadable: true, checks: {}, external: [xview('x-eeeeeeeeee01', HAND_OLD)] })
+ok(
+  'C12 — 배정 파일을 못 읽어도 앱 밖 줄은 「앱 밖 글」(미확인이 아니다) · 앱 글 줄은 그대로 미확인',
+  writerLabel(unreadablePlan.rows.find((r) => r.origin === 'external')!) === '앱 밖 글' && unreadablePlan.rows.find((r) => r.origin === 'external')?.writerUnknown === null &&
+    writerLabel(unreadablePlan.rows.find((r) => r.origin === 'app')!) === '미확인',
+)
+const oldRow = xrow('x-aaaaaaaaaa01')!
+ok(
+  'D4 — 오래된 손글(9/1 올림)을 오늘(11/9) 추적하기 시작하면 다시 볼 날은 추적 시작일부터 3일째(14일 지남으로 쏟아지지 않는다) · 올린 날 칸은 그대로',
+  oldRow.recheckFrom === '2026-11-09' && oldRow.trackedOn === '2026-11-09' && oldRow.publishedOn === '2026-09-01' && !rowRecheck(oldRow, '2026-11-09').due &&
+    rowRecheck(oldRow, '2026-11-09').nextOn === '2026-11-12' && rowRecheck({ ...oldRow, recheckFrom: '2026-09-01' }, '2026-11-09').over,
+)
+const noDateRow = xrow('x-aaaaaaaaaa02')!
+ok(
+  'D4 — 올린 날을 모르면 추적을 시작한 날부터 센다(올린 날 칸은 「모름」)',
+  noDateRow.publishedOn === null && noDateRow.recheckFrom === '2026-11-08' && rowRecheck(noDateRow, '2026-11-09').nextOn === '2026-11-11' &&
+    publishStatusCsv([noDateRow], '2026-11-09').split('\r\n')[1]!.includes(',앱 밖 글,제목 미확인,티스토리,https://hand.tistory.com/2,모름,'),
+)
+ok(
+  'D4 — 올린 날이 추적을 시작한 날과 같거나 늦으면 올린 날부터(앱 글 줄은 늘 올린 날)',
+  buildTenantStatus({ ...tenantInput([]), external: [xview('x-bbbbbbbbbb01', HAND_OLD, { publishedOn: '2026-11-09', trackedAt: '2026-11-08T16:00:00.000Z' })] }).rows[0]?.recheckFrom === '2026-11-09' &&
+    built.rows.filter((r) => r.kind === 'posted').every((r) => r.recheckFrom === r.publishedOn && r.trackedOn === null),
+)
+const movedRow = xrow('x-aaaaaaaaaa03')!
+ok(
+  'D12 — 같은 브랜드에 앱 글로 옮긴 앱 밖 줄은 「앱 글로 옮김(날짜)」으로 쉰다(뺀 글처럼 숨기고 다시 보지 않는다)',
+  movedRow.removed?.reason === 'moved' && movedRow.removed.at === '2026-11-07' && recheckCell(movedRow, '2026-11-09') === '앱 글로 옮김(2026-11-07)' &&
+    !rowRecheck(movedRow, '2026-11-09').due && !filterRows(withExternal.rows, base, '2026-11-09').some((r) => r.postId === 'x-aaaaaaaaaa03') &&
+    filterRows(withExternal.rows, { ...base, showRemoved: true }, '2026-11-09').some((r) => r.postId === 'x-aaaaaaaaaa03'),
+)
+ok(
+  '앱 밖 글 — 뺀 줄(잘못 적음 · 글을 내림)은 뺀 글로(기본은 숨김)',
+  xrow('x-aaaaaaaaaa04')?.removed?.reason === 'mistake' && xrow('x-aaaaaaaaaa05')?.removed?.reason === 'taken-down' &&
+    !filterRows(withExternal.rows, base, '2026-11-09').some((r) => r.postId === 'x-aaaaaaaaaa04' || r.postId === 'x-aaaaaaaaaa05'),
+)
+ok(
+  '앱 밖 글 — 작성자 거르기 「앱 밖 글」(external)은 앱 밖 줄만, 「배정 없음」에는 앱 밖 줄이 들지 않는다',
+  writerFilterValue(oldRow) === 'external' &&
+    filterRows(withExternal.rows, { ...base, writer: 'external' }, '2026-11-09').map((r) => r.postId).join() === 'x-aaaaaaaaaa01,x-aaaaaaaaaa02' &&
+    !filterRows(withExternal.rows, { ...base, writer: 'none' }, '2026-11-09').some((r) => r.origin === 'external') &&
+    validFilter({ ...base, writer: 'external' }, withExternal.rows).writer === 'external',
+)
+// C12 — 같은 주소가 한 브랜드에선 앱 글, 다른 브랜드에선 앱 밖 글이면 앱 글로 센다(앱 글 a + 앱 밖 b = 올린 글).
+const crossApp = buildTenantStatus({ ...tenantInput([post('p-c1', HAND_OLD)]), tenantId: 'vpub-g', brand: '가상스테이전국' })
+const crossRows = [...withExternal.rows, ...crossApp.rows]
+const crossSum = summarizeStatus(crossRows, '2026-11-09')
+ok(
+  'C12 — 요약: 같은 주소가 어느 브랜드에서든 앱 글이면 앱 글로 센다(앱 글 a + 앱 밖 b = 올린 글)',
+  crossSum.app + crossSum.external === crossSum.posted && crossSum.external === 1 && summarizeStatus(withExternal.rows, '2026-11-09').external === 2 &&
+    summarizeStatus(withExternal.rows, '2026-11-09').app === summarizeStatus(built.rows, '2026-11-09').posted,
+)
+ok('C14 — 오늘 다시 볼 거르기 · 요약도 같은 기준일(앱 밖 줄은 추적 시작일부터)', summarizeStatus([oldRow], '2026-11-09').due === 0 && filterRows([oldRow], { ...base, dueOnly: true }, '2026-11-09').length === 0)
+// C15 — 색인 표시는 주소의 것: 다른 고객 브랜드의 같은 주소(앱 글 줄)에서 누른 표시가 앱 밖 줄에도, 앱 밖 줄의 표시가 앱 글 줄에도 보인다.
+const sharedX = buildTenantStatus({
+  ...tenantInput([]),
+  external: [xview('x-cccccccccc01', TISTORY)],
+  others: [{ tenantId: 'vpub-g', brand: '가상스테이전국', checks: { 'p-gg': rec('p-gg', TISTORY, { naver: shown('2026-11-09') }) } }],
+})
+const sharedApp = buildTenantStatus({
+  ...tenantInput([post('p-gg', TISTORY)]),
+  tenantId: 'vpub-g',
+  brand: '가상스테이전국',
+  others: [{ tenantId: 'vpub-a', brand: '가상스테이', checks: { 'x-cccccccccc01': rec('x-cccccccccc01', TISTORY, { google: shown('2026-11-09') }) } }],
+})
+ok(
+  'C15 — 색인 표시는 같은 주소 키로 앱 글 줄 · 앱 밖 줄이 서로 이어받는다(다른 고객 브랜드 포함)',
+  sharedX.rows[0]?.naver?.state === 'shown' && sharedX.rows[0]?.checkFrom === '가상스테이전국' && sharedApp.rows[0]?.google?.state === 'shown' && sharedApp.rows[0]?.checkFrom === '가상스테이',
+)
+// C2 — 자사 주소인지는 알려진 플랫폼보다 먼저(플랫폼 이름 판정 platformOf와 다르다).
+ok(
+  'C2 — 자사 주소 판정(ownedUrl)은 알려진 플랫폼(티스토리) 호스트도 자사 주소 칸으로 직접 맞춘다 · 하위 도메인 · www · 주소 모양 칸',
+  ownedUrl('https://staymeomoom-fake.tistory.com/3', ['staymeomoom-fake.tistory.com']) && platformOf('https://staymeomoom-fake.tistory.com/3', ['staymeomoom-fake.tistory.com'])?.key === 'tistory' &&
+    ownedUrl('https://www.stay.example/blog/1', ['https://stay.example/']) && ownedUrl('https://m.stay.example/a', ['stay.example']) &&
+    !ownedUrl('https://other.example/a', ['stay.example']) && !ownedUrl('ftp://stay.example/a', ['stay.example']) && !ownedUrl('https://notstay.example/a', ['stay.example']),
+)
+
 // ── 10) 서버 길 ─────────────────────────────────────────────────────────────
 const PORT = 4171
 const BASE = `http://127.0.0.1:${PORT}`
@@ -596,6 +727,9 @@ writeFileSync(
     tenant('vpub-e', '깨진배정'),
     tenant('vpub-g', '가상스테이전국'),
     tenant('vpub-comp', '가상경쟁사', { cohortOnly: true }),
+    tenant('vpub-x', '가상손글'),
+    tenant('vpub-y', '가상손글이웃'),
+    tenant('vpub-xb', '깨진앱밖글'),
   ]),
 )
 const tenantDir = (id: string) => {
@@ -630,6 +764,42 @@ writeFileSync(
     checks: { 'p-gggggggggg04': rec('p-gggggggggg04', REPOST, { naver: shown('2026-10-05'), google: shown('2026-10-05'), updatedAt: '2026-10-05T01:00:00.000Z' }) },
   }),
 )
+
+// 앱 밖 글 — vpub-x는 손글을 추적(살아 있는 줄 둘 · 같은 브랜드에 앱 글로 옮긴 줄 · 잘못 적어 뺀 줄), vpub-y는 그 손글 하나(X_SHARED)를 앱
+// 글로 가졌다(같은 주소의 색인 표시를 함께 쓴다), vpub-xb는 앱 밖 글 파일이 깨졌다(앱 글 줄은 그대로 보여야 한다).
+const X_SHARED = 'https://hand.tistory.com/10'
+const X_NODATE = 'https://hand.tistory.com/11'
+const X_MOVED = 'https://hand.tistory.com/12'
+const X_WRONG = 'https://hand.tistory.com/13'
+const trackedNow = new Date().toISOString()
+const xRow = (id: string, url: string, over: Record<string, unknown> = {}) => ({
+  id,
+  url,
+  key: trackingKey(url),
+  title: '가상 손글',
+  publishedOn: '2026-09-01',
+  publishedOnSource: 'page',
+  trackedAt: trackedNow,
+  ...over,
+})
+const EXTERNAL_X = JSON.stringify({
+  version: 1,
+  keyRule: 3,
+  posts: [
+    xRow('x-dddddddddd01', X_SHARED),
+    xRow('x-dddddddddd02', X_NODATE, { title: null, publishedOn: null, publishedOnSource: 'unknown' }),
+    xRow('x-dddddddddd03', X_MOVED, { trackedAt: '2026-11-01T01:00:00.000Z' }),
+    xRow('x-dddddddddd04', X_WRONG, { removedAt: '2026-11-02T01:00:00.000Z', removedReason: 'mistake' }),
+  ],
+})
+const LEDGER_X = ledgerFile([post('p-xxxxxxxxxx01', X_MOVED, { publishedOn: '2026-11-07', recordedAt: '2026-11-07T01:00:00.000Z', articleTitle: '가상 옮긴 글' })])
+const LEDGER_Y = ledgerFile([post('p-yyyyyyyyyy01', X_SHARED, { articleTitle: '가상 이웃 앱 글' })])
+writeFileSync(path.join(tenantDir('vpub-x'), 'external-posts.json'), EXTERNAL_X)
+writeFileSync(path.join(tenantDir('vpub-x'), 'published-posts.json'), LEDGER_X)
+writeFileSync(path.join(tenantDir('vpub-y'), 'published-posts.json'), LEDGER_Y)
+writeFileSync(path.join(tenantDir('vpub-xb'), 'published-posts.json'), ledgerFile([post('p-xbxbxbxb0001', 'https://fake.tistory.com/xb', { articleTitle: '가상 앱 글' })]))
+const BROKEN_EXTERNAL = '{"version":1,"posts":['
+writeFileSync(path.join(tenantDir('vpub-xb'), 'external-posts.json'), BROKEN_EXTERNAL)
 
 const env: Record<string, string | undefined> = {
   ...process.env,
@@ -784,6 +954,75 @@ try {
   ok('발행 현황 요약 — 모든 브랜드에서 서로 다른 주소로 센다', summarizeStatus(afterCross2.body.rows, afterCross2.body.today).posted === new Set(liveAll.map((r) => trackingKey(r.url!))).size)
   ok('vpub-g 원장도 바뀌지 않는다', readFileSync(path.join(dir, 'data', 'vpub-g', 'published-posts.json'), 'utf-8') === LEDGER_G)
   ok('원장(published-posts.json)은 한 글자도 바뀌지 않는다', readFileSync(path.join(dir, 'data', 'vpub-a', 'published-posts.json'), 'utf-8') === LEDGER_A)
+
+  // 앱 밖 글 줄(2026-11-10) — 서버가 같은 쓰기 줄에서 앱 밖 글 파일도 읽어 넘긴다.
+  const xStatus = await getStatus()
+  const today = xStatus.body.today
+  const xRowOf = (id: string) => xStatus.body.rows.find((r) => r.tenantId === 'vpub-x' && r.postId === id)
+  ok(
+    '앱 밖 글 — 발행 현황에 한 줄(작성자 칸 「앱 밖 글」 · 제목 없으면 null · 올린 날 모름) · 브랜드 목록(brands)에 고객 브랜드만',
+    xRowOf('x-dddddddddd01')?.origin === 'external' && writerLabel(xRowOf('x-dddddddddd01')!) === '앱 밖 글' && xRowOf('x-dddddddddd02')?.title === null &&
+      xRowOf('x-dddddddddd02')?.publishedOn === null && Array.isArray(xStatus.body.brands) && xStatus.body.brands.some((b) => b.tenantId === 'vpub-x' && b.brand === '가상손글') &&
+      !xStatus.body.brands.some((b) => b.tenantId === 'vpub-comp'),
+  )
+  ok(
+    'D4 — 오래된 손글을 오늘 추적하기 시작하면 다음 다시 볼 날은 오늘부터 3일째',
+    xRowOf('x-dddddddddd01')?.recheckFrom === today && rowRecheck(xRowOf('x-dddddddddd01')!, today).nextOn === addDays(today, 3) && !rowRecheck(xRowOf('x-dddddddddd01')!, today).due,
+  )
+  ok(
+    'D12 — 같은 브랜드에 앱 글로 옮긴 줄은 「앱 글로 옮김」(옮긴 날 = 원장 줄을 적은 한국 날짜) · 잘못 적어 뺀 줄은 뺀 글',
+    xRowOf('x-dddddddddd03')?.removed?.reason === 'moved' && xRowOf('x-dddddddddd03')?.removed?.at === '2026-11-07' && xRowOf('x-dddddddddd04')?.removed?.reason === 'mistake' &&
+      xStatus.body.rows.some((r) => r.tenantId === 'vpub-x' && r.postId === 'p-xxxxxxxxxx01' && r.origin === 'app' && !r.removed),
+  )
+  const xbRows = xStatus.body.rows.filter((r) => r.tenantId === 'vpub-xb')
+  const xbIssue = xStatus.body.issues.find((i) => i.tenantId === 'vpub-xb')
+  ok(
+    '앱 밖 글 파일이 깨진 브랜드 — 앱 글 줄은 그대로 보이고 오류에 그 파일을 알린다(파일은 그대로)',
+    xbRows.length === 1 && xbRows[0]!.origin === 'app' && /external-posts\.json/.test(xbIssue?.error ?? '') &&
+      readFileSync(path.join(dir, 'data', 'vpub-xb', 'external-posts.json'), 'utf-8') === BROKEN_EXTERNAL,
+  )
+  const pairSum = summarizeStatus(xStatus.body.rows.filter((r) => r.tenantId === 'vpub-x' || r.tenantId === 'vpub-y'), today)
+  ok('C12 — 요약: 다른 브랜드에서 앱 글인 주소는 앱 글로 센다(앱 글 a + 앱 밖 b = 올린 글)', pairSum.posted === 3 && pairSum.app === 2 && pairSum.external === 1)
+  ok('작성자 진행은 앱 밖 글과 상관없다(vpub-a 그대로)', xStatus.body.writers.filter((w) => w.tenantId === 'vpub-a').map((w) => `${w.key}:${w.posted}/${w.assigned}`).join(',') === 'w1:1/2,w2:0/2')
+
+  // 색인 표시 — x- id(앱 밖 줄)도 같은 파일에, 같은 주소 키의 앱 글 줄(다른 고객 브랜드)과 함께 쓴다(C15).
+  const xMark = await put('vpub-x', 'x-dddddddddd01', { engine: 'naver', state: 'shown' })
+  const afterXMark = await getStatus()
+  const yShared = afterXMark.body.rows.find((r) => r.tenantId === 'vpub-y' && r.postId === 'p-yyyyyyyyyy01')
+  ok(
+    '색인 — 앱 밖 줄(x- id)에 표시 200 · 같은 주소의 다른 브랜드 앱 글 줄에도 보인다(어느 브랜드 줄에서 표시했는지와 함께)',
+    xMark.status === 200 && xMark.body.record?.postId === 'x-dddddddddd01' && yShared?.naver?.state === 'shown' && yShared.checkFrom === '가상손글' &&
+      (JSON.parse(checksFile('vpub-x')) as { checks: Record<string, IndexCheckRecord> }).checks['x-dddddddddd01']?.key === trackingKey(X_SHARED),
+  )
+  // C16 — 브랜드를 지우면(툼스톤) 그 브랜드의 앱 밖 줄과 함께 쓰던 색인 표시가 다른 브랜드 줄에서 사라지고, 되살리면 돌아온다(파일은 그대로).
+  const tombstone = path.join(dir, 'tenants.deleted.json')
+  writeFileSync(tombstone, JSON.stringify(['vpub-x']))
+  const deletedStatus = await getStatus()
+  const yWhileDeleted = deletedStatus.body.rows.find((r) => r.tenantId === 'vpub-y' && r.postId === 'p-yyyyyyyyyy01')
+  rmSync(tombstone, { force: true })
+  const restoredStatus = await getStatus()
+  const yRestored = restoredStatus.body.rows.find((r) => r.tenantId === 'vpub-y' && r.postId === 'p-yyyyyyyyyy01')
+  ok(
+    'C16 — 지운 브랜드의 앱 밖 줄은 보이지 않고, 그 줄에서 누른 표시도 다른 브랜드 줄에서 빠진다 · 되살리면 돌아온다(파일은 남는다)',
+    !deletedStatus.body.rows.some((r) => r.tenantId === 'vpub-x') && yWhileDeleted?.naver === null &&
+      restoredStatus.body.rows.some((r) => r.tenantId === 'vpub-x' && r.postId === 'x-dddddddddd01') && yRestored?.naver?.state === 'shown' &&
+      readFileSync(path.join(dir, 'data', 'vpub-x', 'external-posts.json'), 'utf-8') === EXTERNAL_X,
+  )
+  const yMark = await put('vpub-y', 'p-yyyyyyyyyy01', { engine: 'google', state: 'not-yet' })
+  const afterYMark = await getStatus()
+  const xShared = afterYMark.body.rows.find((r) => r.tenantId === 'vpub-x' && r.postId === 'x-dddddddddd01')
+  ok('색인 — 앱 글 줄에서 누른 표시도 같은 주소의 앱 밖 줄에 보인다(앞 표시를 이어받는다)', yMark.status === 200 && xShared?.google?.state === 'not-yet' && xShared.naver?.state === 'shown')
+  ok(
+    '색인 — 없는 앱 밖 줄 404 · 앱 글로 옮긴 줄 · 뺀 줄 409',
+    (await put('vpub-x', 'x-000000000000', valid)).status === 404 && (await put('vpub-x', 'x-dddddddddd03', valid)).status === 409 &&
+      (await put('vpub-x', 'x-dddddddddd04', valid)).status === 409,
+  )
+  ok('색인 — 앱 밖 글 파일이 깨졌으면 앱 밖 줄에 쓰지 않는다(500)', (await put('vpub-xb', 'x-dddddddddd01', valid)).status === 500)
+  ok(
+    '앱 밖 글 줄 · 색인 표시가 원장 · 앱 밖 글 파일을 바꾸지 않는다',
+    readFileSync(path.join(dir, 'data', 'vpub-x', 'published-posts.json'), 'utf-8') === LEDGER_X && readFileSync(path.join(dir, 'data', 'vpub-y', 'published-posts.json'), 'utf-8') === LEDGER_Y &&
+      readFileSync(path.join(dir, 'data', 'vpub-x', 'external-posts.json'), 'utf-8') === EXTERNAL_X,
+  )
 } finally {
   server.kill()
   await new Promise((r) => setTimeout(r, 800))

@@ -651,6 +651,22 @@ try {
   ok('GET 앱 밖 글 인용 이력 — 주차 3 · 행 3(내린 줄 포함)', xh.status === 200 && xhBody.weeks?.length === 3 && xhBody.posts?.length === 3)
   ok('GET 지운 · 없는 브랜드의 이력은 404', (await call('GET', '/api/external-history/vext-gone')).status === 404)
 
+  // 2단계 — 주소 한꺼번에 등록(POST /api/post-import/commit)의 앱 밖 글 · 무시도 같은 저장소로만 간다(원장 · 앱 글 응답은 그대로).
+  const viaImport = await call('POST', '/api/post-import/commit', {
+    items: [
+      { kind: 'external', tenantIds: ['vext-a', 'vext-b'], url: 'https://fake.tistory.com/71', title: '가상 손글 둘', publishedOn: '2026-10-16', publishedOnSource: 'page' },
+      { kind: 'ignore', url: 'https://fake.tistory.com/72', alsoUrls: [] },
+      { kind: 'external', tenantIds: ['vext-a'], url: L.live, title: null, publishedOn: null, publishedOnSource: 'unknown' },
+    ],
+  })
+  const importResults = (viaImport.json.results ?? []) as { kind: string; status: string }[]
+  ok(
+    '2단계 — 등록 패널의 앱 밖 글(두 브랜드) · 무시 · 원장이 이긴 주소의 거절이 줄마다 결과로',
+    viaImport.status === 200 && importResults.map((r) => `${r.kind}:${r.status}`).join() === 'external:added,ignore:added,external:error',
+  )
+  const statusText = (await call('GET', '/api/publish-status')).text
+  ok('2단계 — 발행 현황에 앱 밖 줄이 보인다(읽기만 — 파일을 바꾸지 않는다)', statusText.includes('"origin":"external"') && statusText.includes('fake.tistory.com/71'))
+
   const afterA = await snapshot('vext-a')
   const afterB = await snapshot('vext-b')
   ok('격리 — 앱 밖 글을 적고 · 고치고 · 빼도 /api/published-posts 응답이 바이트 단위로 같다', beforeA.posts === afterA.posts && beforeB.posts === afterB.posts)
@@ -669,6 +685,27 @@ try {
   ok('깨진 앱 밖 글 파일 — 목록 · 이력 · 적기 모두 500, 파일은 그대로', (await call('GET', '/api/external-posts/vext-b')).status === 500 && (await call('GET', '/api/external-history/vext-b')).status === 500 && (await call('POST', '/api/external-posts/vext-b', page(L.hand))).status === 500 && readFileSync(path.join(dir, 'data', 'vext-b', 'external-posts.json'), 'utf-8') === BROKEN)
   const brokenB = await snapshot('vext-b')
   ok('깨진 앱 밖 글 파일이 있어도 앱 글 응답은 그대로', brokenB.posts === beforeB.posts && brokenB.history === beforeB.history && brokenB.runs === beforeB.runs)
+
+  // C18 · C21-12 — 2단계 길(등록 패널의 앱 밖 글 · 무시, 발행 현황 읽기, 앱 밖 줄 색인 표시)이 같은 브랜드의 앱 글 쓰기와 한꺼번에 들어와도 멈추지 않는다.
+  const liveX = ((await call('GET', '/api/external-posts/vext-a')).json.posts as { id: string; state: string }[]).find((p) => p.state === 'live')
+  const burst = await withTimeout(
+    Promise.all([
+      ...Array.from({ length: 6 }, (_, i) =>
+        call('POST', '/api/post-import/commit', { items: [{ kind: 'external', tenantIds: ['vext-a'], url: `https://fake.tistory.com/burst/${i}`, title: null, publishedOn: null, publishedOnSource: 'unknown' }] }),
+      ),
+      ...Array.from({ length: 4 }, (_, i) => call('POST', '/api/post-import/commit', { items: [{ kind: 'ignore', url: `https://fake.tistory.com/burst-ignore/${i}`, alsoUrls: [] }] })),
+      ...Array.from({ length: 4 }, (_, i) =>
+        call('POST', '/api/published-posts/vext-a', { articleId: `content:burst-${i}`, targetActionId: `content:burst-${i}`, via: 'own', url: `https://fake.tistory.com/burst-app/${i}` }),
+      ),
+      ...Array.from({ length: 3 }, () => call('GET', '/api/publish-status')),
+      ...Array.from({ length: 3 }, (_, i) => call('PUT', `/api/index-checks/vext-a/${liveX?.id}`, { engine: i % 2 === 0 ? 'naver' : 'google', state: 'shown' })),
+      ...Array.from({ length: 3 }, () => call('GET', '/api/external-posts/vext-a')),
+    ]),
+    30_000,
+  )
+  ok('C18 — 등록 패널 · 발행 현황 · 색인 표시 · 앱 글 쓰기가 한꺼번에 들어와도 멈추지 않는다(30초 안에 모두 끝남)', burst !== 'timeout' && burst.every((r) => r.status === 200))
+  const afterBurst = ((await call('GET', '/api/external-posts/vext-a')).json.posts ?? []) as { key: string }[]
+  ok('C18 — 한꺼번에 들어온 앱 밖 글이 하나도 사라지지 않는다', Array.from({ length: 6 }, (_, i) => `fake.tistory.com/burst/${i}`).every((k) => afterBurst.some((p) => p.key === k)))
 } catch (err) {
   ok(`서버 검사가 예외 없이 끝난다: ${err instanceof Error ? err.stack : String(err)}`, false)
 } finally {

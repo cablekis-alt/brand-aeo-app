@@ -1,33 +1,50 @@
 import { useEffect, useRef, useState } from 'react'
 import { commitPostImport, listImportBlogPosts, loadBlogSources, readImportPost, saveBlogSources } from '../lib/api'
 import { BANK_UNKNOWN_NOTE } from '../lib/contentLibraryOrder'
+import { externalTitle } from '../lib/externalPosts'
 import {
   autoPick,
   checkedByDefault,
+  choiceBlockReason,
+  choiceStateOf,
+  commitChunks,
   DATE_PROBLEM_TEXT,
+  externalBlockMessage,
+  externalBrandState,
+  externalDefaultBrands,
+  externalResultText,
   extractPostUrls,
+  ignoreOptionAllowed,
+  initialChoice,
+  movesExternal,
   normalizeBlogSource,
   otherUrlsNow,
   pickKey,
   POST_PLATFORM_LABEL,
   ROW_STATE_LABEL,
-  rowStateOf,
+  sameUrlAppBrands,
   scorePercent,
   type BlogListResult,
   type BlogSource,
+  type CommitItem,
+  type CommitResult,
   type ExtractedUrls,
   type ImportCandidate,
   type PostImportRead,
   type RegisteredRow,
+  type RowChoice,
   type RowPick,
   type RowState,
+  type TrackedRecord,
 } from '../lib/postImport'
-import { todayKst, trackingKey } from '../lib/publishedUrl'
+import { kstDate, todayKst, trackingKey } from '../lib/publishedUrl'
+import { monthDay } from '../lib/publishTracking'
 
 /** 한 번에 읽는 주소 수(서버도 바깥 요청을 3개로 묶는다). */
 const READ_CONCURRENCY = 3
-/** 등록 요청 한 번에 보내는 줄 수(서버 상한 100줄 · JSON 100KB 안). */
-const COMMIT_CHUNK = 40
+/** 짝 고르기 값 — 앱 글은 pickKey(브랜드\n글 id), 「앱 글 아님」은 빈 글자, 나머지 둘은 줄바꿈 없는 글자라 겹치지 않는다. */
+const EXTERNAL = 'external'
+const IGNORE = 'ignore'
 
 interface ImportRow {
   /** 추적 키 — 같은 글은 한 줄. */
@@ -37,13 +54,16 @@ interface ImportRow {
   read: PostImportRead | null
   /** 읽기를 마친 차례 — 이 뒤에 이 표에서 등록한 줄만 「이미 다른 주소」에 더한다(otherUrlsNow). */
   readSeq: number
-  /** 짝지을 앱 글. null이면 「앱 글 아님」. */
-  pick: RowPick | null
+  /** 고른 일 — 앱 글(pick null이면 「앱 글 아님」) · 앱 밖 글로 추적(새로 고른 브랜드 · 날짜 모름) · 무시. */
+  choice: RowChoice
   checked: boolean
-  /** 올린 날(YYYY-MM-DD) — 페이지 날짜로 채우고 사람이 고친다. 모르면 빈 글자(사람이 골라야 등록된다). */
+  /** 올린 날(YYYY-MM-DD) — 페이지 날짜로 채우고 사람이 고친다. 모르면 빈 글자(사람이 골라야 등록된다 — 앱 밖 글은 「날짜 모름」도). */
   date: string
-  /** 등록 결과. seq는 등록한 차례, recheck는 등록 요청 자체가 실패해 적혔는지 모르는 줄(다시 읽어 확인한다). */
-  result: { kind: 'added' | 'existing' | 'error'; text: string; seq?: number; recheck?: boolean } | null
+  /**
+   * 등록 결과. seq는 등록한 차례, recheck는 등록 요청 자체가 실패해 적혔는지 모르는 줄(다시 읽어 확인한다). partial은 앱 밖 글을 몇
+   * 브랜드에만 적었다(걸린 브랜드는 그대로 골라 둔다).
+   */
+  result: { kind: 'added' | 'existing' | 'error' | 'partial'; text: string; seq?: number; recheck?: boolean } | null
 }
 
 interface QueueCount {
@@ -66,20 +86,42 @@ function shortUrl(url: string): string {
 }
 
 const validDay = (day: string, limit: string) => /^\d{4}-\d{2}-\d{2}$/.test(day) && day <= limit && day >= '2020-01-01'
-const pickValue = (p: RowPick | null) => (p ? pickKey(p) : '')
+const appPick = (c: RowChoice) => (c.mode === 'app' ? c.pick : null)
+const choiceValue = (c: RowChoice) => (c.mode === 'external' ? EXTERNAL : c.mode === 'ignore' ? IGNORE : c.pick ? pickKey(c.pick) : '')
 const samePick = (c: RowPick | null, p: RowPick | null) => c !== null && p !== null && c.tenantId === p.tenantId && c.articleId === p.articleId
 /** 이 줄을 적을 주소 · 키 — 읽은 페이지가 밝힌 주소(리디렉션 뒤 · 정식 주소). 읽기 전이면 붙여 넣은 주소. */
 const recordUrlOf = (r: ImportRow) => (r.read?.ok ? r.read.recordUrl : r.url)
 const recordKeyOf = (r: ImportRow) => (r.read?.ok ? r.read.recordKey : r.key)
+/** 적을 주소 말고 이 줄을 읽을 때 나온 주소 모양(붙여 넣은 · 읽은 주소) — 무시 목록에 함께 적고, 등록하면 함께 푼다. */
+const otherUrlsOf = (r: ImportRow) => [...new Set([r.url, ...(r.read?.ok && r.read.readUrl ? [r.read.readUrl] : [])])].filter((u) => u !== recordUrlOf(r))
 /** 다시 읽을 줄 — 멈춤 · 읽지 못함 · 등록 요청이 실패해 적혔는지 모르는 줄. */
 const needsReread = (r: ImportRow) => r.status === 'stopped' || (r.status === 'done' && r.read !== null && !r.read.ok) || r.result?.recheck === true
+const NO_CHOICE: RowChoice = { mode: 'app', pick: null }
 
 /** 표의 다른 줄이 이미 고른 앱 글(체크했거나 등록한 줄) — 같은 글 무리에서 한 줄만 미리 체크한다. */
 function claimedPicks(rows: readonly ImportRow[], exceptKey: string): Set<string> {
-  return new Set(rows.filter((r) => r.key !== exceptKey && r.pick && (r.checked || r.result?.kind === 'added')).map((r) => pickKey(r.pick!)))
+  return new Set(
+    rows.flatMap((r) => {
+      const pick = appPick(r.choice)
+      return r.key !== exceptKey && pick && (r.checked || r.result?.kind === 'added') ? [pickKey(pick)] : []
+    }),
+  )
 }
 
-const STATE_TONE: Record<RowState, string> = { match: 'good', review: 'warn', none: '', manual: 'warn', dismissed: '', already: 'info', other: 'bad', unreadable: 'bad' }
+const STATE_TONE: Record<RowState, string> = {
+  match: 'good',
+  review: 'warn',
+  none: '',
+  manual: 'warn',
+  dismissed: '',
+  already: 'info',
+  other: 'bad',
+  unreadable: 'bad',
+  tracked: 'info',
+  ignored: '',
+  external: 'info',
+  ignore: '',
+}
 const BLOCKED: readonly RowState[] = ['already', 'other', 'unreadable']
 
 function writerText(c: ImportCandidate | undefined): string {
@@ -89,9 +131,14 @@ function writerText(c: ImportCandidate | undefined): string {
 }
 
 function listNote(r: BlogListResult): string {
+  const hidden = [
+    ...((r.hiddenExternal ?? 0) > 0 ? [`앱 밖 글 ${r.hiddenExternal}편`] : []),
+    ...((r.hiddenIgnored ?? 0) > 0 ? [`무시한 글 ${r.hiddenIgnored}편`] : []),
+  ]
+  const skipped = hidden.length > 0 ? ` · ${hidden.join(' · ')} 뺌` : ''
   const older = r.older > 0 ? ` · 더 오래된 새 글 ${r.older}편은 뺐습니다` : ''
   const errors = r.errors.length > 0 ? ` · 읽지 못한 목록: ${r.errors.join(' / ')}` : ''
-  return `찾은 글 ${r.found}편 · 새 글 ${r.newUrls.length}편${older}${errors}`
+  return `찾은 글 ${r.found}편 · 새 글 ${r.newUrls.length}편${skipped}${older}${errors}`
 }
 
 function queueText(c: QueueCount): string {
@@ -101,14 +148,19 @@ function queueText(c: QueueCount): string {
   return parts.join(' · ')
 }
 
-/** 읽기를 마친 줄의 상태 · 고를 수 있는지 · 고른 후보. dupOf는 같은 글 주소(적을 주소가 같음)로 위에 먼저 나온 줄. */
+/** 추적 중인 브랜드 — 「가상여관」, 앱 글로 옮겨 쉬는 줄은 「가상여관(앱 글로 옮겨 쉼)」. */
+const trackedText = (tracked: readonly TrackedRecord[]) => [...new Map(tracked.map((t) => [t.tenantId, t.state === 'moved' ? `${t.brand}(앱 글로 옮겨 쉼)` : t.brand])).values()].join(', ')
+
+/** 읽기를 마친 줄의 상태 · 고를 수 있는지 · 고른 후보 · 막힌 까닭. dupOf는 같은 글 주소(적을 주소가 같음)로 위에 먼저 나온 줄. */
 function rowView(row: ImportRow, dupOf: ImportRow | undefined) {
   const read = row.read
-  if (row.status !== 'done' || !read) return { state: null, verdict: null, candidate: undefined, registrable: false, dupOf: undefined }
-  const { state, verdict } = rowStateOf(read, row.pick)
-  const candidate = read.ok ? read.candidates.find((c) => samePick(c, row.pick)) : undefined
+  if (row.status !== 'done' || !read) return { state: null, verdict: null, candidate: undefined, registrable: false, blockReason: null, dupOf: undefined }
+  const { state, verdict } = choiceStateOf(read, row.choice)
+  const pick = appPick(row.choice)
+  const candidate = read.ok && pick ? read.candidates.find((c) => samePick(c, pick)) : undefined
   const done = row.result?.kind === 'added' || row.result?.kind === 'existing'
-  return { state, verdict, candidate, registrable: read.ok && row.pick !== null && !BLOCKED.includes(state) && !done && !dupOf, dupOf }
+  const blockReason = choiceBlockReason(read, row.choice)
+  return { state, verdict, candidate, registrable: blockReason === null && !done && !dupOf, blockReason, dupOf }
 }
 
 /**
@@ -117,8 +169,20 @@ function rowView(row: ImportRow, dupOf: ImportRow | undefined) {
  * 체크해 두고(같은 글을 또 올린 것일 수 있는 줄은 빼고), 사람이 확인 필요 줄의 글을 고르고 날짜를 확인한 뒤 「이대로 등록」을 누르면
  * 「올렸어요」와 같은 기록으로 적는다 — 주소는 페이지가 밝힌 주소(리디렉션 뒤 · 정식 주소)로. 웹에는 라우트가 없어 「데스크톱 앱에서만」을
  * 보인다.
+ *
+ * 앱에서 만들지 않은 글은 「앱 밖 글로 추적…」(브랜드 여러 곳 · 날짜 모름 — 원장과 따로, 점수 · 집행에 넣지 않는다)이나 「무시 — 새 글
+ * 찾기에서 숨김」을 고른다. 이미 추적 중 · 무시한 주소는 그 상태로 다시 보이고 미리 체크하지 않는다(앱 글을 자동으로 고르지 않는다 — C6).
+ * brands는 고객 브랜드 목록(발행 현황 응답).
  */
-export default function PostImportPanel({ today, onRegistered }: { today: string; onRegistered: () => void }) {
+export default function PostImportPanel({
+  today,
+  brands,
+  onRegistered,
+}: {
+  today: string
+  brands: readonly { tenantId: string; brand: string }[]
+  onRegistered: () => void
+}) {
   const [available, setAvailable] = useState<'loading' | 'yes' | 'no'>('loading')
   const [sources, setSources] = useState<BlogSource[]>([])
   const [sourceInput, setSourceInput] = useState('')
@@ -189,13 +253,21 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
           setRows((rs) =>
             rs.map((r) =>
               r.key === t.key
-                ? { ...r, status: 'done', read, readSeq: seq, pick: autoPick(read), checked: checkedByDefault(read, claimedPicks(rs, t.key)), date: read.ok ? (read.post.publishedOn ?? '') : '' }
+                ? {
+                    ...r,
+                    status: 'done',
+                    read,
+                    readSeq: seq,
+                    choice: initialChoice(read),
+                    checked: checkedByDefault(read, claimedPicks(rs, t.key)),
+                    date: read.ok ? (read.post.publishedOn ?? '') : '',
+                  }
                 : r,
             ),
           )
         } catch (err) {
           if (ctrl.signal.aborted) patchRow(t.key, { status: 'stopped' })
-          else patchRow(t.key, { status: 'done', read: { ok: false, url: t.url, key: t.key, error: message(err) }, readSeq: nextSeq(), pick: null, checked: false })
+          else patchRow(t.key, { status: 'done', read: { ok: false, url: t.url, key: t.key, error: message(err) }, readSeq: nextSeq(), choice: NO_CHOICE, checked: false })
         }
         done += 1
         setPhase({ kind: 'read', done, total: targets.length })
@@ -232,8 +304,8 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
     }
     const requeued = new Set(requeue.map((t) => t.key))
     setRows((rs) => [
-      ...rs.map((r) => (requeued.has(r.key) ? { ...r, status: 'waiting' as const, read: null, pick: null, checked: false, result: null } : r)),
-      ...fresh.map((f): ImportRow => ({ ...f, status: 'waiting', read: null, readSeq: 0, pick: null, checked: false, date: '', result: null })),
+      ...rs.map((r) => (requeued.has(r.key) ? { ...r, status: 'waiting' as const, read: null, choice: NO_CHOICE, checked: false, result: null } : r)),
+      ...fresh.map((f): ImportRow => ({ ...f, status: 'waiting', read: null, readSeq: 0, choice: NO_CHOICE, checked: false, date: '', result: null })),
     ])
     void readAll([...requeue, ...fresh])
     return { added: fresh.length, requeued: requeue.length, inTable }
@@ -300,17 +372,45 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
     setFindNote(`새 글 ${found.length}편 — ${queueText(addAndRead(found))}`)
   }
 
-  /** 앱 글을 고른다 — 처음 고른 글로 되돌린 맞음 줄만 다시 체크해 두고, 다른 글 · 「앱 글 아님」을 고르면 체크를 비운다(사람이 확인하고 체크). */
+  /**
+   * 짝을 고른다 — 앱 글은 처음 고른 글로 되돌린 맞음 줄만 다시 체크해 두고, 다른 글 · 「앱 글 아님」을 고르면 체크를 비운다. 「앱 밖 글로
+   * 추적…」은 자사 주소인 브랜드가 정확히 하나면 그 브랜드를 미리 고르고(D2), 「무시」와 함께 체크는 사람이 한다.
+   */
   const choose = (row: ImportRow, value: string) => {
+    if (!row.read) return
+    if (value === EXTERNAL) {
+      const choice: RowChoice = row.choice.mode === 'external' ? row.choice : { mode: 'external', tenantIds: externalDefaultBrands(row.read), dateUnknown: false }
+      patchRow(row.key, { choice, checked: false, result: null })
+      return
+    }
+    if (value === IGNORE) {
+      patchRow(row.key, { choice: { mode: 'ignore' }, checked: false, result: null })
+      return
+    }
     const [tenantId, articleId] = value.split('\n')
     const pick = value && tenantId && articleId ? { tenantId, articleId } : null
-    const back = row.read !== null && samePick(autoPick(row.read), pick)
-    patchRow(row.key, { pick, checked: back && row.read !== null && checkedByDefault(row.read, claimedPicks(rowsRef.current, row.key)), result: null })
+    const back = samePick(autoPick(row.read), pick)
+    // 같은 브랜드에서 앱 밖 글로 추적 중인 주소를 앱 글로 옮기면 앱 글의 올린 날은 옮기는 날(오늘)이다(D12 — 그 전 인용은 앱 밖 표에 남는다).
+    const moving = movesExternal(row.read, pick) !== null
+    patchRow(row.key, {
+      choice: { mode: 'app', pick },
+      checked: back && checkedByDefault(row.read, claimedPicks(rowsRef.current, row.key)),
+      result: null,
+      ...(moving ? { date: dayLimit() } : {}),
+    })
+  }
+
+  /** 앱 밖 글로 추적할 브랜드를 고르거나 뺀다 · 「날짜 모름」을 켜고 끈다. */
+  const patchExternal = (row: ImportRow, patch: { tenantId?: string; on?: boolean; dateUnknown?: boolean }) => {
+    if (row.choice.mode !== 'external') return
+    const { tenantId, on } = patch
+    const tenantIds = tenantId === undefined ? row.choice.tenantIds : on ? [...new Set([...row.choice.tenantIds, tenantId])] : row.choice.tenantIds.filter((t) => t !== tenantId)
+    patchRow(row.key, { choice: { ...row.choice, tenantIds, dateUnknown: patch.dateUnknown ?? row.choice.dateUnknown }, result: null })
   }
 
   const retry = () => {
     const targets = rows.filter(needsReread).map((r) => ({ key: r.key, url: r.url }))
-    for (const t of targets) patchRow(t.key, { status: 'waiting', read: null, pick: null, checked: false, result: null })
+    for (const t of targets) patchRow(t.key, { status: 'waiting', read: null, choice: NO_CHOICE, checked: false, result: null })
     void readAll(targets)
   }
 
@@ -321,8 +421,32 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
     const first = r.status === 'done' && r.read?.ok ? firstByRecord.get(recordKeyOf(r)) : undefined
     return { row: r, ...rowView(r, first && first !== r ? first : undefined) }
   })
-  // 이 표에서 등록한 줄 — 같은 앱 글에 또 다른 주소를 적는지 알리는 데 쓴다.
-  const registered: RegisteredRow[] = rows.flatMap((r) => (r.result?.kind === 'added' && r.pick ? [{ pick: r.pick, recordKey: recordKeyOf(r), seq: r.result.seq ?? 0 }] : []))
+  // 이 표에서 등록한 앱 글 줄 — 같은 앱 글에 또 다른 주소를 적는지 알리는 데 쓴다.
+  const registered: RegisteredRow[] = rows.flatMap((r) => {
+    const pick = appPick(r.choice)
+    return r.result?.kind === 'added' && pick ? [{ pick, recordKey: recordKeyOf(r), seq: r.result.seq ?? 0 }] : []
+  })
+
+  /** 등록한 뒤 이 줄의 읽기 결과를 고친다 — 적은 브랜드를 추적 중으로, 무시한 주소에 무시한 때를(다시 읽지 않아도 상태가 맞게). */
+  const afterExternal = (row: ImportRow, r: Extract<CommitResult, { kind: 'external' }>): Partial<ImportRow> => {
+    const read = row.read
+    const written = r.tenants.filter((t) => t.status !== 'error')
+    const failed = r.tenants.filter((t) => t.status === 'error').map((t) => t.tenantId)
+    const nowIso = new Date().toISOString()
+    const tracked: TrackedRecord[] = written.map((t) => ({
+      tenantId: t.tenantId,
+      brand: t.brand,
+      postId: t.postId ?? '',
+      key: recordKeyOf(row),
+      state: 'live',
+      publishedOn: row.choice.mode === 'external' && row.choice.dateUnknown ? null : row.date || null,
+      trackedAt: nowIso,
+    }))
+    const nextRead = read?.ok ? { ...read, tracked: [...(read.tracked ?? []).filter((t) => !written.some((w) => w.tenantId === t.tenantId)), ...tracked], ignoredAt: null } : read
+    const choice: RowChoice = row.choice.mode === 'external' ? { ...row.choice, tenantIds: failed } : row.choice
+    const kind = r.status === 'partial' ? 'partial' : r.status === 'added' ? 'added' : r.status === 'existing' ? 'existing' : 'error'
+    return { read: nextRead, choice, checked: false, result: { kind, text: externalResultText(r), ...(kind === 'added' ? { seq: nextSeq() } : {}) } }
+  }
 
   const register = async () => {
     const limit = dayLimit()
@@ -330,44 +454,95 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
     if (chosen.length === 0) return
     setCommitting(true)
     setCommitNote(null)
-    const noDate = chosen.filter((r) => !validDay(r.date, limit))
-    for (const r of noDate) patchRow(r.key, { result: { kind: 'error', text: `올린 날을 골라 주세요(2020-01-01 ~ 오늘 ${limit}).` } })
-    const ready = chosen.filter((r) => validDay(r.date, limit))
-    let added = 0
-    let existing = 0
-    let failed = noDate.length
+    const ready: { row: ImportRow; item: CommitItem }[] = []
+    let failed = 0
+    for (const r of chosen) {
+      const c = r.choice
+      const alsoUrls = otherUrlsOf(r)
+      if (c.mode === 'ignore') {
+        ready.push({ row: r, item: { kind: 'ignore', url: recordUrlOf(r), alsoUrls } })
+        continue
+      }
+      const dateOk = validDay(r.date, limit) || (c.mode === 'external' && c.dateUnknown)
+      if (!dateOk || !r.read?.ok) {
+        failed += 1
+        patchRow(r.key, { result: { kind: 'error', text: `올린 날을 골라 주세요(2020-01-01 ~ 오늘 ${limit})${c.mode === 'external' ? ' — 모르면 「날짜 모름」' : ''}.` } })
+        continue
+      }
+      if (c.mode === 'app' && c.pick) {
+        ready.push({ row: r, item: { tenantId: c.pick.tenantId, articleId: c.pick.articleId, url: recordUrlOf(r), publishedOn: r.date, alsoUrls } })
+      } else if (c.mode === 'external') {
+        const unknown = c.dateUnknown
+        ready.push({
+          row: r,
+          item: {
+            kind: 'external',
+            tenantIds: c.tenantIds,
+            url: recordUrlOf(r),
+            title: r.read.post.title || null,
+            publishedOn: unknown ? null : r.date,
+            publishedOnSource: unknown ? 'unknown' : r.date === r.read.post.publishedOn ? 'page' : 'user',
+            alsoUrls,
+          },
+        })
+      }
+    }
+    const count = { app: 0, external: 0, ignored: 0, existing: 0, partial: 0 }
     let uncertain = 0
-    for (let i = 0; i < ready.length; i += COMMIT_CHUNK) {
-      const chunk = ready.slice(i, i + COMMIT_CHUNK)
+    const warnings: string[] = []
+    let offset = 0
+    for (const chunk of commitChunks(ready.map((p) => p.item))) {
+      const pairs = ready.slice(offset, offset + chunk.length)
+      offset += chunk.length
       try {
-        const results = await commitPostImport(chunk.map((r) => ({ tenantId: r.pick!.tenantId, articleId: r.pick!.articleId, url: recordUrlOf(r), publishedOn: r.date })))
-        results.forEach((res, j) => {
-          const r = chunk[j]!
-          if (res.status === 'added') {
-            added += 1
-            patchRow(r.key, { checked: false, result: { kind: 'added', text: '등록함', seq: nextSeq() } })
-          } else if (res.status === 'existing') {
-            existing += 1
-            patchRow(r.key, { checked: false, result: { kind: 'existing', text: '이미 있던 기록 — 그대로 둠' } })
+        const res = await commitPostImport(chunk)
+        warnings.push(...res.warnings)
+        res.results.forEach((result, j) => {
+          const r = pairs[j]?.row
+          if (!r) return
+          if (result.kind === 'external') {
+            const patch = afterExternal(r, result)
+            if (result.status === 'added') count.external += 1
+            else if (result.status === 'existing') count.existing += 1
+            else if (result.status === 'partial') count.partial += 1
+            else failed += 1
+            patchRow(r.key, patch)
+            return
+          }
+          if (result.status === 'added') {
+            if (result.kind === 'ignore') {
+              count.ignored += 1
+              patchRow(r.key, { checked: false, read: r.read?.ok ? { ...r.read, ignoredAt: new Date().toISOString() } : r.read, result: { kind: 'added', text: '무시함 — 새 글 찾기에서 숨깁니다', seq: nextSeq() } })
+            } else {
+              count.app += 1
+              patchRow(r.key, { checked: false, result: { kind: 'added', text: '등록함', seq: nextSeq() } })
+            }
+          } else if (result.status === 'existing') {
+            count.existing += 1
+            patchRow(r.key, { checked: false, result: { kind: 'existing', text: result.kind === 'ignore' ? '이미 무시한 주소 — 그대로 둠' : '이미 있던 기록 — 그대로 둠' } })
           } else {
             failed += 1
-            patchRow(r.key, { result: { kind: 'error', text: res.error ?? '등록하지 못했습니다.' } })
+            patchRow(r.key, { result: { kind: 'error', text: result.error ?? '등록하지 못했습니다.' } })
           }
         })
       } catch (err) {
-        // 요청 자체가 실패했다 — 서버가 몇 줄을 적은 뒤 끊겼을 수 있다. 「다시 읽기」로 원장을 다시 보게 한다.
-        uncertain += chunk.length
-        for (const r of chunk) {
-          patchRow(r.key, { result: { kind: 'error', recheck: true, text: `등록 요청이 실패했습니다 — ${message(err)}. 일부는 적혔을 수 있으니 「다시 읽기」로 확인해 주세요.` } })
+        // 요청 자체가 실패했다 — 서버가 몇 줄을 적은 뒤 끊겼을 수 있다. 「다시 읽기」로 원장 · 앱 밖 글 · 무시 목록을 다시 보게 한다.
+        uncertain += pairs.length
+        for (const { row } of pairs) {
+          patchRow(row.key, { result: { kind: 'error', recheck: true, text: `등록 요청이 실패했습니다 — ${message(err)}. 일부는 적혔을 수 있으니 「다시 읽기」로 확인해 주세요.` } })
         }
       }
     }
     setCommitting(false)
-    const parts = [`등록 ${added}편`, `이미 있던 기록 ${existing}편`]
+    const parts = [`앱 글 등록 ${count.app}편`]
+    if (count.external > 0) parts.push(`앱 밖 글 ${count.external}편`)
+    if (count.partial > 0) parts.push(`앱 밖 글 일부 브랜드만 ${count.partial}편(그 줄의 이유를 보세요)`)
+    if (count.ignored > 0) parts.push(`무시 ${count.ignored}편`)
+    parts.push(`이미 있던 기록 ${count.existing}편`)
     if (failed > 0) parts.push(`걸림 ${failed}편(그 줄의 이유를 보세요)`)
     if (uncertain > 0) parts.push(`적혔는지 모름 ${uncertain}편(다시 읽어 확인하세요)`)
-    setCommitNote(parts.join(' · '))
-    if (added > 0 || uncertain > 0) onRegistered()
+    setCommitNote([parts.join(' · '), ...warnings].join(' — '))
+    if (count.app > 0 || count.external > 0 || count.partial > 0 || uncertain > 0) onRegistered()
   }
 
   const clear = () => {
@@ -383,17 +558,30 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
   const counts = (Object.keys(ROW_STATE_LABEL) as RowState[])
     .map((s) => [s, views.filter((v) => v.state === s).length] as const)
     .filter(([, n]) => n > 0)
-  const checkedCount = views.filter((v) => v.row.checked && v.registrable).length
+  const ready = views.filter((v) => v.row.checked && v.registrable)
+  const readyCount = {
+    app: ready.filter((v) => v.row.choice.mode === 'app').length,
+    external: ready.filter((v) => v.row.choice.mode === 'external').length,
+    ignore: ready.filter((v) => v.row.choice.mode === 'ignore').length,
+  }
+  const readyText = [
+    ...(readyCount.app > 0 ? [`앱 글 ${readyCount.app}`] : []),
+    ...(readyCount.external > 0 ? [`앱 밖 ${readyCount.external}`] : []),
+    ...(readyCount.ignore > 0 ? [`무시 ${readyCount.ignore}`] : []),
+  ].join(' · ')
   const retryable = rows.filter(needsReread).length
   // 같은 앱 글을 둘 이상의 체크한 줄이 고르면 알린다 — 두 주소 모두 그 글의 기록이 된다.
   const pickCount = new Map<string, number>()
-  for (const v of views) if (v.row.checked && v.registrable) pickCount.set(pickValue(v.row.pick), (pickCount.get(pickValue(v.row.pick)) ?? 0) + 1)
+  for (const v of ready) {
+    const pick = appPick(v.row.choice)
+    if (pick) pickCount.set(pickKey(pick), (pickCount.get(pickKey(pick)) ?? 0) + 1)
+  }
 
   return (
     <details className="pi-panel">
       <summary>
         <span className="pi-title">주소 한꺼번에 등록</span>
-        <span className="pi-sub">작성자가 보낸 글 주소를 읽어 앱 글과 맞춘 뒤 확인한 것만 올린 글로 적습니다</span>
+        <span className="pi-sub">작성자가 보낸 글 주소를 읽어 앱 글과 맞춘 뒤 확인한 것만 올린 글로 적습니다 · 앱에서 만들지 않은 글은 앱 밖 글로 추적하거나 무시합니다</span>
       </summary>
       {available === 'loading' && <p className="muted">불러오는 중…</p>}
       {available === 'no' && <p className="muted">주소 한꺼번에 등록은 데스크톱 앱에서 할 수 있습니다(웹에는 이 기능이 없습니다).</p>}
@@ -435,7 +623,7 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
               <h3 id="pi-sources-title">저장한 블로그</h3>
               <p className="pi-label">
                 작성자 블로그를 한 번 저장해 두면 「새 글 찾기」로 아직 적지 않은 글을 모아 읽습니다. 앱 전체에 한 목록입니다(한 블로그에 여러 브랜드의
-                글이 오릅니다).
+                글이 오릅니다). 앱 밖 글로 추적 중인 글과 무시한 글은 새 글 찾기에서 뺍니다.
               </p>
               {sources.length > 0 ? (
                 <ul className="pi-sources">
@@ -572,17 +760,26 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                     </tr>
                   </thead>
                   <tbody>
-                    {views.map(({ row, state, verdict, candidate, registrable, dupOf }) => {
+                    {views.map(({ row, state, verdict, candidate, registrable, blockReason, dupOf }) => {
                       const read = row.read
                       const ok = read?.ok ? read : null
+                      const choice = row.choice
+                      const external = choice.mode === 'external' ? choice : null
                       const label = ok?.post.title || shortUrl(row.url)
                       const recordUrl = recordUrlOf(row)
-                      const runnerUp = ok ? Math.max(0, ...ok.candidates.filter((c) => !samePick(c, row.pick)).map((c) => c.body)) : 0
-                      const twin = row.checked && registrable && (pickCount.get(pickValue(row.pick)) ?? 0) > 1
+                      const pick = appPick(choice)
+                      const runnerUp = ok ? Math.max(0, ...ok.candidates.filter((c) => !samePick(c, pick)).map((c) => c.body)) : 0
+                      const twin = row.checked && registrable && pick !== null && (pickCount.get(pickKey(pick)) ?? 0) > 1
                       const others = candidate ? otherUrlsNow(candidate, recordKeyOf(row), row.readSeq, registered) : 0
                       const finished = row.result?.kind === 'added' || row.result?.kind === 'existing'
-                      const dateBad = registrable && row.date !== '' && !validDay(row.date, limit)
+                      const dated = choice.mode !== 'ignore' && !(external?.dateUnknown ?? false)
+                      const dateBad = registrable && dated && row.date !== '' && !validDay(row.date, limit)
                       const pageDate = ok?.post.dateText ? (ok.post.dateText.length > 40 ? `${ok.post.dateText.slice(0, 40)}…` : ok.post.dateText) : null
+                      const tracked = ok?.tracked ?? []
+                      const appIn = ok && external ? sameUrlAppBrands(ok, external.tenantIds) : []
+                      const chosenBrands = external ? brands.filter((b) => external.tenantIds.includes(b.tenantId)).map((b) => b.brand) : []
+                      const owned = ok?.ownedBrands ?? []
+                      const canIgnore = read !== null && (ignoreOptionAllowed(read) || choice.mode === 'ignore')
                       return (
                         <tr key={row.key} className={(state && BLOCKED.includes(state)) || dupOf ? 'pi-blocked' : undefined}>
                           <td>
@@ -594,9 +791,13 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                               aria-label={`「${label}」 등록에 넣기`}
                             />
                           </td>
-                          <td>{candidate?.brand ?? '—'}</td>
+                          <td>
+                            {choice.mode === 'app' && (candidate?.brand ?? '—')}
+                            {external && (chosenBrands.length > 0 ? chosenBrands.join(', ') : tracked.length > 0 ? <span className="muted">{trackedText(tracked)}</span> : '—')}
+                            {choice.mode === 'ignore' && '—'}
+                          </td>
                           <td className={candidate?.writer ? undefined : 'muted'}>
-                            {candidate ? writerText(candidate) : '—'}
+                            {choice.mode === 'app' ? (candidate ? writerText(candidate) : '—') : external ? '앱 밖 글' : '—'}
                             {/* 판 미확인 — 질문 은행에서 만든 배정 글. 등록하면 배정 파일의 판으로 적으므로 보관함 작성자 칸과 같은 표시를 단다. */}
                             {candidate?.bankUnknown && (
                               <span className="pi-sub-line">
@@ -610,21 +811,63 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                             {ok ? (
                               <>
                                 <select
-                                  value={pickValue(row.pick)}
+                                  value={choiceValue(choice)}
                                   onChange={(e) => choose(row, e.target.value)}
                                   disabled={committing || row.result?.kind === 'added'}
                                   aria-label={`「${label}」과 짝지을 앱 글`}
                                 >
                                   {ok.candidates.map((c) => (
-                                    <option key={pickValue(c)} value={pickValue(c)}>
+                                    <option key={pickKey(c)} value={pickKey(c)}>
                                       {c.title} — {c.brand} · {scorePercent(c.body)}
                                     </option>
                                   ))}
                                   <option value="">앱 글 아님</option>
+                                  <option value={EXTERNAL}>앱 밖 글로 추적…</option>
+                                  {canIgnore && <option value={IGNORE}>무시 — 새 글 찾기에서 숨김</option>}
                                 </select>
                                 {candidate && <span className="pi-sub-line">앱 글: {candidate.title}</span>}
-                                <span className="pi-sub-line">블로그 제목: {ok.post.title || '없음'}</span>
+                                <span className="pi-sub-line">블로그 제목: {ok.post.title || externalTitle({ title: null })}</span>
+                                {external && (
+                                  <fieldset className="pi-brands" disabled={committing || finished}>
+                                    <legend>추적할 브랜드(하나 이상)</legend>
+                                    {brands.length === 0 && <span className="pi-sub-line warn">고객 브랜드 목록을 불러오지 못했습니다 — 발행 현황을 다시 읽어 주세요.</span>}
+                                    <ul>
+                                      {brands.map((b) => {
+                                        const brandState = externalBrandState(ok, b.tenantId)
+                                        const why = brandState === 'blocked' ? externalBlockMessage(ok, b.tenantId) : null
+                                        return (
+                                          <li key={b.tenantId}>
+                                            <label title={why ?? undefined}>
+                                              <input
+                                                type="checkbox"
+                                                checked={brandState === 'tracked' || external.tenantIds.includes(b.tenantId)}
+                                                disabled={brandState !== 'open'}
+                                                onChange={(e) => patchExternal(row, { tenantId: b.tenantId, on: e.target.checked })}
+                                              />
+                                              {b.brand}
+                                              {brandState === 'tracked' && <span className="pi-brand-note"> 추적 중</span>}
+                                              {brandState === 'blocked' && <span className="pi-brand-note"> 이 브랜드의 앱 글</span>}
+                                            </label>
+                                          </li>
+                                        )
+                                      })}
+                                    </ul>
+                                  </fieldset>
+                                )}
+                                {external && owned.length === 1 && <span className="pi-sub-line">자사 주소인 브랜드: {owned[0]!.brand}</span>}
+                                {external && owned.length > 1 && (
+                                  <span className="pi-sub-line">자사 주소인 브랜드가 여럿({owned.map((o) => o.brand).join(', ')})이라 미리 고르지 않았습니다.</span>
+                                )}
+                                {choice.mode === 'ignore' && !ok.ignoredAt && (
+                                  <span className="pi-sub-line">앱 글이 아닌 글입니다 — 새 글 찾기에 더 나오지 않습니다(앱 글 · 앱 밖 글로 적으면 풀립니다).</span>
+                                )}
                               </>
+                            ) : read && !read.ok ? (
+                              // 읽지 못한 줄은 무시만 할 수 있다(사이트맵에 남은 지운 글 · 비공개 글 — D14).
+                              <select value={choiceValue(choice)} onChange={(e) => choose(row, e.target.value)} disabled={committing || row.result?.kind === 'added'} aria-label={`「${label}」 처리`}>
+                                <option value="">—</option>
+                                <option value={IGNORE}>무시 — 새 글 찾기에서 숨김</option>
+                              </select>
                             ) : (
                               <span className="muted">—</span>
                             )}
@@ -641,7 +884,7 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                           </td>
                           <td>{ok ? ok.platform.label : '—'}</td>
                           <td>
-                            {ok ? (
+                            {ok && choice.mode !== 'ignore' ? (
                               <>
                                 <input
                                   type="date"
@@ -650,23 +893,31 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                                   min="2020-01-01"
                                   max={limit}
                                   onChange={(e) => patchRow(row.key, { date: e.target.value, result: null })}
-                                  disabled={committing || !registrable}
+                                  disabled={committing || !registrable || !dated}
                                   aria-label={`「${label}」 올린 날`}
                                   aria-invalid={dateBad || undefined}
                                   title={ok.post.dateText ? `페이지 날짜: ${ok.post.dateText}` : undefined}
                                 />
-                                {!ok.post.publishedOn &&
+                                {external && (
+                                  <label className="pi-sub-line pi-check">
+                                    <input type="checkbox" checked={external.dateUnknown} onChange={(e) => patchExternal(row, { dateUnknown: e.target.checked })} disabled={committing || finished} />
+                                    날짜 모름
+                                  </label>
+                                )}
+                                {dated &&
+                                  !ok.post.publishedOn &&
                                   (pageDate ? (
                                     <span className={`pi-sub-line${registrable && !row.date ? ' warn' : ''}`}>
                                       페이지 날짜 「{pageDate}」를 쓸 수 없습니다 — {ok.post.dateProblem ? DATE_PROBLEM_TEXT[ok.post.dateProblem] : DATE_PROBLEM_TEXT.unknown}
                                       {row.date ? ' · 고른 날' : registrable ? ' · 골라 주세요' : ''}
                                     </span>
                                   ) : registrable && !row.date ? (
-                                    <span className="pi-sub-line warn">페이지에 날짜가 없어 골라야 합니다</span>
+                                    <span className="pi-sub-line warn">페이지에 날짜가 없어 골라야 합니다{external ? '(모르면 「날짜 모름」)' : ''}</span>
                                   ) : (
                                     <span className="pi-sub-line">페이지에 날짜 없음{row.date ? ' — 고른 날' : ''}</span>
                                   ))}
-                                {ok.post.publishedOn && row.date !== ok.post.publishedOn && <span className="pi-sub-line">페이지: {ok.post.publishedOn}</span>}
+                                {dated && ok.post.publishedOn && row.date !== ok.post.publishedOn && <span className="pi-sub-line">페이지: {ok.post.publishedOn}</span>}
+                                {external?.dateUnknown && <span className="pi-sub-line">올린 날 모름 — 올리기 전 · 뒤를 가리지 않고 셉니다.</span>}
                                 {dateBad && (
                                   <span className="pi-sub-line error" role="alert">
                                     2020-01-01부터 오늘({limit})까지의 날을 골라 주세요.
@@ -695,15 +946,29 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                             {row.status === 'waiting' && <span className="chip">기다림</span>}
                             {row.status === 'reading' && <span className="chip info">읽는 중</span>}
                             {row.status === 'stopped' && <span className="chip">멈춤</span>}
-                            {row.result?.kind === 'added' && <span className="chip good">등록함</span>}
-                            {row.result?.kind === 'existing' && <span className="chip info">이미 등록됨</span>}
+                            {row.result?.kind === 'added' && <span className="chip good">{choice.mode === 'ignore' ? '무시함' : '등록함'}</span>}
+                            {row.result?.kind === 'existing' && <span className="chip info">{choice.mode === 'ignore' ? '무시함' : '이미 등록됨'}</span>}
+                            {row.result?.kind === 'partial' && <span className="chip warn">일부만 등록함</span>}
                             {state && !finished && (dupOf ? <span className="chip info">같은 글 주소</span> : <span className={`chip${STATE_TONE[state] ? ` ${STATE_TONE[state]}` : ''}`}>{ROW_STATE_LABEL[state]}</span>)}
                             {dupOf && !finished && <span className="pi-sub-line">표의 위 줄({shortUrl(dupOf.url)})과 같은 글 주소입니다 — 그 줄로 등록합니다.</span>}
                             {!dupOf && state === 'review' && !row.result && <span className="pi-sub-line">비슷한 앱 글이 둘 이상이거나 겹침이 낮습니다 — 맞는 글을 골라 체크하세요.</span>}
-                            {!dupOf && state === 'none' && <span className="pi-sub-line">앱 글과 겹치는 부분이 적습니다. 맞는 글이 있으면 고르세요.</span>}
+                            {!dupOf && state === 'none' && <span className="pi-sub-line">앱 글과 겹치는 부분이 적습니다. 맞는 글이 있으면 고르고, 아니면 앱 밖 글로 추적하거나 무시하세요.</span>}
                             {!dupOf && state === 'manual' && !row.result && (
                               <span className="pi-sub-line warn">가장 잘 맞는 글이 아닌 글을 골랐습니다 — 이 글이 맞으면 체크하세요.</span>
                             )}
+                            {tracked.length > 0 && <span className="pi-sub-line">앱 밖 글로 추적 중: {trackedText(tracked)}</span>}
+                            {ok && movesExternal(ok, pick) && !finished && (
+                              <span className="pi-sub-line warn">
+                                이 브랜드의 앱 밖 글을 앱 글로 옮깁니다 — 올린 날은 옮기는 날(오늘)로 둡니다. 그 전 인용은 앱 밖 글 표에 남고, 앱 밖 줄은 「앱 글로
+                                옮김」으로 쉽니다.
+                              </span>
+                            )}
+                            {ok?.ignoredAt && <span className="pi-sub-line">{monthDay(kstDate(ok.ignoredAt) ?? ok.ignoredAt.slice(0, 10))}에 무시한 주소입니다(앱 글 · 앱 밖 글로 적으면 풀립니다).</span>}
+                            {(ok?.stateUnknown ?? []).length > 0 && (
+                              <span className="pi-sub-line warn">{ok!.stateUnknown!.join(' · ')}을(를) 읽지 못해 앱 밖 글 · 무시 여부를 다 보지 못했습니다 — 미리 체크하지 않았습니다.</span>
+                            )}
+                            {external && appIn.length > 0 && <span className="pi-sub-line">같은 주소: {appIn.join(', ')}의 앱 글</span>}
+                            {external && !row.result && blockReason && external.tenantIds.length > 0 && <span className="pi-sub-line warn">{blockReason}</span>}
                             {verdict?.kind === 'other' && (
                               <span className="pi-sub-line">
                                 {verdict.record.brand}의 「{verdict.record.articleTitle ?? verdict.record.articleId}」에 적힌 주소입니다 — 잘못 적었으면 콘텐츠 보관함에서 그
@@ -722,8 +987,9 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                               <span className="pi-sub-line warn">이 앱 글에는 이미 다른 주소 {others}개가 적혀 있습니다 — 같은 글을 또 올린 것이면 이 주소도 더합니다.</span>
                             )}
                             {twin && <span className="pi-sub-line warn">같은 앱 글을 고른 줄이 또 있습니다 — 두 주소 모두 그 글의 기록이 됩니다.</span>}
-                            {row.result?.kind === 'error' && (
-                              <span className="pi-sub-line error" role="alert">
+                            {(row.result?.kind === 'added' || row.result?.kind === 'existing') && external && <span className="pi-sub-line">{row.result.text}</span>}
+                            {(row.result?.kind === 'error' || row.result?.kind === 'partial') && (
+                              <span className={`pi-sub-line ${row.result.kind === 'error' ? 'error' : 'warn'}`} role="alert">
                                 {row.result.text}
                               </span>
                             )}
@@ -735,8 +1001,8 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                 </table>
               </div>
               <div className="pi-actions">
-                <button type="button" className="btn primary" onClick={() => void register()} disabled={busy || checkedCount === 0}>
-                  이대로 등록{checkedCount > 0 ? ` (${checkedCount}편)` : ''}
+                <button type="button" className="btn primary" onClick={() => void register()} disabled={busy || ready.length === 0}>
+                  이대로 등록{readyText ? ` (${readyText})` : ''}
                 </button>
                 {retryable > 0 && (
                   <button type="button" className="btn" onClick={retry} disabled={busy}>

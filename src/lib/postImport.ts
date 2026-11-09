@@ -16,11 +16,25 @@
  * 페이지에서 읽는다(네이버는 「2시간 전」 같은 상대 시각도 지금 한국 시각으로 센다). 모르면 null — 오늘로 채우지 않는다(확인 불가 원칙).
  * 그 줄은 사람이 날을 골라야 등록된다. 오늘(KST) 뒤 · 2020년 전 날짜는 쓰지 않는다.
  *
+ * ── 앱 밖 글 · 무시(2026-11-10 — 설계 B안 · 검토 C2 · C4 · C5 · C6 · C10 · C11 · C13 · 결정 D2 · D3 · D6 · D13 · D14) ────────
+ * 앱에서 만들지 않은 글(손글)은 짝 고르기에서 「앱 밖 글로 추적…」(브랜드 여러 곳 · 「날짜 모름」 — src/lib/externalPosts.ts)이나 「무시 — 새 글
+ * 찾기에서 숨김」을 고른다. 한 줄 = 한 등록 항목이다(앱 밖 글은 브랜드들을 tenantIds 한 항목으로 — 묶음 상한을 넘지 않고 결과가 제 줄에
+ * 붙는다). 읽기 결과는 이 주소의 앱 밖 기록(tracked) · 무시한 때(ignoredAt)를 원장 기록(known)과 따로 싣는다 — known에 섞으면 「이미
+ * 등록됨 · 다른 글로 등록됨」이 되고, 무엇보다 추적 중 · 무시한 주소에서 본문이 겹치는 앱 글을 자동으로 골라 미리 체크하면 「이대로 등록」
+ * 한 번에 손글이 앱 글로 적히고 앱 밖 줄이 조용히 쉰다(C6). 그래서 그 상태를 먼저 고르고 미리 체크하지 않는다.
+ * 고른 브랜드에 적어도 되는지는 그 브랜드의 원장만 본다(externalRegistrationCheck — 서버와 같은 함수, D13). 다른 브랜드의 앱 글이면 막지
+ * 않고 「같은 주소: ○○의 앱 글」로 알린다. 붙일 브랜드는 글 주소가 정확히 한 고객 브랜드의 자사 주소일 때만 미리 고른다(C2 · D2 — 알려진
+ * 플랫폼 호스트도 자사 주소 칸으로 직접 맞추고, 여럿이 함께 쓰는 플랫폼은 빼고). 무시는 이미 앱 글 · 앱 밖 글로 적힌 주소에는 하지 않고,
+ * 「읽지 못함」 줄에는 할 수 있다(D14 — 사이트맵에 남은 지운 글).
+ *
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다. 받은 HTML은 글자로만 다룬다(실행 · 그리기 없음).
  */
 import type { StoredDraft } from './api.js'
 import { effectiveDraft } from './draftGaps.js'
+import { externalRegistrationCheck, ledgerWinners, ledgerWinsMessage, type ExternalDateSource, type LedgerRowLike } from './externalPosts.js'
+import { ownedUrl } from './publishStatus.js'
 import { ARTICLE_URL_REASON, isArticleUrl, kstDate, todayKst, trackingKey } from './publishedUrl.js'
+import { isSharedPlatformHost } from './sharedHosts.js'
 
 export const MATCH_RULE = {
   /** 「맞음」 — 가장 잘 맞는 초안의 본문 겹침 하한. */
@@ -39,6 +53,12 @@ export const MIN_BODY_GRAMS = 30
 export const BLOG_SOURCES_MAX = 30
 /** 한 번에 등록하는 줄 상한 — 긴 워드프레스 주소 100줄도 서버 JSON 한도(100KB) 안에 든다. 화면은 40줄씩 나눠 보낸다. */
 export const COMMIT_MAX_ITEMS = 100
+/** 화면이 한 번에 보내는 줄 수. */
+export const COMMIT_CHUNK_ITEMS = 40
+/** 화면이 한 번에 보내는 요청 본문 크기(UTF-8) — 서버 JSON 한도(100KB) 아래로 둔다(앱 밖 글 줄은 브랜드 id · 제목이 붙어 길다). */
+export const COMMIT_MAX_BYTES = 80_000
+/** 앱 밖 글 한 줄에 붙이는 브랜드 상한. */
+export const EXTERNAL_TENANTS_MAX = 200
 
 export type PostPlatform = 'naver' | 'tistory' | 'wordpress' | 'generic'
 export const POST_PLATFORM_LABEL: Record<PostPlatform, string> = {
@@ -663,11 +683,32 @@ export interface KnownRecord {
   legacy: boolean
 }
 
+/** 이 주소를 앱 밖 글로 추적하는 고객 브랜드의 줄 — 살아 있거나 같은 브랜드에 앱 글로 옮겨 쉬는 줄(뺀 줄은 넣지 않는다). */
+export interface TrackedRecord {
+  tenantId: string
+  brand: string
+  postId: string
+  /** 그 줄의 주소 키(붙여 넣은 · 읽은 · 적을 주소 가운데 하나). */
+  key: string
+  state: 'live' | 'moved'
+  publishedOn: string | null
+  trackedAt: string
+}
+
+/** 고객 브랜드 원장에서 이 주소(세 키)의 줄 — 뺀 줄 포함. 앱 밖 글로 적을 수 있는지를 externalRegistrationCheck가 가린다(서버와 같은 함수). */
+export interface AppLedger {
+  tenantId: string
+  brand: string
+  posts: LedgerRowLike[]
+}
+
 export interface PostImportReadOk {
   ok: true
   /** 적힌 그대로(앞뒤 공백만 뗀다). */
   url: string
   key: string
+  /** 실제로 읽은 주소(끝에 붙은 글자를 뗐으면 뗀 주소). 옛 서버면 없다. */
+  readUrl?: string
   /**
    * 적을 주소 — 페이지가 밝힌 정식 주소(canonical · og:url, 같은 블로그의 글일 때) › 리디렉션 뒤 주소 › 읽은 주소(붙여 넣은 주소, 끝 글자를
    * 뗐으면 뗀 주소). 추적 키가 붙여 넣은 주소와 같으면 붙여 넣은 주소 그대로. 「이대로 등록」은 이 주소로 적는다 — ?p=번호 · 단축 주소 ·
@@ -683,6 +724,16 @@ export interface PostImportReadOk {
   candidates: ImportCandidate[]
   /** 붙여 넣은 주소 · 읽은 주소 · 적을 주소 가운데 하나라도 원장에 적힌 기록. */
   known: KnownRecord[]
+  /** 세 주소 가운데 하나를 앱 밖 글로 추적하는 고객 브랜드 줄(C6 — known과 따로). 아래 칸은 모두 옛 서버면 없다(앱 글만 본다). */
+  tracked?: TrackedRecord[]
+  /** 세 주소 가운데 하나를 「새 글 찾기」에서 무시한 때. 아니면 null. */
+  ignoredAt?: string | null
+  /** 적을 주소의 호스트를 자사 주소로 가진 고객 브랜드(여럿이 함께 쓰는 플랫폼은 빼고 — C2). 정확히 하나일 때만 미리 고른다. */
+  ownedBrands?: { tenantId: string; brand: string }[]
+  /** 세 주소의 원장 줄이 있는 고객 브랜드(뺀 줄 포함) — 앱 밖 글로 적을 수 있는 브랜드를 가린다(D13). */
+  appLedgers?: AppLedger[]
+  /** 앱 밖 글 · 무시 여부를 다 보지 못한 까닭(읽지 못한 파일). 있으면 미리 체크하지 않는다. */
+  stateUnknown?: string[]
 }
 export interface PostImportReadFail {
   ok: false
@@ -717,8 +768,11 @@ export function urlVerdict(known: readonly KnownRecord[], pick: RowPick): UrlVer
   return { kind: 'fresh' }
 }
 
-/** 줄 상태 — 자동 판정(맞음 · 확인 필요 · 앱 글 아님), 사람이 바꾼 것(직접 고름 · 앱 글 아님(직접)), 원장 · 읽기 결과(이미 등록됨 · 다른 글로 등록됨 · 읽지 못함). */
-export type RowState = MatchState | 'manual' | 'dismissed' | 'already' | 'other' | 'unreadable'
+/**
+ * 줄 상태 — 자동 판정(맞음 · 확인 필요 · 앱 글 아님), 사람이 바꾼 것(직접 고름 · 앱 글 아님(직접)), 원장 · 읽기 결과(이미 등록됨 · 다른 글로
+ * 등록됨 · 읽지 못함), 앱 밖 글 · 무시(추적 중 · 무시함 — 이미 적힌 것, 앱 밖 글로 추적 · 무시 — 이번에 적을 것).
+ */
+export type RowState = MatchState | 'manual' | 'dismissed' | 'already' | 'other' | 'unreadable' | 'tracked' | 'ignored' | 'external' | 'ignore'
 export const ROW_STATE_LABEL: Record<RowState, string> = {
   match: '맞음',
   review: '확인 필요',
@@ -728,6 +782,10 @@ export const ROW_STATE_LABEL: Record<RowState, string> = {
   already: '이미 등록됨',
   other: '다른 글로 등록됨',
   unreadable: '읽지 못함',
+  tracked: '앱 밖 글로 추적 중',
+  ignored: '무시함',
+  external: '앱 밖 글로 추적',
+  ignore: '무시',
 }
 
 /**
@@ -768,6 +826,8 @@ export function rowStateOf(read: PostImportRead, pick: RowPick | null): { state:
  * 등록된다.
  */
 export function checkedByDefault(read: PostImportRead, claimed: ReadonlySet<string> = new Set()): boolean {
+  // 이미 앱 밖 글 · 무시로 적은 주소, 그 여부를 다 보지 못한 주소는 사람이 고른다(C6).
+  if (read.ok && ((read.tracked?.length ?? 0) > 0 || read.ignoredAt || (read.stateUnknown?.length ?? 0) > 0)) return false
   const pick = autoPick(read)
   if (!read.ok || pick === null || rowStateOf(read, pick).state !== 'match' || claimed.has(pickKey(pick))) return false
   return (read.candidates.find((c) => samePick(c, pick))?.otherUrls ?? 0) === 0
@@ -787,6 +847,124 @@ export interface RegisteredRow {
 export function otherUrlsNow(candidate: ImportCandidate, recordKey: string, readSeq: number, registered: readonly RegisteredRow[]): number {
   const later = new Set(registered.filter((r) => r.seq > readSeq && r.recordKey !== recordKey && samePick(r.pick, candidate)).map((r) => r.recordKey))
   return candidate.otherUrls + later.size
+}
+
+// ── 앱 밖 글 · 무시 고르기 ───────────────────────────────────────────────────
+
+/** 줄에서 고른 일 — 앱 글(pick이 null이면 「앱 글 아님」) · 앱 밖 글로 추적(새로 적을 브랜드 · 날짜 모름) · 무시(새 글 찾기에서 숨김). */
+export type RowChoice = { mode: 'app'; pick: RowPick | null } | { mode: 'external'; tenantIds: string[]; dateUnknown: boolean } | { mode: 'ignore' }
+
+/**
+ * 처음 고를 일 — 이미 앱 밖 글로 추적 중인 주소면 앱 밖 글(새로 고른 브랜드 없음), 무시한 주소면 무시, 아니면 앱 글(autoPick). 추적 · 무시를
+ * 자동 선택보다 먼저 본다(C6 — 본문이 겹치는 앱 글을 고르면 손글이 앱 글로 적힌다).
+ */
+export function initialChoice(read: PostImportRead): RowChoice {
+  if (read.ok && (read.tracked?.length ?? 0) > 0) return { mode: 'external', tenantIds: [], dateUnknown: false }
+  if (read.ok && read.ignoredAt) return { mode: 'ignore' }
+  return { mode: 'app', pick: autoPick(read) }
+}
+
+/**
+ * 고른 앱 글이 같은 브랜드에서 앱 밖 글로 추적 중인 주소인가(앱 글로 옮김 — D7 · D12). 그 브랜드의 살아 있는 앱 밖 줄을 돌려준다. 옮기면 앱
+ * 밖 줄은 쉬고(원장이 이김), 앱 글의 올린 날은 옮기는 날이다 — 그 전 인용은 앱 밖 표에 남고 두 표가 같은 측정을 함께 세지 않는다.
+ */
+export function movesExternal(read: PostImportRead, pick: RowPick | null): TrackedRecord | null {
+  if (!read.ok || !pick) return null
+  return (read.tracked ?? []).find((t) => t.tenantId === pick.tenantId && t.state === 'live') ?? null
+}
+
+/** 앱 밖 글로 적을 브랜드 하나의 상태 — tracked 이미 추적 중(살아 있는 줄), blocked 그 브랜드 원장이 이김(앱 글), open 적을 수 있음. */
+export type ExternalBrandState = 'tracked' | 'blocked' | 'open'
+
+/**
+ * 고른 브랜드에 이 주소를 앱 밖 글로 적을 수 있는가 — 그 브랜드의 원장만 본다(externalRegistrationCheck — 서버 등록이 쓰는 함수, D13). 적을
+ * 주소(recordUrl)의 키로 본다(서버도 그 주소로 적는다). 읽지 못한 줄은 적지 않는다.
+ */
+export function externalBrandState(read: PostImportRead, tenantId: string): ExternalBrandState {
+  if (!read.ok) return 'blocked'
+  if ((read.tracked ?? []).some((t) => t.tenantId === tenantId && t.state === 'live')) return 'tracked'
+  return externalRegistrationCheck(tenantId, read.recordKey, read.appLedgers ?? []).blocked ? 'blocked' : 'open'
+}
+
+/** 막힌 브랜드의 까닭 — 원장의 앱 글 줄(살아 있음 · 내림)에 따라(서버 거절과 같은 문구 — C5). 막히지 않았으면 null. */
+export function externalBlockMessage(read: PostImportRead, tenantId: string): string | null {
+  if (!read.ok) return '읽지 못한 주소는 앱 밖 글로 적지 않습니다 — 다시 읽어 주세요.'
+  const winners = ledgerWinners(read.appLedgers?.find((l) => l.tenantId === tenantId)?.posts ?? [], read.recordKey)
+  return winners.length > 0 ? ledgerWinsMessage(winners) : null
+}
+
+/**
+ * 같은 주소를 앱 글로 가진 다른 고객 브랜드의 이름(「같은 주소: ○○의 앱 글」 — 막지 않고 알린다, D13). 고른 브랜드는 뺀다(그 브랜드는
+ * 막힌다). 고른 브랜드가 없으면 그런 브랜드 모두.
+ */
+export function sameUrlAppBrands(read: PostImportRead, tenantIds: readonly string[]): string[] {
+  if (!read.ok) return []
+  const ledgers = read.appLedgers ?? []
+  const ids = new Set((tenantIds.length > 0 ? tenantIds : ['']).flatMap((t) => externalRegistrationCheck(t, read.recordKey, ledgers).appIn))
+  for (const t of tenantIds) ids.delete(t)
+  return ledgers.filter((l) => ids.has(l.tenantId)).map((l) => l.brand)
+}
+
+/**
+ * 이 주소를 자사 주소로 가진 브랜드 — 자사 주소 칸으로 직접 맞춘다(알려진 플랫폼 호스트도 — 발행 현황 platformOf는 티스토리를 먼저 보아
+ * 자사 블로그를 가리지 못한다, C2). 여럿이 함께 쓰는 플랫폼 호스트(blog.naver.com 등 — src/lib/sharedHosts.ts)는 자사 주소 칸에 있어도 뺀다.
+ */
+export function ownedBrandsOf(
+  url: string,
+  brands: readonly { tenantId: string; brand: string; ownedDomains: readonly string[] }[],
+): { tenantId: string; brand: string }[] {
+  const host = parseUrl(url)?.hostname.toLowerCase().replace(/^www\./, '') ?? ''
+  if (!host || isSharedPlatformHost(host)) return []
+  return brands.filter((b) => ownedUrl(url, b.ownedDomains)).map(({ tenantId, brand }) => ({ tenantId, brand }))
+}
+
+/** 「앱 밖 글로 추적…」을 고를 때 미리 고를 브랜드 — 자사 주소인 고객 브랜드가 정확히 하나이고 적을 수 있을 때만(D2). 줄 체크는 사람이 한다. */
+export function externalDefaultBrands(read: PostImportRead): string[] {
+  const owned = read.ok ? (read.ownedBrands ?? []) : []
+  if (owned.length !== 1) return []
+  const only = owned[0]!.tenantId
+  return externalBrandState(read, only) === 'open' ? [only] : []
+}
+
+/** 「무시」를 고를 수 있는 줄 — 읽지 못한 줄(D14)이나, 원장(살아 있는 줄) · 앱 밖 글에 적히지 않은 주소. 이미 앱 글 · 앱 밖 글이면 새 글 찾기에서 이미 빠진다. */
+export function ignoreOptionAllowed(read: PostImportRead): boolean {
+  return !read.ok || (read.known.length === 0 && (read.tracked?.length ?? 0) === 0)
+}
+
+/** 고른 일에 따른 줄 상태 — 앱 글은 rowStateOf 그대로, 앱 밖 글은 「앱 밖 글로 추적」(새 브랜드 없이 이미 추적 중이면 「앱 밖 글로 추적 중」), 무시는 「무시」 · 「무시함」. */
+export function choiceStateOf(read: PostImportRead, choice: RowChoice): { state: RowState; verdict: UrlVerdict | null } {
+  if (choice.mode === 'ignore') return { state: read.ok && read.ignoredAt ? 'ignored' : 'ignore', verdict: null }
+  if (choice.mode === 'app') return rowStateOf(read, choice.pick)
+  if (!read.ok) return { state: 'unreadable', verdict: null }
+  return { state: choice.tenantIds.length === 0 && (read.tracked?.length ?? 0) > 0 ? 'tracked' : 'external', verdict: null }
+}
+
+/**
+ * 이 줄을 이대로 등록할 수 없는 까닭 — 없으면 null(날짜 · 같은 글 주소 · 이미 적음은 화면이 따로 본다). 앱 글은 예전 규칙(읽음 · 고른 글 ·
+ * 이미 등록됨 · 다른 글로 등록됨이 아님), 앱 밖 글은 읽음 · 브랜드 하나 이상 · 고른 브랜드가 모두 적을 수 있음(D13), 무시는 읽지 못한 줄도
+ * 되고(D14) 이미 앱 글 · 앱 밖 글로 적힌 주소 · 이미 무시한 주소는 아니다.
+ */
+export function choiceBlockReason(read: PostImportRead, choice: RowChoice): string | null {
+  if (choice.mode === 'ignore') {
+    if (!read.ok) return null
+    if (read.ignoredAt) return '이미 무시한 주소입니다.'
+    return ignoreOptionAllowed(read) ? null : '이미 앱 글 · 앱 밖 글로 적힌 주소는 무시하지 않습니다(새 글 찾기에서 이미 빠집니다).'
+  }
+  if (!read.ok) return '읽지 못한 주소는 무시만 할 수 있습니다 — 다시 읽어 주세요.'
+  if (choice.mode === 'external') {
+    if (choice.tenantIds.length === 0) return '추적할 브랜드를 하나 이상 고르세요.'
+    for (const t of choice.tenantIds) {
+      const state = externalBrandState(read, t)
+      if (state === 'tracked') return '이미 앱 밖 글로 추적 중인 브랜드를 골랐습니다.'
+      if (state === 'blocked') return externalBlockMessage(read, t)
+    }
+    return null
+  }
+  if (!choice.pick) return '짝지을 앱 글을 고르세요.'
+  const { state } = rowStateOf(read, choice.pick)
+  if (state === 'already') return '이미 등록된 주소입니다.'
+  if (state === 'other') return '다른 글로 등록된 주소입니다.'
+  return null
 }
 
 // ── 저장한 블로그 · 새 글 찾기 ──────────────────────────────────────────────
@@ -1004,10 +1182,14 @@ export interface BlogListResult {
   platform: PostPlatform
   /** 이 블로그에서 찾은 글 수. */
   found: number
-  /** 고객 브랜드 원장에 살아 있지 않은 글 주소(최근 글부터, 많아야 NEW_URLS_MAX편). */
+  /** 고객 브랜드 원장에 살아 있지 않고, 앱 밖 글로 추적하지도 무시하지도 않은 글 주소(최근 글부터, 많아야 NEW_URLS_MAX편). */
   newUrls: string[]
   /** 상한을 넘어 돌려주지 않은 더 오래된 새 글 수. */
   older: number
+  /** 앱 밖 글로 추적 중이라 뺀 글 수(자르기 전에 뺀다). 옛 서버면 없다. */
+  hiddenExternal?: number
+  /** 무시한 글이라 뺀 글 수. 옛 서버면 없다. */
+  hiddenIgnored?: number
   /** 읽지 못한 목록(일부만 읽었으면 나머지로 찾은 글은 그대로). */
   errors: string[]
 }
@@ -1017,37 +1199,189 @@ export const NEW_URLS_MAX = 50
 
 // ── 등록 요청 ───────────────────────────────────────────────────────────────
 
-export interface CommitItem {
+/**
+ * 앱 글 줄 — 「올렸어요」와 같은 기록으로 원장에 적는다. kind가 없는 옛 요청(CLI · 옛 화면)도 앱 글이다. alsoUrls는 이 글을 읽을 때 나온 다른
+ * 주소 모양(붙여 넣은 · 읽은 주소) — 무시 목록에서 풀 때만 쓴다(C11).
+ */
+export interface AppCommitItem {
+  kind?: 'app'
   tenantId: string
   articleId: string
   url: string
   /** 사람이 확인한 올린 날(YYYY-MM-DD). */
   publishedOn: string
+  alsoUrls?: string[]
 }
+/** 앱 밖 글 줄 — 고른 브랜드들(tenantIds 한 항목 — C13)의 앱 밖 글 목록에 적는다. 올린 날을 모르면 null · unknown(D3). 제목이 없으면 null. */
+export interface ExternalCommitItem {
+  kind: 'external'
+  tenantIds: string[]
+  url: string
+  title: string | null
+  publishedOn: string | null
+  publishedOnSource: ExternalDateSource
+  alsoUrls?: string[]
+}
+/** 무시 줄 — 앱 전체 무시 목록에 적는다(새 글 찾기에서 숨김). alsoUrls는 읽을 때 나온 다른 주소 모양(C11 — 목록 주소와 정식 주소가 달라도 숨는다). */
+export interface IgnoreCommitItem {
+  kind: 'ignore'
+  url: string
+  alsoUrls?: string[]
+}
+export type CommitItem = AppCommitItem | ExternalCommitItem | IgnoreCommitItem
+/** 검사를 지난 줄 — 앱 글 줄도 kind가 붙는다. */
+export type ParsedCommitItem = (AppCommitItem & { kind: 'app' }) | ExternalCommitItem | IgnoreCommitItem
 
-export interface CommitResult {
+/** added — 새로 적음, existing — 이미 있던 기록이라 그대로 둠, error — 적지 않음(이유는 error). */
+export type CommitStatus = 'added' | 'existing' | 'error'
+export interface AppCommitResult {
+  kind: 'app'
   tenantId: string
   articleId: string
   url: string
-  /** added — 새로 적음, existing — 이미 그 글의 기록이라 그대로 둠, error — 적지 않음(이유는 error). */
-  status: 'added' | 'existing' | 'error'
+  status: CommitStatus
   error?: string
   postId?: string
 }
+/** 앱 밖 글 줄의 브랜드 하나 — alsoAppIn은 같은 주소를 앱 글로 가진 다른 고객 브랜드 이름(D13 — 막지 않고 알린다). */
+export interface ExternalTenantResult {
+  tenantId: string
+  brand: string
+  status: CommitStatus
+  error?: string
+  postId?: string
+  alsoAppIn?: string[]
+}
+/** 앱 밖 글 줄의 결과 — 브랜드마다(tenants). partial은 몇 브랜드만 걸림. 줄 자체가 틀렸으면(날짜 등) error · 브랜드 결과 없음. */
+export interface ExternalCommitResult {
+  kind: 'external'
+  url: string
+  status: CommitStatus | 'partial'
+  error?: string
+  tenants: ExternalTenantResult[]
+}
+export interface IgnoreCommitResult {
+  kind: 'ignore'
+  url: string
+  status: CommitStatus
+  error?: string
+}
+export type CommitResult = AppCommitResult | ExternalCommitResult | IgnoreCommitResult
 
-/** 등록 요청 본문 검사 — { items: [{ tenantId, articleId, url, publishedOn }] }(글자, COMMIT_MAX_ITEMS줄까지). */
-export function parseCommitItems(body: unknown): { ok: true; items: CommitItem[] } | { ok: false; error: string } {
+/** 브랜드별 결과를 한 줄 상태로 — 모두 걸림 error, 몇만 걸림 partial, 하나라도 새로 적었으면 added, 모두 이미 있던 줄이면 existing. */
+export function externalCommitStatus(tenants: readonly ExternalTenantResult[]): ExternalCommitResult['status'] {
+  const failed = tenants.filter((t) => t.status === 'error').length
+  if (failed === tenants.length) return 'error'
+  if (failed > 0) return 'partial'
+  return tenants.some((t) => t.status === 'added') ? 'added' : 'existing'
+}
+
+/** 등록 결과 한 줄 — 앱 밖 글은 브랜드마다(「등록함 · 앱 밖 글(브랜드 …)」, 걸린 브랜드와 까닭, 같은 주소를 앱 글로 가진 브랜드). */
+export function externalResultText(r: ExternalCommitResult): string {
+  const ok = r.tenants.filter((t) => t.status !== 'error')
+  const bad = r.tenants.filter((t) => t.status === 'error')
+  const appIn = [...new Set(ok.flatMap((t) => t.alsoAppIn ?? []))]
+  const parts: string[] = []
+  if (ok.some((t) => t.status === 'added')) parts.push(`등록함 · 앱 밖 글(${ok.filter((t) => t.status === 'added').map((t) => t.brand).join(', ')})`)
+  if (ok.some((t) => t.status === 'existing')) parts.push(`이미 추적 중 — 그대로 둠(${ok.filter((t) => t.status === 'existing').map((t) => t.brand).join(', ')})`)
+  if (bad.length > 0) parts.push(`걸림 — ${bad.map((t) => `${t.brand}: ${t.error ?? '적지 못했습니다'}`).join(' / ')}`)
+  if (r.tenants.length === 0 && r.error) parts.push(r.error)
+  if (appIn.length > 0) parts.push(`같은 주소: ${appIn.join(', ')}의 앱 글`)
+  return parts.join(' · ')
+}
+
+/** 줄의 주소들(적을 주소 + alsoUrls)의 추적 키 — 겹치는 것은 한 번. 무시 목록에 적고 풀 때 쓴다. */
+export function commitItemKeys(item: { url: string; alsoUrls?: readonly string[] }): string[] {
+  return [...new Set([item.url, ...(item.alsoUrls ?? [])].map((u) => trackingKey(u)).filter((k): k is string => k !== null))]
+}
+
+const URL_FIELD_MAX = 4000
+const isText = (v: unknown, max = URL_FIELD_MAX): v is string => typeof v === 'string' && v.trim() !== '' && v.length <= max
+const SOURCES: readonly ExternalDateSource[] = ['page', 'user', 'unknown']
+
+/** alsoUrls — 없거나, 주소 글자 다섯 개까지. 틀리면 undefined. */
+function alsoUrlsOf(v: unknown): string[] | undefined | null {
+  if (v === undefined) return null
+  if (!Array.isArray(v) || v.length > 5 || !v.every((u) => isText(u))) return undefined
+  return (v as string[]).map((u) => u.trim())
+}
+
+/** 한 줄 검사 — 틀리면 이유(몇 번째 줄인지는 부르는 쪽이 붙인다). */
+function parseCommitItem(it: Record<string, unknown>): ParsedCommitItem | string {
+  const also = alsoUrlsOf(it.alsoUrls)
+  if (also === undefined) return 'alsoUrls는 주소 글자 다섯 개까지입니다.'
+  const extra = also ? { alsoUrls: also } : {}
+  if (it.kind === undefined || it.kind === 'app') {
+    const fields = ['tenantId', 'articleId', 'url', 'publishedOn'] as const
+    if (fields.some((f) => !isText(it[f]))) return 'tenantId · articleId · url · publishedOn 글자가 필요합니다.'
+    return { kind: 'app', tenantId: it.tenantId as string, articleId: it.articleId as string, url: (it.url as string).trim(), publishedOn: (it.publishedOn as string).trim(), ...extra }
+  }
+  if (it.kind === 'external') {
+    const ids = it.tenantIds
+    if (!Array.isArray(ids) || ids.length === 0 || ids.length > EXTERNAL_TENANTS_MAX || !ids.every((t) => isText(t, 200)) || new Set(ids).size !== ids.length) {
+      return `앱 밖 글은 브랜드(tenantIds)를 겹치지 않게 1~${EXTERNAL_TENANTS_MAX}곳 골라야 합니다.`
+    }
+    if (!isText(it.url)) return '앱 밖 글 주소(url)가 필요합니다.'
+    if (!(it.title === undefined || it.title === null || (typeof it.title === 'string' && it.title.length <= URL_FIELD_MAX))) return '제목은 글자이거나 null이어야 합니다.'
+    if (!(it.publishedOn === null || typeof it.publishedOn === 'string')) return '올린 날(publishedOn)은 YYYY-MM-DD이거나 null(모름)이어야 합니다.'
+    const source = SOURCES.find((s) => s === it.publishedOnSource)
+    if (!source) return '올린 날의 출처(publishedOnSource: page · user · unknown)가 필요합니다.'
+    return {
+      kind: 'external',
+      tenantIds: ids as string[],
+      url: (it.url as string).trim(),
+      title: typeof it.title === 'string' ? it.title : null,
+      publishedOn: it.publishedOn === null ? null : (it.publishedOn as string).trim(),
+      publishedOnSource: source,
+      ...extra,
+    }
+  }
+  if (it.kind === 'ignore') {
+    if (!isText(it.url)) return '무시할 주소(url)가 필요합니다.'
+    return { kind: 'ignore', url: (it.url as string).trim(), ...extra }
+  }
+  return 'kind는 app · external · ignore 가운데 하나여야 합니다.'
+}
+
+/**
+ * 등록 요청 본문 검사 — { items: [...] }(COMMIT_MAX_ITEMS줄까지). 줄은 앱 글 { tenantId, articleId, url, publishedOn }(kind 없음도) · 앱 밖 글
+ * { kind: 'external', tenantIds, url, title, publishedOn, publishedOnSource } · 무시 { kind: 'ignore', url }. 날짜 범위 · 글 주소인지는 등록할 때
+ * 줄마다 다시 본다(그 줄만 걸린다).
+ */
+export function parseCommitItems(body: unknown): { ok: true; items: ParsedCommitItem[] } | { ok: false; error: string } {
   const items = (body as { items?: unknown } | null)?.items
   if (!Array.isArray(items) || items.length === 0) return { ok: false, error: '등록할 줄(items)이 없습니다.' }
   if (items.length > COMMIT_MAX_ITEMS) return { ok: false, error: `한 번에 ${COMMIT_MAX_ITEMS}줄까지 등록합니다.` }
-  const out: CommitItem[] = []
+  const out: ParsedCommitItem[] = []
   for (const [i, raw] of items.entries()) {
-    const it = raw as Record<string, unknown> | null
-    const fields = ['tenantId', 'articleId', 'url', 'publishedOn'] as const
-    if (!it || typeof it !== 'object' || fields.some((f) => typeof it[f] !== 'string' || !(it[f] as string).trim() || (it[f] as string).length > 4000)) {
-      return { ok: false, error: `${i + 1}번째 줄 모양이 틀렸습니다 — tenantId · articleId · url · publishedOn 글자가 필요합니다.` }
-    }
-    out.push({ tenantId: it.tenantId as string, articleId: it.articleId as string, url: (it.url as string).trim(), publishedOn: (it.publishedOn as string).trim() })
+    const parsed = raw && typeof raw === 'object' && !Array.isArray(raw) ? parseCommitItem(raw as Record<string, unknown>) : '줄이 객체가 아닙니다.'
+    if (typeof parsed === 'string') return { ok: false, error: `${i + 1}번째 줄 모양이 틀렸습니다 — ${parsed}` }
+    out.push(parsed)
   }
   return { ok: true, items: out }
+}
+
+/**
+ * 화면이 보낼 묶음 — 줄 수(COMMIT_CHUNK_ITEMS) · 본문 크기(COMMIT_MAX_BYTES, UTF-8) 가운데 먼저 닿는 쪽에서 끊는다. 앱 밖 글 줄은 브랜드가 여럿이어도
+ * 한 항목이라 묶음이 서버 상한(COMMIT_MAX_ITEMS)을 넘지 않는다(C13). 순서는 그대로 — 결과도 같은 순서로 온다.
+ */
+export function commitChunks<T>(items: readonly T[], maxItems = COMMIT_CHUNK_ITEMS, maxBytes = COMMIT_MAX_BYTES): T[][] {
+  const encoder = new TextEncoder()
+  const size = (v: unknown) => encoder.encode(JSON.stringify(v)).length
+  const empty = size({ items: [] })
+  const out: T[][] = []
+  let cur: T[] = []
+  let bytes = empty
+  for (const it of items) {
+    const b = size(it) + 1
+    if (cur.length > 0 && (cur.length >= maxItems || bytes + b > maxBytes)) {
+      out.push(cur)
+      cur = []
+      bytes = empty
+    }
+    cur.push(it)
+    bytes += b
+  }
+  if (cur.length > 0) out.push(cur)
+  return out
 }
