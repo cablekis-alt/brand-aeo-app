@@ -17,9 +17,8 @@ import {
   type ActionStatus,
   type StoredBrief,
   type StoredDraft,
-  type TopicSnapshot,
 } from '../lib/api'
-import { assignedTopicSnapshot } from '../lib/contentLibraryOrder'
+import { assignedTopicSnapshot, recordBlockedReason } from '../lib/contentLibraryOrder'
 import { effectiveDraft } from '../lib/draftGaps'
 import { recordOnlyHits, topicSnapshotFor, type GapAction } from '../lib/gapActions'
 import { draftTitle } from '../lib/markdownFile'
@@ -442,20 +441,23 @@ export default function QuestionBankPage() {
                         const stored = drafts[action.id]
                         // 배정 글(작성자 배정에 있는 글 id)은 콘텐츠 보관함 · 주소 한꺼번에 등록 · CLI와 같은 질문 스냅샷 — 추가 글 정의의 판,
                         // 정의가 없으면(판 미확인) 배정 파일의 판(src/lib/contentLibraryOrder.ts assignedTopicSnapshot). 지금 은행 판을 실으면
-                        // 같은 글이 적은 화면에 따라 발행 현황에서 올림 · 미확인 · 배정 밖으로 갈린다. 추가 글 목록을 읽지 못하면 어느 판인지
-                        // 가를 수 없어 적지 않는다(주소 한꺼번에 등록과 같다).
-                        let assigned: TopicSnapshot | null = null
-                        if (writerArticle(probe.plan, action.id)) {
-                          const unread = '추가 글 목록을 읽지 못해 이 글의 질문지 판을 확인하지 못했습니다 — 적지 않았습니다.'
-                          let listed: Awaited<ReturnType<typeof loadExtraArticles>>
+                        // 같은 글이 적은 화면에 따라 발행 현황에서 올림 · 미확인 · 배정 밖으로 갈린다. 배정 파일을 읽지 못했거나 배정 글인데
+                        // 추가 글 목록을 읽지 못하면 배정 글인지 · 어느 판인지 가를 수 없어 적지 않는다(recordBlockedReason — 콘텐츠 보관함 ·
+                        // 주소 한꺼번에 등록과 같다).
+                        const planUnreadable = probe.corrupt || probe.error !== null
+                        let listed: Awaited<ReturnType<typeof loadExtraArticles>> = null
+                        let listError = ''
+                        if (!planUnreadable && writerArticle(probe.plan, action.id)) {
                           try {
                             listed = await loadExtraArticles(tenant.tenantId)
                           } catch (err) {
-                            return `${unread} (${err instanceof Error ? err.message : String(err)})`
+                            listError = ` (${err instanceof Error ? err.message : String(err)})`
                           }
-                          if (!listed || listed.corrupt) return unread
-                          assigned = assignedTopicSnapshot(probe.plan, listed.articles, action.id)
                         }
+                        const extrasList = listed && !listed.corrupt ? listed.articles : null
+                        const blocked = recordBlockedReason(action.id, probe.plan, planUnreadable, extrasList)
+                        if (blocked) return `${blocked}${listError}`
+                        const assigned = assignedTopicSnapshot(probe.plan, extrasList, action.id)
                         const r = await published.record({
                           url,
                           articleId: action.id,

@@ -26,6 +26,7 @@ import {
   libraryPickOptions,
   libraryRecordTopic,
   orphansShown,
+  recordBlockedReason,
   sectionDetail,
   sectionTitle,
   shownSections,
@@ -106,6 +107,7 @@ export default function ContentLibrary() {
   // 작성자 배정 · 추가 글 정의 — 배정이 있으면 글을 작성자별로 묶는다. 누구 글인지는 콘텐츠 생성과 같이 추가 글 정의의 판으로 가린다.
   // 운영 기간이 지나도 묶는다(발행 현황의 작성자 칸과 같다 — src/lib/contentLibraryOrder.ts).
   const probe = useProbePlan(key)
+  const planUnreadable = probe.corrupt || probe.error !== null
   const [extrasState, setExtrasState] = useState<{ key: string; list: ExtraArticle[] | null; error: string | null } | null>(null)
   useEffect(() => {
     if (!key) return
@@ -238,7 +240,10 @@ export default function ContentLibrary() {
           onRecord={async (url, publishedOn, chosen) => {
             // 추가 글은 그 정의의 판 · 문장을 싣는다(콘텐츠 생성과 같은 판 — 발행 현황이 작성자 글로 센다). 판 미확인 배정 글(작성자 칸의
             // 정의 없는 글)은 주소 한꺼번에 등록 · CLI와 같은 배정 파일의 판, 그 밖에 정의가 없으면 질문 은행으로 보고, 초안이 없는
-            // 기록(stored 없음)은 쓸 때의 시각을 몰라 id만 남는다.
+            // 기록(stored 없음)은 쓸 때의 시각을 몰라 id만 남는다. 배정 파일이나 (배정 글의) 추가 글 목록을 읽지 못해 어느 스냅샷인지 가를
+            // 수 없으면 적지 않는다(질문 은행 「올렸어요」 · 주소 한꺼번에 등록과 같다).
+            const blocked = stored ? recordBlockedReason(articleId, probe.plan, planUnreadable, extras?.list ?? null) : null
+            if (blocked) return blocked
             const topic = libraryRecordTopic(articleId, extras?.list ?? null, bank, stored?.generatedAt, probe.plan)
             const r = await published.record({
               url,
@@ -274,7 +279,7 @@ export default function ContentLibrary() {
   const layout = libraryLayout({
     drafts: Object.values(drafts ?? {}),
     plan: probe.plan,
-    planUnreadable: probe.corrupt || probe.error !== null,
+    planUnreadable,
     extras: extras?.list ?? null,
     // 칸 머리의 올림은 발행 현황과 같은 규칙으로 센다(같은 주소 · 같은 날 묶음 · 배정 판으로 쓴 기록만).
     posts: canRecord ? published.posts : null,

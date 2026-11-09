@@ -162,6 +162,24 @@ export function libraryRecordTopic(
   return def ? extraTopicSnapshot(def) : topicSnapshotFor(articleId, bank, draftGeneratedAt)
 }
 
+/**
+ * 보관함 · 질문 은행 「올렸어요」가 초안 있는 글을 적지 않는 까닭 — 질문 글(topic:)이 배정 글인지 · 어느 판인지 가를 수 없으면 어느 스냅샷을
+ * 실을지 몰라 적지 않는다(주소 한꺼번에 등록 src/lib/postRegistration.ts writerUnknownOf와 같이 짐작하지 않는다). 배정 파일을 읽지
+ * 못했으면(깨짐 · 읽기 실패) 모든 질문 글, 배정 글 id인데 추가 글 목록을 읽지 못했으면(null) 그 글. 배정에 없는 글 · 배정 파일이 없는
+ * 브랜드는 지금처럼 적는다. 적어도 되면 null.
+ */
+export function recordBlockedReason(
+  articleId: string,
+  plan: WriterPlan | null,
+  planUnreadable: boolean,
+  extras: readonly unknown[] | null,
+): string | null {
+  if (!articleId.startsWith('topic:')) return null
+  if (planUnreadable) return '작성자 배정 파일(probe-plan.json)을 읽지 못해 누구 글인지 확인하지 못했습니다 — 적지 않았습니다.'
+  if (writerArticle(plan, articleId) && !extras) return '추가 글 목록을 읽지 못해 이 글의 질문지 판을 확인하지 못했습니다 — 적지 않았습니다.'
+  return null
+}
+
 export interface AssignedArticle {
   article: WriterPlanArticle
   /** 판 미확인 — 추가 글 정의가 없어(질문 은행 화면에서 만든 글) 어느 질문지 판으로 썼는지 모른다. */

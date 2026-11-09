@@ -24,6 +24,7 @@ import {
   orphansShown,
   OUTSIDE_PICK,
   recentFirst,
+  recordBlockedReason,
   sectionDetail,
   sectionTitle,
   shownSections,
@@ -414,6 +415,29 @@ const g = grouped(layout);
       assignedTopicSnapshot(plan, withC1, 'topic:q-007+q-008') === null &&
       assignedTopicSnapshot(null, withC1, C2.id) === null &&
       assignedTopicSnapshot(plan, null, C2.id) === null,
+  );
+}
+
+// ── 「올렸어요」(보관함 · 질문 은행)를 적지 않는 때 — 배정 글인지 · 어느 판인지 가를 수 없으면(주소 한꺼번에 등록과 같다) ──────
+{
+  const defs = [{ id: A1.id, bankVersion: 'v9' }];
+  const planMsg = recordBlockedReason(A1.id, null, true, null);
+  ok(
+    '적지 않음 — 배정 파일을 읽지 못했으면 질문 글(topic:)은 모두(배정 글인지 모른다 — 지금은 질문 은행 판으로 적었다)',
+    planMsg?.includes('probe-plan.json') === true && recordBlockedReason('topic:q-007+q-008', null, true, defs) === planMsg,
+    String(planMsg),
+  );
+  const extrasMsg = recordBlockedReason(A1.id, plan, false, null);
+  ok(
+    '적지 않음 — 배정 글 id인데 추가 글 목록을 읽지 못했으면(null) 그 글(정상 정의 · 판 미확인 모두 — 지금은 보관함이 질문 은행 판으로 적었다)',
+    extrasMsg?.includes('추가 글 목록') === true && recordBlockedReason(C2.id, plan, false, null) === extrasMsg,
+    String(extrasMsg),
+  );
+  ok('적음 — 배정에 없는 글은 추가 글 목록을 못 읽어도 지금처럼', recordBlockedReason('topic:q-007+q-008', plan, false, null) === null);
+  ok('적음 — 배정과 추가 글 목록을 읽었으면(판 미확인 글 포함)', recordBlockedReason(A1.id, plan, false, defs) === null && recordBlockedReason(C2.id, plan, false, defs) === null);
+  ok(
+    '적음 — 배정 파일이 없는 브랜드 · topic: 글이 아니면',
+    recordBlockedReason(C2.id, null, false, null) === null && recordBlockedReason('content:category-agnostic', null, true, null) === null,
   );
 }
 
