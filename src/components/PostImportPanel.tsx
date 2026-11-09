@@ -3,8 +3,11 @@ import { commitPostImport, listImportBlogPosts, loadBlogSources, readImportPost,
 import {
   autoPick,
   checkedByDefault,
+  DATE_PROBLEM_TEXT,
   extractPostUrls,
   normalizeBlogSource,
+  otherUrlsNow,
+  pickKey,
   POST_PLATFORM_LABEL,
   ROW_STATE_LABEL,
   rowStateOf,
@@ -14,10 +17,11 @@ import {
   type ExtractedUrls,
   type ImportCandidate,
   type PostImportRead,
+  type RegisteredRow,
   type RowPick,
   type RowState,
 } from '../lib/postImport'
-import { trackingKey } from '../lib/publishedUrl'
+import { todayKst, trackingKey } from '../lib/publishedUrl'
 
 /** 한 번에 읽는 주소 수(서버도 바깥 요청을 3개로 묶는다). */
 const READ_CONCURRENCY = 3
@@ -30,12 +34,21 @@ interface ImportRow {
   url: string
   status: 'waiting' | 'reading' | 'done' | 'stopped'
   read: PostImportRead | null
+  /** 읽기를 마친 차례 — 이 뒤에 이 표에서 등록한 줄만 「이미 다른 주소」에 더한다(otherUrlsNow). */
+  readSeq: number
   /** 짝지을 앱 글. null이면 「앱 글 아님」. */
   pick: RowPick | null
   checked: boolean
   /** 올린 날(YYYY-MM-DD) — 페이지 날짜로 채우고 사람이 고친다. 모르면 빈 글자(사람이 골라야 등록된다). */
   date: string
-  result: { kind: 'added' | 'existing' | 'error'; text: string } | null
+  /** 등록 결과. seq는 등록한 차례, recheck는 등록 요청 자체가 실패해 적혔는지 모르는 줄(다시 읽어 확인한다). */
+  result: { kind: 'added' | 'existing' | 'error'; text: string; seq?: number; recheck?: boolean } | null
+}
+
+interface QueueCount {
+  added: number
+  requeued: number
+  inTable: number
 }
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err))
@@ -51,11 +64,21 @@ function shortUrl(url: string): string {
   return shown.replace(/^https?:\/\//i, '').replace(/\/+$/, '')
 }
 
-const validDay = (day: string, today: string) => /^\d{4}-\d{2}-\d{2}$/.test(day) && day <= today && day >= '2020-01-01'
-const pickValue = (p: RowPick | null) => (p ? `${p.tenantId}\n${p.articleId}` : '')
-const samePick = (c: ImportCandidate, p: RowPick | null) => p !== null && c.tenantId === p.tenantId && c.articleId === p.articleId
+const validDay = (day: string, limit: string) => /^\d{4}-\d{2}-\d{2}$/.test(day) && day <= limit && day >= '2020-01-01'
+const pickValue = (p: RowPick | null) => (p ? pickKey(p) : '')
+const samePick = (c: RowPick | null, p: RowPick | null) => c !== null && p !== null && c.tenantId === p.tenantId && c.articleId === p.articleId
+/** 이 줄을 적을 주소 · 키 — 읽은 페이지가 밝힌 주소(리디렉션 뒤 · 정식 주소). 읽기 전이면 붙여 넣은 주소. */
+const recordUrlOf = (r: ImportRow) => (r.read?.ok ? r.read.recordUrl : r.url)
+const recordKeyOf = (r: ImportRow) => (r.read?.ok ? r.read.recordKey : r.key)
+/** 다시 읽을 줄 — 멈춤 · 읽지 못함 · 등록 요청이 실패해 적혔는지 모르는 줄. */
+const needsReread = (r: ImportRow) => r.status === 'stopped' || (r.status === 'done' && r.read !== null && !r.read.ok) || r.result?.recheck === true
 
-const STATE_TONE: Record<RowState, string> = { match: 'good', review: 'warn', none: '', already: 'info', other: 'bad', unreadable: 'bad' }
+/** 표의 다른 줄이 이미 고른 앱 글(체크했거나 등록한 줄) — 같은 글 무리에서 한 줄만 미리 체크한다. */
+function claimedPicks(rows: readonly ImportRow[], exceptKey: string): Set<string> {
+  return new Set(rows.filter((r) => r.key !== exceptKey && r.pick && (r.checked || r.result?.kind === 'added')).map((r) => pickKey(r.pick!)))
+}
+
+const STATE_TONE: Record<RowState, string> = { match: 'good', review: 'warn', none: '', manual: 'warn', dismissed: '', already: 'info', other: 'bad', unreadable: 'bad' }
 const BLOCKED: readonly RowState[] = ['already', 'other', 'unreadable']
 
 function writerText(c: ImportCandidate | undefined): string {
@@ -70,21 +93,29 @@ function listNote(r: BlogListResult): string {
   return `찾은 글 ${r.found}편 · 새 글 ${r.newUrls.length}편${older}${errors}`
 }
 
-/** 읽기를 마친 줄의 상태 · 고를 수 있는지 · 고른 후보. */
-function rowView(row: ImportRow) {
+function queueText(c: QueueCount): string {
+  const parts = [`새로 읽을 주소 ${c.added}개`]
+  if (c.requeued > 0) parts.push(`다시 읽을 주소(멈춤 · 읽지 못함) ${c.requeued}개`)
+  if (c.inTable > 0) parts.push(`이미 표에 있는 주소 ${c.inTable}개`)
+  return parts.join(' · ')
+}
+
+/** 읽기를 마친 줄의 상태 · 고를 수 있는지 · 고른 후보. dupOf는 같은 글 주소(적을 주소가 같음)로 위에 먼저 나온 줄. */
+function rowView(row: ImportRow, dupOf: ImportRow | undefined) {
   const read = row.read
-  if (row.status !== 'done' || !read) return { state: null, verdict: null, candidate: undefined, registrable: false }
+  if (row.status !== 'done' || !read) return { state: null, verdict: null, candidate: undefined, registrable: false, dupOf: undefined }
   const { state, verdict } = rowStateOf(read, row.pick)
   const candidate = read.ok ? read.candidates.find((c) => samePick(c, row.pick)) : undefined
   const done = row.result?.kind === 'added' || row.result?.kind === 'existing'
-  return { state, verdict, candidate, registrable: read.ok && row.pick !== null && !BLOCKED.includes(state) && !done }
+  return { state, verdict, candidate, registrable: read.ok && row.pick !== null && !BLOCKED.includes(state) && !done && !dupOf, dupOf }
 }
 
 /**
  * 주소 한꺼번에 등록 — 발행 현황(src/pages/PublishStatus.tsx) 위에 접혀 있다. 작성자가 보낸 메일을 붙여 넣거나 저장한 블로그의 새 글을
  * 찾으면, 서버가 글마다 페이지를 읽어 모든 고객 브랜드의 앱 글과 맞춘다(server/postImport.ts · src/lib/postImport.ts). 「맞음」 줄만 미리
- * 체크해 두고, 사람이 확인 필요 줄의 글을 고르고 날짜를 확인한 뒤 「이대로 등록」을 누르면 「올렸어요」와 같은 기록으로 적는다. 웹에는
- * 라우트가 없어 「데스크톱 앱에서만」을 보인다.
+ * 체크해 두고(같은 글을 또 올린 것일 수 있는 줄은 빼고), 사람이 확인 필요 줄의 글을 고르고 날짜를 확인한 뒤 「이대로 등록」을 누르면
+ * 「올렸어요」와 같은 기록으로 적는다 — 주소는 페이지가 밝힌 주소(리디렉션 뒤 · 정식 주소)로. 웹에는 라우트가 없어 「데스크톱 앱에서만」을
+ * 보인다.
  */
 export default function PostImportPanel({ today, onRegistered }: { today: string; onRegistered: () => void }) {
   const [available, setAvailable] = useState<'loading' | 'yes' | 'no'>('loading')
@@ -93,13 +124,21 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
   const [sourceBusy, setSourceBusy] = useState(false)
   const [sourceError, setSourceError] = useState<string | null>(null)
   const [text, setText] = useState('')
-  const [extracted, setExtracted] = useState<(ExtractedUrls & { added: number }) | null>(null)
+  const [extracted, setExtracted] = useState<(ExtractedUrls & QueueCount) | null>(null)
   const [rows, setRows] = useState<ImportRow[]>([])
-  const [phase, setPhase] = useState<{ kind: 'list'; done: number; total: number } | { kind: 'read' } | null>(null)
+  const [phase, setPhase] = useState<{ kind: 'list'; done: number; total: number } | { kind: 'read'; done: number; total: number } | null>(null)
   const [listNotes, setListNotes] = useState<{ source: string; text: string; error: boolean }[]>([])
+  const [findNote, setFindNote] = useState<string | null>(null)
   const [committing, setCommitting] = useState(false)
   const [commitNote, setCommitNote] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  // 비동기 흐름(새 글 찾기 뒤 더하기 · 읽기를 마친 줄의 미리 체크)이 지금 표를 보게 한다.
+  const rowsRef = useRef<ImportRow[]>(rows)
+  const seqRef = useRef(0)
+
+  useEffect(() => {
+    rowsRef.current = rows
+  }, [rows])
 
   useEffect(() => {
     let alive = true
@@ -123,14 +162,21 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
   useEffect(() => () => abortRef.current?.abort(), [])
 
   const busy = phase !== null || committing
+  const nextSeq = () => (seqRef.current += 1)
+  /** 고를 수 있는 날의 끝 — 화면을 연 날과 지금 한국 날짜 가운데 늦은 날(자정을 넘겨 열어 둔 화면에서도 오늘 올린 글을 적게). 서버가 다시 본다. */
+  const dayLimit = () => {
+    const now = todayKst()
+    return now > today ? now : today
+  }
   const patchRow = (key: string, patch: Partial<ImportRow>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)))
 
-  /** 주소들을 차례로 읽는다(한 번에 READ_CONCURRENCY개). 「멈추기」를 누르면 남은 주소는 「멈춤」. */
+  /** 주소들을 차례로 읽는다(한 번에 READ_CONCURRENCY개). 「멈추기」를 누르면 남은 주소는 「멈춤」. 진행은 이번에 읽는 주소로 센다. */
   const readAll = async (targets: { key: string; url: string }[]) => {
     if (targets.length === 0) return
     const ctrl = new AbortController()
     abortRef.current = ctrl
-    setPhase({ kind: 'read' })
+    let done = 0
+    setPhase({ kind: 'read', done, total: targets.length })
     let next = 0
     const worker = async () => {
       while (next < targets.length && !ctrl.signal.aborted) {
@@ -138,11 +184,20 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
         patchRow(t.key, { status: 'reading', result: null })
         try {
           const read = await readImportPost(t.url, ctrl.signal)
-          patchRow(t.key, { status: 'done', read, pick: autoPick(read), checked: checkedByDefault(read), date: read.ok ? (read.post.publishedOn ?? '') : '' })
+          const seq = nextSeq()
+          setRows((rs) =>
+            rs.map((r) =>
+              r.key === t.key
+                ? { ...r, status: 'done', read, readSeq: seq, pick: autoPick(read), checked: checkedByDefault(read, claimedPicks(rs, t.key)), date: read.ok ? (read.post.publishedOn ?? '') : '' }
+                : r,
+            ),
+          )
         } catch (err) {
           if (ctrl.signal.aborted) patchRow(t.key, { status: 'stopped' })
-          else patchRow(t.key, { status: 'done', read: { ok: false, url: t.url, key: t.key, error: message(err) }, pick: null, checked: false })
+          else patchRow(t.key, { status: 'done', read: { ok: false, url: t.url, key: t.key, error: message(err) }, readSeq: nextSeq(), pick: null, checked: false })
         }
+        done += 1
+        setPhase({ kind: 'read', done, total: targets.length })
       }
     }
     await Promise.all(Array.from({ length: READ_CONCURRENCY }, worker))
@@ -151,26 +206,43 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
     setPhase(null)
   }
 
-  /** 표에 없는 글 주소만 줄로 더하고 읽는다. 더한 수를 돌려준다. */
-  const addAndRead = (urls: string[]): number => {
-    const known = new Set(rows.map((r) => r.key))
+  /**
+   * 글 주소를 표에 더하고 읽는다 — 표에 없는 주소는 새 줄로, 표에 있는데 멈춤 · 읽지 못함인 줄은 다시 읽는다. 같은 글은 붙여 넣은 주소와
+   * 적을 주소(리디렉션 뒤 · 정식 주소) 모두로 알아본다.
+   */
+  const addAndRead = (urls: string[]): QueueCount => {
+    const byKey = new Map<string, ImportRow>()
+    for (const r of rowsRef.current) {
+      byKey.set(r.key, r)
+      byKey.set(recordKeyOf(r), r)
+    }
     const fresh: { key: string; url: string }[] = []
+    const requeue: { key: string; url: string }[] = []
+    let inTable = 0
+    const seen = new Set<string>()
     for (const url of urls) {
       const key = trackingKey(url)
-      if (!key || known.has(key)) continue
-      known.add(key)
-      fresh.push({ key, url })
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      const row = byKey.get(key)
+      if (!row) fresh.push({ key, url })
+      else if (needsReread(row) && !requeue.some((t) => t.key === row.key)) requeue.push({ key: row.key, url: row.url })
+      else inTable += 1
     }
-    if (fresh.length === 0) return 0
-    setRows((rs) => [...rs, ...fresh.map((f): ImportRow => ({ ...f, status: 'waiting', read: null, pick: null, checked: false, date: '', result: null }))])
-    void readAll(fresh)
-    return fresh.length
+    const requeued = new Set(requeue.map((t) => t.key))
+    setRows((rs) => [
+      ...rs.map((r) => (requeued.has(r.key) ? { ...r, status: 'waiting' as const, read: null, pick: null, checked: false, result: null } : r)),
+      ...fresh.map((f): ImportRow => ({ ...f, status: 'waiting', read: null, readSeq: 0, pick: null, checked: false, date: '', result: null })),
+    ])
+    void readAll([...requeue, ...fresh])
+    return { added: fresh.length, requeued: requeue.length, inTable }
   }
 
   const onExtract = () => {
     const ex = extractPostUrls(text)
     setCommitNote(null)
-    setExtracted({ ...ex, added: addAndRead(ex.urls) })
+    setFindNote(null)
+    setExtracted({ ...ex, ...addAndRead(ex.urls) })
   }
 
   const saveSources = async (urls: string[]): Promise<boolean> => {
@@ -206,6 +278,7 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
     const ctrl = new AbortController()
     abortRef.current = ctrl
     setListNotes([])
+    setFindNote(null)
     setCommitNote(null)
     const found: string[] = []
     for (const [i, s] of sources.entries()) {
@@ -222,42 +295,56 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
     }
     if (abortRef.current === ctrl) abortRef.current = null
     setPhase(null)
-    if (!ctrl.signal.aborted) addAndRead(found)
+    if (ctrl.signal.aborted) return
+    setFindNote(`새 글 ${found.length}편 — ${queueText(addAndRead(found))}`)
   }
 
+  /** 앱 글을 고른다 — 처음 고른 글로 되돌린 맞음 줄만 다시 체크해 두고, 다른 글 · 「앱 글 아님」을 고르면 체크를 비운다(사람이 확인하고 체크). */
   const choose = (row: ImportRow, value: string) => {
     const [tenantId, articleId] = value.split('\n')
     const pick = value && tenantId && articleId ? { tenantId, articleId } : null
-    const state = row.read ? rowStateOf(row.read, pick).state : null
-    patchRow(row.key, { pick, checked: pick !== null && state !== null && !BLOCKED.includes(state), result: null })
+    const back = row.read !== null && samePick(autoPick(row.read), pick)
+    patchRow(row.key, { pick, checked: back && row.read !== null && checkedByDefault(row.read, claimedPicks(rowsRef.current, row.key)), result: null })
   }
 
   const retry = () => {
-    const targets = rows.filter((r) => r.status === 'stopped' || (r.status === 'done' && r.read && !r.read.ok)).map((r) => ({ key: r.key, url: r.url }))
+    const targets = rows.filter(needsReread).map((r) => ({ key: r.key, url: r.url }))
     for (const t of targets) patchRow(t.key, { status: 'waiting', read: null, pick: null, checked: false, result: null })
     void readAll(targets)
   }
 
+  // 같은 글 주소(적을 주소가 같음) — 위에 먼저 나온 줄로 등록하고 나머지 줄은 막는다.
+  const firstByRecord = new Map<string, ImportRow>()
+  for (const r of rows) if (r.status === 'done' && r.read?.ok && !firstByRecord.has(recordKeyOf(r))) firstByRecord.set(recordKeyOf(r), r)
+  const views = rows.map((r) => {
+    const first = r.status === 'done' && r.read?.ok ? firstByRecord.get(recordKeyOf(r)) : undefined
+    return { row: r, ...rowView(r, first && first !== r ? first : undefined) }
+  })
+  // 이 표에서 등록한 줄 — 같은 앱 글에 또 다른 주소를 적는지 알리는 데 쓴다.
+  const registered: RegisteredRow[] = rows.flatMap((r) => (r.result?.kind === 'added' && r.pick ? [{ pick: r.pick, recordKey: recordKeyOf(r), seq: r.result.seq ?? 0 }] : []))
+
   const register = async () => {
-    const chosen = rows.filter((r) => r.checked && rowView(r).registrable)
+    const limit = dayLimit()
+    const chosen = views.filter((v) => v.row.checked && v.registrable).map((v) => v.row)
     if (chosen.length === 0) return
     setCommitting(true)
     setCommitNote(null)
-    const noDate = chosen.filter((r) => !validDay(r.date, today))
-    for (const r of noDate) patchRow(r.key, { result: { kind: 'error', text: `올린 날을 골라 주세요(오늘 ${today}까지).` } })
-    const ready = chosen.filter((r) => validDay(r.date, today))
+    const noDate = chosen.filter((r) => !validDay(r.date, limit))
+    for (const r of noDate) patchRow(r.key, { result: { kind: 'error', text: `올린 날을 골라 주세요(2020-01-01 ~ 오늘 ${limit}).` } })
+    const ready = chosen.filter((r) => validDay(r.date, limit))
     let added = 0
     let existing = 0
     let failed = noDate.length
+    let uncertain = 0
     for (let i = 0; i < ready.length; i += COMMIT_CHUNK) {
       const chunk = ready.slice(i, i + COMMIT_CHUNK)
       try {
-        const results = await commitPostImport(chunk.map((r) => ({ tenantId: r.pick!.tenantId, articleId: r.pick!.articleId, url: r.url, publishedOn: r.date })))
+        const results = await commitPostImport(chunk.map((r) => ({ tenantId: r.pick!.tenantId, articleId: r.pick!.articleId, url: recordUrlOf(r), publishedOn: r.date })))
         results.forEach((res, j) => {
           const r = chunk[j]!
           if (res.status === 'added') {
             added += 1
-            patchRow(r.key, { checked: false, result: { kind: 'added', text: '등록함' } })
+            patchRow(r.key, { checked: false, result: { kind: 'added', text: '등록함', seq: nextSeq() } })
           } else if (res.status === 'existing') {
             existing += 1
             patchRow(r.key, { checked: false, result: { kind: 'existing', text: '이미 있던 기록 — 그대로 둠' } })
@@ -267,29 +354,36 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
           }
         })
       } catch (err) {
-        failed += chunk.length
-        for (const r of chunk) patchRow(r.key, { result: { kind: 'error', text: `등록하지 못했습니다 — ${message(err)}` } })
+        // 요청 자체가 실패했다 — 서버가 몇 줄을 적은 뒤 끊겼을 수 있다. 「다시 읽기」로 원장을 다시 보게 한다.
+        uncertain += chunk.length
+        for (const r of chunk) {
+          patchRow(r.key, { result: { kind: 'error', recheck: true, text: `등록 요청이 실패했습니다 — ${message(err)}. 일부는 적혔을 수 있으니 「다시 읽기」로 확인해 주세요.` } })
+        }
       }
     }
     setCommitting(false)
-    setCommitNote(`등록 ${added}편 · 이미 있던 기록 ${existing}편${failed > 0 ? ` · 걸림 ${failed}편(그 줄의 이유를 보세요)` : ''}`)
-    if (added > 0) onRegistered()
+    const parts = [`등록 ${added}편`, `이미 있던 기록 ${existing}편`]
+    if (failed > 0) parts.push(`걸림 ${failed}편(그 줄의 이유를 보세요)`)
+    if (uncertain > 0) parts.push(`적혔는지 모름 ${uncertain}편(다시 읽어 확인하세요)`)
+    setCommitNote(parts.join(' · '))
+    if (added > 0 || uncertain > 0) onRegistered()
   }
 
   const clear = () => {
     setRows([])
     setExtracted(null)
     setListNotes([])
+    setFindNote(null)
     setCommitNote(null)
   }
 
-  const views = rows.map((r) => ({ row: r, ...rowView(r) }))
+  const limit = dayLimit()
   const doneCount = rows.filter((r) => r.status === 'done').length
   const counts = (Object.keys(ROW_STATE_LABEL) as RowState[])
     .map((s) => [s, views.filter((v) => v.state === s).length] as const)
     .filter(([, n]) => n > 0)
   const checkedCount = views.filter((v) => v.row.checked && v.registrable).length
-  const retryable = rows.filter((r) => r.status === 'stopped' || (r.status === 'done' && r.read && !r.read.ok)).length
+  const retryable = rows.filter(needsReread).length
   // 같은 앱 글을 둘 이상의 체크한 줄이 고르면 알린다 — 두 주소 모두 그 글의 기록이 된다.
   const pickCount = new Map<string, number>()
   for (const v of views) if (v.row.checked && v.registrable) pickCount.set(pickValue(v.row.pick), (pickCount.get(pickValue(v.row.pick)) ?? 0) + 1)
@@ -318,8 +412,7 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
               </div>
               {extracted && (
                 <div className="pi-note" role="status">
-                  글 주소 {extracted.urls.length}개 · 새로 읽을 주소 {extracted.added}개
-                  {extracted.urls.length > extracted.added && ` · 이미 표에 있는 주소 ${extracted.urls.length - extracted.added}개`}
+                  글 주소 {extracted.urls.length}개 · {queueText(extracted)}
                   {extracted.duplicates > 0 && ` · 겹친 주소 ${extracted.duplicates}개는 한 번만`}
                   {extracted.ignored.length > 0 && (
                     <details className="pi-ignored">
@@ -413,6 +506,11 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                   ))}
                 </ul>
               )}
+              {findNote && (
+                <p className="pi-note" role="status">
+                  {findNote}
+                </p>
+              )}
             </section>
           </div>
 
@@ -424,9 +522,9 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
             )}
             {phase?.kind === 'read' && (
               <>
-                <progress max={rows.length} value={doneCount} aria-label="주소 읽기 진행" />
+                <progress max={phase.total} value={phase.done} aria-label="주소 읽기 진행" />
                 <span>
-                  읽는 중 {doneCount}/{rows.length}
+                  읽는 중 {phase.done}/{phase.total}
                 </span>
               </>
             )}
@@ -473,14 +571,19 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                     </tr>
                   </thead>
                   <tbody>
-                    {views.map(({ row, state, verdict, candidate, registrable }) => {
+                    {views.map(({ row, state, verdict, candidate, registrable, dupOf }) => {
                       const read = row.read
                       const ok = read?.ok ? read : null
                       const label = ok?.post.title || shortUrl(row.url)
+                      const recordUrl = recordUrlOf(row)
                       const runnerUp = ok ? Math.max(0, ...ok.candidates.filter((c) => !samePick(c, row.pick)).map((c) => c.body)) : 0
                       const twin = row.checked && registrable && (pickCount.get(pickValue(row.pick)) ?? 0) > 1
+                      const others = candidate ? otherUrlsNow(candidate, recordKeyOf(row), row.readSeq, registered) : 0
+                      const finished = row.result?.kind === 'added' || row.result?.kind === 'existing'
+                      const dateBad = registrable && row.date !== '' && !validDay(row.date, limit)
+                      const pageDate = ok?.post.dateText ? (ok.post.dateText.length > 40 ? `${ok.post.dateText.slice(0, 40)}…` : ok.post.dateText) : null
                       return (
-                        <tr key={row.key} className={state && BLOCKED.includes(state) ? 'pi-blocked' : undefined}>
+                        <tr key={row.key} className={(state && BLOCKED.includes(state)) || dupOf ? 'pi-blocked' : undefined}>
                           <td>
                             <input
                               type="checkbox"
@@ -508,6 +611,7 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                                   ))}
                                   <option value="">앱 글 아님</option>
                                 </select>
+                                {candidate && <span className="pi-sub-line">앱 글: {candidate.title}</span>}
                                 <span className="pi-sub-line">블로그 제목: {ok.post.title || '없음'}</span>
                               </>
                             ) : (
@@ -515,9 +619,14 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                             )}
                           </td>
                           <td className="pi-url">
-                            <a href={row.url} target="_blank" rel="noreferrer" title={row.url}>
-                              {shortUrl(row.url)}
+                            <a href={recordUrl} target="_blank" rel="noreferrer" title={recordUrl}>
+                              {shortUrl(recordUrl)}
                             </a>
+                            {ok?.urlNote && (
+                              <span className="pi-sub-line">
+                                {ok.urlNote} 붙여 넣은 주소: {shortUrl(row.url)}
+                              </span>
+                            )}
                           </td>
                           <td>{ok ? ok.platform.label : '—'}</td>
                           <td>
@@ -528,19 +637,30 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                                   className="pi-date"
                                   value={row.date}
                                   min="2020-01-01"
-                                  max={today}
+                                  max={limit}
                                   onChange={(e) => patchRow(row.key, { date: e.target.value, result: null })}
                                   disabled={committing || !registrable}
                                   aria-label={`「${label}」 올린 날`}
+                                  aria-invalid={dateBad || undefined}
                                   title={ok.post.dateText ? `페이지 날짜: ${ok.post.dateText}` : undefined}
                                 />
                                 {!ok.post.publishedOn &&
-                                  (registrable && !row.date ? (
+                                  (pageDate ? (
+                                    <span className={`pi-sub-line${registrable && !row.date ? ' warn' : ''}`}>
+                                      페이지 날짜 「{pageDate}」를 쓸 수 없습니다 — {ok.post.dateProblem ? DATE_PROBLEM_TEXT[ok.post.dateProblem] : DATE_PROBLEM_TEXT.unknown}
+                                      {row.date ? ' · 고른 날' : registrable ? ' · 골라 주세요' : ''}
+                                    </span>
+                                  ) : registrable && !row.date ? (
                                     <span className="pi-sub-line warn">페이지에 날짜가 없어 골라야 합니다</span>
                                   ) : (
                                     <span className="pi-sub-line">페이지에 날짜 없음{row.date ? ' — 고른 날' : ''}</span>
                                   ))}
                                 {ok.post.publishedOn && row.date !== ok.post.publishedOn && <span className="pi-sub-line">페이지: {ok.post.publishedOn}</span>}
+                                {dateBad && (
+                                  <span className="pi-sub-line error" role="alert">
+                                    2020-01-01부터 오늘({limit})까지의 날을 골라 주세요.
+                                  </span>
+                                )}
                               </>
                             ) : (
                               '—'
@@ -550,7 +670,9 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                             {candidate ? (
                               <>
                                 본문 {scorePercent(candidate.body)}
-                                <span className="pi-sub-line">다음 {scorePercent(runnerUp)}</span>
+                                <span className="pi-sub-line">
+                                  {runnerUp > candidate.body ? '더 높은 후보' : '다음'} {scorePercent(runnerUp)}
+                                </span>
                               </>
                             ) : ok?.candidates[0] ? (
                               <span className="muted">가장 비슷한 {scorePercent(ok.candidates[0].body)}</span>
@@ -564,11 +686,13 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                             {row.status === 'stopped' && <span className="chip">멈춤</span>}
                             {row.result?.kind === 'added' && <span className="chip good">등록함</span>}
                             {row.result?.kind === 'existing' && <span className="chip info">이미 등록됨</span>}
-                            {state && !(row.result?.kind === 'added' || row.result?.kind === 'existing') && (
-                              <span className={`chip${STATE_TONE[state] ? ` ${STATE_TONE[state]}` : ''}`}>{ROW_STATE_LABEL[state]}</span>
+                            {state && !finished && (dupOf ? <span className="chip info">같은 글 주소</span> : <span className={`chip${STATE_TONE[state] ? ` ${STATE_TONE[state]}` : ''}`}>{ROW_STATE_LABEL[state]}</span>)}
+                            {dupOf && !finished && <span className="pi-sub-line">표의 위 줄({shortUrl(dupOf.url)})과 같은 글 주소입니다 — 그 줄로 등록합니다.</span>}
+                            {!dupOf && state === 'review' && !row.result && <span className="pi-sub-line">비슷한 앱 글이 둘 이상이거나 겹침이 낮습니다 — 맞는 글을 골라 체크하세요.</span>}
+                            {!dupOf && state === 'none' && <span className="pi-sub-line">앱 글과 겹치는 부분이 적습니다. 맞는 글이 있으면 고르세요.</span>}
+                            {!dupOf && state === 'manual' && !row.result && (
+                              <span className="pi-sub-line warn">가장 잘 맞는 글이 아닌 글을 골랐습니다 — 이 글이 맞으면 체크하세요.</span>
                             )}
-                            {state === 'review' && !row.result && <span className="pi-sub-line">비슷한 앱 글이 둘 이상이거나 겹침이 낮습니다 — 맞는 글을 골라 체크하세요.</span>}
-                            {state === 'none' && row.pick === null && <span className="pi-sub-line">앱 글과 겹치는 부분이 적습니다. 맞는 글이 있으면 고르세요.</span>}
                             {verdict?.kind === 'other' && (
                               <span className="pi-sub-line">
                                 {verdict.record.brand}의 「{verdict.record.articleTitle ?? verdict.record.articleId}」에 적힌 주소입니다 — 잘못 적었으면 콘텐츠 보관함에서 그
@@ -583,8 +707,8 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                               </span>
                             )}
                             {read && !read.ok && <span className="pi-sub-line">{read.error}</span>}
-                            {registrable && candidate && candidate.otherUrls > 0 && (
-                              <span className="pi-sub-line warn">이 앱 글에는 이미 다른 주소 {candidate.otherUrls}개가 적혀 있습니다 — 같은 글을 또 올린 것이면 이 주소도 더합니다.</span>
+                            {registrable && others > 0 && (
+                              <span className="pi-sub-line warn">이 앱 글에는 이미 다른 주소 {others}개가 적혀 있습니다 — 같은 글을 또 올린 것이면 이 주소도 더합니다.</span>
                             )}
                             {twin && <span className="pi-sub-line warn">같은 앱 글을 고른 줄이 또 있습니다 — 두 주소 모두 그 글의 기록이 됩니다.</span>}
                             {row.result?.kind === 'error' && (
@@ -605,7 +729,7 @@ export default function PostImportPanel({ today, onRegistered }: { today: string
                 </button>
                 {retryable > 0 && (
                   <button type="button" className="btn" onClick={retry} disabled={busy}>
-                    읽지 못한 · 멈춘 주소 다시 읽기 ({retryable})
+                    다시 읽기 — 읽지 못함 · 멈춤 · 적혔는지 모름 ({retryable})
                   </button>
                 )}
                 <button type="button" className="btn" onClick={clear} disabled={busy}>

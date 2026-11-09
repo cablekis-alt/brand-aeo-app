@@ -26,6 +26,9 @@ await build({
   format: 'cjs',
   target: 'node20',
   packages: 'external', // node_modules는 번들하지 않음(네이티브·동적 require 호환)
+  // 주소 한꺼번에 등록의 루프백 시험 깃발(server/postImport.ts)은 검증 스크립트만 켠다 — 설치본에서는 이름째 지워 userData/.env나
+  // 환경변수로 켤 수 없게 한다(scripts/verify-post-import.ts가 이 줄을 본다).
+  define: { 'process.env.POST_IMPORT_TEST_LOOPBACK': 'undefined' },
   outfile: 'dist-electron/server.cjs',
   logLevel: 'info',
 })

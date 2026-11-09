@@ -72,7 +72,11 @@ export interface ExtractedUrls {
 /** 주소에 쓰이는 글자 — 공백 · 꺾쇠 · 따옴표 · 한국어 문장 부호에서 끊는다. 한글은 받는다(워드프레스 한글 주소를 풀어 쓴 것). */
 const URL_IN_TEXT = /https?:\/\/[^\s<>"'`{}|\\^[\]「」『』〈〉《》，。、]+/gi
 
-/** 주소 끝에 붙은 문장 부호 · 짝 없는 닫는 괄호 · 글 번호 바로 뒤에 붙은 한글(「…/123입니다」)을 뗀다. */
+/**
+ * 주소 끝에 붙은 문장 부호 · 짝 없는 닫는 괄호 · 글 번호 바로 뒤에 붙은 한글(「…/123입니다」)을 뗀다. 메일에 브랜드를 괄호로 붙여 보내기도
+ * 한다(「…/1044(군산각)」 · 「…/slug/(스테이,머뭄)」) — 글 번호 바로 뒤의 괄호, ASCII만으로 된 주소 바로 뒤의 한글 든 괄호도 뗀다. 주소 안에
+ * 한글이 있으면(한글 주소의 괄호) 그대로 둔다.
+ */
 function trimUrl(raw: string): string {
   let u = raw
   for (;;) {
@@ -80,8 +84,23 @@ function trimUrl(raw: string): string {
     u = u.replace(/[.,;:!?'"’”…]+$/u, '')
     if (u.endsWith(')') && (u.match(/\(/g)?.length ?? 0) < (u.match(/\)/g)?.length ?? 0)) u = u.slice(0, -1)
     u = u.replace(/(\/\d+)\P{ASCII}+$/u, '$1')
+    u = u.replace(/(\/\d+)\([^()]*\)$/u, '$1').replace(/^([\x21-\x27\x2a-\x7e]+)\([^()]*\P{ASCII}[^()]*\)$/u, '$1')
     if (u === before) return u
   }
+}
+
+/**
+ * 주소 끝에 붙은 ASCII 밖 글자(「…/slug/입니다」 — 띄어 쓰지 않은 문장)를 뗀 주소. 읽어서 404일 때 한 번 더 읽어 본다(server/postImport.ts).
+ * 워드프레스 글 주소는 숫자로 끝나지 않아 trimUrl이 떼지 못한다. 뗄 것이 없거나, 앞부분에도 ASCII 밖 글자가 있거나(한글 주소 — 어디까지가
+ * 주소인지 모른다), 떼면 글 한 편의 주소가 아니면 null.
+ */
+export function withoutTrailingText(url: string): string | null {
+  const t = url.trim()
+  let cut = t.length
+  while (cut > 0 && t.charCodeAt(cut - 1) > 0x7e) cut -= 1
+  if (cut === t.length || /[^\x20-\x7e]/.test(t.slice(0, cut))) return null
+  const head = t.slice(0, cut)
+  return isArticleUrl(head).ok ? head : null
 }
 
 /** Outlook 안전 링크(…safelinks.protection.outlook.com/?url=…)는 원래 주소로. */
@@ -185,67 +204,215 @@ export function decodeEntities(s: string): string {
   })
 }
 
-/** 글이 아닌 요소 — 통째로 뺀다. */
-const DROP_BLOCKS = /<(script|style|noscript|template|svg|iframe|object|textarea|select|button)\b[^>]*>[\s\S]*?<\/\1\s*>/gi
-/** 본문 둘레의 메뉴 · 꼬리말 · 곁글 · 양식 — 본문을 뽑을 때 뺀다. */
-const DROP_FRAME = /<(nav|footer|aside|form|header)\b[^>]*>[\s\S]*?<\/\1\s*>/gi
+// 받은 페이지는 망가져 있을 수 있다(닫는 짝이 없는 태그 · 주석, 「>」 없는 「<」). 「여는 것 … 닫는 것」을 정규식 한 식으로 찾으면 닫는 짝이
+// 없을 때 시작 위치마다 문서 끝까지 다시 훑어 크기의 제곱으로 느려진다(실측 200KB에 44초 — 그동안 서버 전체가 멈춘다). 그래서 여는 것은
+// 짧은 식으로만 찾고 「>」는 indexOf로, 닫는 것은 그 뒤로 한 번만 찾는다. 한 번 못 찾은 닫는 태그는 그 뒤로도 없으니(뒤로만 찾는다)
+// 기억해 두고 다시 찾지 않는다. 그래서 아래 함수는 모두 페이지 크기에 비례해 끝난다(scripts/verify-post-import.ts가 1MB로 잰다).
 
-/** 주석 · 스크립트 · 스타일 등을 걷어낸 HTML. */
+interface HtmlTag {
+  /** 소문자 이름. */
+  name: string
+  closing: boolean
+  start: number
+  /** 「>」 다음 자리. */
+  end: number
+  /** 「<」부터 「>」까지. */
+  raw: string
+}
+
+/** from부터 태그를 차례로(names를 주면 그 이름만 — 「a|b」 꼴). 「>」가 더는 없으면 멈춘다 — 그 뒤는 태그가 아니라 글자다. */
+function* tagsFrom(html: string, from = 0, names?: string): Generator<HtmlTag> {
+  const re = names ? new RegExp(`<(/?)(${names})(?![\\w-])`, 'gi') : /<(\/?)([a-zA-Z][\w-]*)/g
+  re.lastIndex = from
+  for (let m = re.exec(html); m; m = re.exec(html)) {
+    const close = html.indexOf('>', m.index + m[0].length)
+    if (close === -1) return
+    yield { name: m[2]!.toLowerCase(), closing: m[1] === '/', start: m.index, end: close + 1, raw: html.slice(m.index, close + 1) }
+    re.lastIndex = close + 1
+  }
+}
+
+/** 닫는 태그(</이름>) 찾기 — 문서마다 새로 만든다. 한 번 못 찾은 이름은 그 자리 뒤로 다시 찾지 않는다. */
+function closeTagFinder(html: string): (name: string, from: number) => { start: number; end: number } | null {
+  const missingFrom = new Map<string, number>()
+  return (name, from) => {
+    const missing = missingFrom.get(name)
+    if (missing !== undefined && from >= missing) return null
+    const re = new RegExp(`</${name}\\s*>`, 'gi')
+    re.lastIndex = from
+    const m = re.exec(html)
+    if (!m) {
+      missingFrom.set(name, from)
+      return null
+    }
+    return { start: m.index, end: m.index + m[0].length }
+  }
+}
+
+/** 글이 아닌 요소 — 통째로 뺀다. */
+const RAW_BLOCKS = 'script|style|noscript|template|svg|iframe|object|textarea|select|button'
+/** 본문 둘레의 메뉴 · 꼬리말 · 곁글 · 양식 — 본문을 뽑을 때 뺀다. */
+const FRAME_BLOCKS = 'nav|footer|aside|form|header'
+
+/**
+ * 주석 · 스크립트 · 스타일 등을 걷어낸 HTML. 닫히지 않은 주석 · 스크립트는 나머지를 모두 뺀다(브라우저도 나머지를 주석 · 스크립트로 본다).
+ * 스스로 닫는 <svg …/>는 그 태그만.
+ */
 function withoutCode(html: string): string {
-  return html.replace(/<!--[\s\S]*?-->/g, ' ').replace(DROP_BLOCKS, ' ')
+  const findClose = closeTagFinder(html)
+  const re = new RegExp(`<!--|<(${RAW_BLOCKS})(?![\\w-])`, 'gi')
+  const out: string[] = []
+  let at = 0
+  for (let m = re.exec(html); m; m = re.exec(html)) {
+    out.push(html.slice(at, m.index), ' ')
+    if (!m[1]) {
+      const end = html.indexOf('-->', m.index + 4)
+      if (end === -1) return out.join('')
+      at = end + 3
+    } else {
+      const open = html.indexOf('>', m.index + m[0].length)
+      if (open === -1) return out.join('')
+      const name = m[1].toLowerCase()
+      if (name === 'svg' && html[open - 1] === '/') at = open + 1
+      else {
+        const close = findClose(name, open + 1)
+        if (!close) return out.join('')
+        at = close.end
+      }
+    }
+    re.lastIndex = at
+  }
+  out.push(html.slice(at))
+  return out.join('')
+}
+
+/** 메뉴 · 꼬리말 · 곁글 · 양식을 뺀 HTML — 같은 이름의 첫 닫는 태그까지. 닫는 짝이 없으면 둘레가 아니라고 보고 안쪽 글은 둔다. */
+function withoutFrame(html: string): string {
+  const findClose = closeTagFinder(html)
+  const out: string[] = []
+  let at = 0
+  for (const t of tagsFrom(html, 0, FRAME_BLOCKS)) {
+    if (t.closing || t.start < at) continue
+    const close = findClose(t.name, t.end)
+    if (!close) continue
+    out.push(html.slice(at, t.start), ' ')
+    at = close.end
+  }
+  out.push(html.slice(at))
+  return out.join('')
+}
+
+/** 태그(「<」부터 첫 「>」까지)를 빈칸으로. 「>」가 더는 없으면 나머지는 글자 그대로 둔다. */
+function stripTags(html: string): string {
+  const out: string[] = []
+  let at = 0
+  for (;;) {
+    const lt = html.indexOf('<', at)
+    const gt = lt === -1 ? -1 : html.indexOf('>', lt + 1)
+    if (gt === -1) break
+    out.push(html.slice(at, lt), ' ')
+    at = gt + 1
+  }
+  out.push(html.slice(at))
+  return out.join('')
 }
 
 /** HTML 조각을 글자로 — 메뉴 · 꼬리말을 빼고, 문단 경계는 줄바꿈, 엔티티를 풀고, 공백을 줄인다. */
 export function htmlToText(html: string): string {
-  return decodeEntities(
-    withoutCode(html)
-      .replace(DROP_FRAME, ' ')
-      .replace(/<br\s*\/?>|<\/(p|div|li|h[1-6]|tr|blockquote|section|article)\s*>/gi, '\n')
-      .replace(/<[^>]*>/g, ' '),
-  )
-    .replace(/[ \t\f\v\u00a0]+/g, ' ')
-    .replace(/\s*\n\s*/g, '\n')
+  const marked = withoutFrame(withoutCode(html)).replace(/<br\s*\/?>|<\/(p|div|li|h[1-6]|tr|blockquote|section|article)\s*>/gi, '\n')
+  return decodeEntities(stripTags(marked))
+    .replace(/\r\n?|[\u2028\u2029]/g, '\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ ?\n\s*/g, '\n')
     .trim()
 }
 
-/** 여는 태그의 속성. */
+const ATTR_NAME = /[^\s=<>"'/]+/y
+const ATTR_EQ = /\s*=\s*/y
+const ATTR_VALUE = /"([^"]*)"|'([^']*)'|([^\s"'>]+)/y
+
+/** 여는 태그의 속성(같은 이름이면 나중 것) — 이름=값을 앞에서부터 한 번씩 읽는다(아주 긴 이름 · 닫히지 않은 따옴표도 한 번만 훑는다). */
 function attrsOf(tag: string): Record<string, string> {
   const out: Record<string, string> = {}
-  for (const m of tag.matchAll(/([^\s=<>"'/]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/g)) {
-    out[m[1]!.toLowerCase()] = m[2] ?? m[3] ?? m[4] ?? ''
+  let i = 0
+  while (i < tag.length) {
+    ATTR_NAME.lastIndex = i
+    const name = ATTR_NAME.exec(tag)
+    if (!name) {
+      i += 1
+      continue
+    }
+    const afterName = i + name[0].length
+    ATTR_EQ.lastIndex = afterName
+    const eq = ATTR_EQ.exec(tag)
+    ATTR_VALUE.lastIndex = afterName + (eq?.[0].length ?? 0)
+    const value = eq ? ATTR_VALUE.exec(tag) : null
+    if (!value) {
+      i = afterName
+      continue
+    }
+    out[name[0].toLowerCase()] = value[1] ?? value[2] ?? value[3] ?? ''
+    i = ATTR_VALUE.lastIndex
   }
   return out
 }
 
+type TagTest = (tag: HtmlTag) => boolean
 /** 클래스 낱말을 가진 여는 태그인가. */
-const hasClass = (token: string) => (tag: string) => (attrsOf(tag).class ?? '').split(/\s+/).includes(token)
-const hasId = (id: string) => (tag: string) => attrsOf(tag).id === id
-const isTag = (name: string) => (tag: string) => new RegExp(`^<${name}\\b`, 'i').test(tag)
+const hasClass =
+  (token: string): TagTest =>
+  (t) =>
+    (attrsOf(t.raw).class ?? '').split(/\s+/).includes(token)
+const hasId =
+  (id: string): TagTest =>
+  (t) =>
+    attrsOf(t.raw).id === id
+const isTag =
+  (name: string): TagTest =>
+  (t) =>
+    t.name === name
 
-/** 조건에 맞는 첫 요소의 안쪽 HTML — 같은 이름의 태그 깊이를 세어 닫는 태그를 찾는다. 없으면 null. */
-function elementInner(html: string, test: (openTag: string) => boolean): string | null {
-  for (const m of html.matchAll(/<([a-zA-Z][\w-]*)\b[^>]*>/g)) {
-    if (!test(m[0])) continue
-    const name = m[1]!.toLowerCase()
-    const start = m.index! + m[0].length
-    const re = new RegExp(`<(/?)${name}\\b[^>]*>`, 'gi')
-    re.lastIndex = start
+/** 조건에 맞는 첫 요소의 안쪽 HTML — 같은 이름의 태그 깊이를 세어 닫는 태그를 찾는다(없으면 나머지 전부). 그런 요소가 없으면 null. */
+function elementInner(html: string, test: TagTest): string | null {
+  for (const t of tagsFrom(html)) {
+    if (t.closing || !test(t)) continue
     let depth = 1
-    for (let t = re.exec(html); t; t = re.exec(html)) {
-      if (t[0].endsWith('/>')) continue
-      depth += t[1] ? -1 : 1
-      if (depth === 0) return html.slice(start, t.index)
+    for (const u of tagsFrom(html, t.end, t.name)) {
+      if (u.raw.endsWith('/>')) continue
+      depth += u.closing ? -1 : 1
+      if (depth === 0) return html.slice(t.end, u.start)
     }
-    return html.slice(start)
+    return html.slice(t.end)
+  }
+  return null
+}
+
+/** 첫 <이름>…</이름>의 안쪽(닫는 짝이 없으면 null). */
+function firstChildText(html: string, name: string): string | null {
+  for (const t of tagsFrom(html, 0, name)) {
+    if (t.closing) continue
+    const close = closeTagFinder(html)(name, t.end)
+    return close ? html.slice(t.end, close.start) : null
   }
   return null
 }
 
 /** <meta property|name|itemprop=key content=…> 값(엔티티를 푼다). 없으면 null. */
 function metaContent(html: string, key: string): string | null {
-  for (const m of html.matchAll(/<meta\b[^>]*>/gi)) {
-    const a = attrsOf(m[0])
+  for (const t of tagsFrom(html, 0, 'meta')) {
+    if (t.closing) continue
+    const a = attrsOf(t.raw)
     if ((a.property ?? a.name ?? a.itemprop ?? '').toLowerCase() === key && a.content !== undefined) return decodeEntities(a.content).trim()
+  }
+  return null
+}
+
+/** <link rel="canonical" href=…>(엔티티를 푼다). 없으면 null. */
+function canonicalHref(html: string): string | null {
+  for (const t of tagsFrom(html, 0, 'link')) {
+    if (t.closing) continue
+    const a = attrsOf(t.raw)
+    if ((a.rel ?? '').toLowerCase().split(/\s+/).includes('canonical') && a.href) return decodeEntities(a.href).trim()
   }
   return null
 }
@@ -269,10 +436,17 @@ function jsonLdDate(html: string): string | null {
     }
     return null
   }
-  for (const m of html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script\s*>/gi)) {
+  const findClose = closeTagFinder(html)
+  let skip = 0
+  for (const t of tagsFrom(html, 0, 'script')) {
+    if (t.closing || t.start < skip) continue
+    const close = findClose('script', t.end)
+    if (!close) return null
+    skip = close.end
+    if ((attrsOf(t.raw).type ?? '').trim().toLowerCase() !== 'application/ld+json') continue
     let data: unknown
     try {
-      data = JSON.parse(m[1]!.trim())
+      data = JSON.parse(html.slice(t.end, close.start).trim())
     } catch {
       // 깨진 JSON-LD — 이 덩어리는 날짜 단서가 아니다. 다른 덩어리 · meta · <time>으로 본다.
       continue
@@ -283,7 +457,14 @@ function jsonLdDate(html: string): string | null {
   return null
 }
 
-const timeDatetime = (html: string) => /<time\b[^>]*\bdatetime\s*=\s*["']([^"']+)["']/i.exec(html)?.[1] ?? null
+/** 첫 <time datetime=…>의 값. */
+function timeDatetime(html: string): string | null {
+  for (const t of tagsFrom(html, 0, 'time')) {
+    const value = t.closing ? '' : (attrsOf(t.raw).datetime ?? '').trim()
+    if (value) return value
+  }
+  return null
+}
 
 // ── 날짜 ────────────────────────────────────────────────────────────────────
 
@@ -293,28 +474,53 @@ const realDay = (day: string) => {
 }
 const ymd = (y: string, m: string, d: string) => `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
 
+/** 페이지 날짜를 쓰지 못한 까닭 — future 오늘(KST) 뒤 · early 2020년 전 · ambiguous 지난 시간이 자정을 걸침 · unknown 알아볼 수 없는 모양. */
+export type DateProblem = 'future' | 'early' | 'ambiguous' | 'unknown'
+export const DATE_PROBLEM_TEXT: Record<DateProblem, string> = {
+  future: '오늘 뒤의 날짜입니다',
+  early: '2020년 전 날짜입니다',
+  ambiguous: '지난 시간(「N시간 전」)이 자정을 걸쳐 어느 날인지 정할 수 없습니다',
+  unknown: '알아볼 수 없는 날짜 모양입니다',
+}
+
+const RELATIVE_UNIT_MS = { 초: 1000, 분: 60_000, 시간: 3_600_000, 일: 86_400_000 } as const
+
 /**
  * 페이지의 날짜 글자를 한국 날짜(YYYY-MM-DD)로 — ISO(시간대가 있으면 한국 날짜로 바꾸고, 없으면 그 날짜 그대로) · 「2026. 11. 7. 14:03」 ·
- * 「2026년 11월 7일」 · 네이버 상대 시각(방금 · N초/분/시간/일 전 · 어제 · 그제)은 now(한국 시각)에서 센다. 읽지 못했거나 실제 날짜가
- * 아니거나 오늘(KST) 뒤 · 2020년 전이면 null.
+ * 「2026년 11월 7일」 · 어제 · 그제는 now(한국 시각)에서 센다. 네이버의 지난 시간(방금 · N초/분/시간/일 전)은 내림한 값이다(실측 4시간 48분 →
+ * 「4시간 전」) — 올린 때는 구간 [now − (N+1)단위, now − N단위]이고, 그 두 끝의 한국 날짜가 다르면(자정을 걸침) 날을 정하지 않는다. 쓰지
+ * 못하면 day는 null이고 problem에 까닭(DateProblem)을 둔다 — 오늘로 채우지 않는다(확인 불가 원칙).
  */
-export function parsePostDate(raw: string, now: number): string | null {
+export function postDateOf(raw: string, now: number): { day: string | null; problem: DateProblem | null } {
   const t = raw.replace(/\s+/g, ' ').trim()
   let day: string | null = null
+  let range: [number, number] | null = null
   const rel = /^(\d{1,3})\s*(초|분|시간|일)\s*전/.exec(t)
+  const dotted = /^(\d{4})\s*[.\-/년]\s*(\d{1,2})\s*[.\-/월]\s*(\d{1,2})/.exec(t)
   if (/^\d{4}-\d{2}-\d{2}T/.test(t)) day = /([zZ]|[+-]\d{2}:?\d{2})$/.test(t) ? kstDate(t) : t.slice(0, 10)
   else if (/^\d{4}-\d{2}-\d{2}$/.test(t)) day = t
-  else if (/^(\d{4})\s*[.\-/년]\s*(\d{1,2})\s*[.\-/월]\s*(\d{1,2})/.test(t)) {
-    const m = /^(\d{4})\s*[.\-/년]\s*(\d{1,2})\s*[.\-/월]\s*(\d{1,2})/.exec(t)!
-    day = ymd(m[1]!, m[2]!, m[3]!)
-  } else if (/^방금/.test(t)) day = todayKst(now)
+  else if (dotted) day = ymd(dotted[1]!, dotted[2]!, dotted[3]!)
+  else if (/^방금/.test(t)) range = [now - 60_000, now]
   else if (rel) {
-    const unit = { 초: 1000, 분: 60_000, 시간: 3_600_000, 일: 86_400_000 }[rel[2] as '초' | '분' | '시간' | '일']
-    day = todayKst(now - Number(rel[1]) * unit)
+    const unit = RELATIVE_UNIT_MS[rel[2] as keyof typeof RELATIVE_UNIT_MS]
+    const n = Number(rel[1])
+    range = [now - (n + 1) * unit + 1, now - n * unit]
   } else if (/^어제/.test(t)) day = todayKst(now - 86_400_000)
   else if (/^(그제|그저께)/.test(t)) day = todayKst(now - 2 * 86_400_000)
-  if (!day || !realDay(day) || day > todayKst(now) || day < '2020-01-01') return null
-  return day
+  if (range) {
+    const [from, to] = [todayKst(range[0]), todayKst(range[1])]
+    if (from !== to) return { day: null, problem: 'ambiguous' }
+    day = to
+  }
+  if (!day || !realDay(day)) return { day: null, problem: 'unknown' }
+  if (day > todayKst(now)) return { day: null, problem: 'future' }
+  if (day < '2020-01-01') return { day: null, problem: 'early' }
+  return { day, problem: null }
+}
+
+/** 페이지 날짜 글자의 한국 날짜 — postDateOf의 day. 쓰지 못하면 null. */
+export function parsePostDate(raw: string, now: number): string | null {
+  return postDateOf(raw, now).day
 }
 
 // ── 페이지 읽기(플랫폼별) ────────────────────────────────────────────────────
@@ -325,24 +531,28 @@ export interface ParsedPost {
   publishedOn: string | null
   /** 날짜를 읽은 글자(「2시간 전」 · ISO 등). 없으면 null. */
   dateText: string | null
+  /** 날짜 글자가 있는데 쓰지 못한 까닭. 날짜를 썼거나 글자가 없으면 null. */
+  dateProblem: DateProblem | null
+  /** 페이지가 밝힌 정식 주소 — <link rel=canonical>, og:url(적힌 그대로 — 상대 주소일 수 있다). 없으면 null. */
+  canonical: string | null
+  ogUrl: string | null
   /** 본문 글자. */
   body: string
 }
 
 /** 플랫폼마다 본문 자리 — 앞에서부터 처음 찾은 것. 없으면 <article> · <main> · <body> · 문서 전체. */
-const BODY_PLACES: Record<PostPlatform, ((tag: string) => boolean)[]> = {
+const BODY_PLACES: Record<PostPlatform, TagTest[]> = {
   naver: [hasClass('se-main-container'), hasId('postViewArea')],
   tistory: [hasClass('contents_style'), hasClass('tt_article_useless_p_margin'), hasClass('entry-content')],
   wordpress: [hasClass('entry-content')],
-  generic: [(tag) => attrsOf(tag).itemprop === 'articleBody', hasClass('entry-content')],
+  generic: [(t) => attrsOf(t.raw).itemprop === 'articleBody', hasClass('entry-content')],
 }
 const BODY_FALLBACK = [isTag('article'), isTag('main'), isTag('body')]
 
-/** 페이지 HTML에서 제목 · 올린 날 · 본문을 읽는다(플랫폼별 자리, 없으면 일반 단서). now는 상대 시각을 셀 때 쓴다. */
+/** 페이지 HTML에서 제목 · 올린 날 · 정식 주소 · 본문을 읽는다(플랫폼별 자리, 없으면 일반 단서). now는 상대 시각을 셀 때 쓴다. */
 export function parsePostHtml(platform: PostPlatform, html: string, now: number): ParsedPost {
   const code = withoutCode(html)
-  const titleTag = /<title\b[^>]*>([\s\S]*?)<\/title\s*>/i.exec(code)?.[1]
-  const title = (metaContent(code, 'og:title') || metaContent(code, 'twitter:title') || decodeEntities(titleTag ?? '')).replace(/\s+/g, ' ').trim()
+  const title = (metaContent(code, 'og:title') || metaContent(code, 'twitter:title') || decodeEntities(firstChildText(code, 'title') ?? '')).replace(/\s+/g, ' ').trim()
   let fragment: string | null = null
   for (const test of [...BODY_PLACES[platform], ...BODY_FALLBACK]) {
     fragment = elementInner(code, test)
@@ -355,10 +565,14 @@ export function parsePostHtml(platform: PostPlatform, html: string, now: number)
     jsonLdDate(html) ||
     (fragment !== null ? timeDatetime(fragment) : null) ||
     timeDatetime(code)
+  const date = dateText ? postDateOf(dateText, now) : { day: null, problem: null }
   return {
     title,
-    publishedOn: dateText ? parsePostDate(dateText, now) : null,
+    publishedOn: date.day,
     dateText: dateText || null,
+    dateProblem: date.problem,
+    canonical: canonicalHref(code),
+    ogUrl: metaContent(code, 'og:url'),
     body: htmlToText(fragment ?? code),
   }
 }
@@ -452,10 +666,20 @@ export interface PostImportReadOk {
   /** 적힌 그대로(앞뒤 공백만 뗀다). */
   url: string
   key: string
+  /**
+   * 적을 주소 — 페이지가 밝힌 정식 주소(canonical · og:url, 같은 블로그의 글일 때) › 리디렉션 뒤 주소 › 읽은 주소(붙여 넣은 주소, 끝 글자를
+   * 뗐으면 뗀 주소). 추적 키가 붙여 넣은 주소와 같으면 붙여 넣은 주소 그대로. 「이대로 등록」은 이 주소로 적는다 — ?p=번호 · 단축 주소 ·
+   * /entry/ 주소처럼 같은 글을 다른 모양으로 붙여 넣어도 한 글이 한 주소로 적힌다(발행 현황 · 성과 표는 주소 키로 묶는다).
+   */
+  recordUrl: string
+  recordKey: string
+  /** 적을 주소가 붙여 넣은 주소와 다른 까닭(넘어감 · 정식 주소 · 끝 글자를 뗌). 같으면 null. */
+  urlNote: string | null
   platform: { key: PostPlatform; label: string }
-  post: { title: string; publishedOn: string | null; dateText: string | null; bodyChars: number }
+  post: { title: string; publishedOn: string | null; dateText: string | null; dateProblem: DateProblem | null; bodyChars: number }
   /** 본문 겹침 순 — 많아야 CANDIDATE_LIMIT개. */
   candidates: ImportCandidate[]
+  /** 붙여 넣은 주소 · 읽은 주소 · 적을 주소 가운데 하나라도 원장에 적힌 기록. */
   known: KnownRecord[]
 }
 export interface PostImportReadFail {
@@ -470,6 +694,10 @@ export interface RowPick {
   tenantId: string
   articleId: string
 }
+
+/** 고른 글의 비교 키(브랜드 · 글 id). */
+export const pickKey = (p: RowPick) => `${p.tenantId}\n${p.articleId}`
+const samePick = (a: RowPick | null, b: RowPick | null) => a !== null && b !== null && a.tenantId === b.tenantId && a.articleId === b.articleId
 
 /**
  * 고른 글에 이 주소를 적어도 되는가 — 원장에 적힌 기록으로 본다.
@@ -487,11 +715,14 @@ export function urlVerdict(known: readonly KnownRecord[], pick: RowPick): UrlVer
   return { kind: 'fresh' }
 }
 
-export type RowState = MatchState | 'already' | 'other' | 'unreadable'
+/** 줄 상태 — 자동 판정(맞음 · 확인 필요 · 앱 글 아님), 사람이 바꾼 것(직접 고름 · 앱 글 아님(직접)), 원장 · 읽기 결과(이미 등록됨 · 다른 글로 등록됨 · 읽지 못함). */
+export type RowState = MatchState | 'manual' | 'dismissed' | 'already' | 'other' | 'unreadable'
 export const ROW_STATE_LABEL: Record<RowState, string> = {
   match: '맞음',
   review: '확인 필요',
   none: '앱 글 아님',
+  manual: '직접 고름',
+  dismissed: '앱 글 아님(직접)',
   already: '이미 등록됨',
   other: '다른 글로 등록됨',
   unreadable: '읽지 못함',
@@ -511,26 +742,49 @@ export function autoPick(read: PostImportRead): RowPick | null {
 }
 
 /**
- * 줄 상태 — 읽지 못함 › (고른 글 기준) 이미 등록됨 · 다른 글로 등록됨 › 자동 판정(맞음 · 확인 필요 · 앱 글 아님). 고른 글이 없는데(앱 글
- * 아님) 원장에 이미 적힌 주소면 「이미 등록됨」 — 할 일이 없다.
+ * 줄 상태 — 사람이 고른 글을 기준으로 본다. 읽지 못함 › (고른 글 기준) 이미 등록됨 · 다른 글로 등록됨 › 처음 고른 글(autoPick)이면 자동
+ * 판정, 다른 후보를 골랐으면 「직접 고름」(맞음 기준을 넘은 글이 아니다 — 키보드 화살표 한 번으로도 바뀐다), 「앱 글 아님」을 골랐으면
+ * 「앱 글 아님(직접)」(처음부터 앱 글 아님이면 그대로). 고른 글이 없는데 원장에 이미 적힌 주소면 「이미 등록됨」 — 할 일이 없다.
  */
 export function rowStateOf(read: PostImportRead, pick: RowPick | null): { state: RowState; verdict: UrlVerdict | null } {
   if (!read.ok) return { state: 'unreadable', verdict: null }
-  const auto = decideMatch(read.candidates.map((c) => c.body))
+  const first = autoPick(read)
   if (!pick) {
     const record = read.known[0]
-    return record ? { state: 'already', verdict: { kind: 'already', record } } : { state: auto, verdict: null }
+    if (record) return { state: 'already', verdict: { kind: 'already', record } }
+    return { state: first ? 'dismissed' : 'none', verdict: null }
   }
   const verdict = urlVerdict(read.known, pick)
   if (verdict.kind === 'already') return { state: 'already', verdict }
   if (verdict.kind === 'other') return { state: 'other', verdict }
-  return { state: auto, verdict }
+  return { state: samePick(first, pick) ? decideMatch(read.candidates.map((c) => c.body)) : 'manual', verdict }
 }
 
-/** 처음부터 체크해 둘 줄 — 「맞음」만(날짜를 모르면 사람이 날을 골라야 등록된다). */
-export function checkedByDefault(read: PostImportRead): boolean {
+/**
+ * 처음부터 체크해 둘 줄 — 「맞음」만, 그리고 같은 글을 또 올린 것일 수 있는 줄은 사람이 보게 비워 둔다: 그 앱 글에 이미 다른 주소가 적혀
+ * 있거나(otherUrls), 표의 다른 줄이 이미 그 앱 글을 골랐다(claimed — 체크했거나 등록한 줄의 pickKey). 날짜를 모르면 사람이 날을 골라야
+ * 등록된다.
+ */
+export function checkedByDefault(read: PostImportRead, claimed: ReadonlySet<string> = new Set()): boolean {
   const pick = autoPick(read)
-  return pick !== null && rowStateOf(read, pick).state === 'match'
+  if (!read.ok || pick === null || rowStateOf(read, pick).state !== 'match' || claimed.has(pickKey(pick))) return false
+  return (read.candidates.find((c) => samePick(c, pick))?.otherUrls ?? 0) === 0
+}
+
+/** 이 표에서 등록한 줄 — seq는 등록한 차례(읽은 차례와 견준다). */
+export interface RegisteredRow {
+  pick: RowPick
+  recordKey: string
+  seq: number
+}
+
+/**
+ * 지금 이 앱 글에 적힌 다른 주소 수 — 읽을 때 원장에서 센 수(candidate.otherUrls)에, 이 줄을 읽은 뒤(readSeq) 이 표에서 그 글로 등록한
+ * 다른 주소를 더한다(읽기 전에 등록한 것은 이미 원장 셈에 들었다). 같은 글을 두 주소로 등록하면 둘째 줄에서도 알리기 위해 쓴다.
+ */
+export function otherUrlsNow(candidate: ImportCandidate, recordKey: string, readSeq: number, registered: readonly RegisteredRow[]): number {
+  const later = new Set(registered.filter((r) => r.seq > readSeq && r.recordKey !== recordKey && samePick(r.pick, candidate)).map((r) => r.recordKey))
+  return candidate.otherUrls + later.size
 }
 
 // ── 저장한 블로그 · 새 글 찾기 ──────────────────────────────────────────────
@@ -594,26 +848,42 @@ export function blogListTargets(sourceUrl: string): { kind: ListKind; url: strin
 
 const cdata = (s: string) => s.trim().replace(/^<!\[CDATA\[([\s\S]*?)\]\]>$/, '$1').trim()
 
-/** RSS · Atom의 링크 — <link>…</link> · <guid>…</guid>(주소인 것) · <link href="…"/>. 문서 순서. */
+/** RSS · Atom의 링크 — <link>…</link> · <guid>…</guid>(주소인 것) · <link href="…"/>(닫는 짝이 없는 <link href>도). 문서 순서. */
 export function parseFeedLinks(xml: string): string[] {
   const out: string[] = []
-  // 닫는 태그가 있는 것과 스스로 닫는 것(Atom)을 나눠 찾는다 — 한 식으로 쓰면 <link …/> 뒤의 다른 </link>까지 삼킨다.
-  for (const m of xml.matchAll(/<(link|guid)\b([^>]*?)\/>|<(link|guid)\b([^>]*)>([\s\S]*?)<\/\3\s*>/gi)) {
-    const value = m[1] ? (attrsOf(m[2] ?? '').href ?? '') : cdata(m[5] ?? '') || (attrsOf(m[4] ?? '').href ?? '')
-    const url = decodeEntities(value).trim()
+  const findClose = closeTagFinder(xml)
+  let skip = 0
+  for (const t of tagsFrom(xml, 0, 'link|guid')) {
+    if (t.closing || t.start < skip) continue
+    let value = ''
+    if (!t.raw.endsWith('/>')) {
+      const close = findClose(t.name, t.end)
+      if (close) {
+        value = cdata(xml.slice(t.end, close.start))
+        skip = close.end
+      }
+    }
+    const url = decodeEntities(value || (attrsOf(t.raw).href ?? '')).trim()
     if (/^https?:\/\//i.test(url)) out.push(url)
   }
   return out
 }
 
-/** 사이트맵 — 글 주소(<url><loc>)와 하위 사이트맵(<sitemap><loc>). */
+/** 사이트맵 — 글 주소(<url><loc>)와 하위 사이트맵(<sitemap><loc>). 문서 순서. */
 export function parseSitemap(xml: string): { urls: string[]; sitemaps: string[] } {
-  const locs = (tag: 'url' | 'sitemap') =>
-    [...xml.matchAll(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}\\s*>`, 'gi'))].flatMap((m) => {
-      const loc = /<loc\b[^>]*>([\s\S]*?)<\/loc\s*>/i.exec(m[1]!)?.[1]
-      return loc ? [decodeEntities(cdata(loc))] : []
-    })
-  return { urls: locs('url'), sitemaps: locs('sitemap') }
+  const urls: string[] = []
+  const sitemaps: string[] = []
+  const findClose = closeTagFinder(xml)
+  let skip = 0
+  for (const t of tagsFrom(xml, 0, 'url|sitemap')) {
+    if (t.closing || t.start < skip) continue
+    const close = findClose(t.name, t.end)
+    if (!close) continue
+    skip = close.end
+    const loc = firstChildText(xml.slice(t.end, close.start), 'loc')
+    if (loc) (t.name === 'url' ? urls : sitemaps).push(decodeEntities(cdata(loc)))
+  }
+  return { urls, sitemaps }
 }
 
 /** 워드프레스 공개 API 응답({ found, posts: [{ URL }] }). 모양이 틀리면 빈 목록. */
@@ -628,16 +898,26 @@ export function parseWpPostList(json: unknown): { urls: string[]; found: number 
 /** 그 밖 블로그에서 글이 아닌 첫 단계 경로. */
 const GENERIC_NON_POST = /^\/(category|categories|tag|tags|author|page|search|feed|rss|comments|wp-json|wp-content|wp-admin|wp-includes)(\/|$)/i
 
+const bareHost = (host: string) => host.toLowerCase().replace(/^www\./, '').replace(/^m\./, '')
+
+/** 같은 사이트로 보는 호스트 — 소문자, 앞의 www. · m.를 뗀다(추적 키 src/lib/publishedUrl.ts trackingKey와 같은 규칙). 주소가 아니면 null. */
+export function siteHostOf(raw: string): string | null {
+  const u = parseUrl(raw)
+  return u ? bareHost(u.hostname) : null
+}
+
 /**
- * 목록에서 이 블로그의 글 주소만 — 같은 블로그(네이버는 같은 아이디, 그 밖은 같은 호스트)이고 글 한 편의 주소(isArticleUrl)인 것. 네이버는
- * /아이디/글번호로 맞추고(RSS 꼬리표를 뗀다), 티스토리는 숫자 글 · /entry/ 글만(/m/ · 분류 · 태그 · 방명록 · 공지 빼고), 워드프레스는 기본 글
- * hello-world를 뺀다. 같은 글(추적 키)은 한 번.
+ * 목록에서 이 블로그의 글 주소만 — 같은 블로그(네이버는 같은 아이디, 그 밖은 같은 사이트 — www. · m.는 떼고 보고, alsoHosts는 목록을 실제로
+ * 받은 곳(리디렉션 뒤)처럼 같은 블로그로 볼 호스트)이고 글 한 편의 주소(isArticleUrl)인 것. 네이버는 /아이디/글번호로 맞추고(RSS 꼬리표를
+ * 뗀다), 티스토리는 숫자 글 · /entry/ 글만(/m/ · 분류 · 태그 · 방명록 · 공지 빼고), 워드프레스는 기본 글 hello-world를 뺀다. 같은 글(추적
+ * 키)은 한 번.
  */
-export function listedPostUrls(sourceUrl: string, urls: readonly string[]): string[] {
+export function listedPostUrls(sourceUrl: string, urls: readonly string[], alsoHosts: readonly string[] = []): string[] {
   const src = parseUrl(sourceUrl)
   if (!src) return []
   const platform = postPlatformOf(sourceUrl)
   const naverId = platform === 'naver' ? (src.pathname.split('/').filter(Boolean)[0] ?? '').toLowerCase() : ''
+  const hosts = new Set([bareHost(src.hostname), ...alsoHosts.map(bareHost)])
   const out: string[] = []
   const seen = new Set<string>()
   for (const raw of urls) {
@@ -649,7 +929,7 @@ export function listedPostUrls(sourceUrl: string, urls: readonly string[]): stri
       if (!ref || ref.blogId.toLowerCase() !== naverId) continue
       url = `https://blog.naver.com/${ref.blogId}/${ref.logNo}`
     } else {
-      if (u.host.toLowerCase() !== src.host.toLowerCase()) continue
+      if (!hosts.has(bareHost(u.hostname))) continue
       const path = u.pathname.replace(/\/+$/, '')
       if (platform === 'tistory' && !/^\/\d+$/.test(path) && !/^\/entry\/.+/.test(path)) continue
       if (platform === 'wordpress' && path.split('/').pop() === 'hello-world') continue
@@ -661,6 +941,41 @@ export function listedPostUrls(sourceUrl: string, urls: readonly string[]): stri
     out.push(url)
   }
   return out
+}
+
+/**
+ * 목록에 있던 다른 사이트 글 주소의 호스트(많아야 3곳) — 이 블로그 글을 하나도 찾지 못했을 때 「그 주소로 저장해 주세요」에 쓴다(워드프레스에
+ * 연결한 도메인 · 옮긴 블로그). 홈 · 분류처럼 글이 아닌 주소는 세지 않는다.
+ */
+export function otherListHosts(sourceUrl: string, urls: readonly string[], alsoHosts: readonly string[] = []): string[] {
+  const src = parseUrl(sourceUrl)
+  if (!src) return []
+  const hosts = new Set([bareHost(src.hostname), ...alsoHosts.map(bareHost)])
+  const out = new Set<string>()
+  for (const raw of urls) {
+    const u = parseUrl(raw)
+    if (!u || hosts.has(bareHost(u.hostname)) || GENERIC_NON_POST.test(u.pathname) || !isArticleUrl(raw).ok) continue
+    out.add(u.hostname.toLowerCase())
+    if (out.size >= 3) break
+  }
+  return [...out]
+}
+
+/**
+ * 페이지가 밝힌 정식 주소(canonical · og:url — 상대 주소면 base에서 푼다)를 따를 것인가 — base(실제로 읽은 주소)와 같은 블로그의 글 한 편
+ * 주소일 때만 그 주소(네이버는 /아이디/글번호로 맞춘 것), 아니면 null. 다른 사이트를 정식 주소로 적은 글(옮겨 실은 글)이나 홈 · 분류를 적은
+ * 테마는 따르지 않는다.
+ */
+export function sameBlogPostUrl(base: string, candidate: string): string | null {
+  let abs: string
+  try {
+    abs = new URL(candidate.trim(), base).href
+  } catch {
+    // 주소로 풀리지 않는 정식 주소 — 따르지 않는다.
+    return null
+  }
+  const source = normalizeBlogSource(base)
+  return source.ok ? (listedPostUrls(source.url, [abs])[0] ?? null) : null
 }
 
 /** 글 번호(티스토리 숫자 글 · 네이버 글번호) — 클수록 나중 글. 번호가 없는 주소는 null. */

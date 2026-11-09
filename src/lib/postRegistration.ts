@@ -163,8 +163,18 @@ export function libraryRecordInput(args: {
 }
 
 /**
- * 앱이 짝지은 글의 기록 — 배정 글(보관함 규칙)이면 작성자 기록, 아니면 보관함 기록. 질문 글(topic:)인데 배정이나 추가 글 목록을 읽지
- * 못했으면 누구 글인지 · 어느 판인지 몰라 적지 않는다(짐작하지 않는다). bank는 질문 은행 글(추가 글 정의가 없는 topic:)에만 쓴다.
+ * 질문 글(topic:)의 작성자를 모르는가 — 배정 파일을 읽지 못했거나, 배정이 있는데 추가 글 목록을 읽지 못했다(어느 판으로 만들었는지 몰라 배정
+ * 글인지 가릴 수 없다). 배정 파일이 없으면 배정 글일 수 없으니 안다(보관함 글). 화면(server/postImport.ts 후보의 「미확인」)과 등록
+ * (importRecordInput)이 이 한 식을 쓴다 — 화면이 「배정 없음」으로 보여 체크해 둔 줄을 등록이 거절하지 않게.
+ */
+export function writerUnknownOf(articleId: string, plan: WriterPlan | null, planUnreadable: boolean, extras: readonly ExtraArticle[] | null): boolean {
+  return articleId.startsWith('topic:') && (planUnreadable || (plan !== null && extras === null))
+}
+
+/**
+ * 앱이 짝지은 글의 기록 — 배정 글(보관함 규칙)이면 작성자 기록, 아니면 보관함 기록. 질문 글(topic:)의 작성자를 모르면(writerUnknownOf) 누구
+ * 글인지 · 어느 판인지 몰라 적지 않는다(짐작하지 않는다). 배정 파일이 없는 브랜드는 추가 글 목록을 읽지 못해도 보관함 「올렸어요」와 같이
+ * 질문 은행으로 판을 본다. bank는 질문 은행 글(추가 글 정의가 없는 topic:)에만 쓴다.
  */
 export function importRecordInput(args: {
   plan: WriterPlan | null
@@ -177,7 +187,7 @@ export function importRecordInput(args: {
   day: string
 }): { input: RegisterInput } | { error: string } {
   const { plan, extras, articleId } = args
-  if (articleId.startsWith('topic:') && (args.planUnreadable || extras === null)) {
+  if (writerUnknownOf(articleId, plan, args.planUnreadable, extras)) {
     return {
       error: args.planUnreadable
         ? '작성자 배정 파일(probe-plan.json)을 읽지 못해 누구 글인지 확인하지 못했습니다 — 등록하지 않았습니다.'

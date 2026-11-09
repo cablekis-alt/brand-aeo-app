@@ -25,6 +25,7 @@ import {
   listedPostUrls,
   newestFirst,
   normalizeBlogSource,
+  otherListHosts,
   parseCommitItems,
   parseFeedLinks,
   parsePostHtml,
@@ -32,7 +33,10 @@ import {
   parseWpPostList,
   postPlatformOf,
   readTargetOf,
+  sameBlogPostUrl,
+  siteHostOf,
   urlVerdict,
+  withoutTrailingText,
   wpListPageUrl,
   type BlogListResult,
   type BlogSource,
@@ -42,7 +46,7 @@ import {
   type KnownRecord,
   type PostImportRead,
 } from '../src/lib/postImport.js';
-import { importRecordInput, normalizeDay, postedDayProblem } from '../src/lib/postRegistration.js';
+import { importRecordInput, normalizeDay, postedDayProblem, writerUnknownOf } from '../src/lib/postRegistration.js';
 import type { WriterPlan } from '../src/lib/probePlan.js';
 import { ARTICLE_URL_REASON, isArticleUrl, todayKst, trackingKey } from '../src/lib/publishedUrl.js';
 import type { QuestionBank } from '../src/lib/types.js';
@@ -50,7 +54,6 @@ import type { StoredDraft } from '../src/lib/api.js';
 import { decodeBody } from './aeo/collectPage.js';
 import { isPrivateIp, publicCollectorError } from './aeo/networkSafety.js';
 import { PIPELINE_DATA_DIR, stateFilePath } from './appPaths.js';
-import { readDrafts } from './contentDraft.js';
 import { readExtraArticles } from './extraArticles.js';
 import { PROBE_PLAN_FILE, readProbePlan } from './probePlanStore.js';
 import { addPublishedPost, readPublishedPosts } from './publishedPosts.js';
@@ -75,6 +78,13 @@ import type { TenantConfig } from './types.js';
  * 막는다 — 연결 함수의 lookup에서 검사하므로 검사한 주소와 연결하는 주소가 다를 수 없다(DNS 재바인딩). 받은 HTML은 글자로만 다룬다(실행 ·
  * 그리기 없음).
  * POST_IMPORT_TEST_LOOPBACK=1은 검증 스크립트(scripts/verify-post-import.ts)만 켠다 — 그때만 루프백(127.0.0.0/8 · ::1)과 그 포트를 연다.
+ * 설치본 서버 묶음(scripts/build-electron-server.mjs)은 이 이름을 define으로 지운다 — userData/.env나 환경변수로 켤 수 없다.
+ * 받은 HTML은 src/lib/postImport.ts가 페이지 크기에 비례하는 시간으로만 읽는다(망가진 페이지 하나가 서버를 멈추지 않게).
+ *
+ * ── 적을 주소 ───────────────────────────────────────────────────────────────
+ * 같은 글이 여러 모양의 주소로 온다(워드프레스 ?p=번호 · wp.me 단축 · 티스토리 /entry/). 읽기는 리디렉션 뒤 주소와 페이지가 밝힌 정식
+ * 주소(같은 블로그의 글일 때)를 적을 주소(recordUrl)로 돌려주고, 원장 대조는 붙여 넣은 주소 · 읽은 주소 · 적을 주소 모두로 한다 — 이미
+ * 등록한 글을 다른 모양으로 붙여 넣어도 「이미 등록됨」. 화면은 적을 주소로 등록한다.
  *
  * ── 저장한 블로그는 앱에 한 목록 ────────────────────────────────────────────
  * 한 작성자 블로그에 두 브랜드의 글이 함께 오른다(11-09 실측 — 네이버 · 워드프레스 블로그 하나에 스테이,머뭄과 군산각 글). 브랜드마다
@@ -399,12 +409,39 @@ const isStoredDraft = (v: unknown): v is StoredDraft => {
   return typeof (v as StoredDraft | null)?.generatedAt === 'string' && typeof d?.title === 'string' && Array.isArray(d.sections);
 };
 
+/**
+ * 그 브랜드의 초안(drafts.json) — 파일이 없으면 빈 목록, 읽지 못했거나(잠김 · 권한) 깨졌으면 오류. readDrafts(server/contentDraft.ts)는 둘 다
+ * 빈 목록으로 돌려주는데, 짝짓기에서 그러면 그 브랜드 글이 모두 「앱 글 아님」으로 숨는다.
+ */
+async function draftsForMatch(tenantId: string): Promise<Record<string, unknown>> {
+  let text: string;
+  try {
+    text = await readFile(path.join(PIPELINE_DATA_DIR, tenantId, 'drafts.json'), 'utf-8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return {};
+    throw err;
+  }
+  const parsed: unknown = JSON.parse(text);
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('drafts.json이 글 목록 모양이 아닙니다.');
+  return parsed as Record<string, unknown>;
+}
+
+/** 짝짓기 재료를 만들지 못한 브랜드 — 그 브랜드 글을 빼고 짝지으면 「앱 글 아님」이나 엉뚱한 「맞음」이 되므로 읽기를 「읽지 못함」으로 돌린다. */
+class CorpusError extends Error {}
+
 async function tenantCorpus(t: TenantConfig, brand: string): Promise<CorpusEntry[]> {
   const dir = path.join(PIPELINE_DATA_DIR, t.tenantId);
-  const sig = [brand, ...(await Promise.all(['drafts.json', PROBE_PLAN_FILE, 'extra-articles.json'].map((f) => fileSig(path.join(dir, f)))))].join('|');
+  const signature = async () => [brand, ...(await Promise.all(['drafts.json', PROBE_PLAN_FILE, 'extra-articles.json'].map((f) => fileSig(path.join(dir, f)))))].join('|');
+  const sig = await signature();
   const cached = corpusCache.get(t.tenantId);
   if (cached?.sig === sig) return cached.entries;
-  const drafts = await readDrafts(t.tenantId);
+  let drafts: Record<string, unknown>;
+  try {
+    drafts = await draftsForMatch(t.tenantId);
+  } catch (err) {
+    console.warn(`[postImport] ${t.tenantId} 초안(drafts.json)을 읽지 못해 짝짓지 않았습니다:`, err);
+    throw new CorpusError(`${brand}의 초안(drafts.json)을 읽지 못해 짝짓지 않았습니다(${reasonOf(err)}) — 잠시 뒤 「다시 읽기」를 눌러 주세요.`);
+  }
   const owner = await ownerContext(t.tenantId);
   const defs = new Map((owner.extras ?? []).map((e) => [e.id, e]));
   const entries: CorpusEntry[] = [];
@@ -421,8 +458,8 @@ async function tenantCorpus(t: TenantConfig, brand: string): Promise<CorpusEntry
       continue;
     }
     const text = draftMatchText(stored);
-    // 작성자는 콘텐츠 보관함 규칙(assignedArticle) — 배정 · 추가 글 목록을 읽지 못했으면 질문 글(topic:)은 「미확인」.
-    const writerUnknown = articleId.startsWith('topic:') && (owner.planUnreadable || (owner.plan !== null && owner.extras === null));
+    // 작성자는 콘텐츠 보관함 규칙(assignedArticle) — 모르면(writerUnknownOf — 등록과 같은 식) 질문 글(topic:)은 「미확인」.
+    const writerUnknown = writerUnknownOf(articleId, owner.plan, owner.planUnreadable, owner.extras);
     const assigned = !writerUnknown && owner.plan && owner.extras ? assignedArticle(owner.plan, defs, articleId) : null;
     entries.push({
       tenantId: t.tenantId,
@@ -435,17 +472,20 @@ async function tenantCorpus(t: TenantConfig, brand: string): Promise<CorpusEntry
       writerUnknown,
     });
   }
-  corpusCache.set(t.tenantId, { sig, entries });
+  // 읽는 사이 파일이 바뀌었으면 담아 두지 않는다 — 다음 읽기가 새로 만든다.
+  if ((await signature()) === sig) corpusCache.set(t.tenantId, { sig, entries });
   return entries;
 }
 
 const customersOf = (tenants: TenantConfig[]) => tenants.filter((t) => !t.cohortOnly);
 
 /**
- * 이 주소(추적 키)가 고객 브랜드 원장에 적힌 기록(살아 있는 줄 · 옛 기록)과, 글마다 이 주소 말고 이미 적힌 자사 · 직접 주소 수(CLI의 「이 글에는
- * 이미 다른 주소가 적혀 있습니다」와 같은 셈 — 같은 글을 두 곳에 올렸는지 사람이 보게). 원장을 읽지 못한 브랜드는 로그를 남기고 건너뛴다.
+ * 이 주소(추적 키들 — 붙여 넣은 · 읽은 · 적을 주소)가 고객 브랜드 원장에 적힌 기록(살아 있는 줄 · 옛 기록)과, 글마다 이 주소들 말고 이미 적힌
+ * 자사 · 직접 주소 수(CLI의 「이 글에는 이미 다른 주소가 적혀 있습니다」와 같은 셈 — 같은 글을 두 곳에 올렸는지 사람이 보게). 원장을 읽지 못한
+ * 브랜드는 로그를 남기고 건너뛴다.
  */
-async function ledgerView(customers: TenantConfig[], key: string): Promise<{ known: KnownRecord[]; otherUrls: Map<string, number> }> {
+async function ledgerView(customers: TenantConfig[], keys: readonly string[]): Promise<{ known: KnownRecord[]; otherUrls: Map<string, number> }> {
+  const wanted = new Set(keys);
   const parts = await Promise.all(
     customers.map(async (t) => {
       try {
@@ -462,7 +502,7 @@ async function ledgerView(customers: TenantConfig[], key: string): Promise<{ kno
     const brand = brandLabel(t, customers);
     for (const p of posts) {
       if (p.removedAt) continue;
-      if (p.key === key) {
+      if (wanted.has(p.key)) {
         known.push({
           tenantId: t.tenantId,
           brand,
@@ -485,6 +525,23 @@ ${p.articleId}`;
 
 // ── 읽기 ────────────────────────────────────────────────────────────────────
 
+/** 404 · 410이면 주소 끝에 붙은 글자(「…/slug/입니다」)를 떼고 한 번 더 읽는다 — 읽은 주소와 페이지. 다시 읽기가 실패하면 처음 응답 그대로. */
+async function fetchPostPage(url: string): Promise<{ readUrl: string; page: FetchedText }> {
+  const page = await fetchText(readTargetOf(url));
+  const cut = page.status === 404 || page.status === 410 ? withoutTrailingText(url) : null;
+  if (!cut) return { readUrl: url, page };
+  try {
+    const retry = await fetchText(readTargetOf(cut));
+    return retry.status < 400 ? { readUrl: cut, page: retry } : { readUrl: url, page };
+  } catch (err) {
+    console.warn(`[postImport] 끝 글자를 뗀 주소도 읽지 못해 처음 응답(HTTP ${page.status})으로 둡니다: ${cut}`, err);
+    return { readUrl: url, page };
+  }
+}
+
+/** 화면에 보일 짧은 주소(http(s):// · 끝 슬래시를 뗀다). */
+const shownUrl = (u: string) => u.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+
 /** 글 페이지를 읽어 후보와 원장 기록을 돌려준다(페이지를 읽지 못하면 ok:false · 이유). 글 주소가 아니면 400. */
 export async function readPostForImport(rawUrl: unknown, tenants: TenantConfig[], now = Date.now()): Promise<PostImportRead> {
   if (typeof rawUrl !== 'string' || !rawUrl.trim()) throw new PostImportError('읽을 글 주소(url)가 필요합니다.', 400);
@@ -492,28 +549,51 @@ export async function readPostForImport(rawUrl: unknown, tenants: TenantConfig[]
   const check = isArticleUrl(url);
   if (!check.ok) throw new PostImportError(ARTICLE_URL_REASON[check.reason], 400);
   const key = trackingKey(url)!;
-  const platform = postPlatformOf(url);
+  const fail = (error: string): PostImportRead => ({ ok: false, url, key, error });
+  let readUrl: string;
   let page: FetchedText;
   try {
-    page = await fetchText(readTargetOf(url));
+    ({ readUrl, page } = await fetchPostPage(url));
   } catch (err) {
-    return { ok: false, url, key, error: reasonOf(err) };
+    return fail(reasonOf(err));
   }
-  if (page.status === 404 || page.status === 410) return { ok: false, url, key, error: `없는 글입니다(HTTP ${page.status}) — 주소를 다시 확인하거나 글이 공개됐는지 봐 주세요.` };
-  if (page.status === 429) return { ok: false, url, key, error: '블로그가 잠시 요청을 막았습니다(HTTP 429) — 1~2분 뒤 「다시 읽기」를 눌러 주세요.' };
-  if (page.status >= 400) return { ok: false, url, key, error: `페이지를 읽지 못했습니다(HTTP ${page.status}).` };
+  if (page.status === 404 || page.status === 410) return fail(`없는 글입니다(HTTP ${page.status}) — 주소를 다시 확인하거나 글이 공개됐는지 봐 주세요.`);
+  if (page.status === 429) return fail('블로그가 잠시 요청을 막았습니다(HTTP 429) — 1~2분 뒤 「다시 읽기」를 눌러 주세요.');
+  if (page.status >= 400) return fail(`페이지를 읽지 못했습니다(HTTP ${page.status}).`);
   if (page.contentType && !/html|xml|text\/plain/i.test(page.contentType)) {
-    return { ok: false, url, key, error: `글 페이지가 아닙니다(${page.contentType.split(';')[0]}).` };
+    return fail(`글 페이지가 아닙니다(${page.contentType.split(';')[0]}).`);
   }
+  // 지운 글 · 비공개 글은 블로그 홈으로 넘어가기도 한다 — 그 페이지를 글로 읽지 않는다.
+  if (trackingKey(page.finalUrl) !== trackingKey(readTargetOf(readUrl)) && !isArticleUrl(page.finalUrl).ok) {
+    return fail(`글 주소가 블로그 홈 · 첫 화면(${shownUrl(page.finalUrl)})으로 넘어갔습니다 — 글이 지워졌거나 비공개로 바뀌었는지 봐 주세요.`);
+  }
+  // 플랫폼은 실제로 읽은 곳으로(wp.me 단축 주소 → 워드프레스).
+  const platform = postPlatformOf(page.finalUrl);
   const parsed = parsePostHtml(platform, page.text, now);
   const bodyGrams = bigrams(parsed.body);
   if (bodyGrams.size < MIN_BODY_GRAMS) {
-    return { ok: false, url, key, error: `본문 글자를 거의 찾지 못했습니다(${parsed.body.length}자) — 사진만 있는 글이거나 페이지 모양이 다릅니다.` };
+    return fail(`본문 글자를 거의 찾지 못했습니다(${parsed.body.length}자) — 사진만 있는 글이거나 페이지 모양이 다릅니다.`);
   }
+  // 적을 주소 — 페이지가 밝힌 정식 주소(같은 블로그의 글일 때) › 리디렉션 뒤 주소 › 읽은 주소. 추적 키가 같으면 적힌 모양 그대로.
+  const declared = [parsed.canonical, parsed.ogUrl].flatMap((c) => (c ? [sameBlogPostUrl(page.finalUrl, c)] : [])).find((c): c is string => c !== null) ?? null;
+  const target = declared ?? (isArticleUrl(page.finalUrl).ok ? page.finalUrl : readUrl);
+  const readKey = trackingKey(readUrl)!;
+  const recordUrl = trackingKey(target) === key ? url : trackingKey(target) === readKey ? readUrl : target;
+  const recordKey = trackingKey(recordUrl)!;
+  const notes: string[] = [];
+  if (readUrl !== url) notes.push(`주소 끝에 붙은 「${url.slice(readUrl.length)}」를 떼고 읽었습니다`);
+  if (recordKey !== readKey) notes.push(recordUrl === declared ? '페이지가 밝힌 정식 주소로 적습니다' : '이 주소로 넘어가 넘어간 주소로 적습니다');
   const customers = customersOf(tenants);
-  const corpus = (await Promise.all(customers.map((t) => tenantCorpus(t, brandLabel(t, customers))))).flat();
+  let corpus: CorpusEntry[];
+  try {
+    corpus = (await Promise.all(customers.map((t) => tenantCorpus(t, brandLabel(t, customers))))).flat();
+  } catch (err) {
+    if (err instanceof CorpusError) return fail(err.message);
+    console.error('[postImport] 앱 글을 모으지 못했습니다:', err);
+    return fail(`앱 글을 모으지 못해 짝짓지 않았습니다 — ${reasonOf(err)}`);
+  }
   const titleGrams = bigrams(parsed.title);
-  const ledger = await ledgerView(customers, key);
+  const ledger = await ledgerView(customers, [...new Set([key, readKey, recordKey])]);
   const round = (n: number) => Math.round(n * 1000) / 1000;
   const candidates: ImportCandidate[] = corpus
     .map((d) => ({ d, body: jaccard(bodyGrams, d.bodyGrams), title: jaccard(titleGrams, d.titleGrams) }))
@@ -531,13 +611,16 @@ export async function readPostForImport(rawUrl: unknown, tenants: TenantConfig[]
       otherUrls: ledger.otherUrls.get(`${d.tenantId}
 ${d.articleId}`) ?? 0,
     }));
-  const host = new URL(url).hostname.replace(/^www\./, '');
+  const host = new URL(recordUrl).hostname.replace(/^www\./, '');
   return {
     ok: true,
     url,
     key,
+    recordUrl,
+    recordKey,
+    urlNote: notes.length > 0 ? `${notes.join(' · ')}.` : null,
     platform: { key: platform, label: platform === 'generic' ? host : POST_PLATFORM_LABEL[platform] },
-    post: { title: parsed.title, publishedOn: parsed.publishedOn, dateText: parsed.dateText, bodyChars: parsed.body.length },
+    post: { title: parsed.title, publishedOn: parsed.publishedOn, dateText: parsed.dateText, dateProblem: parsed.dateProblem, bodyChars: parsed.body.length },
     candidates,
     known: ledger.known,
   };
@@ -613,23 +696,14 @@ async function recordedKeys(customers: TenantConfig[]): Promise<Set<string>> {
   return keys;
 }
 
-/** 하위 사이트맵이 같은 호스트인가 — 다른 사이트의 사이트맵은 따라가지 않는다. */
-const sameHost = (raw: string, host: string) => {
-  try {
-    return new URL(raw).host === host;
-  } catch {
-    // 주소로 읽히지 않는 하위 사이트맵 — 따라가지 않는다.
-    return false;
-  }
-};
-
 const FEED_ACCEPT = 'application/rss+xml,application/atom+xml,application/xml;q=0.9,text/xml;q=0.9,*/*;q=0.5';
 
 /**
- * 저장한 블로그 하나의 새 글 — 목록(RSS · 사이트맵 · 워드프레스 공개 API)을 읽어 이 블로그의 글 주소만 모으고(listedPostUrls), 고객
- * 브랜드 원장에 살아 있는 주소를 뺀다. 최근 글부터 NEW_URLS_MAX편만 돌려준다(작성자의 원래 블로그는 글이 천 편을 넘는다 — 11-09 실측
- * 1043편). 읽지 못한 목록은 errors로 알린다(다른 목록으로 하나라도 읽었으면 404는 알리지 않는다 — 그 밖 블로그는 RSS · feed · 사이트맵
- * 가운데 있는 것만 쓴다). 저장하지 않은 블로그는 400.
+ * 저장한 블로그 하나의 새 글 — 목록(RSS · 사이트맵 · 워드프레스 공개 API)을 읽어 이 블로그의 글 주소만 모으고(listedPostUrls — www. · m.는
+ * 떼고 보고, 목록을 실제로 받은 곳(리디렉션 뒤)의 호스트도 같은 블로그), 고객 브랜드 원장에 살아 있는 주소를 뺀다. 최근 글부터
+ * NEW_URLS_MAX편만 돌려준다(작성자의 원래 블로그는 글이 천 편을 넘는다 — 11-09 실측 1043편). 읽지 못한 목록은 errors로 알린다(다른 목록으로
+ * 하나라도 읽었으면 404는 알리지 않는다 — 그 밖 블로그는 RSS · feed · 사이트맵 가운데 있는 것만 쓴다). 목록은 읽었는데 이 블로그 글이 하나도
+ * 없고 다른 사이트 글 주소만 있으면(워드프레스에 연결한 도메인 · 옮긴 블로그) 그 주소로 저장하라고 알린다. 저장하지 않은 블로그는 400.
  */
 export async function listBlogPosts(rawSource: unknown, tenants: TenantConfig[]): Promise<BlogListResult> {
   if (typeof rawSource !== 'string') throw new PostImportError('블로그 주소(source)가 필요합니다.', 400);
@@ -640,8 +714,10 @@ export async function listBlogPosts(rawSource: unknown, tenants: TenantConfig[])
   }
   const urls: string[] = [];
   const errors: { text: string; notFound: boolean }[] = [];
+  /** 이 블로그의 목록을 실제로 받은 곳의 호스트(리디렉션 뒤 — 워드프레스 공개 API는 빼고). */
+  const listHosts = new Set<string>();
   let anyRead = false;
-  const readList = async (target: string): Promise<string | null> => {
+  const readList = async (target: string, ownSite: boolean): Promise<string | null> => {
     try {
       const res = await fetchText(target, FEED_ACCEPT);
       if (res.status >= 400) {
@@ -649,17 +725,23 @@ export async function listBlogPosts(rawSource: unknown, tenants: TenantConfig[])
         return null;
       }
       anyRead = true;
+      const host = ownSite ? siteHostOf(res.finalUrl) : null;
+      if (host) listHosts.add(host);
       return res.text;
     } catch (err) {
       errors.push({ text: `${target} — ${reasonOf(err)}`, notFound: false });
       return null;
     }
   };
-  const host = new URL(norm.url).host;
+  // 하위 사이트맵은 같은 블로그(호스트 규칙은 글 주소와 같다)의 것만 따라간다.
+  const sameSite = (raw: string) => {
+    const host = siteHostOf(raw);
+    return host !== null && (host === siteHostOf(norm.url) || listHosts.has(host));
+  };
   for (const target of blogListTargets(norm.url)) {
     if (target.kind === 'wp-api') {
       for (let page = 1; page <= WP_MAX_PAGES; page += 1) {
-        const text = await readList(wpListPageUrl(new URL(norm.url).hostname, page));
+        const text = await readList(wpListPageUrl(new URL(norm.url).hostname, page), false);
         if (text === null) break;
         let json: unknown;
         try {
@@ -674,7 +756,7 @@ export async function listBlogPosts(rawSource: unknown, tenants: TenantConfig[])
       }
       continue;
     }
-    const text = await readList(target.url);
+    const text = await readList(target.url, true);
     if (text === null) continue;
     if (target.kind === 'rss') {
       urls.push(...parseFeedLinks(text));
@@ -682,12 +764,16 @@ export async function listBlogPosts(rawSource: unknown, tenants: TenantConfig[])
     }
     const sitemap = parseSitemap(text);
     urls.push(...sitemap.urls);
-    for (const child of sitemap.sitemaps.filter((s) => sameHost(s, host)).slice(0, SITEMAP_CHILDREN_MAX)) {
-      const childText = await readList(child);
+    for (const child of sitemap.sitemaps.filter(sameSite).slice(0, SITEMAP_CHILDREN_MAX)) {
+      const childText = await readList(child, true);
       if (childText !== null) urls.push(...parseSitemap(childText).urls);
     }
   }
-  const posts = listedPostUrls(norm.url, urls);
+  const posts = listedPostUrls(norm.url, urls, [...listHosts]);
+  const others = posts.length === 0 ? otherListHosts(norm.url, urls, [...listHosts]) : [];
+  if (others.length > 0) {
+    errors.push({ text: `목록의 글 주소가 다른 주소(${others.join(' · ')})에 있습니다 — 그 주소로 블로그를 저장해 주세요.`, notFound: false });
+  }
   const recorded = await recordedKeys(customersOf(tenants));
   const fresh = newestFirst(posts.filter((u) => !recorded.has(trackingKey(u) ?? '')));
   return {
@@ -725,9 +811,15 @@ async function commitOne(
   if (!day) return fail(`올린 날이 YYYY-MM-DD 날짜가 아닙니다 — ${item.publishedOn}`);
   const dayProblem = postedDayProblem(day, today);
   if (dayProblem) return fail(dayProblem);
-  const draft = (await readDrafts(tenant.tenantId))[item.articleId];
+  let drafts: Record<string, unknown>;
+  try {
+    drafts = await draftsForMatch(tenant.tenantId);
+  } catch (err) {
+    return fail(`이 브랜드의 초안(drafts.json)을 읽지 못해 적지 않았습니다 — ${reasonOf(err)}`);
+  }
+  const draft = drafts[item.articleId];
   if (!isStoredDraft(draft)) return fail('그 브랜드에 이 글(초안)이 없습니다 — 다시 읽어 주세요.');
-  const verdict = urlVerdict((await ledgerView(customers, key)).known, { tenantId: tenant.tenantId, articleId: item.articleId });
+  const verdict = urlVerdict((await ledgerView(customers, [key])).known, { tenantId: tenant.tenantId, articleId: item.articleId });
   if (verdict.kind === 'already') return { ...base, status: 'existing' };
   if (verdict.kind === 'other') return fail(otherRecordMessage(verdict.record));
   const owner = await ownerContext(tenant.tenantId);
@@ -753,7 +845,8 @@ async function commitOne(
 }
 
 /**
- * 등록 — 줄마다 다시 검사하고 적는다(한 줄씩 차례로 — 같은 브랜드의 쓰기 줄에 선다). 걸린 줄은 그 줄만 error, 이미 그 글의 기록이면
+ * 등록 — 줄마다 다시 검사하고 적는다(한 줄씩 차례로 — 같은 브랜드의 쓰기 줄에 선다). 걸린 줄은 그 줄만 error(한 줄에서 예외가 나도 — 파일
+ * 잠김 등 — 그 줄만이다. 앞 줄은 이미 적혔으므로 요청 전체를 실패로 돌리면 적힌 줄이 「못 적음」으로 보인다), 이미 그 글의 기록이면
  * existing(원장을 바꾸지 않는다 — 날짜도). 본문 모양이 틀리면 400. bankFor는 질문 은행 글의 판을 볼 은행(GET /api/question-bank와 같다).
  */
 export async function commitPostImport(
@@ -767,6 +860,13 @@ export async function commitPostImport(
   const customers = customersOf(tenants);
   const today = todayKst(now);
   const results: CommitResult[] = [];
-  for (const item of parsed.items) results.push(await commitOne(item, customers, bankFor, today));
+  for (const item of parsed.items) {
+    try {
+      results.push(await commitOne(item, customers, bankFor, today));
+    } catch (err) {
+      console.error(`[postImport] ${item.tenantId} ${item.articleId} 등록 중 오류 — 이 줄만 걸림으로 둡니다:`, err);
+      results.push({ tenantId: item.tenantId, articleId: item.articleId, url: item.url, status: 'error', error: `등록하지 못했습니다 — ${reasonOf(err)}` });
+    }
+  }
   return { results };
 }

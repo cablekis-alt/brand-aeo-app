@@ -9362,13 +9362,10 @@ tr.ms-run-child td:nth-child(2) {
   padding: 5px 4px;
   font-size: 12.5px;
 }
+/* 주소는 끝(글 번호 · 글 이름)까지 보여야 한 블로그의 줄들을 가릴 수 있다 — 자르지 않고 칸 안에서 줄을 바꾼다. */
 .pi-url a {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: bottom;
+  overflow-wrap: anywhere;
+  word-break: break-all;
   color: var(--accent);
 }
 .pi-date {

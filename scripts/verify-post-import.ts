@@ -14,7 +14,7 @@
  *   npx tsx scripts/verify-post-import.ts
  */
 import { spawn } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync, existsSync } from 'node:fs'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import net from 'node:net'
 import { tmpdir } from 'node:os'
@@ -75,6 +75,12 @@ const TEXT_OTHER = [
   '하산 시간은 해 지기 두 시간 전으로 잡고 헤드랜턴 배터리를 미리 확인하세요.',
   '등산화 끈은 내리막에서 한 번 더 조여 발가락이 앞으로 밀리지 않게 합니다.',
 ]
+const TEXT_Q5 = [
+  '비 오는 날 가상시 실내 전시관은 오전 열 시에 문을 열고 입장권은 현장에서만 팝니다.',
+  '전시관 이층 카페는 창가 자리가 넓어 우산을 말리며 쉬어 가기 좋습니다.',
+  '어린이 체험실은 회차마다 정원이 있어 도착하자마자 다음 회차 표를 받아 두세요.',
+  '전시관 앞 버스 정류장은 원도심 순환 버스가 이십 분마다 섭니다.',
+]
 
 const draftOf = (actionId: string, title: string, text: string[]): StoredDraft => ({
   actionId,
@@ -121,7 +127,10 @@ const DRAFT_A2 = draftOf(A2.id, '주차 편한 가상시 독채 숙소', TEXT_A2
 const DRAFT_C2 = draftOf(C2_ID, '반려견과 묵기 좋은 가상시 숙소', TEXT_C2)
 const DRAFT_B1 = draftOf(B1_ID, '바다 전망 가상 여관 고르기', TEXT_B1)
 const DRAFT_COMP = draftOf(COMP_ID, '경쟁 여관 이야기', TEXT_COMP)
-const DRAFTS_A = { [A1.id]: DRAFT_A1, [A2.id]: DRAFT_A2, [C2_ID]: DRAFT_C2 }
+// 추가 글 정의가 없는 질문 은행 글 — 등록할 때 질문 은행으로 판을 본다.
+const Q5_ID = 'topic:c1-005'
+const DRAFT_Q5 = draftOf(Q5_ID, '비 오는 날 가상시 실내 전시관', TEXT_Q5)
+const DRAFTS_A = { [A1.id]: DRAFT_A1, [A2.id]: DRAFT_A2, [C2_ID]: DRAFT_C2, [Q5_ID]: DRAFT_Q5 }
 // A1은 배정 판(v9)으로 만든 추가 글 — 작성자 글이다. A2는 다른 판(v8)으로 만들어 배정 글로 세지 않는다(보관함 · 발행 현황과 같은 규칙).
 const EXTRAS_A = {
   version: 1,
@@ -190,11 +199,17 @@ const PAGES: Record<string, () => { status?: number; type?: string; body: string
     type: 'text/html',
     body: eucKr(page({ title: '바다 전망 여관', text: TEXT_B1, charset: 'euc-kr' })),
   }),
+  '/post/b1-copy': () => ({ body: page({ title: '바다 전망 여관(다시 올림)', text: TEXT_B1 }) }),
   '/post/mix': () => ({ body: page({ title: '가상시 숙소 이야기', text: [...TEXT_A1.slice(0, 3), ...TEXT_A2.slice(0, 3)], head: jsonLd('2026-11-04T10:00:00+09:00') }) }),
   '/post/other': () => ({ body: page({ title: '겨울 산행 준비물', text: TEXT_OTHER, head: jsonLd('2026-11-05T10:00:00+09:00') }) }),
   '/post/comp': () => ({ body: page({ title: '경쟁 여관 이야기', text: TEXT_COMP, head: jsonLd('2026-11-05T10:00:00+09:00') }) }),
   '/post/taken': () => ({ body: page({ title: '반려견 숙소', text: TEXT_C2, head: jsonLd('2026-10-20T10:00:00+09:00') }) }),
   '/post/empty': () => ({ body: page({ title: '사진만 있는 글', text: ['사진'], head: jsonLd('2026-11-05T10:00:00+09:00') }) }),
+  // 같은 글의 다른 주소 — 정식 주소(canonical)를 밝힌 페이지, 다른 사이트를 정식 주소로 적은 페이지(따르지 않는다), 블로그 홈으로 넘기는 지운 글.
+  '/amp/a1': () => ({ body: page({ title: '원도심 걸어서 다니는 가상시 숙소', text: TEXT_A1, head: `<link rel="canonical" href="${FIX}/post/a1">${jsonLd('2026-11-01T10:00:00+09:00')}` }) }),
+  '/post/canon-other': () => ({ body: page({ title: '반려견 숙소 고르기', text: TEXT_C2, head: `<link rel="canonical" href="http://elsewhere.example/post/c2">${jsonLd('2026-11-03T08:00:00+09:00')}` }) }),
+  '/gone': () => ({ status: 301, body: '', headers: { Location: '/' } }),
+  '/': () => ({ body: page({ title: '가상 블로그 홈', text: TEXT_OTHER }) }),
   '/big': () => ({ body: `<html><body><article>${'가'.repeat(1_200_000)}</article></body></html>` }),
   '/to-private': () => ({ status: 302, body: '', headers: { Location: 'http://10.255.255.1/secret' } }),
   '/rss': () => ({
@@ -215,6 +230,12 @@ let inFlight = 0
 let maxInFlight = 0
 function fixtureHandler(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(req.url ?? '/', FIX)
+  // 워드프레스 ?p=번호 주소 — 고유 주소로 넘긴다.
+  if (url.pathname === '/' && url.searchParams.get('p') === '1') {
+    res.writeHead(301, { Location: '/post/a1' })
+    res.end()
+    return
+  }
   const hop = /^\/hop\/(\d+)$/.exec(url.pathname)
   if (hop) {
     const n = Number(hop[1])
@@ -324,6 +345,32 @@ try {
     ex.ignored,
   )
   ok('메일 붙여 넣기 — 주소가 없으면 빈 결과', pi.extractPostUrls('주소 없는 메일입니다.').urls.length === 0)
+  const tagged = pi.extractPostUrls(
+    [
+      '1) https://fakewriter.tistory.com/1044(가상군산)',
+      '2) https://blog.naver.com/fakewriter/224012345678(가상스테이,가상머뭄),',
+      '3) https://fakewriter.wordpress.com/2026/11/07/fake-trip/(가상군산)',
+      '4) https://ko.wikipedia.org/wiki/가상_(도시)',
+    ].join('\n'),
+  )
+  ok(
+    '메일 붙여 넣기 — 주소 바로 뒤에 붙은 「(브랜드)」 꼬리표는 뗌(글 번호 뒤 · ASCII 주소 뒤) · 주소 안의 한글 괄호는 그대로',
+    JSON.stringify(tagged.urls) ===
+      JSON.stringify([
+        'https://fakewriter.tistory.com/1044',
+        'https://blog.naver.com/fakewriter/224012345678',
+        'https://fakewriter.wordpress.com/2026/11/07/fake-trip/',
+        'https://ko.wikipedia.org/wiki/가상_(도시)',
+      ]),
+    tagged.urls,
+  )
+  ok(
+    '주소 끝 글자 떼기 — ASCII 주소 끝에 붙은 한글만 떼어 본 주소(404일 때 한 번 더 읽는다), 뗄 것이 없으면 null',
+    pi.withoutTrailingText('https://fakewriter.wordpress.com/2026/11/07/fake-trip/입니다') === 'https://fakewriter.wordpress.com/2026/11/07/fake-trip/' &&
+      pi.withoutTrailingText('http://127.0.0.1:4191/p/a2입니다') === 'http://127.0.0.1:4191/p/a2' &&
+      pi.withoutTrailingText('https://fakewriter.tistory.com/13') === null &&
+      pi.withoutTrailingText('https://fakewriter.tistory.com/입니다') === null,
+  )
 
   // ── 2. 플랫폼 · 읽을 주소 ──────────────────────────────────────────────────
   ok(
@@ -364,12 +411,21 @@ try {
   const nRel = (raw: string, now = NOW) => pi.parsePostHtml('naver', naverHtml(raw), now).publishedOn
   ok('네이버 — 「2시간 전」은 지금(한국 시각)에서 센 날', nRel('2시간 전') === '2026-11-09')
   ok('네이버 — 「15시간 전」은 어제(한국 날짜가 넘어감)', nRel('15시간 전') === '2026-11-08')
-  ok('네이버 — 「35분 전」 · 「방금 전」 · 「어제」 · 「3일 전」', nRel('35분 전') === '2026-11-09' && nRel('방금 전') === '2026-11-09' && nRel('어제 21:10') === '2026-11-08' && nRel('3일 전') === '2026-11-06')
+  ok('네이버 — 「35분 전」 · 「방금 전」 · 「어제」', nRel('35분 전') === '2026-11-09' && nRel('방금 전') === '2026-11-09' && nRel('어제 21:10') === '2026-11-08')
   // now = 2026-11-10 00:30 KST(UTC로는 11-09 15:30) — UTC 날짜로 세면 하루 틀린다.
   ok('네이버 — 한국 자정 직후 「2시간 전」은 한국 날짜로 전날', nRel('2시간 전', Date.UTC(2026, 10, 9, 15, 30)) === '2026-11-09' && nRel('10분 전', Date.UTC(2026, 10, 9, 15, 30)) === '2026-11-10')
+  // 네이버는 지난 시간을 내림해 보인다(실측 4시간 48분 → 「4시간 전」). 11-08 23:50 KST에 올린 글은 11-09 01:40에 「1시간 전」, 09:30에
+  // 「9시간 전」이다 — 그 구간([지금 − (N+1)단위, 지금 − N단위])이 자정을 걸치면 어느 날인지 모른다.
+  const nAmb = (raw: string, now: number) => pi.parsePostHtml('naver', naverHtml(raw), now)
+  const at0140 = nAmb('1시간 전', Date.UTC(2026, 10, 8, 16, 40))
+  ok('네이버 — 「1시간 전」 @11-09 01:40 KST는 자정을 걸쳐 날을 정하지 않음(null · 까닭 ambiguous)', at0140.publishedOn === null && at0140.dateProblem === 'ambiguous', at0140)
+  ok('네이버 — 「9시간 전」 @09:30 KST · 「3일 전」 · 자정 30초 뒤 「방금 전」도 null', nRel('9시간 전', Date.UTC(2026, 10, 9, 0, 30)) === null && nRel('3일 전') === null && nRel('방금 전', Date.UTC(2026, 10, 9, 15, 0, 30)) === null)
+  ok('네이버 — 구간이 한 날 안이면 그 날(「15시간 전」 @14:00 → 11-08 22:00~23:00)', nRel('15시간 전') === '2026-11-08' && nAmb('15시간 전', NOW).dateProblem === null)
   const nUnknown = pi.parsePostHtml('naver', naverHtml('얼마 전'), NOW)
-  ok('네이버 — 읽지 못한 날짜는 null(오늘로 채우지 않음) · 읽은 글자는 남김', nUnknown.publishedOn === null && nUnknown.dateText === '얼마 전', nUnknown)
-  ok('날짜 — 미래 날짜는 쓰지 않음(null)', nRel('2027. 1. 5. 10:00') === null)
+  ok('네이버 — 읽지 못한 날짜는 null(오늘로 채우지 않음) · 읽은 글자 · 까닭(unknown)은 남김', nUnknown.publishedOn === null && nUnknown.dateText === '얼마 전' && nUnknown.dateProblem === 'unknown', nUnknown)
+  ok('날짜 — 미래 날짜는 쓰지 않음(null · 까닭 future) · 2020년 전은 early', nRel('2027. 1. 5. 10:00') === null && nAmb('2027. 1. 5. 10:00', NOW).dateProblem === 'future' && nAmb('2019. 12. 31. 10:00', NOW).dateProblem === 'early')
+  ok('날짜 — 날짜 글자가 없으면 까닭도 없음', pi.parsePostHtml('generic', '<html><body><main><p>날짜 없는 글</p></main></body></html>', NOW).dateProblem === null)
+  ok('날짜 까닭 — 화면 문구가 모두 있음', (['future', 'early', 'ambiguous', 'unknown'] as const).every((k) => typeof pi.DATE_PROBLEM_TEXT[k] === 'string' && pi.DATE_PROBLEM_TEXT[k].length > 0))
 
   const tistoryHtml = `<html><head><meta property="og:title" content="가상 티스토리 글"><meta property="article:published_time" content="2026-11-08T23:40:00+09:00"></head>
 <body><div class="tt_category">카테고리</div><div class="entry-content"><div class="contents_style"><p>${TEXT_A2[0]}</p><div><p>${TEXT_A2[1]}</p></div></div>
@@ -391,6 +447,51 @@ try {
   ok('그 밖 — <time datetime>', gTime.publishedOn === '2026-10-31', gTime)
   const gNone = pi.parsePostHtml('generic', '<html><head><title>제목만 &amp; 있음</title></head><body><main><p>본문 한 줄</p></main></body></html>', NOW)
   ok('그 밖 — og:title이 없으면 <title> · 날짜가 없으면 null · <main> 본문', gNone.title === '제목만 & 있음' && gNone.publishedOn === null && gNone.body.includes('본문 한 줄'), gNone)
+  const gCanon = pi.parsePostHtml('generic', page({ title: '정식 주소 글', text: TEXT_B1, head: '<link rel="canonical" href="/post/b1"><meta property="og:url" content="https://fake.example/og">' }), NOW)
+  ok('그 밖 — 페이지가 밝힌 정식 주소(canonical · og:url)를 읽음', gCanon.canonical === '/post/b1' && gCanon.ogUrl === 'https://fake.example/og', gCanon)
+  ok('그 밖 — 닫히지 않은 태그 뒤 글자 · 엔티티 · 줄바꿈', pi.htmlToText('<p>가&amp;나</p>\r\n\r\n<div>다 <b>라</b></div><p>마 < 바') === '가&나\n다 라\n마 < 바', pi.htmlToText('<p>가&amp;나</p>\r\n\r\n<div>다 <b>라</b></div><p>마 < 바'))
+
+  // 망가진 페이지 — 닫는 짝이 없는 태그 · 주석이 많아도 페이지 크기에 비례해 끝나야 한다(정규식이 시작 위치마다 문서 끝까지 다시 훑으면
+  // 200KB에 44초 — 그동안 서버 전체가 멈춘다). 1MB씩, 하나에 1초 안.
+  const MB = 1_000_000
+  const timed = (fn: () => unknown) => {
+    const t0 = performance.now()
+    fn()
+    return Math.round(performance.now() - t0)
+  }
+  const brokenPages: [string, string][] = [
+    ['「>」 없는 「<a 」 반복', `<html><head><title>x</title></head><body>${'<a '.repeat(MB / 3)}`],
+    ['닫히지 않은 주석 반복', `<html><body><p>본문</p>${'<!-- x '.repeat(MB / 7)}`],
+    ['닫히지 않은 <script> 반복', '<script>'.repeat(MB / 8)],
+    ['닫히지 않은 <nav> 반복', `<body>${'<nav>가'.repeat(MB / 6)}</body>`],
+    ['닫히지 않은 <title> 반복', '<title>'.repeat(MB / 7)],
+    ['닫히지 않은 <div class=se-main-container> 반복', '<div class="se-main-container">'.repeat(MB / 32)],
+    ['「>」 없는 <meta 반복', `<head>${'<meta property="og:title" '.repeat(MB / 26)}`],
+    ['아주 긴 속성 이름', `<div ${'a'.repeat(MB)}>본문</div>`],
+    ['닫히지 않은 따옴표 속성 반복', `<p>${'<i a="'.repeat(MB / 6)}`],
+    ['줄바꿈 없는 \\r 반복', `<p>${'\r'.repeat(MB)}x</p>`],
+    ['닫히지 않은 <time 반복', `<p>${'<time datetime="2026-11-01" '.repeat(MB / 28)}`],
+    ['닫히지 않은 ld+json 반복', '<script type="application/ld+json">{'.repeat(MB / 38)],
+  ]
+  for (const [label, html] of brokenPages) {
+    const ms = Math.max(...(['naver', 'generic'] as const).map((p) => timed(() => pi.parsePostHtml(p, html, NOW))))
+    ok(`망가진 페이지 1MB — ${label}: 1초 안(${ms}ms)`, ms < 1000, `${ms}ms`)
+  }
+  const brokenLists: [string, () => unknown][] = [
+    ['사이트맵 — 닫히지 않은 <url> 반복', () => pi.parseSitemap('<url>'.repeat(MB / 5))],
+    ['사이트맵 — <url> 하나 안에 닫히지 않은 <loc> 반복', () => pi.parseSitemap(`<urlset><url>${'<loc>'.repeat(MB / 5)}</url></urlset>`)],
+    ['사이트맵 — 「>」 없는 <url 반복', () => pi.parseSitemap('<url '.repeat(MB / 5))],
+    ['RSS — 닫히지 않은 <link> 반복', () => pi.parseFeedLinks('<link>'.repeat(MB / 6))],
+    ['RSS — 「>」 없는 <link 반복', () => pi.parseFeedLinks('<link '.repeat(MB / 6))],
+    ['RSS — 닫히지 않은 <guid> 반복', () => pi.parseFeedLinks(`<rss>${'<guid>https://x.example/1'.repeat(MB / 26)}`)],
+  ]
+  for (const [label, fn] of brokenLists) {
+    const ms = timed(fn)
+    ok(`망가진 목록 1MB — ${label}: 1초 안(${ms}ms)`, ms < 1000, `${ms}ms`)
+  }
+  const bigNormal = page({ title: '큰 가상 글', text: Array.from({ length: 12_000 }, (_, i) => `${TEXT_A1[i % TEXT_A1.length]!} <a href="/t/${i}">태그 ${i}</a>`) })
+  const msNormal = timed(() => pi.parsePostHtml('generic', bigNormal, NOW))
+  ok(`보통 모양의 큰 페이지(${Math.round(bigNormal.length / 1000)}KB) — 1초 안(${msNormal}ms) · 본문을 다 읽음`, msNormal < 1000 && pi.parsePostHtml('generic', bigNormal, NOW).body.includes('태그 11999'), `${msNormal}ms`)
 
   // ── 4. 맞음 정도 · 상태 ─────────────────────────────────────────────────────
   const m = pi.MATCH_RULE
@@ -432,8 +533,11 @@ try {
       ok: true,
       url: 'https://fake.tistory.com/1',
       key: 'fake.tistory.com/1',
+      recordUrl: 'https://fake.tistory.com/1',
+      recordKey: 'fake.tistory.com/1',
+      urlNote: null,
       platform: { key: 'tistory', label: '티스토리' },
-      post: { title: '가짜', publishedOn, dateText: null, bodyChars: 500 },
+      post: { title: '가짜', publishedOn, dateText: null, dateProblem: null, bodyChars: 500 },
       candidates,
       known,
     }) as import('../src/lib/postImport').PostImportRead
@@ -471,6 +575,34 @@ try {
   ok('줄 — 날짜를 모르는 맞음 줄도 체크는 하되(사람이 날을 고르면 등록) 상태는 맞음', pi.rowStateOf(rNoDate, pi.autoPick(rNoDate)).state === 'match' && pi.checkedByDefault(rNoDate))
   const rFail = { ok: false, url: 'https://fake.tistory.com/2', key: 'fake.tistory.com/2', error: '페이지를 찾지 못했습니다(HTTP 404).' } as import('../src/lib/postImport').PostImportRead
   ok('줄 — 읽지 못한 주소는 「읽지 못함」', pi.rowStateOf(rFail, null).state === 'unreadable' && !pi.checkedByDefault(rFail) && pi.ROW_STATE_LABEL.unreadable === '읽지 못함')
+  // 상태는 사람이 고른 글을 기준으로 — 맞음 줄에서 더 약한 후보를 고르면(키보드 화살표 한 번으로도) 「맞음」이 아니다.
+  const rStrong = readOf([cand('t1', 'a', 0.99), cand('t1', 'b', 0.26)])
+  ok('줄 — 맞음 줄에서 더 약한 후보를 고르면 「직접 고름」', pi.rowStateOf(rStrong, { tenantId: 't1', articleId: 'b' }).state === 'manual' && pi.ROW_STATE_LABEL.manual === '직접 고름')
+  ok('줄 — 처음 고른 글로 되돌리면 다시 「맞음」', pi.rowStateOf(rStrong, { tenantId: 't1', articleId: 'a' }).state === 'match')
+  ok('줄 — 앱 글 아님 줄에서 후보를 고르면 「직접 고름」(앱 글 아님이 아님)', pi.rowStateOf(rNone, { tenantId: 't1', articleId: 'a' }).state === 'manual')
+  ok('줄 — 확인 필요 줄에서 둘째 후보를 고르면 「직접 고름」', pi.rowStateOf(rReview, { tenantId: 't2', articleId: 'b' }).state === 'manual')
+  ok(
+    '줄 — 사람이 「앱 글 아님」을 고르면 「앱 글 아님(직접)」, 처음부터 앱 글 아님이면 그대로',
+    pi.rowStateOf(rReview, null).state === 'dismissed' && pi.rowStateOf(rStrong, null).state === 'dismissed' && pi.ROW_STATE_LABEL.dismissed === '앱 글 아님(직접)' && pi.rowStateOf(rNone, null).state === 'none',
+  )
+  // 미리 체크 — 같은 글을 또 올린 것일 수 있는 줄은 사람이 보게 비워 둔다.
+  const rOtherUrl = readOf([{ ...cand('t1', 'a', 0.6), otherUrls: 1 }, cand('t1', 'b', 0.1)])
+  ok('줄 — 그 앱 글에 이미 다른 주소가 적혀 있으면 맞음이라도 미리 체크하지 않음', pi.rowStateOf(rOtherUrl, pi.autoPick(rOtherUrl)).state === 'match' && !pi.checkedByDefault(rOtherUrl))
+  ok(
+    '줄 — 표의 다른 줄이 이미 그 앱 글을 골랐으면(체크 · 등록) 미리 체크하지 않음(같은 글 무리에 한 줄만)',
+    !pi.checkedByDefault(rMatch, new Set([pi.pickKey({ tenantId: 't1', articleId: 'a' })])) && pi.checkedByDefault(rMatch, new Set([pi.pickKey({ tenantId: 't1', articleId: 'b' })])),
+  )
+  // 등록한 뒤 — 이 표에서 같은 글로 등록한 다른 주소도 「이미 다른 주소」로 센다(읽은 뒤에 등록한 것만 — 읽기 전 등록은 원장 셈에 들었다).
+  const cA = cand('t1', 'a', 0.6)
+  const reg1 = { pick: { tenantId: 't1', articleId: 'a' }, recordKey: 'fake.tistory.com/9', seq: 5 }
+  ok(
+    '줄 — 지금 그 앱 글에 적힌 다른 주소 수 = 읽을 때 센 수 + 읽은 뒤 이 표에서 그 글로 등록한 다른 주소',
+    pi.otherUrlsNow(cA, 'fake.tistory.com/1', 3, [reg1]) === 1 &&
+      pi.otherUrlsNow(cA, 'fake.tistory.com/1', 7, [reg1]) === 0 &&
+      pi.otherUrlsNow(cA, 'fake.tistory.com/9', 3, [reg1]) === 0 &&
+      pi.otherUrlsNow(cA, 'fake.tistory.com/1', 3, [{ ...reg1, pick: { tenantId: 't1', articleId: 'b' } }]) === 0 &&
+      pi.otherUrlsNow({ ...cA, otherUrls: 2 }, 'fake.tistory.com/1', 3, [reg1, { ...reg1, seq: 6 }]) === 3,
+  )
 
   // ── 6. 저장한 블로그 · 목록 읽기 ───────────────────────────────────────────
   const ns = (raw: string) => pi.normalizeBlogSource(raw)
@@ -526,6 +658,24 @@ try {
       pi.NEW_URLS_MAX === 50,
   )
   ok('목록 — 다른 사이트 주소는 뺌', pi.listedPostUrls('https://fakewriter.tistory.com', ['https://other.tistory.com/3', 'https://fakewriter.tistory.com/3']).length === 1)
+  const wwwPosts = ['https://www.myblog.example/2026/11/07/first-post/', 'https://www.myblog.example/2026/11/08/second-post/']
+  ok('목록 — 그 밖 블로그는 www. · m.를 떼고 같은 사이트로 봄(추적 키와 같은 규칙)', pi.listedPostUrls('https://myblog.example', wwwPosts).length === 2 && pi.listedPostUrls('https://www.myblog.example', ['https://myblog.example/2026/11/07/first-post/']).length === 1)
+  ok('목록 — 목록을 실제로 받은 곳(리디렉션 뒤)의 호스트도 같은 블로그', pi.listedPostUrls('https://myblog.example', ['https://new-home.example/2026/11/07/a/'], ['new-home.example']).length === 1 && pi.listedPostUrls('https://myblog.example', ['https://new-home.example/2026/11/07/a/']).length === 0)
+  ok(
+    '목록 — 이 블로그 글이 하나도 없을 때 목록에 있던 다른 사이트 글의 호스트를 알려 줌(그 주소로 저장하게)',
+    JSON.stringify(pi.otherListHosts('https://fakewriter.wordpress.com', ['https://fake-domain.example/2026/11/07/a/', 'https://fake-domain.example/2026/11/08/b/', 'https://fake-domain.example/'])) === '["fake-domain.example"]' &&
+      pi.otherListHosts('https://fakewriter.tistory.com', ['https://fakewriter.tistory.com/category']).length === 0,
+    pi.otherListHosts('https://fakewriter.wordpress.com', ['https://fake-domain.example/2026/11/07/a/']),
+  )
+  ok(
+    '정식 주소 — 같은 블로그의 글 주소일 때만 받음(분류 · 다른 사이트 · 블로그 홈은 아님)',
+    pi.sameBlogPostUrl('https://fakewriter.wordpress.com/?p=7', 'https://fakewriter.wordpress.com/2026/11/08/fake-slug/') === 'https://fakewriter.wordpress.com/2026/11/08/fake-slug/' &&
+      pi.sameBlogPostUrl('https://fakewriter.tistory.com/entry/fake', 'https://fakewriter.tistory.com/13') === 'https://fakewriter.tistory.com/13' &&
+      pi.sameBlogPostUrl('https://fakewriter.tistory.com/13', 'https://fakewriter.tistory.com/category/x') === null &&
+      pi.sameBlogPostUrl('https://fakewriter.wordpress.com/a/', 'https://elsewhere.example/a/') === null &&
+      pi.sameBlogPostUrl('https://blog.naver.com/PostView.naver?blogId=fakewriter&logNo=224470026946', 'https://m.blog.naver.com/fakewriter/224470026946') === 'https://blog.naver.com/fakewriter/224470026946' &&
+      pi.sameBlogPostUrl('https://blog.naver.com/PostView.naver?blogId=fakewriter&logNo=224470026946', 'https://blog.naver.com/fakewriter') === null,
+  )
 
   // ── 7. 등록 규칙 — CLI와 같은 모듈 ───────────────────────────────────────────
   ok('CLI(scripts/register-posts.ts)는 공용 규칙 모듈의 함수를 그대로 쓴다', reg.planRegistration === pr.planRegistration && reg.normalizeDay === pr.normalizeDay)
@@ -551,6 +701,27 @@ try {
   ok('주소 등록 — 본 글(content:)은 질문 스냅샷 없이 직접 줄', 'input' in libC2 && libC2.input.via === 'direct' && libC2.input.topic === undefined, libC2)
   const unsure = pr.importRecordInput({ plan: null, planUnreadable: true, extras, bank: null, draft: DRAFT_A1, articleId: A1.id, url: A1_URL, day: '2026-11-01' })
   ok('주소 등록 — 배정 파일을 읽지 못하면 질문 글(topic:)은 적지 않음(누구 글인지 모른다)', 'error' in unsure && unsure.error.includes('배정'), unsure)
+  const BANK = {
+    version: 'v3',
+    generatedAt: '2026-10-01T00:00:00.000Z',
+    questions: ['c1-001', 'c1-002', 'c1-005'].map((questionId) => ({ questionId, text: `${questionId} 가상 질문`, category: 'local', industry: '숙박', region: '가상시', containsBrandName: false, version: 'v3' })),
+  } as unknown as import('../src/lib/types').QuestionBank
+  const noPlan = pr.importRecordInput({ plan: null, planUnreadable: false, extras: null, bank: BANK, draft: DRAFT_A1, articleId: A1.id, url: A1_URL, day: '2026-11-01' })
+  ok(
+    '주소 등록 — 배정 파일이 없는 브랜드는 추가 글 목록을 읽지 못해도 보관함 「올렸어요」 모양(직접 · 질문 은행 판)',
+    'input' in noPlan && noPlan.input.via === 'direct' && noPlan.input.topic?.bankVersion === 'v3',
+    noPlan,
+  )
+  ok(
+    '작성자 모름 — 화면과 등록이 같은 식(배정 파일을 읽지 못함, 또는 배정이 있는데 추가 글 목록을 읽지 못함 · 질문 글만)',
+    pr.writerUnknownOf(A1.id, null, false, null) === false &&
+      pr.writerUnknownOf(A1.id, plan, false, null) === true &&
+      pr.writerUnknownOf(A1.id, null, true, extras) === true &&
+      pr.writerUnknownOf(C2_ID, plan, true, null) === false &&
+      pr.writerUnknownOf(A1.id, plan, false, extras) === false,
+  )
+  const noExtras = pr.importRecordInput({ plan, planUnreadable: false, extras: null, bank: BANK, draft: DRAFT_A1, articleId: A1.id, url: A1_URL, day: '2026-11-01' })
+  ok('주소 등록 — 배정이 있는데 추가 글 목록을 읽지 못하면 질문 글은 적지 않음(화면의 「미확인」과 같다)', 'error' in noExtras && noExtras.error.includes('추가 글'), noExtras)
   ok('올린 날 검사 — 오늘 뒤 · 너무 이른 날은 CLI와 같은 문구', pr.postedDayProblem('2999-01-01', today)?.includes('오늘') === true && pr.postedDayProblem('2019-12-31', today)?.includes('너무 이릅니다') === true && pr.postedDayProblem('2026-11-01', today) === null)
 
   // ── 8. 내부 주소 막기(이 프로세스 — 시험 깃발 없음) ─────────────────────────
@@ -564,6 +735,14 @@ try {
   ok('읽기 — 루프백 주소(127.0.0.1 · [::1])는 깃발 없이는 연결 전에 막음', (await errOf(sp.fetchText('http://127.0.0.1/x'))).startsWith('PRIVATE_ADDRESS') && (await errOf(sp.fetchText('http://[::1]/x'))).startsWith('PRIVATE_ADDRESS'))
   ok('읽기 — 이름이 루프백으로 풀리면(localhost) DNS 뒤에서 막음', (await errOf(sp.fetchText('http://localhost/x'))).startsWith('PRIVATE_ADDRESS'))
   ok('읽기 — 80 · 443이 아닌 포트는 깃발 없이는 막음', (await errOf(sp.fetchText(`${FIX}/post/a1`))).startsWith('BLOCKED_PORT'))
+  // 시험 깃발은 설치본에서 켤 수 없어야 한다 — 설치본 서버 묶음(scripts/build-electron-server.mjs)이 그 이름을 지운다(userData/.env · 환경변수로
+  // 켜면 그 PC의 로컬 서비스를 읽게 된다).
+  const FLAG_DEFINE = { 'process.env.POST_IMPORT_TEST_LOOPBACK': 'undefined' }
+  const buildScript = readFileSync(path.join(process.cwd(), 'scripts', 'build-electron-server.mjs'), 'utf8')
+  ok('설치본 — 서버 묶음 빌드가 시험 깃발을 지운다(define)', buildScript.includes(`define: { 'process.env.POST_IMPORT_TEST_LOOPBACK': 'undefined' }`))
+  const { build } = await import('esbuild')
+  const bundled = await build({ entryPoints: ['server/postImport.ts'], bundle: true, platform: 'node', format: 'cjs', target: 'node20', packages: 'external', write: false, logLevel: 'silent', define: FLAG_DEFINE })
+  ok('설치본 — 그 define으로 묶으면 묶음에 깃발 이름이 남지 않는다', bundled.outputFiles.length === 1 && !bundled.outputFiles[0]!.text.includes('POST_IMPORT_TEST_LOOPBACK') && bundled.outputFiles[0]!.text.includes('addressBlocked'))
 
   // ── 9. 서버 길(가짜 블로그 + 임시 데이터 폴더) ──────────────────────────────
   for (const port of [FIX_PORT, API_PORT]) {
@@ -721,10 +900,43 @@ try {
   ok('다시 읽기 — 등록한 주소는 「이미 등록됨」', ra1again.ok && stateOf(ra1again) === 'already', ra1again)
   const sameArticle = (await read(`${FIX}/hop/1`)).body
   ok(
-    '읽기 — 같은 앱 글을 다른 주소로 읽으면 「맞음」이되 그 글에 이미 적힌 다른 주소 수를 함께(CLI 경고와 같은 셈)',
-    sameArticle.ok && stateOf(sameArticle) === 'match' && sameArticle.candidates[0]!.articleId === A1.id && sameArticle.candidates[0]!.otherUrls === 1 && sameArticle.candidates.find((c) => c.articleId === C2_ID)?.otherUrls === 0,
+    '읽기 — 같은 앱 글을 다른 주소로 읽으면 「맞음」이되 그 글에 이미 적힌 다른 주소 수를 함께(CLI 경고와 같은 셈) · 미리 체크하지 않음',
+    sameArticle.ok &&
+      stateOf(sameArticle) === 'match' &&
+      sameArticle.candidates[0]!.articleId === A1.id &&
+      sameArticle.candidates[0]!.otherUrls === 1 &&
+      sameArticle.candidates.find((c) => c.articleId === Q5_ID)?.otherUrls === 0 &&
+      !pi.checkedByDefault(sameArticle),
     sameArticle,
   )
+  ok('읽기 — 리디렉션되면 넘어간 뒤 주소로 적는다(적을 주소 · 키 · 까닭)', sameArticle.ok && sameArticle.recordUrl === `${FIX}/hop/0` && sameArticle.recordKey === '127.0.0.1/hop/0' && sameArticle.urlNote !== null, sameArticle)
+  const viaP = (await read(`${FIX}/?p=1`)).body
+  ok(
+    '읽기 — ?p=번호 주소가 이미 등록한 글 주소로 넘어가면 「이미 등록됨」(맞음 · 미리 체크가 아님) · 적을 주소는 넘어간 주소',
+    viaP.ok && stateOf(viaP) === 'already' && !pi.checkedByDefault(viaP) && viaP.recordUrl === A1_URL && viaP.recordKey === '127.0.0.1/post/a1',
+    viaP,
+  )
+  const viaCanon = (await read(`${FIX}/amp/a1`)).body
+  ok('읽기 — 페이지가 밝힌 정식 주소(같은 블로그)가 이미 등록한 주소면 「이미 등록됨」', viaCanon.ok && stateOf(viaCanon) === 'already' && viaCanon.recordUrl === A1_URL, viaCanon)
+  const canonOther = (await read(`${FIX}/post/canon-other`)).body
+  ok('읽기 — 다른 사이트를 정식 주소로 적은 페이지는 따르지 않고 붙여 넣은 주소로', canonOther.ok && canonOther.recordUrl === `${FIX}/post/canon-other` && canonOther.urlNote === null, canonOther)
+  const trailing = (await read(`${FIX}/post/c2입니다`)).body
+  ok(
+    '읽기 — 주소 끝에 한글이 붙어 404면 그 글자를 떼고 한 번 더 읽는다(적을 주소 · 까닭에 뗀 글자)',
+    trailing.ok && trailing.recordUrl === `${FIX}/post/c2` && trailing.recordKey === '127.0.0.1/post/c2' && (trailing.urlNote ?? '').includes('입니다') && stateOf(trailing) === 'match',
+    trailing,
+  )
+  ok('읽기 — 블로그 홈으로 넘어가는 주소(지운 글)는 「읽지 못함」', (await unreadable(`${FIX}/gone`, '홈')) === '', await unreadable(`${FIX}/gone`, '홈'))
+  // 한 브랜드의 초안 파일을 읽지 못하면(잠김 · 깨짐) 그 브랜드 글을 빼고 짝짓지 않는다 — 「앱 글 아님」으로 숨으면 틀린 판정이 된다.
+  const draftsB = path.join(appRoot, 'data', 'vpi-b', 'drafts.json')
+  renameSync(draftsB, `${draftsB}.bak`)
+  mkdirSync(draftsB)
+  const rLocked = (await read(`${FIX}/post/b1-copy`)).body
+  rmSync(draftsB, { recursive: true, force: true })
+  renameSync(`${draftsB}.bak`, draftsB)
+  const rUnlocked = (await read(`${FIX}/post/b1-copy`)).body
+  ok('읽기 — 한 브랜드의 초안(drafts.json)을 읽지 못하면 「읽지 못함」 · 브랜드 이름(앱 글 아님으로 숨기지 않음)', !rLocked.ok && rLocked.error.includes('가상여관') && rLocked.error.includes('초안'), rLocked)
+  ok('읽기 — 다시 읽을 수 있게 되면 그 브랜드 글과 다시 맞춤', rUnlocked.ok && stateOf(rUnlocked) === 'match' && rUnlocked.candidates[0]!.tenantId === 'vpi-b', rUnlocked)
   const c3 = await commit([
     { tenantId: 'vpi-nope', articleId: A1.id, url: `${FIX}/post/x1`, publishedOn: '2026-11-01' },
     { tenantId: 'vpi-comp', articleId: COMP_ID, url: `${FIX}/post/comp`, publishedOn: '2026-11-01' },
@@ -769,6 +981,36 @@ try {
     list.body,
   )
   ok('새 글 찾기 — 저장하지 않은 블로그 · 틀린 주소는 400', (await post('/api/post-import/list', { source: 'https://unsaved.tistory.com' })).status === 400 && (await post('/api/post-import/list', {})).status === 400)
+
+  // 한 줄에서 예외가 나도(질문 은행 파일을 다른 프로그램이 잡고 있음 — EPERM) 그 줄만 걸리고, 앞 줄은 적힌 그대로 결과에 나와야 한다.
+  // 서버 모듈을 이 프로세스에서 같은 임시 데이터 폴더로 부른다(질문 은행을 던지게 할 수 있게).
+  const inProcTenants = [tenant('vpi-a', '가상스테이'), tenant('vpi-b', '가상여관'), tenant('vpi-comp', '가상경쟁', { cohortOnly: true })] as unknown as import('../server/types').TenantConfig[]
+  const throwingBank = async (): Promise<null> => {
+    throw Object.assign(new Error('EPERM: 가짜 — 질문 은행 파일을 다른 프로그램이 잡고 있음'), { code: 'EPERM' })
+  }
+  const partial = await sp
+    .commitPostImport(
+      {
+        items: [
+          { tenantId: 'vpi-b', articleId: B1_ID, url: `${FIX}/post/b1-copy`, publishedOn: '2026-11-05' },
+          { tenantId: 'vpi-a', articleId: Q5_ID, url: `${FIX}/post/q5`, publishedOn: '2026-11-05' },
+        ],
+      },
+      inProcTenants,
+      throwingBank,
+    )
+    .then(
+      (r) => r,
+      (err: unknown) => `요청 전체가 실패함: ${err instanceof Error ? err.message : String(err)}`,
+    )
+  ok(
+    '등록 — 한 줄에서 예외가 나도 그 줄만 「걸림」(이유) · 앞 줄은 적힌 그대로 결과에(요청 전체가 실패하지 않음)',
+    typeof partial !== 'string' &&
+      partial.results.map((r) => r.status).join() === 'added,error' &&
+      (partial.results[1]!.error ?? '').includes('EPERM') &&
+      ledgerOf('vpi-b').posts.some((p) => p.url === `${FIX}/post/b1-copy`),
+    partial,
+  )
 } catch (err) {
   ok('예외 없이 끝남', false, err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err))
 } finally {
