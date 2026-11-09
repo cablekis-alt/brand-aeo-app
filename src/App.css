@@ -573,6 +573,23 @@
   color: var(--muted);
 }
 
+/* 콘텐츠 보관함의 작성자 고르기 — 주차 고르기와 같은 모양. 긴 이름도 좁은 화면에서 줄 안에 머문다. */
+.library-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.library-pick span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.library-pick select {
+  max-width: 100%;
+}
+
 .engine-filter {
   border: 0;
   margin: 0;

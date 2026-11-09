@@ -8,6 +8,7 @@ import {
   fetchScreenFile,
   loadActionStates,
   loadContentDrafts,
+  loadExtraArticles,
   loadFactGraph,
   loadPublishSettings,
   loadQuestionBank,
@@ -17,11 +18,25 @@ import {
   type FactNode,
   type StoredDraft,
 } from '../lib/api'
+import {
+  LIBRARY_FALLBACK_NOTE,
+  libraryCount,
+  libraryLayout,
+  libraryPickOptions,
+  liveArticleIds,
+  orphansShown,
+  sectionDetail,
+  sectionTitle,
+  shownSections,
+  validLibraryPick,
+} from '../lib/contentLibraryOrder'
+import type { ExtraArticle } from '../lib/extraArticles'
 import { recordOnlyHits, topicSnapshotFor } from '../lib/gapActions'
 import { postChannelLabel, summarizePost, TIER_LABEL, type PostTier } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { QuestionBank } from '../lib/types'
 import { usePublishedPosts } from '../lib/usePublishedPosts'
+import { useProbePlan } from '../lib/useProbePlan'
 import type { PublishSettings } from '../lib/publishSettings'
 import { effectiveDraft, workMarkdownOf } from '../lib/draftGaps'
 import { publishArticleOf } from '../lib/publishArticle'
@@ -40,6 +55,9 @@ import ArticlePreview from '../components/ArticlePreview'
  *
  * 올린 곳도 글 기준으로 모은다 — 한 글의 기록(자사 · 채널 줄)을 한곳에서 보고 고치고 더 적는다. 그 주 실행 항목에서 빠진 글도
  * 여기서 주소를 적을 수 있다. 주차별 인용 판정은 보이지 않는다(어느 주의 결과인지 기준이 없다).
+ *
+ * 작성자 배정이 있는 브랜드는 글을 작성자별 칸(배정표 순서)으로 묶고 배정 밖 글을 마지막에 최근 순으로 둔다 — 배정 글 80편이 최근
+ * 고친 순으로 섞여 누구 글인지 헷갈렸다. 배정이 없는 브랜드는 지금과 같은 한 목록이다(src/lib/contentLibraryOrder.ts).
  */
 export default function ContentLibrary() {
   const { tenant } = useTenant()
@@ -49,7 +67,6 @@ export default function ContentLibrary() {
   const [state, setState] = useState<{ key: string; drafts: Record<string, StoredDraft> | null } | null>(null)
   const [open, setOpen] = useState<string | null>(null)
   const key = tenant?.tenantId ?? ''
-  const loading = state?.key !== key
   // 발행 설정(글 끝 상담 안내 · 태그) — 미리보기와 내보내기가 올리기 목록과 같은 발행본을 내도록.
   const [settingsState, setSettingsState] = useState<{ key: string; value: PublishSettings | null }>({ key: '', value: null })
   const settings = settingsState.key === key ? settingsState.value : null
@@ -82,6 +99,33 @@ export default function ContentLibrary() {
   }, [key])
 
   const drafts = state?.key === key ? state.drafts : null
+
+  // 작성자 배정 · 추가 글 정의 — 배정이 있으면 글을 작성자별로 묶는다. 누구 글인지는 콘텐츠 생성과 같이 추가 글 정의의 판으로 가린다.
+  // 운영 기간이 지나도 묶는다(발행 현황의 작성자 칸과 같다 — src/lib/contentLibraryOrder.ts).
+  const probe = useProbePlan(key)
+  const [extrasState, setExtrasState] = useState<{ key: string; list: ExtraArticle[] | null; error: string | null } | null>(null)
+  useEffect(() => {
+    if (!key) return
+    let alive = true
+    void loadExtraArticles(key).then(
+      (r) => {
+        // null은 이 환경에 기능이 없다(웹), corrupt는 깨진 목록을 빈 목록으로 읽었다 — 둘 다 누구 글인지 가를 수 없다.
+        if (alive) setExtrasState({ key, list: r && !r.corrupt ? r.articles : null, error: r?.corrupt ? '저장된 목록이 깨져 있습니다' : null })
+      },
+      (err: unknown) => {
+        if (alive) setExtrasState({ key, list: null, error: err instanceof Error ? err.message : String(err) })
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [key])
+  const extras = extrasState?.key === key ? extrasState : null
+  // 배정이 있으면 추가 글 정의까지 받은 뒤에 그린다 — 한 목록으로 그렸다가 묶이면 글이 한꺼번에 자리를 옮긴다.
+  const loading = state?.key !== key || !probe.loaded || (probe.plan !== null && extras === null)
+  // 작성자 고르기 — 브랜드마다 따로 둔다(브랜드를 바꾸면 전체). 다시 읽은 뒤 없는 값이면 전체로 본다(validLibraryPick).
+  const [writerPick, setWriterPick] = useState<{ tenantId: string; value: string } | null>(null)
+  const pickedValue = writerPick && writerPick.tenantId === key ? writerPick.value : ''
 
   // 올린 글 주소(집행 원장) · 집행 상태 — 데스크톱 · 로컬 전용(웹은 칸을 숨긴다).
   const published = usePublishedPosts(key)
@@ -215,10 +259,20 @@ export default function ContentLibrary() {
 
   if (!tenant) return null
 
-  // 최근에 만든 것이 위로. 고친 글이 있으면 그 시각을 기준으로 본다.
-  const rows = Object.values(drafts ?? {}).sort((a, b) =>
-    (b.editedAt ?? b.generatedAt).localeCompare(a.editedAt ?? a.generatedAt),
-  )
+  // 배정이 없으면 지금처럼 한 목록(최근에 만든 것이 위로, 고친 글은 그 시각). 배정이 있으면 작성자별 칸 — 배정이나 추가 글 목록을 읽지
+  // 못하면 짐작하지 않고 한 목록으로 모든 글을 보인다.
+  const layout = libraryLayout({
+    drafts: Object.values(drafts ?? {}),
+    plan: probe.plan,
+    planUnreadable: probe.corrupt || probe.error !== null,
+    extras: extras?.list ?? null,
+    livePostIds: canRecord ? liveArticleIds(published.posts) : null,
+  })
+  const pick = validLibraryPick(layout, pickedValue)
+  const count = libraryCount(layout, pick)
+  // 묶지 못한 이유 — 배정이 없는 브랜드는 fallback이 null이라 안내가 없다(지금과 같다).
+  const fallback = layout.grouped ? null : layout.fallback
+  const fallbackWhy = fallback === 'plan-unreadable' ? (probe.corrupt ? '파일이 깨져 있습니다' : probe.error) : (extras?.error ?? null)
   // 초안이 없어진 기록 — 초안을 지웠거나 다른 곳(질문 은행 · 옛 화면)에서 적은 주소. 글 단위로 묶어 남은 것을 보이고 고친다.
   const orphanArticles = drafts
     ? [...new Set((published.posts ?? []).map((p) => p.articleId))].filter((id) => !drafts[id])
@@ -276,6 +330,107 @@ export default function ContentLibrary() {
     </>
   )
 
+  /** 글 카드 하나 — 한 목록(배정 없음)에서도, 작성자 칸에서도 같은 카드. */
+  const draftCard = (d: StoredDraft) => {
+    const md = workMarkdownOf(d)
+    const gaps = countGapNotes(md)
+    const title = draftTitle(effectiveDraft(d))
+    const shown = open === d.actionId
+    const postCount = postsOf(d.actionId).filter((p) => !p.removedAt).length
+    const postsShown = postsOpen === d.actionId
+    const tier = postCount > 0 ? tierOf(d.actionId) : null
+    return (
+      <article className="gap-card" key={d.actionId}>
+        <div className="gap-card-head">
+          <span className="gap-name">{title}</span>
+          {d.editedMarkdown && <span className="st st-info">고침</span>}
+          {gaps > 0 && <span className="st st-warn">빈칸 {gaps}</span>}
+          {canRecord && postCount > 0 && <span className="st st-info">올린 곳 {postCount}</span>}
+          {tier && (
+            <span className="st st-info" title="올린 뒤 측정에서 그 주소가 AI 답변에 인용됐나 — 주차별 칸은 AEO 퍼포먼스의 올린 글 인용 추적">
+              {TIER_LABEL[tier]}
+            </span>
+          )}
+        </div>
+        <p className="gap-tally">{d.draft.lead}</p>
+        <p className="doc-meta">
+          {/* 내부 키(content:category-agnostic)는 보이지 않는다 — 제목이 이미 무슨 글인지 말한다(상용화 UI 3차 U23). */}
+          {(d.editedAt ?? d.generatedAt).slice(0, 10)} · 소제목 {d.draft.sections.length}개 · 쓴 사실 {d.draft.usedFacts.length}건
+        </p>
+        <div className="facts-bar">
+          <button type="button" onClick={() => setOpen(shown ? null : d.actionId)} aria-expanded={shown}>
+            {shown ? '접기' : '본문 보기'}
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            title="제목 · 본문 · 사진 · 글 끝 안내를 서식째 복사합니다. 네이버 블로그 · 티스토리 편집기에 붙이면 서식이 남습니다."
+            disabled={!settingsReady}
+            onClick={() => void copyArticle(d)}
+          >
+            {copied === d.actionId ? '복사했습니다' : '블로그에 붙일 글 복사'}
+            {gaps > 0 && copied !== d.actionId && <span className="muted"> — 빈칸 {gaps}줄 뺌</span>}
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            title="홈페이지 · CMS에 올리는 완성 문서입니다. <head>에 JSON-LD(Article · Organization)를 심고, 브라우저로 열어 미리 볼 수 있습니다."
+            disabled={!settingsReady}
+            onClick={() => {
+              setCopyError(null)
+              // 자사 화면은 그림을 문서 안(data:)에 넣는다 — 받지 못하면 「[화면: 이름]」 글자, 앱 주소가 남으면 내려받지 않는다.
+              void loadFactGraph(tenant.tenantId)
+                .then((fg) => fg?.factGraph ?? [])
+                .catch(() => [] as FactNode[])
+                .then((facts) => inlineScreens(buildPublishHtml({ stored: d, brand: tenant, facts, settings }), fetchScreenFile))
+                .then((out) => {
+                  downloadHtml(`홈페이지용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.html`, out.html)
+                  if (out.dropped) setCopyError(screensDroppedText(out.dropped, out.droppedMaps))
+                })
+                .catch((e: unknown) => setCopyError(e instanceof Error ? e.message : String(e)))
+            }}
+          >
+            홈페이지용 .html
+          </button>
+          {canRecord && (
+            <button type="button" className="ghost" aria-expanded={postsShown} onClick={() => setPostsOpen(postsShown ? null : d.actionId)}>
+              {postsShown ? '올린 곳 접기' : postCount > 0 ? `올린 곳 ${postCount}` : '올린 곳 적기'}
+            </button>
+          )}
+        </div>
+        {postsShown && postsPanel(d.actionId, title, d)}
+        {shown && (
+          <div className="brief-body">
+            {/* 서식째 보인다(markdownToHtml은 모든 글자를 이스케이프한다) — 복사가 막힌 곳에서 여기서 골라 복사해도
+                블로그에 #·** 기호가 남지 않는다. 자사 화면 · 지도 · 업주 사진은 받아서 문서 안 그림으로 — 앱 주소 그림이 복사되지 않게. */}
+            <ArticlePreview html={markdownToHtml(publishArticleOf(d, { brand: tenant, settings }))} />
+            {/* 작업용 원고(.md)를 뺀 대신 — 그 주 목록에서 빠진 글도 남은 빈칸 · 쓴 사실을 여기서 본다. */}
+            {gaps > 0 && (
+              <>
+                <p className="doc-meta">남은 빈칸 {gaps}줄 — 복사 · .html에서는 빠집니다</p>
+                <ul>
+                  {gapNoteLines(md).map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {d.draft.usedFacts.length > 0 && (
+              <details className="draft-audit">
+                <summary>이 글이 쓴 사실 {d.draft.usedFacts.length}개</summary>
+                <ul>
+                  {d.draft.usedFacts.map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
+        )}
+      </article>
+    )
+  }
+
   return (
     <>
       <p className="brand">실행</p>
@@ -289,7 +444,7 @@ export default function ContentLibrary() {
         <p className="muted">불러오는 중…</p>
       ) : drafts === null ? (
         <p className="muted">이 환경에서는 초안 보관함을 쓸 수 없습니다 (데스크톱·로컬 전용).</p>
-      ) : rows.length === 0 ? (
+      ) : count.total === 0 ? (
         <section>
           <p className="muted">
             아직 만든 글이 없습니다. <Link to="/gap-actions">콘텐츠 생성</Link>에서 첫 글을 만들어 보세요.
@@ -300,113 +455,47 @@ export default function ContentLibrary() {
       ) : (
         <section>
           {notices}
+          {fallback && (
+            <p className="hint" role="status">
+              {LIBRARY_FALLBACK_NOTE[fallback]}
+              {fallbackWhy && ` (${fallbackWhy})`}
+            </p>
+          )}
+          {layout.grouped && (
+            // 작성자 고르기 — 콘텐츠 생성의 작성자 거르기처럼 그 칸만 남긴다. 「주소만 남은 기록」은 전체에서만 보인다(orphansShown).
+            <div className="filters">
+              <label className="library-pick">
+                <span>작성자</span>
+                <select value={pick} onChange={(e) => setWriterPick({ tenantId: tenant.tenantId, value: e.target.value })}>
+                  {libraryPickOptions(layout).map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <p className="hint" style={{ marginTop: 0 }}>
-            글 <b>{rows.length}편</b>. 블로그(네이버·티스토리)에는 <b>블로그에 붙일 글 복사</b>로 복사해 편집기에 붙여
+            {count.scope !== null && `${count.scope} `}글 <b>{count.shown}편</b>
+            {count.scope !== null && ` · 전체 ${count.total}편`}. 블로그(네이버·티스토리)에는 <b>블로그에 붙일 글 복사</b>로 복사해 편집기에 붙여
             넣으세요 — 제목·굵은 글씨·사진이 함께 들어갑니다. 홈페이지·CMS에는 <b>홈페이지용 .html</b>을 올리세요 — AI 검색이
             읽는 구조화 데이터(JSON-LD)가 들어 있고, 브라우저로 열어 미리 볼 수도 있습니다. 남은 빈칸 줄은 두 곳 모두에서 빠집니다.
           </p>
-          <div className="gap-grid">
-            {rows.map((d) => {
-              const md = workMarkdownOf(d)
-              const gaps = countGapNotes(md)
-              const title = draftTitle(effectiveDraft(d))
-              const shown = open === d.actionId
-              const postCount = postsOf(d.actionId).filter((p) => !p.removedAt).length
-              const postsShown = postsOpen === d.actionId
-              const tier = postCount > 0 ? tierOf(d.actionId) : null
-              return (
-                <article className="gap-card" key={d.actionId}>
-                  <div className="gap-card-head">
-                    <span className="gap-name">{title}</span>
-                    {d.editedMarkdown && <span className="st st-info">고침</span>}
-                    {gaps > 0 && <span className="st st-warn">빈칸 {gaps}</span>}
-                    {canRecord && postCount > 0 && <span className="st st-info">올린 곳 {postCount}</span>}
-                    {tier && (
-                      <span className="st st-info" title="올린 뒤 측정에서 그 주소가 AI 답변에 인용됐나 — 주차별 칸은 AEO 퍼포먼스의 올린 글 인용 추적">
-                        {TIER_LABEL[tier]}
-                      </span>
-                    )}
-                  </div>
-                  <p className="gap-tally">{d.draft.lead}</p>
-                  <p className="doc-meta">
-                    {/* 내부 키(content:category-agnostic)는 보이지 않는다 — 제목이 이미 무슨 글인지 말한다(상용화 UI 3차 U23). */}
-                    {(d.editedAt ?? d.generatedAt).slice(0, 10)} · 소제목 {d.draft.sections.length}개 · 쓴 사실 {d.draft.usedFacts.length}건
-                  </p>
-                  <div className="facts-bar">
-                    <button type="button" onClick={() => setOpen(shown ? null : d.actionId)} aria-expanded={shown}>
-                      {shown ? '접기' : '본문 보기'}
-                    </button>
-                    <button
-                      type="button"
-                      className="ghost"
-                      title="제목 · 본문 · 사진 · 글 끝 안내를 서식째 복사합니다. 네이버 블로그 · 티스토리 편집기에 붙이면 서식이 남습니다."
-                      disabled={!settingsReady}
-                      onClick={() => void copyArticle(d)}
-                    >
-                      {copied === d.actionId ? '복사했습니다' : '블로그에 붙일 글 복사'}
-                      {gaps > 0 && copied !== d.actionId && <span className="muted"> — 빈칸 {gaps}줄 뺌</span>}
-                    </button>
-                    <button
-                      type="button"
-                      className="ghost"
-                      title="홈페이지 · CMS에 올리는 완성 문서입니다. <head>에 JSON-LD(Article · Organization)를 심고, 브라우저로 열어 미리 볼 수 있습니다."
-                      disabled={!settingsReady}
-                      onClick={() => {
-                        setCopyError(null)
-                        // 자사 화면은 그림을 문서 안(data:)에 넣는다 — 받지 못하면 「[화면: 이름]」 글자, 앱 주소가 남으면 내려받지 않는다.
-                        void loadFactGraph(tenant.tenantId)
-                          .then((fg) => fg?.factGraph ?? [])
-                          .catch(() => [] as FactNode[])
-                          .then((facts) => inlineScreens(buildPublishHtml({ stored: d, brand: tenant, facts, settings }), fetchScreenFile))
-                          .then((out) => {
-                            downloadHtml(`홈페이지용-${safeFileName(title)}-${d.generatedAt.slice(0, 10)}.html`, out.html)
-                            if (out.dropped) setCopyError(screensDroppedText(out.dropped, out.droppedMaps))
-                          })
-                          .catch((e: unknown) => setCopyError(e instanceof Error ? e.message : String(e)))
-                      }}
-                    >
-                      홈페이지용 .html
-                    </button>
-                    {canRecord && (
-                      <button type="button" className="ghost" aria-expanded={postsShown} onClick={() => setPostsOpen(postsShown ? null : d.actionId)}>
-                        {postsShown ? '올린 곳 접기' : postCount > 0 ? `올린 곳 ${postCount}` : '올린 곳 적기'}
-                      </button>
-                    )}
-                  </div>
-                  {postsShown && postsPanel(d.actionId, title, d)}
-                  {shown && (
-                    <div className="brief-body">
-                      {/* 서식째 보인다(markdownToHtml은 모든 글자를 이스케이프한다) — 복사가 막힌 곳에서 여기서 골라 복사해도
-                          블로그에 #·** 기호가 남지 않는다. 자사 화면 · 지도 · 업주 사진은 받아서 문서 안 그림으로 — 앱 주소 그림이 복사되지 않게. */}
-                      <ArticlePreview html={markdownToHtml(publishArticleOf(d, { brand: tenant, settings }))} />
-                      {/* 작업용 원고(.md)를 뺀 대신 — 그 주 목록에서 빠진 글도 남은 빈칸 · 쓴 사실을 여기서 본다. */}
-                      {gaps > 0 && (
-                        <>
-                          <p className="doc-meta">남은 빈칸 {gaps}줄 — 복사 · .html에서는 빠집니다</p>
-                          <ul>
-                            {gapNoteLines(md).map((line, i) => (
-                              <li key={i}>{line}</li>
-                            ))}
-                          </ul>
-                        </>
-                      )}
-                      {d.draft.usedFacts.length > 0 && (
-                        <details className="draft-audit">
-                          <summary>이 글이 쓴 사실 {d.draft.usedFacts.length}개</summary>
-                          <ul>
-                            {d.draft.usedFacts.map((f) => (
-                              <li key={f}>{f}</li>
-                            ))}
-                          </ul>
-                        </details>
-                      )}
-                    </div>
-                  )}
-                </article>
-              )
-            })}
-          </div>
-          {orphanSection}
+          {layout.grouped ? (
+            shownSections(layout, pick).map((s) => (
+              // 작성자 칸 — 화면 읽기 프로그램이 제목으로 칸을 건너뛰도록 h3. 칸 안은 배정표 순서, 배정 밖 칸은 최근 순.
+              <section key={s.pick}>
+                <h3 className="step-head">
+                  {sectionTitle(s)} <span className="muted">— {sectionDetail(s)}</span>
+                </h3>
+                {s.drafts.length > 0 ? <div className="gap-grid">{s.drafts.map(draftCard)}</div> : <p className="muted">아직 만든 글이 없습니다.</p>}
+              </section>
+            ))
+          ) : (
+            <div className="gap-grid">{layout.drafts.map(draftCard)}</div>
+          )}
+          {orphansShown(layout, pick) && orphanSection}
         </section>
       )}
     </>

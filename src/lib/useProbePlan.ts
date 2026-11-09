@@ -4,7 +4,8 @@ import { isActive, type WriterPlan } from './probePlan'
 import { todayKst } from './publishedUrl'
 
 /**
- * 작성자 배정(server/probePlanStore.ts · src/lib/probePlan.ts)을 불러온다 — 글을 만드는 화면(콘텐츠 생성 · 질문 은행)만 쓴다.
+ * 작성자 배정(server/probePlanStore.ts · src/lib/probePlan.ts)을 불러온다 — 글을 만드는 화면(콘텐츠 생성 · 질문 은행)과 글을 작성자별로
+ * 묶어 보이는 콘텐츠 보관함만 쓴다.
  * useGapActionPlan(사이드바 · 대시보드도 씀)에는 넣지 않는다 — 배정은 글 만들기의 잠금이지 할 일 수가 아니다.
  *
  * available이 false면 이 환경에 기능이 없거나(웹 — 라우트 404) 아직 읽는 중이다 — 화면은 배정 파일이 없을 때와 똑같이 그린다.
@@ -44,5 +45,7 @@ export function useProbePlan(tenantId: string) {
     corrupt: fresh?.corrupt ?? false,
     error: fresh?.error ?? null,
     available: fresh?.available ?? false,
+    /** 이 브랜드의 응답을 받았다(파일 없음 · 기능 없음 · 실패 포함) — 콘텐츠 보관함이 배정을 받기 전에 한 목록으로 그렸다가 묶지 않게. */
+    loaded: fresh !== null,
   }
 }
