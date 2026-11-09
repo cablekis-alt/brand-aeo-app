@@ -26,11 +26,14 @@ import {
   applyIndexCheck,
   buildTenantStatus,
   csvCell,
+  emptyStateOf,
   filterRows,
   findIndexRecord,
   googleSearchUrl,
   INDEX_CHECKS_FORMAT,
+  markLabel,
   naverSearchUrl,
+  orderRows,
   parseIndexCheckInput,
   parseIndexChecksFile,
   platformOf,
@@ -39,7 +42,13 @@ import {
   publishStatusFileName,
   recheckOf,
   rowRecheck,
+  sameUrlBrands,
+  searchLabel,
   summarizeStatus,
+  toggleWriterChip,
+  unpostedLabel,
+  validFilter,
+  withIndexRecord,
   writerLabel,
   type IndexCheck,
   type IndexCheckRecord,
@@ -89,7 +98,7 @@ const plan = parsedPlan.plan!
 const A1 = plan.articles[0]!.id
 const A3 = plan.articles[2]!.id
 
-const post = (id: string, url: string, over: Partial<LedgerPostLike> = {}): LedgerPostLike & Record<string, unknown> => ({
+const post = (id: string, url: string, over: Partial<LedgerPostLike> & Record<string, unknown> = {}): LedgerPostLike & Record<string, unknown> => ({
   id,
   url,
   key: trackingKey(url) ?? url,
@@ -101,16 +110,21 @@ const post = (id: string, url: string, over: Partial<LedgerPostLike> = {}): Ledg
   via: 'own',
   ...over,
 })
+/** topic: 글의 질문 스냅샷 — 원장이 글을 올릴 때 남기는 그 판(bankVersion). 판을 모르면 null. */
+const topicOf = (articleId: string, bankVersion: string | null = 'v1') => {
+  const ids = articleId.slice('topic:'.length).split('+')
+  return { bankVersion, questionIds: ids, questionTexts: bankVersion ? ids.map((id) => Q[id]!) : [] }
+}
 const NAVER = 'https://blog.naver.com/fakeid/224000000001'
 const TISTORY = 'https://fake.tistory.com/12'
 const OWN = 'https://stay.example/blog/1'
 const DOWN = 'https://fake.tistory.com/50'
 const ledgerA = [
-  post('p-aaaaaaaaaaa1', NAVER, { articleId: A1, targetActionId: 'listing:platform:blog.naver.com', via: 'channel', articleTitle: '가상시 숙소, 처음이라면 이렇게 고르세요' }),
-  post('p-aaaaaaaaaaa2', TISTORY, { articleId: A1, targetActionId: 'listing:platform:tistory.com', via: 'channel', articleTitle: '가상시 숙소, 처음이라면 이렇게 고르세요' }),
+  post('p-aaaaaaaaaaa1', NAVER, { articleId: A1, topic: topicOf(A1), targetActionId: 'listing:platform:blog.naver.com', via: 'channel', articleTitle: '가상시 숙소, 처음이라면 이렇게 고르세요' }),
+  post('p-aaaaaaaaaaa2', TISTORY, { articleId: A1, topic: topicOf(A1), targetActionId: 'listing:platform:tistory.com', via: 'channel', articleTitle: '가상시 숙소, 처음이라면 이렇게 고르세요' }),
   post('p-aaaaaaaaaaa3', OWN, { articleTitle: '가상스테이 이용 안내', publishedOn: '2026-10-25', recordedAt: '2026-10-25T01:00:00.000Z' }),
   post('p-aaaaaaaaaaa4', OWN, { articleTitle: '가상스테이 이용 안내', publishedOn: '2026-10-25', recordedAt: '2026-10-25T02:00:00.000Z', via: 'channel', targetActionId: 'listing:platform:stay.example' }),
-  post('p-aaaaaaaaaaa5', DOWN, { articleId: A3, articleTitle: '가상시 가족 여행 숙소 이야기', removedAt: '2026-10-28T00:00:00.000Z', removedReason: 'taken-down' }),
+  post('p-aaaaaaaaaaa5', DOWN, { articleId: A3, topic: topicOf(A3), articleTitle: '가상시 가족 여행 숙소 이야기', removedAt: '2026-10-28T00:00:00.000Z', removedReason: 'taken-down' }),
   ...Array.from({ length: 8 }, (_, i) =>
     post(`p-bbbbbbbbbb${String(i).padStart(2, '0')}`, `https://fake.tistory.com/${100 + i}`, { articleTitle: `가상 글 ${i}`, articleId: `content:extra-${i}`, targetActionId: `content:extra-${i}` }),
   ),
@@ -209,10 +223,21 @@ const store: Record<string, IndexCheckRecord> = {
   'p-older': rec('p-older', OWN, { naver: notYet('2026-10-20'), updatedAt: '2026-10-20T00:00:00.000Z' }),
   'p-rep': rec('p-rep', TISTORY, { google: shown('2026-10-27') }),
 }
+const ownStore = { tenantId: 'vpub-a', checks: store }
+const found = (own: typeof ownStore, others: (typeof ownStore)[], ids: string[], key: string | null) => {
+  const f = findIndexRecord(own, others, ids, key)
+  return f ? `${f.tenantId}:${f.record.postId}` : null
+}
 ok(
-  '기록 찾기 — 대표 id → 묶인 줄 id → 같은 주소 키(가장 나중 기록)',
-  findIndexRecord(store, 'p-rep', ['p-rep'], 'x')?.postId === 'p-rep' && findIndexRecord(store, 'p-new', ['p-new', 'p-older'], 'none')?.postId === 'p-older' &&
-    findIndexRecord(store, 'p-new', ['p-new'], trackingKey(OWN)!)?.postId === 'p-old' && findIndexRecord(store, 'p-new', ['p-new'], 'none') === null,
+  '기록 찾기 — 묶인 줄 id · 같은 주소 키 가운데 가장 나중에 고친 기록(줄 id 기록이 더 오래면 같은 주소의 나중 기록), 없으면 null',
+  found(ownStore, [], ['p-rep'], 'x') === 'vpub-a:p-rep' && found(ownStore, [], ['p-new', 'p-older'], 'none') === 'vpub-a:p-older' &&
+    found(ownStore, [], ['p-new'], trackingKey(OWN)!) === 'vpub-a:p-old' && found(ownStore, [], ['p-older'], trackingKey(OWN)!) === 'vpub-a:p-old' &&
+    found(ownStore, [], ['p-new'], 'none') === null,
+)
+ok(
+  '기록 찾기 — 뺀 편(key null)은 제 줄 기록만, 다른 고객 브랜드는 같은 주소 키로만(그 브랜드의 줄 id는 보지 않는다)',
+  found(ownStore, [], ['p-older'], null) === 'vpub-a:p-older' && found({ tenantId: 'vpub-g', checks: {} }, [ownStore], ['p-z'], trackingKey(TISTORY)!) === 'vpub-a:p-rep' &&
+    found({ tenantId: 'vpub-g', checks: {} }, [ownStore], ['p-rep'], 'none') === null,
 )
 const marked = applyIndexCheck(null, { id: 'p-x', key: 'fake.tistory.com/12', url: TISTORY }, 'naver', 'shown', NOW)
 ok(
@@ -261,16 +286,19 @@ const row = (over: Partial<PublishStatusRow>): PublishStatusRow => ({
   brand: '가상스테이',
   kind: 'posted',
   postId: 'p-x',
+  key: trackingKey(TISTORY)!,
   articleId: 'content:x',
   title: '가상 글',
   writer: null,
-  writerUnknown: false,
+  writerUnknown: null,
+  postedUnknown: false,
   platform: { key: 'tistory', label: '티스토리' },
   url: TISTORY,
   publishedOn: PUB,
   removed: null,
   naver: null,
   google: null,
+  checkFrom: null,
   ...over,
 })
 const rr = rowRecheck(row({ naver: shown('2026-11-04'), google: notYet('2026-11-04') }), '2026-11-05')
@@ -287,12 +315,13 @@ ok(
 )
 
 // ── 6) 요약 · 거르기 ──────────────────────────────────────────────────────────
+// 요약은 서로 다른 주소로 세므로 줄마다 주소 키를 다르게 둔다.
 const sumRows = [
-  row({ rowKey: 'a', naver: shown('2026-11-04'), google: shown('2026-11-04') }),
-  row({ rowKey: 'b', naver: notYet('2026-11-04') }),
-  row({ rowKey: 'c', publishedOn: '2026-11-08' }),
-  row({ rowKey: 'd', removed: { reason: 'taken-down', at: '2026-11-06T00:00:00.000Z' }, naver: shown('2026-11-04') }),
-  row({ rowKey: 'e', kind: 'unposted', postId: null, url: null, platform: null, publishedOn: null, writer: W1 }),
+  row({ rowKey: 'a', key: 'fake.tistory.com/a', naver: shown('2026-11-04'), google: shown('2026-11-04') }),
+  row({ rowKey: 'b', key: 'fake.tistory.com/b', naver: notYet('2026-11-04') }),
+  row({ rowKey: 'c', key: 'fake.tistory.com/c', publishedOn: '2026-11-08' }),
+  row({ rowKey: 'd', key: 'fake.tistory.com/d', removed: { reason: 'taken-down', at: '2026-11-06T00:00:00.000Z' }, naver: shown('2026-11-04') }),
+  row({ rowKey: 'e', key: null, kind: 'unposted', postId: null, url: null, platform: null, publishedOn: null, writer: W1 }),
 ]
 const sum = summarizeStatus(sumRows, '2026-11-09')
 ok('요약 — 올린 글 · 네이버 노출 · 구글 색인 · 미확인(한 엔진이라도) · 오늘 다시 볼(내린 글 · 안 올린 글은 세지 않는다)', sum.posted === 3 && sum.naverShown === 1 && sum.googleShown === 1 && sum.unknown === 2 && sum.due === 1)
@@ -326,7 +355,7 @@ ok(
 )
 ok(
   'CSV — 올린 글 줄(수식 막기 · 미확인 · 다음 날) · 아직 안 올린 줄',
-  lines[1] === `가상스테이,w1 · 김가상,"'=1+1 가상, ""글""",티스토리,${TISTORY},${PUB},노출됨,2026-11-04,미확인,,오늘 다시 볼 글` &&
+  lines[1] === `가상스테이,w1 · 김가상,"'=1+1 가상, ""글""",티스토리,${TISTORY},${PUB},노출됨,2026-11-04,미확인,,오늘 다시 볼 글 (구글)` &&
     lines[2] === '가상스테이,w2 · 이가상,가상시 바다 보이는 숙소,,,아직 안 올림,,,,,',
 )
 ok('CSV 파일 이름 — 발행-현황-<한국 날짜>.csv', publishStatusFileName('2026-11-09') === '발행-현황-2026-11-09.csv')
@@ -348,7 +377,191 @@ ok(
     googleSearchUrl('http://blog.naver.com/fakeid/224000000001#top') === `https://www.google.com/search?q=${encodeURIComponent('site:blog.naver.com/fakeid/224000000001')}`,
 )
 
-// ── 9) 서버 길 ──────────────────────────────────────────────────────────────
+// ── 9) 검토 반영(2026-11-09) ────────────────────────────────────────────────
+const tenantInput = (posts: LedgerPostLike[], checksIn: Record<string, IndexCheckRecord> = {}) => ({
+  tenantId: 'vpub-a',
+  brand: '가상스테이',
+  ownedDomains: owned,
+  posts,
+  plan: null,
+  planUnreadable: false,
+  checks: checksIn,
+})
+// (가) 같은 주소를 올린 날만 다르게 두 줄(자사 10/30 · 채널 11/02 오늘 날짜) — 블로그 글은 하나다.
+const SAME = 'https://fake.tistory.com/300'
+const twoDays = buildTenantStatus(
+  tenantInput(
+    [
+      post('p-s1', SAME, { publishedOn: '2026-10-30', recordedAt: '2026-10-30T01:00:00.000Z', articleTitle: '가상 같은 글' }),
+      post('p-s2', SAME, { publishedOn: '2026-11-02', recordedAt: '2026-11-02T01:00:00.000Z', publishedOnSource: 'default-today', via: 'channel', articleTitle: '가상 같은 글' }),
+    ],
+    {
+      'p-s1': rec('p-s1', SAME, { naver: shown('2026-11-03'), updatedAt: '2026-11-03T00:00:00.000Z' }),
+      'p-s2': rec('p-s2', SAME, { naver: shown('2026-11-03'), google: notYet('2026-11-04'), updatedAt: '2026-11-04T00:00:00.000Z' }),
+    },
+  ),
+)
+const sameLive = twoDays.rows.filter((r) => r.kind === 'posted' && !r.removed)
+ok(
+  '같은 주소를 올린 날만 다르게 두 줄 적어도 한 편 — 발행일은 가장 이른 날, 색인 표시는 그 주소의 가장 나중 기록 하나',
+  sameLive.length === 1 && sameLive[0]!.publishedOn === '2026-10-30' && sameLive[0]!.naver?.state === 'shown' && sameLive[0]!.google?.state === 'not-yet',
+)
+ok('같은 주소 두 줄 — 요약도 한 편(다시 볼 날도 한 번)', summarizeStatus(twoDays.rows, '2026-11-09').posted === 1 && summarizeStatus(twoDays.rows, '2026-11-09').due <= 1)
+// (나) 대표 줄이 바뀌었다 돌아옴(뺀 줄을 되살림) — 대표 id의 옛 기록보다 나중 기록을 쓴다.
+const RESTORE = 'https://fake.tistory.com/88'
+const restored = buildTenantStatus(
+  tenantInput(
+    [post('p-r1', RESTORE), post('p-r2', RESTORE, { recordedAt: '2026-10-20T04:00:00.000Z', via: 'channel' })],
+    {
+      'p-r1': rec('p-r1', RESTORE, { naver: shown('2026-11-04'), updatedAt: '2026-11-04T01:00:00.000Z' }),
+      'p-r2': rec('p-r2', RESTORE, { naver: shown('2026-11-04'), google: shown('2026-11-06'), updatedAt: '2026-11-06T01:00:00.000Z' }),
+    },
+  ),
+)
+ok('대표 줄이 바뀌었다 돌아와도 가장 나중에 고친 기록을 쓴다(나중 표시가 사라지지 않는다)', restored.rows[0]?.postId === 'p-r1' && restored.rows[0]?.google?.state === 'shown')
+// (다) 내린 뒤 같은 주소로 다시 올림 — 내리기 전 확인(올린 날보다 앞선 확인)은 이 편의 확인이 아니다.
+const REPOST = 'https://fake.tistory.com/77'
+const reposted = buildTenantStatus(
+  tenantInput(
+    [
+      post('p-d1', REPOST, { publishedOn: '2026-10-01', recordedAt: '2026-10-01T01:00:00.000Z', removedAt: '2026-10-10T01:00:00.000Z', removedReason: 'taken-down' }),
+      post('p-d2', REPOST, { publishedOn: '2026-11-01', recordedAt: '2026-11-01T01:00:00.000Z' }),
+    ],
+    { 'p-d1': rec('p-d1', REPOST, { naver: shown('2026-10-05'), google: shown('2026-10-05'), updatedAt: '2026-10-05T01:00:00.000Z' }) },
+  ),
+)
+const repostRow = reposted.rows.find((r) => r.postId === 'p-d2')
+ok(
+  '내린 뒤 같은 주소로 다시 올린 글은 내리기 전 확인을 이어받지 않는다(미확인 · 오늘 다시 볼 글)',
+  repostRow?.naver === null && repostRow.google === null && rowRecheck(repostRow, '2026-11-09').due && summarizeStatus(reposted.rows, '2026-11-09').unknown === 1,
+)
+// (라) 작성자 배정은 배정 판(bankVersion)으로 쓴 글만 — 질문 id는 판이 바뀌어도 이어진다.
+const PLAN_URL = 'https://fake.tistory.com/500'
+const withBank = (topic: unknown) =>
+  buildTenantStatus({ ...tenantInput([post('p-v1', PLAN_URL, { articleId: A1, ...(topic === undefined ? {} : { topic }) })]), plan })
+const oldBank = withBank(topicOf(A1, 'v0'))
+const sameBank = withBank(topicOf(A1, 'v1'))
+const noBank = withBank(undefined)
+const nullBank = withBank(topicOf(A1, null))
+const progress = (s: typeof oldBank) => s.writers.find((w) => w.key === 'w1')?.posted
+const hasUnposted = (s: typeof oldBank) => s.rows.some((r) => r.kind === 'unposted' && r.articleId === A1)
+ok(
+  '작성자 배정 — 옛 판 글은 배정 없음 · 그 배정 글은 아직 안 올림 · 진행에 세지 않는다, 같은 판이면 배정 글',
+  writerLabel(oldBank.rows[0]!) === '배정 없음' && progress(oldBank) === 0 && hasUnposted(oldBank) &&
+    sameBank.rows[0]?.writer?.key === 'w1' && progress(sameBank) === 1 && !hasUnposted(sameBank),
+)
+ok(
+  '작성자 배정 — 판을 모르면(스냅샷 없음 · 판 null) 작성자 미확인, 진행에 세지 않는다',
+  writerLabel(noBank.rows[0]!) === '미확인' && writerLabel(nullBank.rows[0]!) === '미확인' && progress(noBank) === 0 && progress(nullBank) === 0,
+)
+// (마) 범위 변형 두 브랜드에 같은 글 주소 — 색인 상태는 주소의 것이라 함께 보이고, 모든 브랜드 요약은 한 번 센다.
+const sharedRows = buildTenantStatus({
+  tenantId: 'vpub-g',
+  brand: '가상스테이 · 전국형',
+  ownedDomains: [],
+  posts: [post('p-x1', TISTORY)],
+  plan: null,
+  planUnreadable: false,
+  checks: {},
+  others: [{ tenantId: 'vpub-a', brand: '가상스테이', checks: { 'p-aaaaaaaaaaa2': rec('p-aaaaaaaaaaa2', TISTORY, { naver: shown('2026-11-03') }) } }],
+})
+ok('다른 고객 브랜드에 적은 같은 주소의 확인도 보인다(어느 브랜드 줄에서 표시했는지와 함께)', sharedRows.rows[0]?.naver?.state === 'shown' && sharedRows.rows[0]?.checkFrom === '가상스테이')
+const bothBrands = [...built.rows, ...sharedRows.rows]
+const distinctLive = new Set(bothBrands.filter((r) => r.kind === 'posted' && !r.removed).map((r) => trackingKey(r.url!))).size
+ok('모든 브랜드 요약은 서로 다른 주소로 센다', summarizeStatus(bothBrands, '2026-11-09').posted === distinctLive)
+// (바) CSV 다시 볼 날 — 표처럼 어느 엔진인지 · 14일 지남까지.
+const dueLine = publishStatusCsv([row({ publishedOn: '2026-09-01' })], '2026-11-09').split('\r\n')[1] ?? ''
+ok('CSV 다시 볼 날 — 표와 같이 엔진 · 14일 지남을 함께 적는다', dueLine.endsWith(',오늘 다시 볼 글 (네이버 · 구글 · 14일 지남)'))
+// (사) 기본 창(1360×900)에서 표가 잘리지 않는다 — 표 최소 너비가 표 상자 안에 들어오고, 표 상자가 세로로도 스크롤해 가로 막대 · 머리글이 보인다.
+const css = readFileSync(path.join(process.cwd(), 'src', 'App.css'), 'utf-8')
+const cssBlock = (sel: string) => new RegExp(`(?:^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? ''
+const tableMin = Number(/min-width:\s*(\d+)px/.exec(cssBlock('.ps-table'))?.[1] ?? NaN)
+ok('표 최소 너비가 기본 창 본문(표 상자 안쪽 약 1040px)에 들어온다', tableMin <= 1000)
+ok(
+  '표 상자는 화면 높이 안에서 스크롤하고 머리글이 붙는다(가로 스크롤 막대 · 열 이름이 늘 보인다)',
+  /max-height/.test(cssBlock('.ps-table-wrap')) && /overflow:\s*auto/.test(cssBlock('.ps-table-wrap')) && /position:\s*sticky/.test(cssBlock('.ps-table thead th')),
+)
+// (아) 판을 모르는 배정 글 — 아직 안 올렸다고 하지 않는다(올렸는지 미확인), 작성자 진행에도 따로 센다.
+const noBankUnposted = noBank.rows.find((r) => r.kind === 'unposted' && r.articleId === A1)
+ok(
+  '판을 모르는 배정 글 — 그 배정 글 줄은 「올렸는지 미확인」, 작성자 진행은 미확인 1(올림에는 세지 않는다)',
+  noBankUnposted?.postedUnknown === true && unpostedLabel(noBankUnposted) === '올렸는지 미확인' && noBank.writers.find((w) => w.key === 'w1')?.unsure === 1 &&
+    publishStatusCsv([noBankUnposted], '2026-11-09').split('\r\n')[1]!.includes(',올렸는지 미확인,') &&
+    oldBank.rows.find((r) => r.kind === 'unposted' && r.articleId === A1)?.postedUnknown === false && oldBank.writers.find((w) => w.key === 'w1')?.unsure === 0,
+)
+// (자) 표시 뒤 화면 갱신 — 같은 주소의 줄 모두(다른 브랜드 포함), 줄마다 올린 날보다 앞선 확인은 뺀다.
+const synced = withIndexRecord(
+  [
+    row({ rowKey: 'x1', tenantId: 'vpub-a', brand: '가상스테이' }),
+    row({ rowKey: 'x2', tenantId: 'vpub-g', brand: '가상스테이전국' }),
+    row({ rowKey: 'x3', tenantId: 'vpub-g', brand: '가상스테이전국', publishedOn: '2026-11-08' }),
+    row({ rowKey: 'x4', key: 'fake.tistory.com/other' }),
+    row({ rowKey: 'x5', removed: { reason: 'taken-down', at: '2026-11-06T00:00:00.000Z' } }),
+  ],
+  row({ tenantId: 'vpub-a', brand: '가상스테이' }),
+  rec('p-x', TISTORY, { naver: shown('2026-11-05'), google: notYet('2026-11-05') }),
+)
+ok(
+  '표시 뒤 화면 — 같은 주소 줄 모두 고치고(다른 브랜드 줄엔 표시한 브랜드), 올린 날보다 앞선 확인은 빼고, 다른 주소 · 뺀 줄은 그대로',
+  synced[0]!.naver?.state === 'shown' && synced[0]!.checkFrom === null && synced[1]!.google?.state === 'not-yet' && synced[1]!.checkFrom === '가상스테이' &&
+    synced[2]!.naver === null && synced[2]!.checkFrom === null && synced[3]!.naver === null && synced[4]!.naver === null,
+)
+const urlBrands = sameUrlBrands([row({ brand: '가상스테이' }), row({ rowKey: 'y', brand: '가상스테이전국' }), row({ rowKey: 'z', key: 'fake.tistory.com/z' })])
+ok('같은 주소를 적은 브랜드 — 둘 이상인 주소만', urlBrands.size === 1 && urlBrands.get(trackingKey(TISTORY)!)?.join() === '가상스테이,가상스테이전국')
+// (차) 다시 읽은 뒤 고른 브랜드 · 작성자가 사라지면 모두로 되돌린다.
+const readRows = [row({ tenantId: 'vpub-a', writer: W1 }), row({ rowKey: 'k2', tenantId: 'vpub-g' })]
+const gone = validFilter({ ...base, tenantId: 'vpub-gone', writer: 'w1\n김가상' }, readRows)
+const goneWriter = validFilter({ ...base, tenantId: 'vpub-a', writer: 'w2\n이가상' }, readRows)
+const kept = { ...base, tenantId: 'vpub-a', writer: 'w1\n김가상' }
+const allWriter = { ...base, writer: 'w1\n김가상' }
+ok(
+  '거르기 되돌리기 — 없는 브랜드는 모두로(그 브랜드에서 고른 작성자도 비움), 그 브랜드에 없는 작성자도 모두로, 있으면 그대로(같은 값)',
+  gone.tenantId === '' && gone.writer === '' && goneWriter.tenantId === 'vpub-a' && goneWriter.writer === '' && validFilter(kept, readRows) === kept &&
+    validFilter(allWriter, readRows) === allWriter && filterRows(readRows, gone, '2026-11-09').length === 2,
+)
+// (카) 작성자 칩 — 끄면 켜기 전 브랜드 거르기로 돌아간다.
+const chipOn = toggleWriterChip(base, { tenantId: 'vpub-a', writer: 'w1\n김가상' }, null)
+const chipOff = toggleWriterChip(chipOn.filter, { tenantId: 'vpub-a', writer: 'w1\n김가상' }, chipOn.before)
+const chipSwap = toggleWriterChip(chipOn.filter, { tenantId: 'vpub-g', writer: 'w1\n박가상' }, chipOn.before)
+const chipOffSwap = toggleWriterChip(chipSwap.filter, { tenantId: 'vpub-g', writer: 'w1\n박가상' }, chipSwap.before)
+ok(
+  '작성자 칩 — 켜면 그 브랜드 · 작성자, 끄면 켜기 전(모든 브랜드)으로, 칩을 바꿔 눌러도 처음 브랜드 거르기를 기억한다',
+  chipOn.filter.tenantId === 'vpub-a' && chipOn.filter.writer === 'w1\n김가상' && chipOn.before === '' && chipOff.filter.tenantId === '' && chipOff.filter.writer === '' &&
+    chipOff.before === null && chipOffSwap.filter.tenantId === '' && toggleWriterChip(kept, { tenantId: 'vpub-a', writer: 'w1\n김가상' }, null).filter.tenantId === 'vpub-a',
+)
+// (타) 줄이 없을 때 — 파일 오류가 있으면 「기록이 없다」고 하지 않는다.
+ok(
+  '빈 상태 — 오류가 있으면 issues, 정말 없으면 empty, 줄이 있으면 null',
+  emptyStateOf({ rows: [], issues: [{ tenantId: 'vpub-c', brand: '깨진원장', error: 'x' }] }) === 'issues' && emptyStateOf({ rows: [], issues: [] }) === 'empty' &&
+    emptyStateOf({ rows: [row({})], issues: [{ tenantId: 'vpub-c', brand: '깨진원장', error: 'x' }] }) === null,
+)
+// (파) 줄 순서 — 모든 브랜드의 올린 글(늦은 날 먼저) 뒤에 아직 안 올린 배정 글.
+const ordered = orderRows([
+  row({ rowKey: 'a-post', publishedOn: '2026-11-01' }),
+  row({ rowKey: 'a-plan', kind: 'unposted', key: null, url: null, publishedOn: null }),
+  row({ rowKey: 'g-post', tenantId: 'vpub-g', publishedOn: '2026-11-05' }),
+  row({ rowKey: 'g-nodate', tenantId: 'vpub-g', publishedOn: null }),
+  row({ rowKey: 'g-plan', tenantId: 'vpub-g', kind: 'unposted', key: null, url: null, publishedOn: null }),
+])
+ok('줄 순서 — 올린 글(브랜드를 건너 늦은 날 먼저, 모르면 뒤) → 아직 안 올린 배정 글(브랜드 순)', ordered.map((r) => r.rowKey).join() === 'g-post,a-post,g-nodate,a-plan,g-plan')
+// (하) 화면 읽기 이름 — 줄마다 다르고, 이미 눌린 단추는 다시 누르면 확인일만 오늘로 바뀐다고 알린다.
+const twoRows = [
+  row({ title: '가상 글 하나' }),
+  row({ rowKey: 'k2', title: '가상 글 둘' }),
+  row({ rowKey: 'k3', title: null, url: 'https://fake.tistory.com/9' }),
+  row({ rowKey: 'k4', title: '가상 글 하나', url: NAVER, platform: { key: 'naver-blog', label: '네이버 블로그' } }),
+]
+const labels = twoRows.flatMap((r) => [markLabel(r, 'naver', 'shown', null), markLabel(r, 'google', 'not-yet', null), searchLabel(r, 'naver'), searchLabel(r, 'google')])
+ok(
+  '화면 읽기 이름 — 단추 · 링크 이름에 브랜드 · 제목(없으면 주소) · 플랫폼(같은 글을 두 곳에 올려도 다르다), 링크는 새 창, 지우기, 눌린 단추는 확인일을 오늘로',
+  new Set(labels).size === labels.length && labels[0] === '가상스테이 「가상 글 하나」 티스토리 네이버 노출됨으로 표시' &&
+    labels[2] === '가상스테이 「가상 글 하나」 티스토리 네이버에서 확인(새 창)' &&
+    markLabel(twoRows[2]!, 'google', 'shown', null) === '가상스테이 「fake.tistory.com/9」 티스토리 구글 색인됨으로 표시' &&
+    markLabel(twoRows[0]!, 'naver', null, shown('2026-11-04')) === '가상스테이 「가상 글 하나」 티스토리 네이버 표시 지우기(미확인으로)' &&
+    markLabel(twoRows[0]!, 'naver', 'shown', shown('2026-11-04')) === '가상스테이 「가상 글 하나」 티스토리 네이버 노출됨 — 지금 표시됨, 다시 누르면 확인일을 오늘로',
+)
+
+// ── 10) 서버 길 ─────────────────────────────────────────────────────────────
 const PORT = 4171
 const BASE = `http://127.0.0.1:${PORT}`
 const portFree = () =>
@@ -381,6 +594,7 @@ writeFileSync(
     tenant('vpub-c', '깨진원장'),
     tenant('vpub-d', '깨진확인'),
     tenant('vpub-e', '깨진배정'),
+    tenant('vpub-g', '가상스테이전국'),
     tenant('vpub-comp', '가상경쟁사', { cohortOnly: true }),
   ]),
 )
@@ -400,6 +614,22 @@ writeFileSync(path.join(tenantDir('vpub-d'), 'index-checks.json'), BROKEN_CHECKS
 writeFileSync(path.join(tenantDir('vpub-e'), 'published-posts.json'), ledgerFile([post('p-eeeeeeeeee01', 'https://fake.tistory.com/800', { articleId: A1 })]))
 writeFileSync(path.join(tenantDir('vpub-e'), 'probe-plan.json'), '{"format":"probe-plan/2"')
 writeFileSync(path.join(tenantDir('vpub-comp'), 'published-posts.json'), ledgerFile([post('p-cccccccccc01', 'https://fake.tistory.com/900')]))
+// vpub-g — vpub-a와 같은 글 주소(TISTORY), 같은 주소를 올린 날만 다르게 두 줄(SAME), 내린 뒤 다시 올린 주소(REPOST — 내리기 전 확인이 있다).
+const LEDGER_G = ledgerFile([
+  post('p-gggggggggg01', TISTORY, { via: 'channel', articleTitle: '가상시 숙소, 처음이라면 이렇게 고르세요' }),
+  post('p-gggggggggg02', SAME, { publishedOn: '2026-10-30', recordedAt: '2026-10-30T01:00:00.000Z', articleTitle: '가상 같은 글' }),
+  post('p-gggggggggg03', SAME, { publishedOn: '2026-11-02', recordedAt: '2026-11-02T01:00:00.000Z', publishedOnSource: 'default-today', via: 'channel', articleTitle: '가상 같은 글' }),
+  post('p-gggggggggg04', REPOST, { publishedOn: '2026-10-01', recordedAt: '2026-10-01T01:00:00.000Z', removedAt: '2026-10-10T01:00:00.000Z', removedReason: 'taken-down' }),
+  post('p-gggggggggg05', REPOST, { publishedOn: '2026-11-01', recordedAt: '2026-11-01T01:00:00.000Z' }),
+])
+writeFileSync(path.join(tenantDir('vpub-g'), 'published-posts.json'), LEDGER_G)
+writeFileSync(
+  path.join(tenantDir('vpub-g'), 'index-checks.json'),
+  JSON.stringify({
+    format: INDEX_CHECKS_FORMAT,
+    checks: { 'p-gggggggggg04': rec('p-gggggggggg04', REPOST, { naver: shown('2026-10-05'), google: shown('2026-10-05'), updatedAt: '2026-10-05T01:00:00.000Z' }) },
+  }),
+)
 
 const env: Record<string, string | undefined> = {
   ...process.env,
@@ -521,6 +751,38 @@ try {
     '동시 저장 — 16건 모두 200이고 하나도 사라지지 않는다(화면 · 파일)',
     many.every((r) => r.status === 200) && allKept && generic.every((p, i) => fileAfter.checks[p.id]?.naver?.state === want(i, 'naver') && fileAfter.checks[p.id]?.google?.state === want(i, 'google')),
   )
+
+  // 검토 반영 — 같은 주소 한 편 · 다시 올린 글 · 브랜드 사이 같은 주소 · 줄 순서
+  const rowsG = (s: PublishStatus) => s.rows.filter((r) => r.tenantId === 'vpub-g')
+  const liveG = rowsG(first.body).filter((r) => r.kind === 'posted' && !r.removed)
+  ok('발행 현황 — 같은 주소를 올린 날만 다르게 적은 두 줄은 한 줄(가장 이른 날)', liveG.length === 3 && liveG.filter((r) => r.url === SAME).map((r) => r.publishedOn).join() === '2026-10-30')
+  const firstUnposted = first.body.rows.findIndex((r) => r.kind === 'unposted')
+  const lastPosted = first.body.rows.map((r) => r.kind === 'posted' && !r.removed).lastIndexOf(true)
+  ok('발행 현황 — 모든 브랜드의 올린 글이 아직 안 올린 배정 글보다 앞에 온다', firstUnposted > lastPosted)
+  const sameA = await put('vpub-g', 'p-gggggggggg02', { engine: 'naver', state: 'shown' })
+  const sameB = await put('vpub-g', 'p-gggggggggg03', { engine: 'google', state: 'not-yet' })
+  const afterSame = await getStatus()
+  const sameRows = rowsG(afterSame.body).filter((r) => r.url === SAME && !r.removed)
+  ok(
+    '같은 주소의 두 줄에 따로 눌러도 한 편의 표시 하나로 모인다',
+    sameA.status === 200 && sameB.status === 200 && sameRows.length === 1 && sameRows[0]!.naver?.state === 'shown' && sameRows[0]!.google?.state === 'not-yet',
+  )
+  const repostPut = await put('vpub-g', 'p-gggggggggg05', { engine: 'google', state: 'not-yet' })
+  ok('다시 올린 글에 표시하면 내리기 전 확인(올린 날보다 앞)을 이어받지 않는다', repostPut.status === 200 && repostPut.body.record?.naver === undefined && repostPut.body.record?.google?.state === 'not-yet')
+  ok('내린 글에는 표시하지 않는다(409)', (await put('vpub-g', 'p-gggggggggg04', { engine: 'naver', state: 'shown' })).status === 409)
+  const crossA = await put('vpub-a', 'p-aaaaaaaaaaa2', { engine: 'naver', state: 'shown' })
+  const afterCross = await getStatus()
+  ok('다른 고객 브랜드에 같은 주소가 있으면 한쪽 표시가 다른 쪽 줄에도 보인다', crossA.status === 200 && rowsG(afterCross.body).find((r) => r.url === TISTORY)?.naver?.state === 'shown')
+  const crossG = await put('vpub-g', 'p-gggggggggg01', { engine: 'google', state: 'shown' })
+  const afterCross2 = await getStatus()
+  const tistoryA = afterCross2.body.rows.find((r) => r.tenantId === 'vpub-a' && r.url === TISTORY)
+  ok(
+    '다른 브랜드 줄에서 다른 엔진을 눌러도 앞 표시를 이어받는다(두 브랜드 줄이 같은 상태)',
+    crossG.status === 200 && crossG.body.record?.naver?.state === 'shown' && tistoryA?.naver?.state === 'shown' && tistoryA.google?.state === 'shown',
+  )
+  const liveAll = afterCross2.body.rows.filter((r) => r.kind === 'posted' && !r.removed)
+  ok('발행 현황 요약 — 모든 브랜드에서 서로 다른 주소로 센다', summarizeStatus(afterCross2.body.rows, afterCross2.body.today).posted === new Set(liveAll.map((r) => trackingKey(r.url!))).size)
+  ok('vpub-g 원장도 바뀌지 않는다', readFileSync(path.join(dir, 'data', 'vpub-g', 'published-posts.json'), 'utf-8') === LEDGER_G)
   ok('원장(published-posts.json)은 한 글자도 바뀌지 않는다', readFileSync(path.join(dir, 'data', 'vpub-a', 'published-posts.json'), 'utf-8') === LEDGER_A)
 } finally {
   server.kill()

@@ -2710,15 +2710,18 @@ app.get('/api/publish-status', async (_req, res) => {
 });
 
 // 색인 확인 표시 — { engine: 'naver' | 'google', state: 'shown' | 'not-yet' | null }(server/indexChecks.ts). null은 미확인으로 되돌린다.
-// 고객 브랜드의 원장에 있는 기록만 받는다(경쟁사 · 없는 기록은 404, 본문이 틀리면 400, 파일이 깨졌으면 500 — 쓰지 않는다).
+// 고객 브랜드의 원장에 있는 기록만 받는다(경쟁사 · 없는 기록은 404, 본문이 틀리면 400, 내린 · 뺀 글은 409, 파일이 깨졌으면 500 — 쓰지
+// 않는다). 같은 주소를 적은 다른 고객 브랜드의 기록도 이어받는다(범위 변형 두 브랜드에 같은 글).
 app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
-  const tenant = await findTenant(req.params.tenantId);
+  const tenants = await loadRuntimeTenants();
+  const tenant = tenants.find((t) => t.tenantId === req.params.tenantId);
   if (!tenant || tenant.cohortOnly) {
     res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
     return;
   }
+  const others = tenants.filter((t) => !t.cohortOnly && t.tenantId !== tenant.tenantId).map((t) => t.tenantId);
   try {
-    res.json(await setIndexCheck(tenant.tenantId, req.params.postId, req.body));
+    res.json(await setIndexCheck(tenant.tenantId, req.params.postId, req.body, others));
   } catch (err) {
     const status = err instanceof IndexChecksError || err instanceof PublishedPostsError ? err.status : 500;
     res.status(status).json({ error: err instanceof Error ? err.message : String(err) });

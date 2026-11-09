@@ -3,15 +3,21 @@
  * server/indexChecks.ts). 작성자 8명이 브랜드마다 10편씩 올리므로, 누가 몇 편을 올렸는지와 올린 글이 네이버 · 구글에 나오는지를 브랜드마다
  * 화면을 옮겨 다니며 볼 수 없었다.
  *
- * ── 한 줄 = 한 편 ─────────────────────────────────────────────────────────
- * 원장(server/publishedPosts.ts)은 「주소 한 줄 = 기록 한 줄」이라 같은 글을 자사 줄과 채널 줄에 함께 적으면 두 줄이다. 블로그에 올라간 글은
- * 하나이므로 같은 주소 · 같은 올린 날의 줄은 한 편으로 묶는다(성과 표 src/lib/publishTracking.ts distinctPostings와 같은 묶음). 다만 여기는
- * 「뺀 글 보기」가 있어 잘못 적은 주소도 흐리게 보인다.
+ * ── 한 줄 = 한 주소 ───────────────────────────────────────────────────────
+ * 원장(server/publishedPosts.ts)은 「주소 한 줄 = 기록 한 줄」이라 같은 글을 자사 줄과 채널 줄에 함께 적으면 두 줄이다. 먼저 같은 주소 ·
+ * 같은 올린 날의 줄을 올린 일 한 번으로 묶고(성과 표 src/lib/publishTracking.ts distinctPostings와 같은 묶음 — 내림 · 다시 올림을 가린다),
+ * 그 가운데 살아 있는 것은 주소 하나로 다시 묶는다. 네이버 노출 · 구글 색인은 주소의 상태라, 올린 날만 다르게 두 번 적은 주소(자사 줄
+ * 10/30 · 채널 줄 11/02 「오늘」)를 두 줄로 두면 표시가 줄마다 갈라지고 요약이 두 번 센다(검토 실측 web4ai). 발행일은 가장 이른 날이다.
+ * 「뺀 글 보기」를 켜면 내린 글 · 잘못 적은 주소도 흐리게 보인다.
  *
  * ── 색인 확인은 사람이 본 것만 ─────────────────────────────────────────────
  * 지금은 네이버 · 구글 모두 사람이 검색해 보고 「노출됨/색인됨」 · 「아직」을 누른다. 누르지 않은 글은 「미확인」이다 — 「아직」으로 채우지
  * 않는다. 기록은 원장과 따로 data/<tenant>/index-checks.json에 두고(원장 모양은 바꾸지 않는다), 기록마다 출처(manual · auto)를 남겨 나중에
  * 네이버 검색 API로 자동 확인해도 같은 칸에 쓴다.
+ *
+ * 한 주소의 상태는 기록 하나다 — 그 주소의 기록(줄 id · 주소 키, 다른 고객 브랜드 포함 — 범위 변형 두 브랜드에 같은 글을 적는다) 가운데
+ * 가장 나중에 고친 것. 적을 때 늘 그 기록을 이어받아 새 기록이 가장 나중이 된다(findIndexRecord). 올린 날보다 앞선 확인은 그 올림의
+ * 확인이 아니다 — 내린 뒤 같은 주소로 다시 올린 글은 미확인부터 다시 본다(freshIndexRecord).
  *
  * ── 다시 볼 날 ────────────────────────────────────────────────────────────
  * 올린 뒤 3 · 7 · 14일째에 다시 본다. 그날이 지났는데 그날 이후에 본 기록이 없고 노출 · 색인도 아니면 「오늘 다시 볼 글」이다. 14일째에 보고도
@@ -20,7 +26,7 @@
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다.
  */
 import { todayKst } from './publishedUrl.js'
-import { planWriters, writerArticle, type PlanWriter, type WriterPlan } from './probePlan.js'
+import { planWriters, writerArticle, type PlanWriter, type WriterPlan, type WriterPlanArticle } from './probePlan.js'
 
 export const INDEX_CHECKS_FORMAT = 'index-checks/1'
 export const INDEX_ENGINES = ['naver', 'google'] as const
@@ -31,6 +37,8 @@ export type IndexState = (typeof INDEX_STATES)[number]
 export type IndexSource = 'manual' | 'auto'
 
 export const ENGINE_NAME: Record<IndexEngine, string> = { naver: '네이버', google: '구글' }
+/** 「나온다」의 엔진별 이름 — 네이버는 노출, 구글은 색인. */
+export const SHOWN_WORD: Record<IndexEngine, string> = { naver: '노출됨', google: '색인됨' }
 
 /** 한 엔진의 확인 한 번. */
 export interface IndexCheck {
@@ -44,9 +52,9 @@ export interface IndexCheck {
 
 /** 올린 글 한 편의 확인 기록 — 엔진 칸이 없으면 미확인. */
 export interface IndexCheckRecord {
-  /** 원장 기록 id(한 편의 대표 줄). */
+  /** 원장 기록 id(표시를 누른 줄). */
   postId: string
-  /** 주소 키(src/lib/publishedUrl.ts trackingKey) — 대표 줄이 바뀌거나 올린 날을 고쳐 묶음이 달라져도 같은 주소의 기록을 찾는다. */
+  /** 주소 키(src/lib/publishedUrl.ts trackingKey) — 한 주소의 상태는 이 키의 가장 나중 기록이다(대표 줄 · 브랜드가 달라도). */
   key: string
   url: string
   naver?: IndexCheck
@@ -133,25 +141,28 @@ export interface LedgerPostLike {
   articleTitle?: string
   removedAt?: string
   removedReason?: 'mistake' | 'taken-down'
+  /** topic: 글의 질문 스냅샷 — 그 글을 쓴 질문지 판. 판을 모르면 bankVersion null. */
+  topic?: { bankVersion: string | null }
 }
 
 export type RemovedReason = 'mistake' | 'taken-down'
 
 export interface Posting<P extends LedgerPostLike = LedgerPostLike> {
-  /** 대표 줄. */
+  /** 대표 줄 — 살아 있는 편은 가장 이른 올린 날의 줄. */
   post: P
   /** 이 편으로 묶인 줄 id 모두(뺀 줄 포함) — 확인 기록을 대표가 아닌 줄로 적었어도 찾는다. */
   ids: string[]
+  /** 이 편의 살아 있는 줄(뺀 줄 빼고) — 작성자 진행이 배정 글을 셀 때 쓴다. 뺀 편이면 빈 배열. */
+  live: P[]
   /** 내렸거나(taken-down) 잘못 적은 주소만 남은(mistake) 편. 살아 있으면 null. */
   removed: { reason: RemovedReason; at: string } | null
 }
 
 /**
- * 원장 줄을 올린 글 한 편씩으로 묶는다 — 같은 주소 · 같은 올린 날. 같은 주소에 날짜 있는 줄이 있으면 날짜 없는 옛 줄은 뺀다.
- * 대표: 한 줄이라도 내렸으면 가장 먼저 내린 줄(그 뒤에 같은 주소를 다시 적은 줄이 있으면 다시 올린 것으로 보고 그 줄), 아니면 살아 있는
- * 첫 줄, 다 잘못 적은 주소면 첫 줄(뺀 글).
+ * 올린 일 한 번씩 — 같은 주소 · 같은 올린 날. 같은 주소에 날짜 있는 줄이 있으면 날짜 없는 옛 줄은 뺀다. 대표: 한 줄이라도 내렸으면 가장
+ * 먼저 내린 줄(그 뒤에 같은 주소를 다시 적은 줄이 있으면 다시 올린 것으로 보고 그 줄), 아니면 살아 있는 첫 줄, 다 잘못 적은 주소면 첫 줄.
  */
-export function postingsOf<P extends LedgerPostLike>(posts: P[]): Posting<P>[] {
+function publicationsOf<P extends LedgerPostLike>(posts: P[]): Posting<P>[] {
   const dated = new Set(posts.filter((p) => p.publishedOn && p.removedReason !== 'mistake').map((p) => p.key))
   const groups = new Map<string, P[]>()
   for (const p of posts) {
@@ -166,23 +177,85 @@ export function postingsOf<P extends LedgerPostLike>(posts: P[]): Posting<P>[] {
       .filter((p) => p.removedReason === 'taken-down' && p.removedAt)
       .sort((a, b) => a.removedAt!.localeCompare(b.removedAt!))[0]
     const reposted = down ? live.find((p) => p.recordedAt > down.removedAt!) : undefined
-    if (down && !reposted) return { post: down, ids, removed: { reason: 'taken-down' as const, at: down.removedAt! } }
+    if (down && !reposted) return { post: down, ids, live: [], removed: { reason: 'taken-down' as const, at: down.removedAt! } }
     const rep = reposted ?? live[0]
-    if (rep) return { post: rep, ids, removed: null }
+    if (rep) return { post: rep, ids, live, removed: null }
     const first = group[0]!
-    return { post: first, ids, removed: { reason: 'mistake' as const, at: first.removedAt ?? '' } }
+    return { post: first, ids, live: [], removed: { reason: 'mistake' as const, at: first.removedAt ?? '' } }
   })
 }
 
-/** 가장 나중에 고친 기록. */
-const latest = (list: IndexCheckRecord[]): IndexCheckRecord | null => [...list].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0] ?? null
+/**
+ * 원장 줄을 표의 한 줄씩으로 묶는다 — 올린 일 한 번씩(publicationsOf)으로 나눈 뒤, 살아 있는 것은 주소 하나로 합친다(대표 · 발행일은
+ * 가장 이른 올린 날, 줄 id는 모두). 내린 편 · 잘못 적은 주소만 남은 편은 올린 날마다 따로 남는다(뺀 글 보기).
+ */
+export function postingsOf<P extends LedgerPostLike>(posts: P[]): Posting<P>[] {
+  const publications = publicationsOf(posts)
+  const liveByKey = new Map<string, Posting<P>[]>()
+  for (const p of publications) if (!p.removed) liveByKey.set(p.post.key, [...(liveByKey.get(p.post.key) ?? []), p])
+  const out: Posting<P>[] = []
+  for (const p of publications) {
+    if (p.removed) {
+      out.push(p)
+      continue
+    }
+    const same = liveByKey.get(p.post.key)
+    if (!same) continue
+    liveByKey.delete(p.post.key)
+    const first = [...same].sort((a, b) => (a.post.publishedOn ?? '9999').localeCompare(b.post.publishedOn ?? '9999'))[0]!
+    out.push({ post: first.post, ids: same.flatMap((s) => s.ids), live: same.flatMap((s) => s.live), removed: null })
+  }
+  return out
+}
 
-/** 한 편의 확인 기록 — 대표 줄 id → 묶인 다른 줄 id → 같은 주소 키(가장 나중 기록). 없으면 null(두 엔진 모두 미확인). */
-export function findIndexRecord(checks: Record<string, IndexCheckRecord>, repId: string, ids: readonly string[], key: string): IndexCheckRecord | null {
-  if (checks[repId]) return checks[repId]
-  const byId = latest(ids.map((id) => checks[id]).filter((r): r is IndexCheckRecord => Boolean(r)))
-  if (byId) return byId
-  return latest(Object.values(checks).filter((r) => r.key === key))
+/** 고객 브랜드 한 곳의 확인 기록. */
+export interface TenantChecks {
+  tenantId: string
+  checks: Record<string, IndexCheckRecord>
+}
+
+export interface FoundIndexRecord {
+  record: IndexCheckRecord
+  /** 기록이 있는 브랜드. */
+  tenantId: string
+}
+
+/**
+ * 한 편의 확인 기록 — 그 편으로 묶인 줄 id의 기록과, key를 주면 같은 주소의 기록(이 브랜드 · 다른 고객 브랜드) 가운데 가장 나중에 고친
+ * 것 하나. 적을 때 늘 이 기록을 이어받으므로 가장 나중 기록이 그 주소의 지금 상태다 — 대표 줄 기록을 앞세우면 대표가 바뀌었다 돌아올 때
+ * (뺀 줄을 되살림) 그 사이의 표시가 가려졌다. 뺀 편은 key 없이(null) 제 줄의 기록만 본다. 없으면 null(두 엔진 모두 미확인).
+ */
+export function findIndexRecord(own: TenantChecks, others: readonly TenantChecks[], ids: readonly string[], key: string | null): FoundIndexRecord | null {
+  const found: FoundIndexRecord[] = []
+  for (const t of [own, ...others]) {
+    for (const [id, record] of Object.entries(t.checks)) {
+      if ((t === own && ids.includes(id)) || (key !== null && record.key === key)) found.push({ record, tenantId: t.tenantId })
+    }
+  }
+  return found.sort((a, b) => b.record.updatedAt.localeCompare(a.record.updatedAt))[0] ?? null
+}
+
+/**
+ * 올린 날보다 앞선 확인은 뺀다 — 내린 뒤 같은 주소로 다시 올린 글이 내리기 전 「노출됨 · 색인됨」을 이어받아 한 번도 다시 보지 않고
+ * 「확인 끝」이 되던 것. 표시할 때도 적을 때(이어받기)도 이 기록을 쓴다. 올린 날을 모르면 그대로.
+ */
+export function freshIndexRecord(record: IndexCheckRecord, publishedOn: string | null): IndexCheckRecord {
+  if (!publishedOn) return record
+  const next = { ...record }
+  for (const engine of INDEX_ENGINES) {
+    const check = next[engine]
+    if (check && check.checkedOn < publishedOn) delete next[engine]
+  }
+  return next
+}
+
+/** 배정 글인가 — 글 id가 배정에 있고, 그 글을 쓴 판이 배정 판이어야 한다(질문 id는 판이 바뀌어도 이어진다 — GapActions writerArticleOf와 같은 규칙). 판을 모르면 'bank-unknown'. */
+export function planArticleOf(plan: WriterPlan | null, post: Pick<LedgerPostLike, 'articleId' | 'topic'>): WriterPlanArticle | 'bank-unknown' | null {
+  const article = writerArticle(plan, post.articleId)
+  if (!article || !plan) return null
+  const version = post.topic?.bankVersion
+  if (!version) return 'bank-unknown'
+  return version === plan.bankVersion ? article : null
 }
 
 // ── 표의 줄 ──────────────────────────────────────────────────────────────────
@@ -196,13 +269,17 @@ export interface PublishStatusRow {
   kind: 'posted' | 'unposted'
   /** 확인 기록을 적는 원장 줄(대표). 아직 안 올린 글이면 null. */
   postId: string | null
+  /** 주소 키 — 같은 주소의 줄(다른 고객 브랜드 포함)은 표시 하나를 함께 쓴다. 아직 안 올린 글이면 null. */
+  key: string | null
   articleId: string
   /** 그때 글 제목(없으면 배정 주제 이름). 모르면 null. */
   title: string | null
   /** 배정 작성자. 배정 밖 글이면 null. */
   writer: PlanWriter | null
-  /** 배정 파일을 읽지 못해 작성자를 모른다 — writer는 null이고 「미확인」으로 보인다. */
-  writerUnknown: boolean
+  /** 작성자를 모른다(writer는 null, 「미확인」) — 배정 파일을 읽지 못했거나, 배정 글 id인데 그 글을 쓴 질문지 판을 모른다. */
+  writerUnknown: WriterUnknown | null
+  /** 아직 안 올린 배정 글인데, 판을 몰라 이 배정 글인지 모르는 올린 글이 있다 — 「올렸는지 미확인」. */
+  postedUnknown: boolean
   platform: Platform | null
   url: string | null
   /** 올린 날(한국 날짜). 모르면 null. */
@@ -210,9 +287,17 @@ export interface PublishStatusRow {
   removed: { reason: RemovedReason; at: string } | null
   naver: IndexCheck | null
   google: IndexCheck | null
+  /** 보이는 확인 기록을 다른 고객 브랜드의 같은 주소 줄에서 표시했으면 그 브랜드 이름. */
+  checkFrom: string | null
 }
 
-/** 작성자 한 사람의 진행 — 배정 글 중 살아 있는 글이 하나라도 있는 글 수. */
+export type WriterUnknown = 'plan-unreadable' | 'bank-unknown'
+export const WRITER_UNKNOWN_NOTE: Record<WriterUnknown, string> = {
+  'plan-unreadable': '배정 파일(probe-plan.json)을 읽지 못해 작성자를 모릅니다',
+  'bank-unknown': '배정 글과 같은 질문으로 쓴 글인데, 그 글을 쓴 질문지 판을 몰라 배정 글인지 확인하지 못했습니다',
+}
+
+/** 작성자 한 사람의 진행 — 배정 글 중 살아 있는 글이 하나라도 있는 글 수(배정 판으로 쓴 글만). */
 export interface WriterSummary {
   tenantId: string
   brand: string
@@ -220,6 +305,8 @@ export interface WriterSummary {
   name: string
   assigned: number
   posted: number
+  /** 올렸는지 미확인 — 배정 글 id로 올린 글이 있는데 그 글을 쓴 판을 모른다. */
+  unsure: number
 }
 
 /** 그 브랜드만의 문제 — 파일이 깨졌다 등. 다른 브랜드는 그대로 보인다. */
@@ -246,39 +333,52 @@ export interface TenantStatusInput {
   /** 배정 파일이 있는데 읽지 못했다. */
   planUnreadable: boolean
   checks: Record<string, IndexCheckRecord>
+  /** 다른 고객 브랜드의 확인 기록(브랜드 이름과 함께) — 같은 주소의 기록을 함께 본다. 없으면 이 브랜드 기록만. */
+  others?: readonly (TenantChecks & { brand: string })[]
 }
 
 /**
  * 한 브랜드의 줄과 작성자 진행. 올린 글은 올린 날이 늦은 순(모르면 뒤), 그 뒤에 아직 안 올린 배정 글(배정표 순 — 작성자 순, 작성자 안에서는
- * 번호 순). 배정 글이 살아 있는 편 없이 내린 글뿐이면 아직 안 올린 줄로도 보인다.
+ * 번호 순). 배정 글이 살아 있는 편 없이 내린 글뿐이면 아직 안 올린 줄로도 보인다. 배정 판이 아닌 판으로 쓴 글은 배정 글로 세지 않는다.
  */
 export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStatusRow[]; writers: WriterSummary[] } {
   const { tenantId, brand, plan } = input
+  const own: TenantChecks = { tenantId, checks: input.checks }
+  const others = input.others ?? []
   const postings = postingsOf(input.posts)
   const posted = postings
     .map(({ post, ids, removed }): PublishStatusRow => {
-      const assigned = writerArticle(plan, post.articleId)
-      const record = findIndexRecord(input.checks, post.id, ids, post.key)
+      const match = planArticleOf(plan, post)
+      const assigned = match === 'bank-unknown' ? null : match
+      const found = removed ? findIndexRecord(own, [], ids, null) : findIndexRecord(own, others, ids, post.key)
+      const record = found ? freshIndexRecord(found.record, post.publishedOn) : null
+      const from = found && found.tenantId !== tenantId && (record?.naver || record?.google) ? found.tenantId : null
       return {
         rowKey: `${tenantId}|${post.id}`,
         tenantId,
         brand,
         kind: 'posted',
         postId: post.id,
+        key: post.key,
         articleId: post.articleId,
         title: post.articleTitle?.trim() || assigned?.name || null,
         writer: assigned ? { ...assigned.writer } : null,
-        writerUnknown: !assigned && input.planUnreadable,
+        writerUnknown: input.planUnreadable ? 'plan-unreadable' : match === 'bank-unknown' ? 'bank-unknown' : null,
+        postedUnknown: false,
         platform: platformOf(post.url, input.ownedDomains),
         url: post.url,
         publishedOn: post.publishedOn,
         removed,
         naver: record?.naver ?? null,
         google: record?.google ?? null,
+        checkFrom: from ? (others.find((o) => o.tenantId === from)?.brand ?? from) : null,
       }
     })
     .sort((a, b) => (b.publishedOn ?? '').localeCompare(a.publishedOn ?? ''))
-  const live = new Set(postings.filter((p) => !p.removed).map((p) => p.post.articleId))
+  // 배정 글의 진행 — 살아 있는 줄 가운데 배정 판으로 쓴 글만 올린 것으로 센다. 판을 모르는 글은 「올렸는지 미확인」으로 따로 둔다.
+  const liveRows = postings.flatMap((p) => p.live).map((p) => ({ articleId: p.articleId, match: planArticleOf(plan, p) }))
+  const live = new Set(liveRows.filter((p) => p.match !== null && p.match !== 'bank-unknown').map((p) => p.articleId))
+  const unsure = new Set(liveRows.filter((p) => p.match === 'bank-unknown' && !live.has(p.articleId)).map((p) => p.articleId))
   const unposted = (plan?.articles ?? [])
     .filter((a) => !live.has(a.id))
     .map(
@@ -288,25 +388,70 @@ export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStat
         brand,
         kind: 'unposted',
         postId: null,
+        key: null,
         articleId: a.id,
         title: a.name,
         writer: { ...a.writer },
-        writerUnknown: false,
+        writerUnknown: null,
+        postedUnknown: unsure.has(a.id),
         platform: null,
         url: null,
         publishedOn: null,
         removed: null,
         naver: null,
         google: null,
+        checkFrom: null,
       }),
     )
   const writers = plan
     ? planWriters(plan).map((w): WriterSummary => {
         const mine = plan.articles.filter((a) => a.writer.key === w.key)
-        return { tenantId, brand, key: w.key, name: w.name, assigned: mine.length, posted: mine.filter((a) => live.has(a.id)).length }
+        return {
+          tenantId,
+          brand,
+          key: w.key,
+          name: w.name,
+          assigned: mine.length,
+          posted: mine.filter((a) => live.has(a.id)).length,
+          unsure: mine.filter((a) => unsure.has(a.id)).length,
+        }
       })
     : []
   return { rows: [...posted, ...unposted], writers }
+}
+
+/**
+ * 모든 브랜드의 줄 순서 — 올린 글(브랜드를 건너 올린 날 늦은 순, 모르면 뒤)을 먼저, 그 뒤에 아직 안 올린 배정 글(브랜드 · 배정표 순).
+ * 브랜드마다 [올린 글, 배정 글]을 이어 붙이면 둘째 브랜드의 올린 글이 첫 브랜드의 배정 글 80줄 뒤에 묻혔다(검토 실측 86~90번째).
+ */
+export function orderRows(rows: PublishStatusRow[]): PublishStatusRow[] {
+  const posted = rows.filter((r) => r.kind === 'posted').sort((a, b) => (b.publishedOn ?? '').localeCompare(a.publishedOn ?? ''))
+  return [...posted, ...rows.filter((r) => r.kind === 'unposted')]
+}
+
+/**
+ * 표시를 저장한 뒤 화면 줄을 고친다 — 같은 주소의 살아 있는 줄 모두(다른 고객 브랜드 포함, 다시 읽은 것과 같은 값). 줄마다 올린 날보다
+ * 앞선 확인은 뺀다. from은 표시를 누른 줄.
+ */
+export function withIndexRecord(rows: PublishStatusRow[], from: Pick<PublishStatusRow, 'tenantId' | 'brand' | 'key'>, record: IndexCheckRecord): PublishStatusRow[] {
+  return rows.map((r) => {
+    if (r.kind !== 'posted' || r.removed || r.key === null || r.key !== from.key) return r
+    const fresh = freshIndexRecord(record, r.publishedOn)
+    const naver = fresh.naver ?? null
+    const google = fresh.google ?? null
+    return { ...r, naver, google, checkFrom: r.tenantId !== from.tenantId && (naver || google) ? from.brand : null }
+  })
+}
+
+/** 같은 주소를 적은 브랜드들(살아 있는 올린 글) — 주소 키 → 브랜드 이름. 둘 이상인 주소만. */
+export function sameUrlBrands(rows: PublishStatusRow[]): Map<string, string[]> {
+  const byKey = new Map<string, string[]>()
+  for (const r of rows) {
+    if (r.kind !== 'posted' || r.removed || r.key === null) continue
+    const list = byKey.get(r.key) ?? []
+    if (!list.includes(r.brand)) byKey.set(r.key, [...list, r.brand])
+  }
+  return new Map([...byKey].filter(([, brands]) => brands.length > 1))
 }
 
 /** 작성자 칸 — 「w1 · 이름」, 배정 밖 글은 「배정 없음」, 배정 파일을 못 읽었으면 「미확인」. */
@@ -412,11 +557,13 @@ export interface RowRecheck {
   nextOn: string | null
   /** 14일째도 지났다. */
   over: boolean
-  /** 표 · CSV의 「다시 볼 날」 칸. */
+  /** 「다시 볼 날」 칸의 머리 — 오늘 다시 볼 글 · 다음 날 · 14일 지남 · 모름 · 확인 끝. */
   label: string
+  /** 오늘 다시 볼 글이면 어느 엔진인지(14일 지남까지) — 「네이버 · 구글 · 14일 지남」. 그 밖은 빈 글자. */
+  note: string
 }
 
-const NO_RECHECK: RowRecheck = { due: false, engines: [], nextOn: null, over: false, label: '' }
+const NO_RECHECK: RowRecheck = { due: false, engines: [], nextOn: null, over: false, label: '', note: '' }
 
 /** 줄의 다시 볼 날 — 두 엔진을 합친다. 아직 안 올린 글 · 뺀 글은 다시 보지 않는다(빈 칸). */
 export function rowRecheck(row: Pick<PublishStatusRow, 'kind' | 'removed' | 'publishedOn' | 'naver' | 'google'>, today: string): RowRecheck {
@@ -425,23 +572,25 @@ export function rowRecheck(row: Pick<PublishStatusRow, 'kind' | 'removed' | 'pub
   const due = per.filter((p) => p.r.kind === 'due')
   if (due.length > 0) {
     const over = due.some((p) => p.r.kind === 'due' && p.r.over)
-    return { due: true, engines: due.map((p) => p.engine), nextOn: null, over, label: '오늘 다시 볼 글' }
+    const engines = due.map((p) => p.engine)
+    const note = [...engines.map((e) => ENGINE_NAME[e]), ...(over ? ['14일 지남'] : [])].join(' · ')
+    return { due: true, engines, nextOn: null, over, label: '오늘 다시 볼 글', note }
   }
   const next = per
     .map((p) => (p.r.kind === 'wait' ? p.r.next : null))
     .filter((d): d is string => d !== null)
     .sort()[0]
-  if (next) return { due: false, engines: [], nextOn: next, over: false, label: next }
-  if (per.some((p) => p.r.kind === 'over')) return { due: false, engines: [], nextOn: null, over: true, label: '14일 지남' }
-  if (per.some((p) => p.r.kind === 'no-date')) return { due: false, engines: [], nextOn: null, over: false, label: '모름' }
-  return { due: false, engines: [], nextOn: null, over: false, label: '확인 끝' }
+  if (next) return { ...NO_RECHECK, nextOn: next, label: next }
+  if (per.some((p) => p.r.kind === 'over')) return { ...NO_RECHECK, over: true, label: '14일 지남' }
+  if (per.some((p) => p.r.kind === 'no-date')) return { ...NO_RECHECK, label: '모름' }
+  return { ...NO_RECHECK, label: '확인 끝' }
 }
 
 /** 확인 칸 이름 — 네이버는 노출, 구글은 색인. 기록이 없으면 미확인. */
 export function indexStateLabel(engine: IndexEngine, check: IndexCheck | null): string {
   if (!check) return '미확인'
   if (check.state === 'not-yet') return '아직'
-  return engine === 'naver' ? '노출됨' : '색인됨'
+  return SHOWN_WORD[engine]
 }
 
 // ── 요약 · 거르기 ────────────────────────────────────────────────────────────
@@ -455,15 +604,24 @@ export interface StatusSummary {
   due: number
 }
 
-/** 맨 위 요약 — 살아 있는 올린 글만 센다(아직 안 올린 글 · 뺀 글은 빼고). */
+/**
+ * 맨 위 요약 — 살아 있는 올린 글만, 서로 다른 주소로 센다(아직 안 올린 글 · 뺀 글은 빼고). 범위 변형 두 브랜드에 같은 글 주소를 적으면
+ * 모든 브랜드 보기에서 두 줄이지만 올린 글은 하나다. 같은 주소의 줄 가운데 하나라도 그 상태면 센다.
+ */
 export function summarizeStatus(rows: PublishStatusRow[], today: string): StatusSummary {
-  const live = rows.filter((r) => r.kind === 'posted' && !r.removed)
+  const pages = new Map<string, PublishStatusRow[]>()
+  for (const r of rows) {
+    if (r.kind !== 'posted' || r.removed) continue
+    const k = r.key ?? r.rowKey
+    pages.set(k, [...(pages.get(k) ?? []), r])
+  }
+  const count = (test: (r: PublishStatusRow) => boolean) => [...pages.values()].filter((same) => same.some(test)).length
   return {
-    posted: live.length,
-    naverShown: live.filter((r) => r.naver?.state === 'shown').length,
-    googleShown: live.filter((r) => r.google?.state === 'shown').length,
-    unknown: live.filter((r) => r.naver === null || r.google === null).length,
-    due: live.filter((r) => rowRecheck(r, today).due).length,
+    posted: pages.size,
+    naverShown: count((r) => r.naver?.state === 'shown'),
+    googleShown: count((r) => r.google?.state === 'shown'),
+    unknown: count((r) => r.naver === null || r.google === null),
+    due: count((r) => rowRecheck(r, today).due),
   }
 }
 
@@ -501,6 +659,64 @@ export function filterRows(rows: PublishStatusRow[], f: StatusFilter, today: str
   })
 }
 
+/**
+ * 고른 브랜드 · 작성자가 새로 읽은 줄에 없으면(브랜드를 지웠거나 그 브랜드 파일이 깨졌다 · 배정이 바뀌었다) 모두로 되돌린다 — select에는
+ * 「모든 브랜드」가 보이는데 거르기는 사라진 브랜드로 남아 요약 · 표가 모두 비던 것. 브랜드가 사라졌으면 그 브랜드에서 고른 작성자도
+ * 비운다(같은 키 · 이름의 작성자가 다른 브랜드에 있어도). 그대로면 같은 값을 돌려준다.
+ */
+export function validFilter(f: StatusFilter, rows: PublishStatusRow[]): StatusFilter {
+  const tenantGone = Boolean(f.tenantId) && !rows.some((r) => r.tenantId === f.tenantId)
+  const tenantId = tenantGone ? '' : f.tenantId
+  const writer = f.writer && !tenantGone && rows.some((r) => (!tenantId || r.tenantId === tenantId) && writerFilterValue(r) === f.writer) ? f.writer : ''
+  return tenantId === f.tenantId && writer === f.writer ? f : { ...f, tenantId, writer }
+}
+
+/**
+ * 작성자 칩 누르기 — 켜면 그 브랜드 · 작성자로 거르고, 끄면 켜기 전 브랜드 거르기로 돌아간다(before — 칩으로 켰을 때만 있다). 끌 때 작성자만
+ * 비우면 브랜드 거르기가 남아 다른 브랜드의 작성자 진행이 사라졌다.
+ */
+export function toggleWriterChip(
+  f: StatusFilter,
+  chip: { tenantId: string; writer: string },
+  before: string | null,
+): { filter: StatusFilter; before: string | null } {
+  if (f.tenantId === chip.tenantId && f.writer === chip.writer) return { filter: { ...f, writer: '', tenantId: before ?? f.tenantId }, before: null }
+  return { filter: { ...f, tenantId: chip.tenantId, writer: chip.writer }, before: before ?? f.tenantId }
+}
+
+/** 줄이 하나도 없을 때 — 파일을 읽지 못한 브랜드가 있으면 「기록이 없다」고 하지 않는다(issues), 정말 없으면 empty. 줄이 있으면 null. */
+export function emptyStateOf(data: Pick<PublishStatus, 'rows' | 'issues'>): 'issues' | 'empty' | null {
+  if (data.rows.length > 0) return null
+  return data.issues.length > 0 ? 'issues' : 'empty'
+}
+
+// ── 화면 읽기 이름 ───────────────────────────────────────────────────────────
+
+/**
+ * 줄을 가리키는 이름 — 단추 · 링크가 줄마다 같은 이름이면 화면 읽기 프로그램으로 어느 글의 것인지 모른다. 브랜드 + 제목(모르면 주소) +
+ * 플랫폼(같은 글을 티스토리 · 네이버 블로그에 함께 올리면 제목이 같다).
+ */
+export function rowName(row: Pick<PublishStatusRow, 'brand' | 'title' | 'url' | 'platform'>): string {
+  const what = row.title?.trim() || (row.url ? withoutScheme(row.url) : '제목 미확인')
+  return `${row.brand} 「${what}」${row.platform ? ` ${row.platform.label}` : ''}`
+}
+
+/**
+ * 표시 단추의 이름 — state null은 지우기. 이미 그 상태인 단추를 다시 누르면 상태는 그대로이고 확인일만 오늘로 바뀌므로 그렇게 알린다
+ * (눌린 토글을 다시 눌러도 풀리지 않는 것을 이름으로 설명).
+ */
+export function markLabel(row: Pick<PublishStatusRow, 'brand' | 'title' | 'url' | 'platform'>, engine: IndexEngine, state: IndexState | null, current: IndexCheck | null): string {
+  const target = `${rowName(row)} ${ENGINE_NAME[engine]}`
+  if (state === null) return `${target} 표시 지우기(미확인으로)`
+  const word = state === 'shown' ? SHOWN_WORD[engine] : '아직'
+  return current?.state === state ? `${target} ${word} — 지금 표시됨, 다시 누르면 확인일을 오늘로` : `${target} ${word}으로 표시`
+}
+
+/** 검색 링크의 이름 — 새 창(데스크톱 앱은 시스템 브라우저)으로 열린다는 것까지. */
+export function searchLabel(row: Pick<PublishStatusRow, 'brand' | 'title' | 'url' | 'platform'>, engine: IndexEngine): string {
+  return `${rowName(row)} ${ENGINE_NAME[engine]}에서 확인(새 창)`
+}
+
 // ── 검색 주소 ────────────────────────────────────────────────────────────────
 
 /** 주소에서 http(s):// · # 뒤 · 끝 슬래시를 뗀다. */
@@ -536,11 +752,15 @@ export function csvCell(v: string | number | null): string {
 
 const REMOVED_LABEL: Record<RemovedReason, string> = { 'taken-down': '내림', mistake: '잘못 적은 주소' }
 
-/** 표의 「다시 볼 날」 칸 — 뺀 글은 뺀 이유. */
+/** 표의 「다시 볼 날」 칸 — 뺀 글은 뺀 이유, 오늘 다시 볼 글은 어느 엔진인지 · 14일 지남까지(표의 칩 · 아래 줄과 같은 글자). */
 export function recheckCell(row: PublishStatusRow, today: string): string {
   if (row.removed) return REMOVED_LABEL[row.removed.reason]
-  return rowRecheck(row, today).label
+  const r = rowRecheck(row, today)
+  return r.note ? `${r.label} (${r.note})` : r.label
 }
+
+/** 아직 안 올린 배정 글의 표시 — 판을 몰라 올렸는지 모르는 글은 「올렸는지 미확인」. */
+export const unpostedLabel = (row: Pick<PublishStatusRow, 'postedUnknown'>) => (row.postedUnknown ? '올렸는지 미확인' : '아직 안 올림')
 
 /** 표에 보이는 줄 그대로 — 열은 표와 같고 엔진마다 확인일을 더한다. 엑셀이 한글을 깨뜨리지 않게 BOM을 붙이고 줄은 CRLF. */
 export function publishStatusCsv(rows: PublishStatusRow[], today: string): string {
@@ -555,7 +775,7 @@ export function publishStatusCsv(rows: PublishStatusRow[], today: string): strin
         r.title ?? '제목 미확인',
         r.platform?.label ?? '',
         r.url ?? '',
-        posted ? (r.publishedOn ?? '모름') : '아직 안 올림',
+        posted ? (r.publishedOn ?? '모름') : unpostedLabel(r),
         posted ? indexStateLabel('naver', r.naver) : '',
         r.naver?.checkedOn ?? '',
         posted ? indexStateLabel('google', r.google) : '',

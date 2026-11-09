@@ -9043,10 +9043,27 @@ tr.ms-run-child td:nth-child(2) {
   min-height: 32px;
   font-size: 13px;
 }
-/* 열이 아홉이라 좁은 창에서 짧은 칸이 한 글자씩 접혔다 — 표 너비를 지키고 .table-wrap 안에서 옆으로 민다. */
+/*
+ * 열이 아홉이라 좁은 창에서 짧은 칸이 한 글자씩 접혔다 — 표 너비를 지키고 표 상자 안에서 옆으로 민다. 최소 너비는 데스크톱 앱 기본 창
+ * (1360×900 — 표 상자 안쪽 약 1040px)에 들어오게 둔다(1120px일 때 구글 색인 단추 · 다시 볼 날이 잘렸다, 2026-11-09 검토).
+ * 표 상자는 화면 높이 안에서 세로로도 스크롤하고 머리글을 붙인다 — 250줄이면 표가 1만 7천 px라 가로 스크롤 막대가 맨 아래에만 있었고
+ * 내려가면 열 이름이 보이지 않았다. 상단 막대(56px) 아래에 들어오는 높이다.
+ */
+.ps-table-wrap {
+  max-height: calc(100vh - 88px);
+  overflow: auto;
+  padding-top: 0;
+}
 .ps-table {
-  min-width: 1120px;
+  min-width: 960px;
   font-size: 13px;
+}
+.ps-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--card);
+  box-shadow: inset 0 -1px 0 var(--ink);
 }
 .ps-table th,
 .ps-table td {
@@ -9062,7 +9079,7 @@ tr.ms-run-child td:nth-child(2) {
   cursor: default;
 }
 .ps-title {
-  min-width: 200px;
+  min-width: 150px;
   overflow-wrap: anywhere;
 }
 .ps-tag {
@@ -9070,7 +9087,7 @@ tr.ms-run-child td:nth-child(2) {
 }
 .ps-url a {
   display: inline-block;
-  max-width: 220px;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -9078,7 +9095,7 @@ tr.ms-run-child td:nth-child(2) {
   color: var(--accent);
 }
 .ps-index {
-  min-width: 170px;
+  min-width: 118px;
 }
 .ps-date {
   display: block;

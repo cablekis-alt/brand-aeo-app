@@ -4,16 +4,26 @@ import { loadPublishStatus, saveIndexCheck } from '../lib/api'
 import { downloadCsv, safeFileName } from '../lib/markdownFile'
 import { monthDay } from '../lib/publishTracking'
 import {
+  emptyStateOf,
   ENGINE_NAME,
   filterRows,
   googleSearchUrl,
   indexStateLabel,
+  markLabel,
   naverSearchUrl,
   publishStatusCsv,
   publishStatusFileName,
   recheckCell,
   rowRecheck,
+  sameUrlBrands,
+  searchLabel,
+  SHOWN_WORD,
   summarizeStatus,
+  toggleWriterChip,
+  unpostedLabel,
+  validFilter,
+  withIndexRecord,
+  WRITER_UNKNOWN_NOTE,
   writerFilterValue,
   writerLabel,
   type IndexEngine,
@@ -26,8 +36,6 @@ import {
 
 const DEFAULT_FILTER: StatusFilter = { tenantId: '', writer: '', naver: '', google: '', dueOnly: false, showUnposted: true, showRemoved: false }
 
-const SHOWN_WORD: Record<IndexEngine, string> = { naver: '노출됨', google: '색인됨' }
-
 /** 주소 칸에 보일 글자 — http(s)://를 뗀다(누르면 전체 주소로 연다). */
 const shortUrl = (url: string) => url.replace(/^https?:\/\//i, '').replace(/\/+$/, '')
 
@@ -36,6 +44,7 @@ type MarkFn = (row: PublishStatusRow, engine: IndexEngine, state: IndexState | n
 /**
  * 네이버 노출 · 구글 색인 칸 — 상태와 확인한 날, 검색 창을 여는 링크(데스크톱 앱은 시스템 브라우저로 연다 — electron/main.cjs
  * setWindowOpenHandler), 본 결과를 적는 단추. 같은 상태를 다시 누르면 확인한 날이 오늘로 바뀐다(다시 볼 날에 「아직」을 다시 확인한 것).
+ * 단추 · 링크 이름에 브랜드 · 제목을 넣어 화면 읽기 프로그램이 어느 글의 것인지 알게 한다.
  */
 function IndexCell({ row, engine, busy, onMark }: { row: PublishStatusRow; engine: IndexEngine; busy: boolean; onMark: MarkFn }) {
   if (row.kind === 'unposted') return <td className="ps-index muted">—</td>
@@ -48,13 +57,13 @@ function IndexCell({ row, engine, busy, onMark }: { row: PublishStatusRow; engin
       <span className={`chip${tone}`}>{indexStateLabel(engine, check)}</span>
       {check && (
         <span className="ps-date" title={`${check.source === 'auto' ? '자동 확인' : '직접 확인'} · ${check.checkedAt}`}>
-          {monthDay(check.checkedOn)} 확인
+          {monthDay(check.checkedOn)} 확인{row.checkFrom ? ` · ${row.checkFrom} 줄에서` : ''}
         </span>
       )}
       {!row.removed && (
         <div className="ps-index-actions">
           {searchUrl && (
-            <a className="ps-search" href={searchUrl} target="_blank" rel="noreferrer">
+            <a className="ps-search" href={searchUrl} target="_blank" rel="noreferrer" aria-label={searchLabel(row, engine)}>
               {name}에서 확인
             </a>
           )}
@@ -62,7 +71,7 @@ function IndexCell({ row, engine, busy, onMark }: { row: PublishStatusRow; engin
             type="button"
             className="ps-mark"
             aria-pressed={check?.state === 'shown'}
-            aria-label={`${name} ${SHOWN_WORD[engine]}으로 표시`}
+            aria-label={markLabel(row, engine, 'shown', check)}
             disabled={busy}
             onClick={() => onMark(row, engine, 'shown')}
           >
@@ -72,14 +81,14 @@ function IndexCell({ row, engine, busy, onMark }: { row: PublishStatusRow; engin
             type="button"
             className="ps-mark"
             aria-pressed={check?.state === 'not-yet'}
-            aria-label={`${name} 아직으로 표시`}
+            aria-label={markLabel(row, engine, 'not-yet', check)}
             disabled={busy}
             onClick={() => onMark(row, engine, 'not-yet')}
           >
             아직
           </button>
           {check && (
-            <button type="button" className="ps-mark ps-clear" aria-label={`${name} 표시 지우기(미확인으로)`} disabled={busy} onClick={() => onMark(row, engine, null)}>
+            <button type="button" className="ps-mark ps-clear" aria-label={markLabel(row, engine, null, check)} disabled={busy} onClick={() => onMark(row, engine, null)}>
               지우기
             </button>
           )}
@@ -89,7 +98,7 @@ function IndexCell({ row, engine, busy, onMark }: { row: PublishStatusRow; engin
   )
 }
 
-/** 다시 볼 날 칸 — 오늘 다시 볼 글이면 어느 엔진인지, 아니면 다음 날 · 14일 지남 · 확인 끝 · 모름. */
+/** 다시 볼 날 칸 — 오늘 다시 볼 글이면 어느 엔진인지(CSV와 같은 글자), 아니면 다음 날 · 14일 지남 · 확인 끝 · 모름. */
 function RecheckView({ row, today }: { row: PublishStatusRow; today: string }) {
   if (row.kind === 'unposted') return <td />
   if (row.removed) return <td className="muted">{recheckCell(row, today)}</td>
@@ -97,11 +106,8 @@ function RecheckView({ row, today }: { row: PublishStatusRow; today: string }) {
   if (r.due) {
     return (
       <td>
-        <span className="chip warn">오늘 다시 볼 글</span>
-        <span className="ps-date">
-          {r.engines.map((e) => ENGINE_NAME[e]).join(' · ')}
-          {r.over ? ' · 14일 지남' : ''}
-        </span>
+        <span className="chip warn">{r.label}</span>
+        <span className="ps-date">{r.note}</span>
       </td>
     )
   }
@@ -126,7 +132,9 @@ function RecheckView({ row, today }: { row: PublishStatusRow; today: string }) {
 export default function PublishStatus() {
   const [state, setState] = useState<{ loaded: boolean; value: PublishStatusData | null; error: string | null }>({ loaded: false, value: null, error: null })
   const [reloadKey, setReloadKey] = useState(0)
-  const [filter, setFilter] = useState<StatusFilter>(DEFAULT_FILTER)
+  const [filterState, setFilter] = useState<StatusFilter>(DEFAULT_FILTER)
+  // 작성자 칩으로 거르기를 켜기 전의 브랜드 거르기 — 칩을 끄면 여기로 돌아간다. 손으로 고르면 null.
+  const [chipBefore, setChipBefore] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [markError, setMarkError] = useState<string | null>(null)
 
@@ -134,7 +142,10 @@ export default function PublishStatus() {
     let alive = true
     void loadPublishStatus().then(
       (value) => {
-        if (alive) setState({ loaded: true, value, error: null })
+        if (!alive) return
+        setState({ loaded: true, value, error: null })
+        // 고른 브랜드 · 작성자가 새 줄에 없으면(브랜드 파일이 깨졌다 · 지웠다 · 배정이 바뀌었다) 모두로 되돌린다.
+        if (value) setFilter((f) => validFilter(f, value.rows))
       },
       (err: unknown) => {
         if (alive) setState((s) => ({ ...s, loaded: true, error: err instanceof Error ? err.message : String(err) }))
@@ -148,7 +159,13 @@ export default function PublishStatus() {
   const data = state.value
   const today = data?.today ?? ''
   const rows = data?.rows ?? []
-  const patchFilter = (patch: Partial<StatusFilter>) => setFilter((f) => ({ ...f, ...patch }))
+  // 거르기는 늘 지금 줄에 있는 브랜드 · 작성자로 본다(읽은 직후에도 되돌리지만, 그 사이 한 번 그리는 값도 어긋나지 않게).
+  const filter = validFilter(filterState, rows)
+  const patchFilter = (patch: Partial<StatusFilter>) => setFilter((f) => ({ ...validFilter(f, rows), ...patch }))
+  const pickFilter = (patch: Partial<StatusFilter>) => {
+    patchFilter(patch)
+    setChipBefore(null)
+  }
 
   const mark: MarkFn = (row, engine, next) => {
     if (!row.postId) return
@@ -157,17 +174,8 @@ export default function PublishStatus() {
     setMarkError(null)
     saveIndexCheck(row.tenantId, row.postId, engine, next)
       .then((record) => {
-        setState((s) =>
-          s.value
-            ? {
-                ...s,
-                value: {
-                  ...s.value,
-                  rows: s.value.rows.map((r) => (r.rowKey === row.rowKey ? { ...r, naver: record.naver ?? null, google: record.google ?? null } : r)),
-                },
-              }
-            : s,
-        )
+        // 같은 주소의 줄 모두(다른 고객 브랜드 포함) — 다시 읽은 것과 같은 값이 된다.
+        setState((s) => (s.value ? { ...s, value: { ...s.value, rows: withIndexRecord(s.value.rows, row, record) } } : s))
       })
       .catch((err: unknown) => setMarkError(`「${row.title ?? '제목 미확인'}」 ${ENGINE_NAME[engine]} 표시를 저장하지 못했습니다 — ${err instanceof Error ? err.message : String(err)}`))
       .finally(() => setBusy((b) => (b === cell ? null : b)))
@@ -182,6 +190,8 @@ export default function PublishStatus() {
   const shown = filterRows(rows, filter, today)
   const writers = (data?.writers ?? []).filter((w) => !filter.tenantId || w.tenantId === filter.tenantId)
   const writerBrands = [...new Set(writers.map((w) => w.tenantId))]
+  const sameUrl = sameUrlBrands(rows)
+  const empty = data ? emptyStateOf(data) : null
 
   const exportCsv = () => downloadCsv(safeFileName(publishStatusFileName(today)), publishStatusCsv(shown, today))
   const tiles = [
@@ -233,6 +243,7 @@ export default function PublishStatus() {
               {data.issues.map((i) => (
                 <p key={`${i.tenantId}|${i.error}`} className="ps-issue">
                   <b>{i.brand}</b> — {i.error}
+                  {!rows.some((r) => r.tenantId === i.tenantId) && ' 이 브랜드의 줄은 표에 보이지 않습니다.'}
                 </p>
               ))}
             </div>
@@ -243,7 +254,9 @@ export default function PublishStatus() {
             </p>
           )}
 
-          {rows.length === 0 ? (
+          {empty === 'issues' ? (
+            <p className="muted">파일을 읽지 못한 브랜드가 있어 보일 줄이 없습니다. 위 오류의 파일을 고친 뒤 「다시 읽기」를 누르세요.</p>
+          ) : empty === 'empty' ? (
             <p className="muted">
               아직 올린 글도 작성자 배정도 없습니다. <Link to="/content-library">콘텐츠 보관함</Link>에서 올린 주소를 적으면 여기에 모입니다.
             </p>
@@ -275,12 +288,17 @@ export default function PublishStatus() {
                               type="button"
                               className={`ps-writer${on ? ' on' : ''}${w.posted >= w.assigned ? ' done' : ''}`}
                               aria-pressed={on}
-                              title={`${w.key} · ${w.name} — 배정 ${w.assigned}편 중 ${w.posted}편 올림`}
-                              onClick={() => patchFilter(on ? { writer: '' } : { tenantId, writer: value })}
+                              title={`${w.key} · ${w.name} — 배정 ${w.assigned}편 중 ${w.posted}편 올림${w.unsure ? ` · ${w.unsure}편은 올렸는지 미확인(글을 쓴 질문지 판을 모름)` : ''}`}
+                              onClick={() => {
+                                const next = toggleWriterChip(filter, { tenantId, writer: value }, chipBefore)
+                                setFilter(next.filter)
+                                setChipBefore(next.before)
+                              }}
                             >
                               {w.key} · {w.name}
                               <span className="ps-writer-n">
                                 올림 {w.posted}/{w.assigned}
+                                {w.unsure ? ` · 미확인 ${w.unsure}` : ''}
                               </span>
                             </button>
                           )
@@ -293,7 +311,7 @@ export default function PublishStatus() {
               <div className="ps-tools">
                 <label className="ps-field">
                   <span>브랜드</span>
-                  <select value={filter.tenantId} onChange={(e) => patchFilter({ tenantId: e.target.value, writer: '' })}>
+                  <select value={filter.tenantId} onChange={(e) => pickFilter({ tenantId: e.target.value, writer: '' })}>
                     <option value="">모든 브랜드</option>
                     {brands.map(([id, brand]) => (
                       <option key={id} value={id}>
@@ -304,7 +322,7 @@ export default function PublishStatus() {
                 </label>
                 <label className="ps-field">
                   <span>작성자</span>
-                  <select value={filter.writer} onChange={(e) => patchFilter({ writer: e.target.value })}>
+                  <select value={filter.writer} onChange={(e) => pickFilter({ writer: e.target.value })}>
                     <option value="">모든 작성자</option>
                     {writerOptions.map(([value, text]) => (
                       <option key={value} value={value}>
@@ -351,7 +369,7 @@ export default function PublishStatus() {
               {shown.length === 0 ? (
                 <p className="muted">고른 조건에 맞는 글이 없습니다.</p>
               ) : (
-                <div className="table-wrap">
+                <div className="table-wrap ps-table-wrap">
                   <table className="ps-table">
                     <thead>
                       <tr>
@@ -370,15 +388,12 @@ export default function PublishStatus() {
                       {shown.map((r) => (
                         <tr key={r.rowKey} className={r.removed ? 'ps-removed' : r.kind === 'unposted' ? 'ps-unposted' : undefined}>
                           <td className="ps-nowrap">{r.brand}</td>
-                          <td
-                            className={`ps-nowrap${r.writer ? '' : ' muted'}`}
-                            title={r.writerUnknown ? '배정 파일(probe-plan.json)을 읽지 못해 작성자를 모릅니다' : undefined}
-                          >
+                          <td className={`ps-nowrap${r.writer ? '' : ' muted'}`} title={r.writerUnknown ? WRITER_UNKNOWN_NOTE[r.writerUnknown] : undefined}>
                             {writerLabel(r)}
                           </td>
                           <td className="ps-title">
                             {r.title ?? <span className="muted">제목 미확인</span>}
-                            {r.kind === 'unposted' && <span className="chip ps-tag">아직 안 올림</span>}
+                            {r.kind === 'unposted' && <span className="chip ps-tag">{unpostedLabel(r)}</span>}
                             {r.removed && <span className="chip ps-tag">{recheckCell(r, today)}</span>}
                           </td>
                           <td className="ps-nowrap">{r.platform?.label ?? '—'}</td>
@@ -389,6 +404,9 @@ export default function PublishStatus() {
                               </a>
                             ) : (
                               '—'
+                            )}
+                            {r.key && !r.removed && sameUrl.has(r.key) && (
+                              <span className="ps-date">같은 주소: {sameUrl.get(r.key)!.filter((b) => b !== r.brand).join(', ')}</span>
                             )}
                           </td>
                           <td className="mono">{r.kind === 'unposted' ? '—' : (r.publishedOn ?? '모름')}</td>
