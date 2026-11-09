@@ -173,6 +173,8 @@ import { startScheduler } from './scheduler.js';
 import { isActionStatus, readActionStates, sanitizeUrls, writeActionState } from './actionStates.js';
 import { queueTenantWrite } from './tenantWriteQueue.js';
 import { getPublishedHistory } from './publishedHistory.js';
+import { IndexChecksError, setIndexCheck } from './indexChecks.js';
+import { readPublishStatus } from './publishStatus.js';
 import { getRunHistory, MAX_RUN_WEEKS } from './runHistory.js';
 import {
   addPublishedPost,
@@ -2694,6 +2696,32 @@ app.patch('/api/published-posts/:tenantId/:postId', async (req, res) => {
     res.json(await patchPublishedPost(tenant.tenantId, req.params.postId, (req.body ?? {}) as PatchPostInput));
   } catch (err) {
     sendPostsError(res, err);
+  }
+});
+
+// 발행 현황 — 고객 브랜드 모두의 올린 글 · 작성자 배정 · 색인 확인(server/publishStatus.ts). 데스크톱·로컬 전용이다(Vercel 함수는
+// 12/12 — 웹은 404를 「데스크톱 앱에서만」으로 읽는다). 한 브랜드의 파일이 깨지면 그 브랜드만 issues로 알린다.
+app.get('/api/publish-status', async (_req, res) => {
+  try {
+    res.json(await readPublishStatus(await loadRuntimeTenants()));
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// 색인 확인 표시 — { engine: 'naver' | 'google', state: 'shown' | 'not-yet' | null }(server/indexChecks.ts). null은 미확인으로 되돌린다.
+// 고객 브랜드의 원장에 있는 기록만 받는다(경쟁사 · 없는 기록은 404, 본문이 틀리면 400, 파일이 깨졌으면 500 — 쓰지 않는다).
+app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
+  const tenant = await findTenant(req.params.tenantId);
+  if (!tenant || tenant.cohortOnly) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return;
+  }
+  try {
+    res.json(await setIndexCheck(tenant.tenantId, req.params.postId, req.body));
+  } catch (err) {
+    const status = err instanceof IndexChecksError || err instanceof PublishedPostsError ? err.status : 500;
+    res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 

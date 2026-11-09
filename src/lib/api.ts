@@ -7,6 +7,7 @@ import type { CitationQuestionScope, CitationSourceAnalysis } from '../prompts/b
 import type { PublishSettings } from './publishSettings'
 import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './extraArticles'
 import { parseWriterPlan, type WriterPlan } from './probePlan'
+import type { IndexCheckRecord, IndexEngine, IndexState, PublishStatus } from './publishStatus'
 import type { AnswerEvidence } from './answerEvidence'
 import { validScene, type PhotoScene } from './photoScenes'
 import { isMapImageId, normalizeMapPoints, parseMapAppSrc, type MapPoint } from './mapImage'
@@ -723,6 +724,33 @@ export async function patchPublishedPost(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   })
+}
+
+/**
+ * 발행 현황(server/publishStatus.ts) — 고객 브랜드 모두의 올린 글 · 작성자 배정 · 색인 확인. **null은 "이 환경에는 기능이 없다"(웹 —
+ * 라우트 404)**는 뜻이고, 그 밖의 실패는 이유와 함께 throw한다. 한 브랜드의 파일이 깨진 것은 실패가 아니라 issues로 온다.
+ */
+export async function loadPublishStatus(): Promise<PublishStatus | null> {
+  let res: Response
+  try {
+    res = await fetch('/api/publish-status')
+  } catch (err) {
+    throw new PublishedPostsRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  if (res.status === 404) return null
+  const body = (await res.json().catch(() => null)) as (PublishStatus & { error?: string }) | null
+  if (!res.ok || !body || !Array.isArray(body.rows)) throw new PublishedPostsRequestError(body?.error || `발행 현황을 읽지 못했습니다 (HTTP ${res.status})`)
+  return body
+}
+
+/** 색인 확인 표시(server/indexChecks.ts) — state null은 미확인으로 되돌린다. 실패하면 서버가 준 이유와 함께 throw한다. */
+export async function saveIndexCheck(tenantId: string, postId: string, engine: IndexEngine, state: IndexState | null): Promise<IndexCheckRecord> {
+  const body = await postsRequest<{ record: IndexCheckRecord }>(`/api/index-checks/${encodeURIComponent(tenantId)}/${encodeURIComponent(postId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ engine, state }),
+  })
+  return body.record
 }
 
 /** 실패하면 null. 화면은 이전 상태를 되돌리고 사용자에게 알린다(조용히 삼키지 않는다). */

@@ -8919,3 +8919,214 @@ tr.ms-run-child td:nth-child(2) {
   color: var(--warn);
   margin: 0;
 }
+
+/*
+ * ── 발행 현황(src/pages/PublishStatus.tsx) ───────────────────────────────
+ * 요약 칸 · 작성자별 진행 · 거르기 · 한 표. 표는 열이 많아 좁은 창에서는 표 안에서만 옆으로 민다(.table-wrap).
+ */
+.ps-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin: 0 0 14px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+  background: var(--line);
+}
+.ps-sum {
+  flex: 1 1 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 18px 14px;
+  background: var(--paper);
+}
+.ps-sum-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.ps-sum-value {
+  font-family: var(--mono);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.ps-sum.good .ps-sum-value { color: var(--good); }
+.ps-sum.warn .ps-sum-value { color: var(--warn); }
+.ps-sum-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+.ps-issue {
+  margin: 0 0 6px;
+}
+.ps-writers {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.ps-writer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.ps-writer-brand {
+  min-width: 110px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.ps-writer,
+.ps-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.ps-writer:hover,
+.ps-due:hover {
+  border-color: var(--ink-2);
+}
+.ps-writer.done {
+  border-color: color-mix(in srgb, var(--good) 45%, var(--line));
+}
+.ps-writer.on,
+.ps-due.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+.ps-writer:focus-visible,
+.ps-due:focus-visible,
+.ps-mark:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.ps-writer-n {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.ps-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  margin: 0 0 12px;
+}
+.ps-field {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ps-field select {
+  max-width: 220px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.ps-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: 13px;
+}
+/* 열이 아홉이라 좁은 창에서 짧은 칸이 한 글자씩 접혔다 — 표 너비를 지키고 .table-wrap 안에서 옆으로 민다. */
+.ps-table {
+  min-width: 1120px;
+  font-size: 13px;
+}
+.ps-table th,
+.ps-table td {
+  text-align: left;
+  white-space: normal;
+}
+.ps-table th,
+.ps-table td.ps-nowrap,
+.ps-table td.mono {
+  white-space: nowrap;
+}
+.ps-table tbody tr {
+  cursor: default;
+}
+.ps-title {
+  min-width: 200px;
+  overflow-wrap: anywhere;
+}
+.ps-tag {
+  margin-left: 6px;
+}
+.ps-url a {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+  color: var(--accent);
+}
+.ps-index {
+  min-width: 170px;
+}
+.ps-date {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ps-index-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+.ps-search {
+  margin-right: 2px;
+  font-size: 12px;
+  color: var(--accent);
+}
+.ps-mark {
+  padding: 2px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ps-mark:hover:not(:disabled) {
+  border-color: var(--ink-2);
+}
+.ps-mark[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+.ps-mark:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.ps-clear {
+  color: var(--muted);
+}
+.ps-unposted td {
+  color: var(--muted);
+}
+.ps-removed td {
+  opacity: 0.55;
+}

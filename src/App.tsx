@@ -15,6 +15,7 @@ import Eeat from './pages/Eeat'
 import MeasureStatus from './pages/MeasureStatus'
 import MeasureTenant from './pages/MeasureTenant'
 import PeriodicReport from './pages/PeriodicReport'
+import PublishStatus from './pages/PublishStatus'
 import Performance from './pages/Performance'
 import BrandFacts from './pages/BrandFacts'
 import QuestionBank from './pages/QuestionBank'
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="gap-analysis" element={<GapAnalysis />} />
             <Route path="gap-actions" element={<GapActions />} />
             <Route path="content-library" element={<ContentLibrary />} />
+            <Route path="publish-status" element={<PublishStatus />} />
             <Route path="sentiment" element={<SentimentDashboard />} />
             <Route path="site-diagnosis" element={<SiteDiagnosis />} />
             <Route path="questions" element={<QuestionBank />} />

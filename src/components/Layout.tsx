@@ -11,9 +11,9 @@ import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 
 // 선택 브랜드와 무관한 관리·측정 화면 — 브랜드 0개여도 그대로 연다(브랜드 추가는 첫 등록 통로, 측정 대기열·상태는 전역,
-// 테넌트 골라 측정은 자체 패널, 브랜드 현황은 전체 목록). 사이드바 브랜드 칸은 숨기지 않고 흐리게 둔다 — 화면마다 칸이
+// 테넌트 골라 측정은 자체 패널, 브랜드 현황 · 발행 현황은 전체 목록). 사이드바 브랜드 칸은 숨기지 않고 흐리게 둔다 — 화면마다 칸이
 // 사라졌다 나타나면 메뉴가 58px씩 오르내렸고, 사이드바 배지 · 측정 카드가 어느 브랜드 기준인지 보이지 않았다(상용화 UI 3차 U12).
-const MANAGEMENT_ROUTES = new Set(['/brand-onboarding', '/measure-tenant', '/measure-status', '/brands'])
+const MANAGEMENT_ROUTES = new Set(['/brand-onboarding', '/measure-tenant', '/measure-status', '/brands', '/publish-status'])
 
 export default function Layout() {
   const { tenants, tenant, customer, viewing, exitCompetitorView, loading, error, reloadTenants } = useTenant()

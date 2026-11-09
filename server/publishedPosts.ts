@@ -223,10 +223,16 @@ async function readAll(tenantId: string): Promise<{ ledger: PublishedPost[]; leg
  * 실패했다(검토 실측: 읽기 2개를 쉬지 않고 걸면 80건 중 3건).
  */
 export function readPublishedPosts(tenantId: string): Promise<PublishedPost[]> {
-  return queueTenantWrite(tenantId, async () => {
-    const { ledger, legacy } = await readAll(tenantId);
-    return [...ledger, ...legacy];
-  });
+  return queueTenantWrite(tenantId, () => readPublishedPostsInQueue(tenantId));
+}
+
+/**
+ * 쓰기 줄에 이미 선 작업 안에서 원장 + 옛 기록을 읽는다(발행 현황 · 색인 확인 server/indexChecks.ts). 줄 안에서 readPublishedPosts를
+ * 부르면 앞 작업(자기 자신)을 기다려 멈추므로 이것을 쓴다. 줄 밖에서 부르지 않는다.
+ */
+export async function readPublishedPostsInQueue(tenantId: string): Promise<PublishedPost[]> {
+  const { ledger, legacy } = await readAll(tenantId);
+  return [...ledger, ...legacy];
 }
 
 async function writeLedger(tenantId: string, posts: PublishedPost[]): Promise<void> {

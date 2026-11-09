@@ -64,6 +64,8 @@ export const MENU: MenuGroup[] = [
       // 내보내는 것이고, 고객이 찾는 말도 그쪽이다. 배지(남은 건수)는 그대로 쓴다.
       { label: '콘텐츠 생성', to: '/gap-actions', badge: 'actions', icon: 'content', customerOnly: true },
       { label: '콘텐츠 보관함', to: '/content-library', icon: 'library', customerOnly: true },
+      // 고객 브랜드 모두의 올린 글 · 작성자별 진행 · 네이버 노출 · 구글 색인 확인을 한 표로 — 브랜드를 고르지 않는 화면이다(Layout MANAGEMENT_ROUTES).
+      { label: '발행 현황', to: '/publish-status', icon: 'publish', customerOnly: true },
       { label: 'Site AEO Checker', to: '/site-diagnosis', icon: 'site', customerOnly: true },
     ],
   },
