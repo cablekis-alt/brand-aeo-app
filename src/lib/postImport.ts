@@ -640,7 +640,7 @@ export interface ImportCandidate {
   body: number
   /** 제목 겹침(0~1) — 보이기만 한다. */
   titleScore: number
-  /** 작성자(콘텐츠 보관함 규칙 — 배정에 있고 그 추가 글을 배정 판으로 만들었다). 배정 밖 글이면 null. */
+  /** 작성자(콘텐츠 보관함 규칙 — 배정에 있고, 그 추가 글을 배정 판으로 만들었거나 추가 글 정의가 없다(판 미확인)). 배정 밖 글이면 null. */
   writer: { key: string; name: string } | null
   /** 배정이나 추가 글 목록을 읽지 못해 작성자를 모른다(「미확인」). */
   writerUnknown: boolean

@@ -5,11 +5,15 @@
  *
  * 왜: 배정 글 80편이 한 목록에 최근 고친 순으로 섞여 있어 누구 글인지 · 몇 편이 남았는지 보기 어려웠다. 어느 글이 누구 몫인지는 콘텐츠
  * 생성(src/pages/GapActions.tsx writerArticleOf)과 같은 규칙이어야 한다 — 글 id가 배정에 있어도 그 추가 글을 배정 판이 아닌 판으로
- * 만들었으면 다른 질문이라 배정 밖 글이다. 추가 글 목록이나 배정을 읽지 못하면 짐작하지 않고 지금 순서로 모든 글을 보인다.
+ * 만들었으면 다른 질문이라 배정 밖 글이다. 추가 글 정의가 없는 배정 글 id(질문 은행 화면에서 만든 글)는 그 작성자 칸에 「판 미확인」으로
+ * 둔다(사용자 결정, 2026-11-09 — 발행 현황 · 콘텐츠 생성 작성자 줄 · 작성자 묶음과 같이 그 작성자 글로 본다). 추가 글 목록이나 배정을
+ * 읽지 못하면 짐작하지 않고 지금 순서로 모든 글을 보인다.
  *
  *   npx tsx scripts/verify-content-library-order.ts
  */
 import {
+  assignedArticle,
+  BANK_UNKNOWN_NOTE,
   libraryCount,
   libraryLayout,
   libraryPickOptions,
@@ -81,7 +85,8 @@ const dA2 = draft(A2.id, '2026-11-03T03:00:00.000Z');
 const dA3 = draft(A3.id, '2026-11-04T00:00:00.000Z', '2026-11-09T00:00:00.000Z');
 const dB1 = draft(B1.id, '2026-11-05T00:00:00.000Z');
 const dB2 = draft(B2.id, '2026-11-02T00:00:00.000Z');
-// 배정 밖 — 본 글, 배정에 없는 질문 글, 배정 글 id지만 다른 판(v8)으로 만든 추가 글, 배정 글 id지만 추가 글 정의가 없는 글(질문 은행 화면).
+// 배정 밖 — 본 글, 배정에 없는 질문 글, 배정 글 id지만 다른 판(v8)으로 만든 추가 글. 배정 글 id지만 추가 글 정의가 없는 글(질문 은행
+// 화면)은 그 작성자(w3) 칸에 「판 미확인」으로 둔다.
 const dMain = draft('content:category-agnostic', '2026-10-20T00:00:00.000Z', '2026-11-06T00:00:00.000Z');
 const dTopic = draft('topic:q-007+q-008', '2026-10-25T00:00:00.000Z');
 const dOldBank = draft(C1.id, '2026-10-28T00:00:00.000Z');
@@ -144,9 +149,10 @@ const g = grouped(layout);
   ok('묶기 — 배정과 추가 글 목록을 읽었으면 묶는다', g !== null);
   ok('묶기 — 작성자 순서(w1 → w2 → w3), 배정 밖 글은 마지막', same(g?.sections.map((s) => s.pick), ['w1', 'w2', 'w3', OUTSIDE_PICK]));
   ok('묶기 — 작성자 칸 안은 배정표 순서(최근 순이 아님)', same(ids(g?.sections[0].drafts ?? []), [A1.id, A2.id, A3.id]) && same(ids(g?.sections[1].drafts ?? []), [B1.id, B2.id]));
+  // 사용자 결정(2026-11-09)으로 바뀐 기대 — 예전에는 정의 없는 글(C2)도 이 칸에 있었다. 이제는 w3 칸의 「판 미확인」 글이다.
   ok(
-    '묶기 — 배정 밖 글은 최근 순(본 글 · 배정에 없는 질문 · 다른 판 · 정의 없는 글)',
-    same(ids(g?.sections[3].drafts ?? []), [C2.id, 'content:category-agnostic', C1.id, 'topic:q-007+q-008']),
+    '묶기 — 배정 밖 글은 최근 순(본 글 · 배정에 없는 질문 · 다른 판 — 정의 없는 배정 글은 없음)',
+    same(ids(g?.sections[3].drafts ?? []), ['content:category-agnostic', C1.id, 'topic:q-007+q-008']),
     ids(g?.sections[3].drafts ?? []).join('\n'),
   );
   ok('묶기 — 배정 밖 칸은 작성자가 없다', g?.sections[3].writer === null);
@@ -159,11 +165,48 @@ const g = grouped(layout);
 {
   const w3 = g?.sections.find((s) => s.pick === 'w3');
   ok('판 — 배정 글 id라도 다른 판(v8)으로 만든 글은 배정 밖', !ids(w3?.drafts ?? []).includes(C1.id) && ids(g?.sections[3].drafts ?? []).includes(C1.id));
-  ok('판 — 추가 글 정의가 없는 배정 글 id도 배정 밖(판을 모른다)', !ids(w3?.drafts ?? []).includes(C2.id) && ids(g?.sections[3].drafts ?? []).includes(C2.id));
-  ok('판 — 같은 판으로 다시 만들면 작성자 칸으로', (() => {
+  // 사용자 결정(2026-11-09, 「작성자 칸에 두기」)으로 바뀐 기대 — 예전 기대는 「추가 글 정의가 없는 배정 글 id도 배정 밖(판을 모른다)」였다.
+  ok(
+    '판 미확인 — 추가 글 정의가 없는 배정 글 id(질문 은행 글)는 그 작성자(w3) 칸에, 배정 밖 칸에는 없다',
+    same(ids(w3?.drafts ?? []), [C2.id]) && !ids(g?.sections[3].drafts ?? []).includes(C2.id),
+    JSON.stringify({ w3: ids(w3?.drafts ?? []), outside: ids(g?.sections[3].drafts ?? []) }),
+  );
+  ok(
+    '판 미확인 — 그 글만 「판 미확인」으로 표시(배정 판으로 만든 글 · 배정 밖 칸은 표시 없음)',
+    same(g?.sections.map((s) => s.bankUnknown), [[], [], [C2.id], []]),
+    JSON.stringify(g?.sections.map((s) => s.bankUnknown)),
+  );
+  ok('판 — 같은 판으로 다시 만들면 작성자 칸으로(정의 없는 글과 함께 배정표 순서)', (() => {
     const fixed = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras: [...extras.filter((e) => e.id !== C1.id), def(C1.id, 'v9')], posts }));
-    return same(ids(fixed?.sections.find((s) => s.pick === 'w3')?.drafts ?? []), [C1.id]);
+    const s = fixed?.sections.find((x) => x.pick === 'w3');
+    return same(ids(s?.drafts ?? []), [C1.id, C2.id]) && same(s?.bankUnknown, [C2.id]) && s?.unmade === 0;
   })());
+  // 칸 안은 배정표 순서 그대로 — 판 미확인 글을 칸 끝으로 밀지 않는다(w1의 가운데 글 A2의 정의가 없을 때).
+  const midUnknown = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras: extras.filter((e) => e.id !== A2.id), posts }));
+  ok(
+    '판 미확인 — 칸 안은 배정표 순서(A1 · A2 · A3) · A2만 표시',
+    same(ids(midUnknown?.sections[0].drafts ?? []), [A1.id, A2.id, A3.id]) && same(midUnknown?.sections[0].bankUnknown, [A2.id]) && midUnknown?.sections[0].unmade === 0,
+    JSON.stringify(midUnknown?.sections[0] && { drafts: ids(midUnknown.sections[0].drafts), bankUnknown: midUnknown.sections[0].bankUnknown }),
+  );
+  ok('판 미확인 — 표시 문구는 질문 은행 글 · 판을 모른다는 뜻을 밝힌다', BANK_UNKNOWN_NOTE.includes('질문 은행') && BANK_UNKNOWN_NOTE.includes('판'), BANK_UNKNOWN_NOTE);
+  // 배정 — 정의가 배정 판이면 판을 안다, 정의가 없으면 판 미확인, 다른 판이면 배정 아님. 배정에 없는 글 · 배정 없음도 아님.
+  const defs = new Map(extras.map((e) => [e.id, e]));
+  const a1 = assignedArticle(plan, defs, A1.id);
+  const c2 = assignedArticle(plan, defs, C2.id);
+  ok(
+    '배정 — 배정 판 정의: 그 배정 글(판 앎) · 정의 없음: 그 배정 글(판 미확인) · 다른 판 · 배정에 없는 글 · 배정 없음: null',
+    a1?.article?.id === A1.id &&
+      a1.article.writer.key === 'w1' &&
+      a1.bankUnknown === false &&
+      c2?.article?.id === C2.id &&
+      c2.article.writer.key === 'w3' &&
+      c2.bankUnknown === true &&
+      assignedArticle(plan, defs, C1.id) === null &&
+      assignedArticle(plan, defs, 'topic:q-007+q-008') === null &&
+      assignedArticle(plan, defs, 'content:category-agnostic') === null &&
+      assignedArticle(null, defs, A1.id) === null,
+    JSON.stringify({ a1, c2 }),
+  );
   // 「목록에서 빼기」 한 추가 글도 정의는 남는다 — 콘텐츠 생성도 뺀 글까지 정의로 본다.
   const removedDef = grouped(
     libraryLayout({ drafts, plan, planUnreadable: false, extras: extras.map((e) => (e.id === A2.id ? { ...e, removedAt: '2026-11-08T00:00:00.000Z' } : e)), posts }),
@@ -176,8 +219,17 @@ const g = grouped(layout);
   const [s1, s2, s3, out] = g?.sections ?? [];
   ok('수 — w1: 3편 · 올림 1(내린 글만 있는 글은 세지 않음) · 아직 안 만든 글 없음', s1?.drafts.length === 3 && s1.posted === 1 && s1.unmade === 0);
   ok('수 — w2: 2편 · 올림 1', s2?.drafts.length === 2 && s2.posted === 1 && s2.unmade === 0);
-  ok('수 — 글이 없는 작성자도 칸이 있다(0편 · 아직 안 만든 글 2편)', s3?.drafts.length === 0 && s3.posted === 0 && s3.unmade === 2);
-  ok('수 — 배정 밖: 4편 · 올림 1 · 아직 안 만든 글은 세지 않음', out?.drafts.length === 4 && out.posted === 1 && out.unmade === 0);
+  // 사용자 결정(2026-11-09)으로 바뀐 기대 — 예전 기대는 「w3: 0편 · 아직 안 만든 글 2편」 · 「배정 밖: 4편」이었다. 정의 없는 C2가 w3 칸으로
+  // 옮겨 와 만든 글로 세고, 다른 판(v8)으로 만든 C1만 아직 안 만든 글이다.
+  ok(
+    '수 — w3: 1편(판 미확인 글) · 아직 안 만든 글 1편(판 미확인 글은 세지 않음 — 다른 판으로 만든 C1만)',
+    s3?.drafts.length === 1 && s3.posted === 0 && s3.unmade === 1,
+    JSON.stringify(s3 && { drafts: s3.drafts.length, posted: s3.posted, unmade: s3.unmade }),
+  );
+  const noC2 = grouped(libraryLayout({ drafts: drafts.filter((d) => d !== dNoDef), plan, planUnreadable: false, extras, posts }));
+  const empty3 = noC2?.sections.find((s) => s.pick === 'w3');
+  ok('수 — 글이 없는 작성자도 칸이 있다(0편 · 아직 안 만든 글 2편)', empty3?.drafts.length === 0 && empty3.posted === 0 && empty3.unmade === 2 && same(empty3.bankUnknown, []));
+  ok('수 — 배정 밖: 3편 · 올림 1 · 아직 안 만든 글은 세지 않음', out?.drafts.length === 3 && out.posted === 1 && out.unmade === 0, JSON.stringify(out && { drafts: out.drafts.length, posted: out.posted }));
   ok('수 — 내린 기록 · 잘못 적은 주소만 있는 글은 올린 글이 아니다', live !== null && !live.any.has(A3.id) && live.any.has(A2.id) && live.planned.has(A2.id) && !live.planned.has(A3.id));
   ok('수 — 원장을 못 읽으면(null) 올린 글 수도 null', livePostsOf(plan, null) === null);
   ok('수 — 판을 모르는 기록이 없으면 올렸는지 미확인 0', s1?.unsure === 0 && s2?.unsure === 0 && out?.unsure === 0);
@@ -185,7 +237,8 @@ const g = grouped(layout);
   ok('머리 — 작성자 칸 이름은 「w1 · 이름」', sectionTitle(s1) === 'w1 · 가상 작성자 하나');
   ok('머리 — 배정 밖 칸 이름', sectionTitle(out) === '배정 밖 글');
   ok('머리 — 편수 · 올림', sectionDetail(s1) === '3편 · 올림 1', sectionDetail(s1));
-  ok('머리 — 아직 안 만든 글이 있으면 덧붙인다', sectionDetail(s3) === '0편 · 올림 0 · 아직 안 만든 글 2편', sectionDetail(s3));
+  ok('머리 — 아직 안 만든 글이 있으면 덧붙인다(판 미확인 글은 만든 글)', sectionDetail(s3) === '1편 · 올림 0 · 아직 안 만든 글 1편', sectionDetail(s3));
+  ok('머리 — 글이 없는 작성자', empty3 !== undefined && sectionDetail(empty3) === '0편 · 올림 0 · 아직 안 만든 글 2편', empty3 && sectionDetail(empty3));
   const noLedger = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, posts: null }));
   ok('머리 — 원장을 못 읽으면 올림을 말하지 않는다(0으로 채우지 않음)', noLedger?.sections[0].posted === null && sectionDetail(noLedger.sections[0]) === '3편', noLedger ? sectionDetail(noLedger.sections[0]) : '');
   // 아직 안 만든 글 — 배정 글 가운데 그 작성자 칸에 들어간 초안이 없는 글. 다른 판으로 만든 글은 그 작성자 몫을 채우지 않는다.
@@ -233,17 +286,29 @@ const g = grouped(layout);
     post('content:category-agnostic', { key: 'main', at: '2026-11-06T02:00:00.000Z', removedAt: '2026-11-08T00:00:00.000Z' }),
   ]).find((s) => s.pick === OUTSIDE_PICK)?.posted === 0);
 
-  // 발행 현황과 같은 수 — 작성자 글의 초안이 모두 그 칸에 있을 때(w1 · w2) 칸의 올림 · 미확인이 발행 현황 작성자 진행과 같다.
+  // 판 미확인 글(C2 — 정의 없음)의 올림도 작성자 칸의 규칙(livePostsOf) — 칸이 판을 몰라도 기록의 판으로 센다.
+  const w3Of = (list: LibrarySection<Draft>[]) => list.find((s) => s.pick === 'w3');
+  const c2Planned = w3Of(sectionsWith([post(C2.id, { key: 'c2', version: 'v9' })]));
+  ok('판 미확인 글 — 배정 판(v9)으로 적은 기록이면 올림', c2Planned?.posted === 1 && c2Planned.unsure === 0, JSON.stringify(c2Planned && { posted: c2Planned.posted, unsure: c2Planned.unsure }));
+  const c2Unknown = w3Of(sectionsWith([post(C2.id, { key: 'c2', version: null })]));
+  ok('판 미확인 글 — 판 없는 기록(질문 은행 「올렸어요」)이면 「올렸는지 미확인」', c2Unknown?.posted === 0 && c2Unknown.unsure === 1, JSON.stringify(c2Unknown && { posted: c2Unknown.posted, unsure: c2Unknown.unsure }));
+  const c2Other = w3Of(sectionsWith([post(C2.id, { key: 'c2', version: 'v8' })]));
+  ok('판 미확인 글 — 다른 판(v8)으로 적은 기록은 올림도 미확인도 아니다', c2Other?.posted === 0 && c2Other.unsure === 0, JSON.stringify(c2Other && { posted: c2Other.posted, unsure: c2Other.unsure }));
+  ok('판 미확인 글 — 배정 밖 칸의 올림에는 들어가지 않는다', sectionsWith([post(C2.id, { key: 'c2', version: 'v9' })]).find((s) => s.pick === OUTSIDE_PICK)?.posted === 1);
+
+  // 발행 현황과 같은 수 — 작성자 글의 초안이 모두 그 칸에 있을 때(w1 · w2) 칸의 올림 · 미확인이 발행 현황 작성자 진행과 같다. w3는 다른 판
+  // 글(C1)의 기록이 없을 때 — 판 미확인 글(C2)의 판 없는 기록이 두 화면 모두 「올렸는지 미확인」 1이다.
   const mixed = [
     ...posts,
     post(A1.id, { key: 'a1', version: null }),
     own,
     chan,
     post(B2.id, { key: 'b2', version: 'v8' }),
+    post(C2.id, { key: 'c2', version: null }),
   ];
   const lib = grouped(libraryLayout({ drafts, plan, planUnreadable: false, extras, posts: mixed }))?.sections ?? [];
   const status = buildTenantStatus({ tenantId: plan.tenantId, brand: '가상펜션', ownedDomains: [], posts: mixed, plan, planUnreadable: false, checks: {} }).writers;
-  for (const key of ['w1', 'w2']) {
+  for (const key of ['w1', 'w2', 'w3']) {
     const s = lib.find((x) => x.pick === key);
     const w = status.find((x) => x.key === key);
     ok(`발행 현황과 같은 수 — ${key} 올림 · 미확인`, s !== undefined && w !== undefined && s.posted === w.posted && s.unsure === w.unsure, JSON.stringify({ lib: s && [s.posted, s.unsure], status: w && [w.posted, w.unsure] }));
@@ -333,7 +398,10 @@ const g = grouped(layout);
   const onlyPlan = libraryLayout({ drafts: [dA1], plan, planUnreadable: false, extras, posts });
   ok('고르기 — 배정 밖 글이 없어졌으면 전체로', validLibraryPick(onlyPlan, OUTSIDE_PICK) === '');
   ok('고르기 — 묶지 않은 화면(배정 없음 · 못 읽음)이면 전체로', validLibraryPick(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, posts }), 'w1') === '');
-  ok('고르기 — 글이 없는 작성자도 고를 수 있다', validLibraryPick(layout, 'w3') === 'w3' && shownSections(layout, 'w3').length === 1 && shownSections(layout, 'w3')[0].drafts.length === 0);
+  ok('고르기 — w3를 고르면 그 칸의 판 미확인 글이 보인다', validLibraryPick(layout, 'w3') === 'w3' && shownSections(layout, 'w3').length === 1 && same(ids(shownSections(layout, 'w3')[0].drafts), [C2.id]));
+  ok('고르기 — 배정 밖 글만 고르면 판 미확인 글은 없다', !shownSections(layout, OUTSIDE_PICK).some((s) => ids(s.drafts).includes(C2.id)));
+  const noC2 = libraryLayout({ drafts: drafts.filter((d) => d !== dNoDef), plan, planUnreadable: false, extras, posts });
+  ok('고르기 — 글이 없는 작성자도 고를 수 있다', validLibraryPick(noC2, 'w3') === 'w3' && shownSections(noC2, 'w3').length === 1 && shownSections(noC2, 'w3')[0].drafts.length === 0);
 
   ok('보이는 칸 — 전체면 모든 칸', same(shownSections(layout, '').map((s) => s.pick), ['w1', 'w2', 'w3', OUTSIDE_PICK]));
   ok('보이는 칸 — 작성자를 고르면 그 칸만', same(shownSections(layout, 'w2').map((s) => s.pick), ['w2']));
@@ -350,7 +418,8 @@ const g = grouped(layout);
 {
   ok('글 수 — 전체면 모든 글', same(libraryCount(layout, ''), { scope: null, shown: 9, total: 9 }));
   ok('글 수 — 작성자를 고르면 그 작성자 글과 전체', same(libraryCount(layout, 'w1'), { scope: 'w1', shown: 3, total: 9 }));
-  ok('글 수 — 배정 밖 글', same(libraryCount(layout, OUTSIDE_PICK), { scope: '배정 밖', shown: 4, total: 9 }));
+  ok('글 수 — 배정 밖 글(판 미확인 글은 빠짐)', same(libraryCount(layout, OUTSIDE_PICK), { scope: '배정 밖', shown: 3, total: 9 }), JSON.stringify(libraryCount(layout, OUTSIDE_PICK)));
+  ok('글 수 — w3를 고르면 판 미확인 글까지', same(libraryCount(layout, 'w3'), { scope: 'w3', shown: 1, total: 9 }), JSON.stringify(libraryCount(layout, 'w3')));
   ok('글 수 — 없는 값이면 전체', same(libraryCount(layout, 'w9'), { scope: null, shown: 9, total: 9 }));
   ok('글 수 — 배정 없음이면 지금처럼 모든 글', same(libraryCount(libraryLayout({ drafts, plan: null, planUnreadable: false, extras, posts }), ''), { scope: null, shown: 9, total: 9 }));
 }

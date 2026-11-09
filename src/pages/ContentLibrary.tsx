@@ -19,6 +19,7 @@ import {
   type StoredDraft,
 } from '../lib/api'
 import {
+  BANK_UNKNOWN_NOTE,
   LIBRARY_FALLBACK_NOTE,
   libraryCount,
   libraryLayout,
@@ -58,7 +59,8 @@ import ArticlePreview from '../components/ArticlePreview'
  * 여기서 주소를 적을 수 있다. 주차별 인용 판정은 보이지 않는다(어느 주의 결과인지 기준이 없다).
  *
  * 작성자 배정이 있는 브랜드는 글을 작성자별 칸(배정표 순서)으로 묶고 배정 밖 글을 마지막에 최근 순으로 둔다 — 배정 글 80편이 최근
- * 고친 순으로 섞여 누구 글인지 헷갈렸다. 배정이 없는 브랜드는 지금과 같은 한 목록이다(src/lib/contentLibraryOrder.ts).
+ * 고친 순으로 섞여 누구 글인지 헷갈렸다. 질문 은행에서 만든 배정 글(추가 글 정의 없음)은 그 작성자 칸에 「판 미확인」으로 둔다. 배정이 없는
+ * 브랜드는 지금과 같은 한 목록이다(src/lib/contentLibraryOrder.ts).
  */
 export default function ContentLibrary() {
   const { tenant } = useTenant()
@@ -278,6 +280,8 @@ export default function ContentLibrary() {
   })
   const pick = validLibraryPick(layout, writerPick)
   const count = libraryCount(layout, pick)
+  // 판 미확인 — 작성자 칸에 둔, 추가 글 정의가 없는 배정 글(질문 은행에서 만든 글). 묶지 않은 화면에서는 누구 글인지 가르지 않아 표시도 없다.
+  const bankUnknown = new Set(layout.grouped ? layout.sections.flatMap((s) => s.bankUnknown) : [])
   // 묶지 못한 이유 — 배정이 없는 브랜드는 fallback이 null이라 안내가 없다(지금과 같다).
   const fallback = layout.grouped ? null : layout.fallback
   const fallbackWhy = fallback === 'plan-unreadable' ? (probe.corrupt ? '파일이 깨져 있습니다' : probe.error) : (extras?.error ?? null)
@@ -351,6 +355,11 @@ export default function ContentLibrary() {
       <article className="gap-card" key={d.actionId}>
         <div className="gap-card-head">
           <span className="gap-name">{title}</span>
+          {bankUnknown.has(d.actionId) && (
+            <span className="st st-warn" title={BANK_UNKNOWN_NOTE}>
+              판 미확인<span className="sr-only"> — {BANK_UNKNOWN_NOTE}</span>
+            </span>
+          )}
           {d.editedMarkdown && <span className="st st-info">고침</span>}
           {gaps > 0 && <span className="st st-warn">빈칸 {gaps}</span>}
           {canRecord && postCount > 0 && <span className="st st-info">올린 곳 {postCount}</span>}

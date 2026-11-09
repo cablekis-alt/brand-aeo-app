@@ -75,6 +75,13 @@ const TEXT_OTHER = [
   '하산 시간은 해 지기 두 시간 전으로 잡고 헤드랜턴 배터리를 미리 확인하세요.',
   '등산화 끈은 내리막에서 한 번 더 조여 발가락이 앞으로 밀리지 않게 합니다.',
 ]
+const TEXT_A3 = [
+  '단풍이 절정인 시월 말에는 고개 넘는 국도가 붐벼 이른 아침에 출발하는 편이 낫습니다.',
+  '전망대 주차장은 오전 아홉 시 전에 차면 다음 휴게소까지 내려가 기다려야 합니다.',
+  '고갯마루 휴게소의 군고구마와 호떡은 줄이 길어 현금을 조금 챙겨 두면 빠릅니다.',
+  '안개가 짙은 날은 전조등을 켜고 급커브 구간에서 속도를 줄이는 것이 안전합니다.',
+  '내려오는 길 계곡 옆 국숫집은 오후 세 시에 문을 닫으니 점심을 일찍 드세요.',
+]
 const TEXT_Q5 = [
   '비 오는 날 가상시 실내 전시관은 오전 열 시에 문을 열고 입장권은 현장에서만 팝니다.',
   '전시관 이층 카페는 창가 자리가 넓어 우산을 말리며 쉬어 가기 좋습니다.',
@@ -104,6 +111,8 @@ const QTEXT: Record<string, string> = {
   'c1-002': '가상시 기차역에서 가까운 조용한 숙소 추천해줘',
   'c1-003': '가상시 숙소 주차 편한 곳 후기 어디서 봐?',
   'c1-004': '가상시 독채 숙소 특징이 어때?',
+  'c1-006': '가상시 근처 단풍 드라이브 코스 추천해줘',
+  'c1-007': '가상시 고개 휴게소 먹거리 뭐가 유명해?',
 }
 const W1 = { key: 'w1', name: '가상 작성자 하나' }
 const W2 = { key: 'w2', name: '가상 작성자 둘' }
@@ -118,7 +127,9 @@ const planArt = (ids: string[], name: string, writer: { key: string; name: strin
 })
 const A1 = planArt(['c1-001', 'c1-002'], '원도심 걸어서 다니는 숙소', W1)
 const A2 = planArt(['c1-003', 'c1-004'], '주차 편한 독채 숙소', W2)
-const PLAN = { format: 'probe-plan/2', tenantId: 'vpi-a', bankVersion: 'v9', activeUntil: '2027-03-31', source: { writers: 'docs/writers.json', seed: 7 }, articles: [A1, A2] }
+// A3는 추가 글 정의가 없는 배정 글(질문 은행 화면에서 만든 글 — 콘텐츠 보관함의 「판 미확인」) — 그 작성자(w2) 글이다.
+const A3 = planArt(['c1-006', 'c1-007'], '단풍 드라이브 고개 휴게소', W2)
+const PLAN = { format: 'probe-plan/2', tenantId: 'vpi-a', bankVersion: 'v9', activeUntil: '2027-03-31', source: { writers: 'docs/writers.json', seed: 7 }, articles: [A1, A2, A3] }
 const C2_ID = 'content:c1-050'
 const B1_ID = 'content:c2-001'
 const COMP_ID = 'content:c3-001'
@@ -130,7 +141,8 @@ const DRAFT_COMP = draftOf(COMP_ID, '경쟁 여관 이야기', TEXT_COMP)
 // 추가 글 정의가 없는 질문 은행 글 — 등록할 때 질문 은행으로 판을 본다.
 const Q5_ID = 'topic:c1-005'
 const DRAFT_Q5 = draftOf(Q5_ID, '비 오는 날 가상시 실내 전시관', TEXT_Q5)
-const DRAFTS_A = { [A1.id]: DRAFT_A1, [A2.id]: DRAFT_A2, [C2_ID]: DRAFT_C2, [Q5_ID]: DRAFT_Q5 }
+const DRAFT_A3 = draftOf(A3.id, '단풍 드라이브 길의 고개 휴게소', TEXT_A3)
+const DRAFTS_A = { [A1.id]: DRAFT_A1, [A2.id]: DRAFT_A2, [C2_ID]: DRAFT_C2, [Q5_ID]: DRAFT_Q5, [A3.id]: DRAFT_A3 }
 // A1은 배정 판(v9)으로 만든 추가 글 — 작성자 글이다. A2는 다른 판(v8)으로 만들어 배정 글로 세지 않는다(보관함 · 발행 현황과 같은 규칙).
 const EXTRAS_A = {
   version: 1,
@@ -195,6 +207,7 @@ const PAGES: Record<string, () => { status?: number; type?: string; body: string
   '/post/a1': () => ({ body: page({ title: '원도심 걸어서 다니는 가상시 숙소', text: TEXT_A1, head: jsonLd('2026-11-01T10:00:00+09:00') }) }),
   '/post/a2': () => ({ body: page({ title: '차 가져가는 가족의 독채 숙소', text: TEXT_A2, bodyTop: '<time datetime="2026-11-02T09:00:00+09:00">11월 2일</time>' }) }),
   '/post/c2': () => ({ body: page({ title: '반려견 숙소 고르기', text: TEXT_C2, head: '<meta property="article:published_time" content="2026-11-03T08:00:00+09:00">' }) }),
+  '/post/a3': () => ({ body: page({ title: '단풍 드라이브 고개 휴게소', text: TEXT_A3, head: jsonLd('2026-11-03T10:00:00+09:00') }) }),
   '/post/b1-euckr': () => ({
     type: 'text/html',
     body: eucKr(page({ title: '바다 전망 여관', text: TEXT_B1, charset: 'euc-kr' })),
@@ -722,6 +735,20 @@ try {
   )
   const noExtras = pr.importRecordInput({ plan, planUnreadable: false, extras: null, bank: BANK, draft: DRAFT_A1, articleId: A1.id, url: A1_URL, day: '2026-11-01' })
   ok('주소 등록 — 배정이 있는데 추가 글 목록을 읽지 못하면 질문 글은 적지 않음(화면의 「미확인」과 같다)', 'error' in noExtras && noExtras.error.includes('추가 글'), noExtras)
+  // 추가 글 정의가 없는 배정 글(질문 은행 화면에서 만든 글 — 보관함의 「판 미확인」)은 그 작성자 글이다(사용자 결정, 2026-11-09). 앱 등록은
+  // CLI(planRegistration)와 같은 기록 — 자사 줄 · 배정 파일의 스냅샷(판 v9). 질문 은행(v3)으로 판을 보지 않는다.
+  const extrasNoA1 = extras.filter((e) => e.id !== A1.id)
+  const cliNoDef = reg.planRegistration({ plan, drafts: DRAFTS_A, extras: extrasNoA1, posts: [], rows: [{ line: 2, writer: 'w1', article: A1.id, url: A1_URL, postedOn: '2026-11-01' }], today })
+  const appNoDef = pr.importRecordInput({ plan, planUnreadable: false, extras: extrasNoA1, bank: BANK, draft: DRAFT_A1, articleId: A1.id, url: A1_URL, day: '2026-11-01' })
+  ok(
+    '주소 등록 — 추가 글 정의가 없는 배정 글(판 미확인)은 CLI와 한 글자도 같은 작성자 기록(자사 줄 · 배정 파일 스냅샷 v9 — 질문 은행 판이 아님)',
+    cliNoDef.errors.length === 0 &&
+      'input' in appNoDef &&
+      JSON.stringify(appNoDef.input) === JSON.stringify(cliNoDef.items[0]?.input) &&
+      appNoDef.input.via === 'own' &&
+      JSON.stringify(appNoDef.input.topic) === JSON.stringify({ bankVersion: 'v9', questionIds: A1.questionIds, questionTexts: A1.questionTexts }),
+    { cli: cliNoDef.items[0]?.input, app: appNoDef },
+  )
   ok('올린 날 검사 — 오늘 뒤 · 너무 이른 날은 CLI와 같은 문구', pr.postedDayProblem('2999-01-01', today)?.includes('오늘') === true && pr.postedDayProblem('2019-12-31', today)?.includes('너무 이릅니다') === true && pr.postedDayProblem('2026-11-01', today) === null)
 
   // ── 8. 내부 주소 막기(이 프로세스 — 시험 깃발 없음) ─────────────────────────
@@ -832,6 +859,12 @@ try {
   ok('읽기 — 응답에 페이지 HTML · 본문을 싣지 않음', !JSON.stringify(ra1).includes('<p>') && !JSON.stringify(ra1).includes(TEXT_A1[3]!))
   const ra2 = (await read(`${FIX}/post/a2`)).body
   ok('읽기 — 다른 판으로 만든 배정 id 글: 「맞음」 · 작성자 없음(보관함 규칙) · <time> 날짜', ra2.ok && stateOf(ra2) === 'match' && ra2.candidates[0]!.articleId === A2.id && ra2.candidates[0]!.writer === null && ra2.post.publishedOn === '2026-11-02', ra2)
+  const ra3 = (await read(`${FIX}/post/a3`)).body
+  ok(
+    '읽기 — 추가 글 정의가 없는 배정 글(판 미확인): 「맞음」 · 그 작성자(w2 — 보관함 작성자 칸 · 등록 기록과 같다)',
+    ra3.ok && stateOf(ra3) === 'match' && ra3.candidates[0]!.articleId === A3.id && ra3.candidates[0]!.writer?.key === 'w2' && ra3.candidates[0]!.writerUnknown === false,
+    ra3,
+  )
   const rb1 = (await read(`${FIX}/post/b1-euckr`)).body
   ok('읽기 — EUC-KR 페이지(머리글에 charset 없음, meta로) · 다른 브랜드 글 · 날짜 모름(null)', rb1.ok && stateOf(rb1) === 'match' && rb1.candidates[0]!.tenantId === 'vpi-b' && rb1.post.title === '바다 전망 여관' && rb1.post.publishedOn === null, rb1)
   const rmix = (await read(`${FIX}/post/mix`)).body
@@ -893,6 +926,17 @@ try {
     a2rec,
   )
   ok('등록 — 다른 브랜드(vpi-b)는 그 브랜드 원장에', ledgerOf('vpi-b').posts.length === 1 && ledgerOf('vpi-b').posts[0]!.articleId === B1_ID && ledgerOf('vpi-b').posts[0]!.publishedOn === '2026-11-04')
+  // 판 미확인 배정 글(A3)의 등록 — CLI가 같은 줄로 적을 기록과 같은지 CLI 확인(checkRegistration)으로 본다(자사 줄 · 배정 파일 스냅샷).
+  const A3_URL = `${FIX}/post/a3`
+  const cliA3 = reg.planRegistration({ plan, drafts: DRAFTS_A, extras, posts: afterA, rows: [{ line: 2, writer: 'w2', article: A3.id, url: A3_URL, postedOn: '2026-11-03' }], today })
+  const cA3 = await commit([{ tenantId: 'vpi-a', articleId: A3.id, url: A3_URL, publishedOn: '2026-11-03' }])
+  const afterA3 = await readPublishedPosts('vpi-a')
+  const a3Problems = reg.checkRegistration({ before: afterA, after: afterA3, items: cliA3.items, states: statesOf('vpi-a') })
+  ok(
+    '등록 — 추가 글 정의가 없는 배정 글(판 미확인)은 CLI 확인을 그대로 통과(자사 줄 · 배정 파일 스냅샷 v9 · 집행함)',
+    cA3.body.results?.[0]?.status === 'added' && cliA3.errors.length === 0 && a3Problems.length === 0,
+    { result: cA3.body.results, cliErrors: cliA3.errors, a3Problems, record: afterA3.find((p) => p.articleId === A3.id) },
+  )
   const ledgerAfter = readFileSync(path.join(dirA, 'published-posts.json'), 'utf8')
   const c2 = await commit([{ tenantId: 'vpi-a', articleId: A1.id, url: A1_URL, publishedOn: '2026-11-05' }])
   ok('다시 등록 — 같은 주소 · 같은 글은 「이미 등록됨」 · 원장 그대로(날짜도 바꾸지 않음)', c2.body.results?.[0]?.status === 'existing' && readFileSync(path.join(dirA, 'published-posts.json'), 'utf8') === ledgerAfter, c2.body)

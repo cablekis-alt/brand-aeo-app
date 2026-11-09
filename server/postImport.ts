@@ -458,7 +458,8 @@ async function tenantCorpus(t: TenantConfig, brand: string): Promise<CorpusEntry
       continue;
     }
     const text = draftMatchText(stored);
-    // 작성자는 콘텐츠 보관함 규칙(assignedArticle) — 모르면(writerUnknownOf — 등록과 같은 식) 질문 글(topic:)은 「미확인」.
+    // 작성자는 콘텐츠 보관함 규칙(assignedArticle — 추가 글 정의가 없는 배정 글(판 미확인)도 그 작성자, 등록도 작성자 기록으로 적는다) —
+    // 모르면(writerUnknownOf — 등록과 같은 식) 질문 글(topic:)은 「미확인」.
     const writerUnknown = writerUnknownOf(articleId, owner.plan, owner.planUnreadable, owner.extras);
     const assigned = !writerUnknown && owner.plan && owner.extras ? assignedArticle(owner.plan, defs, articleId) : null;
     entries.push({
@@ -468,7 +469,7 @@ async function tenantCorpus(t: TenantConfig, brand: string): Promise<CorpusEntry
       title,
       titleGrams: bigrams(text.title),
       bodyGrams: bigrams(text.body),
-      writer: assigned ? { key: assigned.writer.key, name: assigned.writer.name } : null,
+      writer: assigned ? { key: assigned.article.writer.key, name: assigned.article.writer.name } : null,
       writerUnknown,
     });
   }

@@ -8,8 +8,10 @@
  *     것) · 글 제목(초안 제목) · 초안 판(generatedAt) · 사람이 고른 올린 날(writerRecordInput).
  *   그 밖의 글 — 콘텐츠 보관함 「올렸어요」(src/pages/ContentLibrary.tsx onRecord)와 같다: via 'direct' · 질문 스냅샷은 추가 글 정의 또는
  *     질문 은행(src/lib/contentLibraryOrder.ts libraryRecordTopic)(libraryRecordInput).
- * 앱은 보관함과 같은 규칙으로 배정 글을 가린다(assignedArticle — 배정에 있고 그 추가 글을 배정 판으로 만들었다). CLI는 작성자 · 글을 사람이
- * 적으므로 배정표의 글이면 작성자 기록이다(planRegistration — 예전 그대로).
+ * 앱은 보관함과 같은 규칙으로 배정 글을 가린다(assignedArticle — 배정에 있고, 그 추가 글을 배정 판으로 만들었거나 추가 글 정의가 없다).
+ * 추가 글 정의가 없는 배정 글(질문 은행에서 만든 글 — 보관함의 「판 미확인」)은 CLI와 같이 배정 파일의 스냅샷으로 작성자 기록을 적는다 — 두
+ * 길이 같은 글에 같은 기록을 남긴다. CLI는 작성자 · 글을 사람이 적으므로 배정표의 글이면 작성자 기록이다(planRegistration — 예전 그대로).
+ * 다른 판으로 만든 추가 글은 앱에서는 배정 밖(보관함 기록)이다.
  *
  * 서버가 import하므로 상대 import는 .js로 쓰고, DOM을 쓰는 모듈은 끌어오지 않는다(내려받기는 src/lib/fileDownload.ts).
  */
@@ -172,9 +174,10 @@ export function writerUnknownOf(articleId: string, plan: WriterPlan | null, plan
 }
 
 /**
- * 앱이 짝지은 글의 기록 — 배정 글(보관함 규칙)이면 작성자 기록, 아니면 보관함 기록. 질문 글(topic:)의 작성자를 모르면(writerUnknownOf) 누구
- * 글인지 · 어느 판인지 몰라 적지 않는다(짐작하지 않는다). 배정 파일이 없는 브랜드는 추가 글 목록을 읽지 못해도 보관함 「올렸어요」와 같이
- * 질문 은행으로 판을 본다. bank는 질문 은행 글(추가 글 정의가 없는 topic:)에만 쓴다.
+ * 앱이 짝지은 글의 기록 — 배정 글(보관함 규칙 — 판 미확인 글 포함)이면 작성자 기록(추가 글 정의가 없으면 배정 파일의 스냅샷 — CLI와 같다),
+ * 아니면 보관함 기록. 질문 글(topic:)의 작성자를 모르면(writerUnknownOf) 누구 글인지 · 어느 판인지 몰라 적지 않는다(짐작하지 않는다). 배정
+ * 파일이 없는 브랜드는 추가 글 목록을 읽지 못해도 보관함 「올렸어요」와 같이 질문 은행으로 판을 본다. bank는 배정 밖 질문 은행 글(추가 글
+ * 정의가 없는 topic:)에만 쓴다.
  */
 export function importRecordInput(args: {
   plan: WriterPlan | null
@@ -196,7 +199,7 @@ export function importRecordInput(args: {
   }
   const assigned = plan && extras ? assignedArticle(plan, new Map(extras.map((e) => [e.id, e])), articleId) : null
   if (assigned && plan && extras) {
-    return { input: writerRecordInput({ article: assigned, plan, draft: args.draft, extras, url: args.url, day: args.day }) }
+    return { input: writerRecordInput({ article: assigned.article, plan, draft: args.draft, extras, url: args.url, day: args.day }) }
   }
   return { input: libraryRecordInput({ articleId, draft: args.draft, extras, bank: args.bank, url: args.url, day: args.day }) }
 }

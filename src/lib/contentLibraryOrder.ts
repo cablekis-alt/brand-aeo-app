@@ -13,10 +13,12 @@ import type { QuestionBank } from './types'
  * 배정에 없는 질문 글 · 다른 판으로 만든 글)은 마지막 칸에 지금처럼 최근 순이다. 배정이 없는 브랜드는 지금과 같은 한 목록이다.
  *
  * ── 누구 글인가 ─────────────────────────────────────────────────────────────
- * 콘텐츠 생성(src/pages/GapActions.tsx writerArticleOf)과 같은 규칙 — 글 id가 배정에 있고, 그 추가 글 정의(src/lib/extraArticles.ts)를
- * 배정 판으로 만들었어야 한다. 질문 id의 뜻은 판마다 바뀌므로 같은 id라도 다른 판으로 만든 글은 다른 질문이다. 초안에는 판이 없어 추가 글
- * 정의로 본다(「목록에서 빼기」 한 정의도 판은 남는다 — 콘텐츠 생성도 뺀 정의까지 본다). 발행 현황(src/lib/publishStatus.ts
- * planArticleOf)은 같은 규칙을 올린 기록의 질문 스냅샷 판으로 본다.
+ * 글 id가 배정에 있어야 하고, 그 추가 글 정의(src/lib/extraArticles.ts)가 있으면 배정 판으로 만들었어야 한다(콘텐츠 생성
+ * src/pages/GapActions.tsx writerArticleOf와 같다). 질문 id의 뜻은 판마다 바뀌므로 같은 id라도 다른 판으로 만든 글은 다른 질문이다. 초안에는
+ * 판이 없어 추가 글 정의로 본다(「목록에서 빼기」 한 정의도 판은 남는다 — 콘텐츠 생성도 뺀 정의까지 본다).
+ * 추가 글 정의가 없는 배정 글 id(질문 은행 화면 src/pages/QuestionBank.tsx에서 만든 글 — 판을 남기지 않는다)는 그 작성자 칸에 두고
+ * 「판 미확인」으로 표시한다(사용자 결정, 2026-11-09). 발행 현황(src/lib/publishStatus.ts planArticleOf — 판 없는 기록은 「미확인」) · 콘텐츠
+ * 생성의 작성자 줄(초안 n/10) · 작성자 묶음(src/lib/writerBundle.ts)도 그 글을 그 작성자 글로 보고, 아직 안 만든 글로 세지 않는다.
  *
  * ── 운영 기간 ───────────────────────────────────────────────────────────────
  * 운영 기간(activeUntil)이 지나도 묶는다 — 기간은 글 만들기의 잠금이고, 이미 쓴 글이 누구 몫인지는 바뀌지 않는다. 발행 현황도 기간과
@@ -45,6 +47,9 @@ export function recentFirst<D extends LibraryDraftLike>(drafts: readonly D[]): D
   return [...drafts].sort((a, b) => (b.editedAt ?? b.generatedAt).localeCompare(a.editedAt ?? a.generatedAt))
 }
 
+/** 「판 미확인」 표시의 풀이 — 글 카드의 툴팁 · 화면 읽기 프로그램 글자. */
+export const BANK_UNKNOWN_NOTE = '질문 은행에서 만든 글이라 어느 질문지 판으로 썼는지 모릅니다 — 배정 글 id라 이 작성자 칸에 둡니다.'
+
 /** 「배정 밖 글」 고르기 값 — 작성자 키(영문 · 숫자 · _ · -)가 될 수 없는 글자로 둔다. */
 export const OUTSIDE_PICK = ':outside'
 
@@ -54,6 +59,8 @@ export interface LibrarySection<D> {
   /** 배정 밖 글이면 null. */
   writer: PlanWriter | null
   drafts: D[]
+  /** 판 미확인 — 이 칸의 글 가운데 추가 글 정의가 없어 어느 질문지 판으로 썼는지 모르는 글 id(칸 순서). 배정 밖 칸은 비어 있다. */
+  bankUnknown: string[]
   /** 올린 글이 있는 글 수(livePostsOf — 작성자 칸은 배정 판으로 쓴 기록만) — 원장을 읽지 못했으면 null(0으로 채우지 않는다). */
   posted: number | null
   /** 올렸는지 미확인 — 살아 있는 기록이 판을 모르는 것뿐인 글 수. 배정 밖 칸 · 원장을 읽지 못했으면 0. */
@@ -125,13 +132,26 @@ export function libraryRecordTopic(
   return def ? extraTopicSnapshot(def) : topicSnapshotFor(articleId, bank, draftGeneratedAt)
 }
 
-/** 이 글의 배정 — 글 id가 배정에 있고 그 추가 글을 배정 판으로 만들었을 때만. 아니면 null. */
+export interface AssignedArticle {
+  article: WriterPlanArticle
+  /** 판 미확인 — 추가 글 정의가 없어(질문 은행 화면에서 만든 글) 어느 질문지 판으로 썼는지 모른다. */
+  bankUnknown: boolean
+}
+
+/**
+ * 이 글의 배정 — 글 id가 배정에 있고, 그 추가 글을 배정 판으로 만들었거나(판을 앎) 추가 글 정의가 없을 때(판 미확인). 다른 판으로 만든 추가
+ * 글 · 배정에 없는 글이면 null.
+ */
 export function assignedArticle(
   plan: WriterPlan | null,
   defs: ReadonlyMap<string, Pick<ExtraArticle, 'bankVersion'>>,
   articleId: string,
-): WriterPlanArticle | null {
-  return plan && defs.get(articleId)?.bankVersion === plan.bankVersion ? writerArticle(plan, articleId) : null
+): AssignedArticle | null {
+  const article = writerArticle(plan, articleId)
+  if (!plan || !article) return null
+  const def = defs.get(articleId)
+  if (!def) return { article, bankUnknown: true }
+  return def.bankVersion === plan.bankVersion ? { article, bankUnknown: false } : null
 }
 
 /** 보관함의 칸 — 배정과 추가 글 목록을 읽었으면 작성자별로 묶고, 아니면 한 목록(최근 순). 어느 쪽이든 모든 글이 한 번씩 나온다. */
@@ -143,11 +163,16 @@ export function libraryLayout<D extends LibraryDraftLike>(input: LibraryLayoutIn
   const defs = new Map(extras.map((e) => [e.id, e]))
   const order = new Map(plan.articles.map((a, i) => [a.id, i]))
   const byWriter = new Map<string, D[]>()
+  const bankUnknown = new Set<string>()
   const outside: D[] = []
   for (const d of input.drafts) {
     const a = assignedArticle(plan, defs, d.actionId)
-    if (!a) outside.push(d)
-    else byWriter.set(a.writer.key, [...(byWriter.get(a.writer.key) ?? []), d])
+    if (!a) {
+      outside.push(d)
+      continue
+    }
+    byWriter.set(a.article.writer.key, [...(byWriter.get(a.article.writer.key) ?? []), d])
+    if (a.bankUnknown) bankUnknown.add(d.actionId)
   }
   const live = livePostsOf(plan, input.posts)
   const countIn = (list: readonly D[], ids: ReadonlySet<string>) => list.filter((d) => ids.has(d.actionId)).length
@@ -158,6 +183,7 @@ export function libraryLayout<D extends LibraryDraftLike>(input: LibraryLayoutIn
       pick: w.key,
       writer: { key: w.key, name: w.name },
       drafts: mine,
+      bankUnknown: mine.filter((d) => bankUnknown.has(d.actionId)).map((d) => d.actionId),
       posted: live ? countIn(mine, live.planned) : null,
       unsure: live ? countIn(mine, live.unsure) : 0,
       unmade: plan.articles.filter((a) => a.writer.key === w.key && !made.has(a.id)).length,
@@ -165,7 +191,7 @@ export function libraryLayout<D extends LibraryDraftLike>(input: LibraryLayoutIn
   })
   if (outside.length > 0) {
     const recent = recentFirst(outside)
-    sections.push({ pick: OUTSIDE_PICK, writer: null, drafts: recent, posted: live ? countIn(recent, live.any) : null, unsure: 0, unmade: 0 })
+    sections.push({ pick: OUTSIDE_PICK, writer: null, drafts: recent, bankUnknown: [], posted: live ? countIn(recent, live.any) : null, unsure: 0, unmade: 0 })
   }
   return { grouped: true, sections, total: input.drafts.length }
 }
