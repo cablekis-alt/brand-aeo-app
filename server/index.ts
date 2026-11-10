@@ -110,6 +110,7 @@ import {
   type MapImageRecord,
 } from './maps.js';
 import { findRegionTourPhotos, findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
+import { scrubSerpKey, serpApiAccountView, serpApiConfigured } from './serpApi.js';
 import { describeLocalPhoto, describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
 import {
   addOwnerPhoto,
@@ -263,6 +264,8 @@ app.get('/api/health', (_req, res) => {
     collectEngines: globalCollectEngines(),
     // 관광공사 사진(3단계)을 쓸 수 있는가 — 이 PC에 TourAPI 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 건너뛴다.
     tourApi: tourApiConfigured(),
+    // SerpAPI(색인 자동 확인 등)를 쓸 수 있는가 — 이 PC에 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 숨긴다.
+    serpApi: serpApiConfigured(),
     // 사진 장면(비전 모델)을 읽을 수 있는가 — 이 PC에 Claude 키가 있는지만(값은 싣지 않는다). 웹(api/health.ts)에는 없어 화면이 장면 없이 고른다.
     photoScenes: photoScenesConfigured(),
     // 자사 화면을 찍을 수 있는가 — 설치한 데스크톱 앱(서버가 utilityProcess)에서만 true(server/screens.ts). 웹 · dev에는 없거나 false라
@@ -2730,6 +2733,17 @@ app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
   } catch (err) {
     const status = err instanceof IndexChecksError || err instanceof PublishedPostsError || err instanceof ExternalPostsError ? err.status : 500;
     res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// SerpAPI 공용 연결(server/serpApi.ts) — 계정(무료 account.json, 허용 칸만 · 60초 캐시) · 몫(요금제 월 검색 수의 비율) · 이 PC 장부의 이번
+// 결제 주기 사용(기능별). 검색은 하지 않는다. 키 · 계정 이메일 · 계정 id는 싣지 않는다. 키가 없거나 연결 주소 설정이 틀렸으면 아무 데도
+// 부르지 않고 configured · configError로 알린다. Express 전용(Vercel 함수 12/12 — 웹은 404를 「이 환경에는 없음」으로 읽는다).
+app.get('/api/serpapi/account', async (_req, res) => {
+  try {
+    res.json(await serpApiAccountView());
+  } catch (err) {
+    res.status(500).json({ error: scrubSerpKey(err instanceof Error ? err.message : String(err)) });
   }
 });
 

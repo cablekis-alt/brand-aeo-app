@@ -46,4 +46,5 @@ server/tourapi-cache.json
 server/photo-scenes.json
 server/blog-sources.json
 server/post-import-ignored.json
+server/serpapi-usage.json
 .claude/launch.json

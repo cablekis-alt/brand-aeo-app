@@ -19,7 +19,11 @@ if (noticeIssues.length) {
 
 mkdirSync('dist-electron', { recursive: true })
 
-await build({
+// SerpAPI 시험 전용 env — 가짜 SerpAPI 서버 주소(127.0.0.1)와 짧은 시간 초과(server/serpApi.ts). 검증 스크립트만 쓴다 — 설치본에서는 이름째
+// 지워 userData/.env나 환경변수로 진짜 키를 다른 주소로 보내거나 시간 초과를 바꿀 수 없게 한다(scripts/verify-serpapi-client.ts가 이 줄을 본다).
+const SERPAPI_TEST_ENV = ['SERPAPI_BASE_URL', 'SERPAPI_TIMEOUT_MS']
+
+const serverBuild = {
   entryPoints: ['server/index.ts'],
   bundle: true,
   platform: 'node',
@@ -31,7 +35,9 @@ await build({
   define: { 'process.env.POST_IMPORT_TEST_LOOPBACK': 'undefined' },
   outfile: 'dist-electron/server.cjs',
   logLevel: 'info',
-})
+}
+for (const name of SERPAPI_TEST_ENV) serverBuild.define[`process.env.${name}`] = 'undefined'
+await build(serverBuild)
 
 console.log('[build-electron-server] dist-electron/server.cjs 생성 완료')
 
