@@ -327,7 +327,7 @@ const RUN_DONE = {
     ok('계획 — 「이번에 확인할 글 2편 · 검색 2회」', pt.includes('이번에 확인할 글 2편 · 검색 2회'), pt)
     ok('계획 — 이번 결제 주기(12월 8일 갱신까지) 색인 몫 남은 158회 / 200회 · 계정 남은 958회 · 바닥 500회', pt.includes('12월 8일') && pt.includes('158회') && pt.includes('200회') && pt.includes('958회') && pt.includes('500회'), pt)
     ok('계획 — 요금제(Starter 월 1,000회 · 시간당 200회)', pt.includes('Starter') && pt.includes('1,000회') && pt.includes('시간당 200회'), pt)
-    ok('계획 — 3 · 7일째는 직접 · 이번 차례에 못 가린 글은 다시 찾지 않음 · 자동으로 안 찾는 주소', pt.includes('3 · 7일째 차례 1편은 직접 확인') && pt.includes('자동으로 못 가린 글 1편 — 다시 찾지 않아요') && pt.includes('자동으로 안 찾는 주소 1편') && pt.includes('가상 영상'), pt)
+    ok('계획 — 3 · 7일째는 직접 · 이번 차례에 이미 본 글은 다시 찾지 않음 · 자동으로 안 찾는 주소', pt.includes('3 · 7일째 차례 1편은 직접 확인') && pt.includes('이번 차례에 이미 자동으로 본 글 1편 — 이번 차례에는 다시 찾지 않아요') && pt.includes('자동으로 안 찾는 주소 1편') && pt.includes('가상 영상'), pt)
     const runBtn = buttonNamed('2편 확인하기(검색 2회)', panel() ?? doc)
     ok('계획 — 단추 이름에 편 수 · 검색 수 「2편 확인하기(검색 2회)」', Boolean(runBtn) && runBtn?.disabled === false)
     ok('계획 — 「열 때 하루 한 번」 설정은 기본 꺼짐 · 한 번에 40편', (doc.getElementById('iap-on-open') as HTMLInputElement | null)?.checked === false && (doc.getElementById('iap-run-cap') as HTMLInputElement | null)?.value === '40')

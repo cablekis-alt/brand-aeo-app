@@ -54,7 +54,8 @@ const port = await freePort()
 const lan = Object.values(networkInterfaces())
   .flat()
   .find((a) => a && !a.internal && a.family === 'IPv4')?.address
-const env = { ...process.env, APP_DATA_DIR: dir, PORT: String(port), USE_MOCK_ENGINES: 'true', BLOB_READ_WRITE_TOKEN: '', BLOB_STORE_ID: '', PIPELINE_CRON: '', GH_MEASURE_TOKEN: '' }
+// 저장소 .env를 읽지 않는다(없는 파일) — 시험 서버가 진짜 키(SerpAPI 등)를 쥐지 않게.
+const env = { ...process.env, APP_DATA_DIR: dir, PORT: String(port), USE_MOCK_ENGINES: 'true', BLOB_READ_WRITE_TOKEN: '', BLOB_STORE_ID: '', PIPELINE_CRON: '', GH_MEASURE_TOKEN: '', DOTENV_CONFIG_PATH: path.join(dir, 'no-such.env'), SERPAPI_API_KEY: '' }
 delete env.AEO_SERVER_HOST
 // PC 전체에 흔한 이름의 HOST가 있어도(다른 개발 도구용) 서버는 읽지 않는다 — 아래 확인은 모두 HOST=0.0.0.0이 깔린 채로 돈다.
 env.HOST = '0.0.0.0'

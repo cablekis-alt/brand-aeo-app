@@ -467,7 +467,7 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
                     )}
                     <ul className="iap-facts">
                       {plan.manual > 0 && <li>3 · 7일째 차례 {plan.manual}편은 직접 확인해 주세요(「구글에서 확인」).</li>}
-                      {plan.settled > 0 && <li>이번 차례에 자동으로 못 가린 글 {plan.settled}편 — 다시 찾지 않아요. 칸 아래 안내대로 직접 확인해 주세요.</li>}
+                      {plan.settled > 0 && <li>이번 차례에 이미 자동으로 본 글 {plan.settled}편 — 이번 차례에는 다시 찾지 않아요. 직접 확인해 주세요(「구글에서 확인」).</li>}
                       {plan.unsupported.length > 0 && (
                         <li>
                           자동으로 안 찾는 주소 {plan.unsupported.length}편 — 직접 확인해 주세요.

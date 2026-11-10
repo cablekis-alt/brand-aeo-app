@@ -97,6 +97,9 @@ const env = {
   BLOB_STORE_ID: '',
   PIPELINE_CRON: '',
   GH_MEASURE_TOKEN: '',
+  // 저장소 .env를 읽지 않는다(없는 파일) — 시험 서버가 진짜 키(SerpAPI 등)를 쥐지 않게.
+  DOTENV_CONFIG_PATH: path.join(dir, 'no-such.env'),
+  SERPAPI_API_KEY: '',
 }
 const server = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts'], { cwd: process.cwd(), env, stdio: 'ignore' })
 const call = async (method: string, url: string, body?: unknown) => {
