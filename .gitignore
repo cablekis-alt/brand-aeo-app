@@ -47,4 +47,5 @@ server/photo-scenes.json
 server/blog-sources.json
 server/post-import-ignored.json
 server/serpapi-usage.json
+server/index-auto.json
 .claude/launch.json

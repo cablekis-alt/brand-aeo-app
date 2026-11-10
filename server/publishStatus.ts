@@ -1,7 +1,7 @@
 import { brandLabel } from '../src/lib/brandVariant.js';
 import { externalViews } from '../src/lib/externalPosts.js';
 import { todayKst } from '../src/lib/publishedUrl.js';
-import { buildTenantStatus, orderRows, type PublishStatus, type TenantIssue } from '../src/lib/publishStatus.js';
+import { buildTenantStatus, orderRows, type PublishStatus, type TenantChecks, type TenantIssue } from '../src/lib/publishStatus.js';
 import type { WriterPlan } from '../src/lib/probePlan.js';
 import { readExternalPostsInQueue } from './externalPosts.js';
 import { readIndexChecksInQueue } from './indexChecks.js';
@@ -30,6 +30,20 @@ const settle = <T>(p: Promise<T>): Promise<Settled<T>> =>
  * 이어받는 기록과 같게).
  */
 export async function readPublishStatus(tenants: TenantConfig[], now = Date.now()): Promise<PublishStatus> {
+  return (await readPublishStatusSnapshot(tenants, now)).status;
+}
+
+/** 발행 현황과, 그 표를 만든 바로 그 확인 기록(브랜드마다 거르기 전 원본 — 파일이 깨진 브랜드는 빠진다). */
+export interface PublishStatusSnapshot {
+  status: PublishStatus;
+  checks: TenantChecks[];
+}
+
+/**
+ * readPublishStatus와 같은 읽기에 원본 확인 기록을 함께 준다 — 색인 자동 확인(server/indexAuto.ts)이 대상(줄)과 CAS 기준값(원본 최신 기록)을
+ * 같은 순간의 파일에서 셈한다. 따로 두 번 읽으면 그 사이 사람이 누른 표시가 기준값에만 들어가 덮일 수 있다.
+ */
+export async function readPublishStatusSnapshot(tenants: TenantConfig[], now = Date.now()): Promise<PublishStatusSnapshot> {
   const customers = tenants.filter((t) => !t.cohortOnly);
   const parts = await Promise.all(
     customers.map(async (t) => {
@@ -73,10 +87,13 @@ export async function readPublishStatus(tenants: TenantConfig[], now = Date.now(
     });
   });
   return {
-    today: todayKst(now),
-    brands: parts.map((p) => ({ tenantId: p.t.tenantId, brand: p.brand })),
-    rows: orderRows(built.flatMap((b) => b.rows)),
-    writers: built.flatMap((b) => b.writers),
-    issues: parts.flatMap((p) => p.issues),
+    status: {
+      today: todayKst(now),
+      brands: parts.map((p) => ({ tenantId: p.t.tenantId, brand: p.brand })),
+      rows: orderRows(built.flatMap((b) => b.rows)),
+      writers: built.flatMap((b) => b.writers),
+      issues: parts.flatMap((p) => p.issues),
+    },
+    checks: shared.map(({ tenantId, checks }) => ({ tenantId, checks })),
   };
 }

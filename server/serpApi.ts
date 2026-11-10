@@ -29,7 +29,7 @@ import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
 export type SerpFeature = 'index' | 'aio';
 /** 장부 · 몫을 가진 기능. 'aio'(구글 AI 개요 시범)는 몫만 잡아 두었다 — 지금 부르는 곳은 색인 자동 확인뿐이다. */
 export const SERP_FEATURES: readonly SerpFeature[] = ['index', 'aio'];
-const FEATURE_LABEL: Record<SerpFeature, string> = { index: '색인 자동 확인', aio: '구글 AI 개요 시범' };
+export const FEATURE_LABEL: Record<SerpFeature, string> = { index: '색인 자동 확인', aio: '구글 AI 개요 시범' };
 
 export const SERPAPI_DEFAULT_BASE = 'https://serpapi.com';
 /** 요금제 월 검색 수(searches_per_month)에 대한 비율(%) — 바닥은 계정 전체, 기능 몫은 이 PC의 결제 주기 사용. 합 100. */
@@ -136,6 +136,13 @@ function ready(): { base: string; key: string } {
   const r = resolveSerpBase(process.env.SERPAPI_BASE_URL);
   if ('error' in r) throw new SerpApiError('config', r.error);
   return { base: r.base, key };
+}
+
+/** 키가 없거나 연결 주소 설정이 틀렸으면 그 까닭(그러면 검색 · 계정 모두 시작하지 않는다). 쓸 수 있으면 null. */
+export function serpApiUnavailable(): { kind: 'no-key' | 'config'; message: string } | null {
+  if (!serpKey()) return { kind: 'no-key', message: NO_KEY_MESSAGE };
+  const r = resolveSerpBase(process.env.SERPAPI_BASE_URL);
+  return 'error' in r ? { kind: 'config', message: r.error } : null;
 }
 
 /** 검색 시간 초과 — 30초. 시험만 더 짧게 줄 수 있다(설치본 묶음에서는 이 env 이름이 지워진다). */
@@ -559,6 +566,30 @@ export function serpSearch(feature: SerpFeature, params: Record<string, string>)
   });
 }
 
+// ── 실행 잠금 ─────────────────────────────────────────────────────────────────
+
+let runHolder: SerpFeature | null = null;
+
+/**
+ * 앱 전체에서 SerpAPI를 쓰는 실행(색인 자동 확인 · 나중의 AI 개요 시범)은 한 번에 하나 — 두 실행이 시간당 한도 · 몫을 나눠 셈하지 않게.
+ * 잡으면 놓는 함수를 돌려주고(두 번 불러도 한 번만 놓는다), 이미 누가 잡았으면 null.
+ */
+export function claimSerpRun(feature: SerpFeature): (() => void) | null {
+  if (runHolder) return null;
+  runHolder = feature;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    runHolder = null;
+  };
+}
+
+/** 지금 SerpAPI 실행을 잡고 있는 기능(없으면 null). */
+export function serpRunHolder(): SerpFeature | null {
+  return runHolder;
+}
+
 // ── 계정 보기(GET /api/serpapi/account) ─────────────────────────────────────────
 
 export interface SerpFeatureUsage {
@@ -590,8 +621,10 @@ export interface SerpApiAccountView {
   usageError: string | null;
 }
 
-/** 계정 · 몫 · 이 PC 장부를 한 번에(검색은 하지 않는다 — 계정은 60초 캐시). 키 · 계정 이메일 · id는 싣지 않는다. */
-export async function serpApiAccountView(): Promise<SerpApiAccountView> {
+/**
+ * 계정 · 몫 · 이 PC 장부를 한 번에(검색은 하지 않는다 — 계정은 60초 캐시, fresh면 새로 읽는다). 키 · 계정 이메일 · id는 싣지 않는다.
+ */
+export async function serpApiAccountView(opts: { fresh?: boolean } = {}): Promise<SerpApiAccountView> {
   const view: SerpApiAccountView = {
     configured: serpApiConfigured(),
     configError: serpApiConfigError(),
@@ -610,7 +643,7 @@ export async function serpApiAccountView(): Promise<SerpApiAccountView> {
   }
   let acc: SerpAccount;
   try {
-    acc = await serpAccount();
+    acc = await serpAccount({ fresh: opts.fresh });
   } catch (err) {
     view.accountError = { kind: err instanceof SerpApiError ? err.kind : 'account', message: scrubSerpKey(err instanceof Error ? err.message : String(err)) };
     return view;

@@ -10,6 +10,9 @@ import {
   postingsOf,
   type IndexCheckRecord,
   type IndexChecksFile,
+  type IndexEngine,
+  type IndexSource,
+  type IndexState,
   type TenantChecks,
 } from '../src/lib/publishStatus.js';
 import { EXTERNAL_ID, externalIndexBasis, externalViews } from '../src/lib/externalPosts.js';
@@ -19,8 +22,9 @@ import { readPublishedPostsInQueue, type PublishedPost } from './publishedPosts.
 import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
 
 /**
- * 색인 확인 기록 — 올린 글이 네이버에 노출되는지 · 구글에 색인됐는지 사람이 검색해 보고 누른 것(data/<tenant>/index-checks.json, 모양은
- * src/lib/publishStatus.ts IndexChecksFile). 원장(published-posts.json)과 따로 둔다 — 원장 모양은 바꾸지 않는다.
+ * 색인 확인 기록 — 올린 글이 네이버에 노출되는지 · 구글에 색인됐는지 사람이 검색해 보고 누른 것과, 구글 칸을 색인 자동 확인
+ * (server/indexAuto.ts)이 대신 검색해 적은 것(source 'auto')(data/<tenant>/index-checks.json, 모양은 src/lib/publishStatus.ts IndexChecksFile).
+ * 원장(published-posts.json)과 따로 둔다 — 원장 모양은 바꾸지 않는다.
  *
  * 원장과 같은 쓰기 줄(tenantWriteQueue.ts)에서 읽고 쓴다 — 윈도우에서는 읽는 중인 파일 위로 rename이 EPERM으로 실패하고, 줄 밖에서 동시에
  * 쓰면 먼저 쓴 표시가 사라진다. 파일이 깨졌으면 읽지도 쓰지도 않는다(빈 기록으로 읽고 덮으면 확인이 통째로 사라진다).
@@ -125,10 +129,8 @@ async function externalTarget(tenantId: string, postId: string, posts: readonly 
 }
 
 /**
- * 올린 글 한 편의 한 엔진 확인을 적거나(state) 지운다(null — 미확인으로). postId는 원장에 있는 살아 있는 편의 줄이거나 살아 있는 앱 밖 글
- * 줄(x- id)이어야 한다(내린 · 뺀 · 앱 글로 옮긴 줄은 409). 그 주소의 지금 기록(같은 편의 다른 줄 · 같은 주소 · 다른 고객 브랜드 others의 같은
- * 주소 가운데 가장 나중, 올린 날보다 앞선 확인은 빼고)을 이어받아 다른 엔진 칸이 사라지지 않게 한다 — 앱 밖 줄과 같은 주소의 앱 글 줄도 서로
- * 이어받는다(C15). 확인일 · 출처(manual)는 서버가 정한다.
+ * 올린 글 한 편의 한 엔진 확인을 적거나(state) 지운다(null — 미확인으로) — 사람이 누른 표시(PUT). 본문은 { engine, state }만 받는다(출처는
+ * 본문으로 열지 않는다 — 늘 manual). 적는 규칙은 writeIndexCheck.
  */
 export function setIndexCheck(
   tenantId: string,
@@ -139,16 +141,79 @@ export function setIndexCheck(
 ): Promise<{ record: IndexCheckRecord }> {
   const input = parseIndexCheckInput(body);
   if (!input.ok) return Promise.reject(new IndexChecksError(input.error, 400));
+  return writeIndexCheck(tenantId, postId, input.engine, input.state, others, now, 'manual');
+}
+
+/**
+ * 자동 쓰기의 조건(CAS) — 계획 때 본 그 주소의 원본 최신 기록(신선도로 거르기 전, 모든 고객 브랜드 · 줄을 통틀어 — findIndexRecord)의 그
+ * 엔진 확인 시각. 쓸 때 다시 읽은 값과 다르면 확인하는 사이 누가(사람이) 표시한 것이라 덮지 않는다. 줄마다 신선도 기준일이 달라도 원본으로
+ * 견주므로 「늘 다름」이 되지 않는다.
+ */
+export interface IndexCheckGuard {
+  expectRawCheckedAt: string | null;
+}
+
+/** 자동 결과를 적지 않은 까닭 — changed 확인하는 사이 표시가 바뀜, already-shown 원본 최신 기록이 「색인됨」(사람 표시가 먼저). */
+export type IndexWriteSkip = 'changed' | 'already-shown';
+export type IndexWriteResult = { record: IndexCheckRecord } | { skipped: IndexWriteSkip };
+
+/**
+ * 올린 글 한 편의 한 엔진 확인을 적는다 — 사람(manual)은 PUT이, 자동(auto)은 색인 자동 확인(server/indexAuto.ts)이 부른다. postId는 원장에 있는
+ * 살아 있는 편의 줄이거나 살아 있는 앱 밖 글 줄(x- id)이어야 한다(없으면 404, 내린 · 뺀 · 앱 글로 옮긴 줄은 409). 그 주소의 지금 기록(같은
+ * 편의 다른 줄 · 같은 주소 · 다른 고객 브랜드 others의 같은 주소 가운데 가장 나중, 올린 날보다 앞선 확인은 빼고)을 이어받아 다른 엔진 칸이
+ * 사라지지 않게 한다 — 앱 밖 줄과 같은 주소의 앱 글 줄도 서로 이어받는다(C15). 확인일은 서버가 정한다. 파일 모양은 그대로다(state ·
+ * checkedOn · checkedAt · source — 옛 판 v0.4.63 · v0.4.64도 source 'auto'를 읽는다).
+ *
+ * 자동은 사람 표시가 먼저다(D4 A): 조건(guard) 없이 · 지우기(null)로는 적지 않고(400), 원본 최신 기록의 그 엔진 확인 시각이 계획 때와 다르면
+ * changed, 원본 최신 기록이 「색인됨」이면 already-shown으로 건너뛴다(파일은 그대로).
+ */
+export function writeIndexCheck(
+  tenantId: string,
+  postId: string,
+  engine: IndexEngine,
+  state: IndexState | null,
+  others: readonly string[],
+  now: number,
+  source: 'manual',
+): Promise<{ record: IndexCheckRecord }>;
+export function writeIndexCheck(
+  tenantId: string,
+  postId: string,
+  engine: IndexEngine,
+  state: IndexState,
+  others: readonly string[],
+  now: number,
+  source: 'auto',
+  guard: IndexCheckGuard,
+): Promise<IndexWriteResult>;
+export function writeIndexCheck(
+  tenantId: string,
+  postId: string,
+  engine: IndexEngine,
+  state: IndexState | null,
+  others: readonly string[],
+  now: number,
+  source: IndexSource,
+  guard?: IndexCheckGuard,
+): Promise<IndexWriteResult> {
   if (!POST_ID.test(postId)) return Promise.reject(new IndexChecksError('올린 글 기록 id가 올바르지 않습니다.', 400));
+  if (source === 'auto' && (!guard || state === null)) {
+    return Promise.reject(new IndexChecksError('자동 확인은 조건 없이 · 지우기로 적지 않습니다.', 400));
+  }
   return queueTenantWrite(INDEX_CHECKS_LOCK, async () => {
     const foreign = await readOthersChecks(others.filter((id) => id !== tenantId));
-    return queueTenantWrite(tenantId, async () => {
+    return queueTenantWrite(tenantId, async (): Promise<IndexWriteResult> => {
       const posts = await readPublishedPostsInQueue(tenantId);
       const target = EXTERNAL_ID.test(postId) ? await externalTarget(tenantId, postId, posts) : ledgerTarget(posts, postId);
       const checks = await readIndexChecksInQueue(tenantId);
       const found = findIndexRecord({ tenantId, checks }, foreign, target.ids, target.post.key);
+      if (guard) {
+        const raw = found?.record[engine];
+        if ((raw?.checkedAt ?? null) !== guard.expectRawCheckedAt) return { skipped: 'changed' };
+        if (raw?.state === 'shown') return { skipped: 'already-shown' };
+      }
       const base = found ? freshIndexRecord(found.record, target.publishedOn) : null;
-      const record = applyIndexCheck(base, target.post, input.engine, input.state, now);
+      const record = applyIndexCheck(base, target.post, engine, state, now, source);
       const file: IndexChecksFile = { format: INDEX_CHECKS_FORMAT, checks: { ...checks, [postId]: record } };
       await writeJsonAtomic(filePathFor(tenantId), file);
       return { record };

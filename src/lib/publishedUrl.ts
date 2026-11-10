@@ -18,7 +18,7 @@ export const KEY_RULE = 3
  * 인용 추적용 파라미터 — 같은 글인데 붙었다 안 붙었다 한다(OpenAI는 utm_source=openai를 붙인다). si는 유튜브 · 스포티파이의
  * 공유 꼬리표지만 다른 사이트에서는 뜻이 있는 값이라(실측: 지역 코드) 전역으로 떼지 않는다 — 유튜브는 v만 남긴다.
  */
-const TRACKING_PARAM = /^(utm_.*|fbclid|gclid|igshid|igsh)$/i
+export const TRACKING_PARAM = /^(utm_.*|fbclid|gclid|igshid|igsh)$/i
 
 /**
  * 질의가 글을 가리키지 않는 플랫폼 — 질의를 모두 뗀다. 티스토리는 카테고리 목록에서 연 글에 ?category=가, 인스타그램은 「링크 복사」에

@@ -175,6 +175,7 @@ import { isActionStatus, readActionStates, sanitizeUrls, writeActionState } from
 import { queueTenantWrite } from './tenantWriteQueue.js';
 import { getPublishedHistory } from './publishedHistory.js';
 import { IndexChecksError, setIndexCheck } from './indexChecks.js';
+import { IndexAutoError, indexAutoStatus, planIndexAuto, saveIndexAutoSettings, startIndexAuto } from './indexAuto.js';
 import { readPublishStatus } from './publishStatus.js';
 import { commitPostImport, listBlogPosts, PostImportError, readBlogSources, readPostForImport, saveBlogSources } from './postImport.js';
 import { IGNORED_MAX, IgnoredListError, listIgnored, unignoreUrls } from './postImportIgnored.js';
@@ -2744,6 +2745,58 @@ app.get('/api/serpapi/account', async (_req, res) => {
     res.json(await serpApiAccountView());
   } catch (err) {
     res.status(500).json({ error: scrubSerpKey(err instanceof Error ? err.message : String(err)) });
+  }
+});
+
+// 색인 자동 확인(server/indexAuto.ts · 규칙 src/lib/indexAuto.ts) — 발행 현황의 구글 색인 칸을 SerpAPI site: 검색으로 대신 본다. 사람이 단추를
+// 눌러야 돈다: POST plan(계획 — 검색 0, 계정만 무료로 읽어 대상 · 검색 수 · 이번 결제 주기 몫을 보인다) → POST run(그 계획 id로만 — 검색이 든다,
+// 202 뒤 GET으로 진행을 묻는다). 돈이 드는 길(plan · run · settings)은 Content-Type application/json만 받는다 — 다른 사이트가 보내는 text/plain ·
+// form 단순 요청은 415로 막히고, JSON 요청은 서버에 CORS가 없어 사전 요청에서 막힌다. 오류: 400 본문 모양, 409 도는 중 · 계획이 바뀜 · 오늘 이미
+// 함, 502 계정을 못 읽음, 503 키 없음 · 연결 설정 틀림, 500 기록 파일이 깨짐(덮어쓰지 않는다). Express 전용(Vercel 함수 12/12 — 웹은 404).
+function sendIndexAutoError(res: import('express').Response, err: unknown) {
+  if (!(err instanceof IndexAutoError)) console.error('[index-auto]', err);
+  res.status(err instanceof IndexAutoError ? err.status : 500).json({ error: scrubSerpKey(err instanceof Error ? err.message : String(err)) });
+}
+
+/** 본문이 JSON이 아니면 415로 끝낸다(검색 0). */
+function requireJson(req: import('express').Request, res: import('express').Response): boolean {
+  if (req.is('application/json')) return true;
+  res.status(415).json({ error: '본문은 JSON(Content-Type: application/json)만 받아요.' });
+  return false;
+}
+
+app.get('/api/index-auto', async (_req, res) => {
+  try {
+    res.json(await indexAutoStatus());
+  } catch (err) {
+    sendIndexAutoError(res, err);
+  }
+});
+
+app.post('/api/index-auto/plan', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  try {
+    res.json(await planIndexAuto(await loadRuntimeTenants(), req.body));
+  } catch (err) {
+    sendIndexAutoError(res, err);
+  }
+});
+
+app.post('/api/index-auto/run', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  try {
+    res.status(202).json(await startIndexAuto(await loadRuntimeTenants(), req.body));
+  } catch (err) {
+    sendIndexAutoError(res, err);
+  }
+});
+
+app.put('/api/index-auto/settings', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  try {
+    res.json(await saveIndexAutoSettings(req.body));
+  } catch (err) {
+    sendIndexAutoError(res, err);
   }
 });
 
