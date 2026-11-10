@@ -8,6 +8,7 @@ import type { PublishSettings } from './publishSettings'
 import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './extraArticles'
 import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { IndexCheckRecord, IndexEngine, IndexState, PublishStatus } from './publishStatus'
+import type { AutoAttemptView } from './indexAuto'
 import type { BlogListResult, BlogSource, CommitItem, CommitResult, IgnoredList, PostImportRead, UnignoreResult } from './postImport'
 // 앱 밖 글 모듈은 타입으로만 불러온다 — 정기진단 보고서가 이 파일을 불러오므로 런타임 import가 생기면 보고서가 앱 밖 글 모듈을 끌어온다
 // (scripts/verify-external-posts.ts 정적 검사).
@@ -791,6 +792,140 @@ export async function saveIndexCheck(tenantId: string, postId: string, engine: I
     body: JSON.stringify({ engine, state }),
   })
   return body.record
+}
+
+// ── 색인 자동 확인(server/indexAuto.ts) — 서버 타입과 같은 모양이다. Express 전용이라 웹은 404(GET이 null). ──────────────
+
+export type IndexAutoTrigger = 'button' | 'open'
+export interface IndexAutoSettings {
+  /** 한 번에 검색할 글 수 상한(1~200). */
+  runCap: number
+  /** 발행 현황을 열 때 하루 한 번 자동으로(기본 끔). */
+  autoOnOpen: boolean
+}
+export interface IndexAutoRunItem {
+  key: string
+  tenantId: string
+  postId: string
+  rowName: string
+  tier: 'day14' | 'day30'
+  outcome: 'found' | 'not-found' | 'unknown'
+  reason?: string
+  matched?: string
+  wrote?: 'shown' | 'not-yet'
+  skipped?: string
+}
+export interface IndexAutoRunRecord {
+  runId: string
+  trigger: IndexAutoTrigger
+  startedAt: string
+  /** null이면 끝나지 않았다(도는 중이거나, 앱이 꺼져 끊김). */
+  endedAt: string | null
+  planned: number
+  searched: number
+  found: number
+  notFound: number
+  unknown: number
+  skipped: number
+  notRun: number
+  stoppedBy: { kind: string; message: string } | null
+  items: IndexAutoRunItem[]
+}
+export interface IndexAutoStatus {
+  configured: boolean
+  configError: string | null
+  settings: IndexAutoSettings
+  running: { runId: string; trigger: IndexAutoTrigger; startedAt: string; total: number; done: number } | null
+  lastRun: IndexAutoRunRecord | null
+  attemptsByKey: Record<string, AutoAttemptView[]>
+  openRunToday: boolean
+}
+/** 이번 결제 주기 색인 몫 · 계정 숫자(어림 — 계정 값 − 그 뒤 이 PC가 보낸 수). */
+export interface IndexAutoQuota {
+  cycle: string
+  cap: number
+  used: number
+  featureLeft: number
+  floor: number
+  accountLeft: number
+  aboveFloor: number
+  hourLeft: number
+  allowed: number
+  planName: string | null
+  searchesPerMonth: number | null
+  rateLimitPerHour: number | null
+}
+export interface IndexAutoPlan {
+  /** 실행에 넘길 계획 id(10분) — 검색할 수가 0이면 null. */
+  planId: string | null
+  expiresAt: string | null
+  trigger: IndexAutoTrigger
+  today: string
+  candidates: number
+  searches: number
+  limitedBy: 'run-cap' | 'feature-cap' | 'floor' | 'hour' | 'account' | null
+  /** 계정 · 장부를 못 읽었거나 계정 상태로는 검색하지 않는 까닭(그러면 0). */
+  blocked: string | null
+  targets: { key: string; tenantId: string; postId: string; rowName: string; tier: 'day14' | 'day30'; turn: string; since: string; batch: 'first' | 'retry'; query: string }[]
+  manual: number
+  unsupported: { key: string; rowName: string; reason: string; text: string }[]
+  settled: number
+  shownElsewhere: number
+  quota: IndexAutoQuota | null
+  settings: IndexAutoSettings
+}
+
+/** 색인 자동 확인 요청 실패 — status는 서버 HTTP 상태(닿지 못했으면 0). 409(계획이 바뀜 · 도는 중)면 화면이 계획을 다시 받는다. */
+export class IndexAutoRequestError extends Error {
+  readonly status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'IndexAutoRequestError'
+    this.status = status
+  }
+}
+
+async function indexAutoRequest<T>(path: string, init: RequestInit | undefined, what: string): Promise<{ status: number; body: (T & { error?: string }) | null }> {
+  let res: Response
+  try {
+    res = await fetch(path, init)
+  } catch (err) {
+    throw new IndexAutoRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`, 0)
+  }
+  const body = (await res.json().catch(() => null)) as (T & { error?: string }) | null
+  if (!res.ok && res.status !== 404) throw new IndexAutoRequestError(body?.error || `${what} (HTTP ${res.status})`, res.status)
+  return { status: res.status, body }
+}
+
+const jsonInit = (method: 'POST' | 'PUT', payload: unknown): RequestInit => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+
+/** 색인 자동 확인 상태(검색 · 계정 읽기 없음 — 진행을 2초마다 묻는 데 쓴다). **null은 이 환경에 기능이 없다(웹 — 404)**. */
+export async function loadIndexAuto(): Promise<IndexAutoStatus | null> {
+  const { status, body } = await indexAutoRequest<IndexAutoStatus>('/api/index-auto', undefined, '자동 확인 상태를 읽지 못했습니다')
+  if (status === 404) return null
+  if (!body || typeof body.configured !== 'boolean' || !body.settings) throw new IndexAutoRequestError('자동 확인 상태를 읽지 못했습니다(응답 모양).', status)
+  return body
+}
+
+/** 계획 — 검색은 하지 않는다(서버가 SerpAPI 계정만 무료로 읽는다). 검색할 수가 있으면 planId를 준다. */
+export async function planIndexAuto(trigger: IndexAutoTrigger): Promise<IndexAutoPlan> {
+  const { status, body } = await indexAutoRequest<IndexAutoPlan>('/api/index-auto/plan', jsonInit('POST', { trigger }), '자동 확인 계획을 받지 못했습니다')
+  if (status === 404 || !body || typeof body.searches !== 'number') throw new IndexAutoRequestError(body?.error || `자동 확인 계획을 받지 못했습니다 (HTTP ${status})`, status)
+  return body
+}
+
+/** 실행 — 계획 id로만(검색이 든다). 서버는 202로 바로 돌려주고 뒤에서 하나씩 검색한다(진행은 loadIndexAuto). */
+export async function runIndexAuto(planId: string): Promise<{ runId: string; total: number }> {
+  const { status, body } = await indexAutoRequest<{ runId: string; total: number }>('/api/index-auto/run', jsonInit('POST', { planId }), '자동 확인을 시작하지 못했습니다')
+  if (status === 404 || !body || typeof body.runId !== 'string') throw new IndexAutoRequestError(body?.error || `자동 확인을 시작하지 못했습니다 (HTTP ${status})`, status)
+  return body
+}
+
+/** 설정 저장 — 바꾼 칸만. 서버가 저장한 설정을 돌려준다. */
+export async function saveIndexAutoSettings(patch: Partial<IndexAutoSettings>): Promise<IndexAutoSettings> {
+  const { status, body } = await indexAutoRequest<{ settings: IndexAutoSettings }>('/api/index-auto/settings', jsonInit('PUT', patch), '자동 확인 설정을 저장하지 못했습니다')
+  if (status === 404 || !body?.settings) throw new IndexAutoRequestError(body?.error || `자동 확인 설정을 저장하지 못했습니다 (HTTP ${status})`, status)
+  return body.settings
 }
 
 /**

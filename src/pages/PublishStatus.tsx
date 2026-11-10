@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import IndexAutoPanel, { type IndexAutoLoad } from '../components/IndexAutoPanel'
 import PostImportPanel from '../components/PostImportPanel'
-import { commitPostImport, loadPublishStatus, patchExternalPost, saveIndexCheck } from '../lib/api'
+import { commitPostImport, loadIndexAuto, loadPublishStatus, patchExternalPost, saveIndexCheck, type IndexAutoStatus } from '../lib/api'
 import { downloadCsv } from '../lib/fileDownload'
 import { safeFileName } from '../lib/markdownFile'
 import { repostDayProblem, takenDownBefore } from '../lib/externalPosts'
+import { AUTO_NOT_FOUND_NOTE, autoAttemptsText, autoCellNotes, estimateAutoTargets, type AutoCellNote } from '../lib/indexAuto'
 import { externalResultText } from '../lib/postImport'
 import { todayKst } from '../lib/publishedUrl'
 import { monthDay } from '../lib/publishTracking'
@@ -50,25 +52,44 @@ const shortUrl = (url: string) => url.replace(/^https?:\/\//i, '').replace(/\/+$
 
 type MarkFn = (row: PublishStatusRow, engine: IndexEngine, state: IndexState | null) => void
 
+/** 구글 칸의 자동 확인 덧붙임 — 칸 아래 안내(D10 A · K18)와 칩 툴팁의 자동 확인 기록. */
+interface AutoCellExtra {
+  notes: AutoCellNote[]
+  history: string
+}
+
 /**
  * 네이버 노출 · 구글 색인 칸 — 상태와 확인한 날, 검색 창을 여는 링크(데스크톱 앱은 시스템 브라우저로 연다 — electron/main.cjs
  * setWindowOpenHandler), 본 결과를 적는 단추. 같은 상태를 다시 누르면 확인한 날이 오늘로 바뀐다(다시 볼 날에 「아직」을 다시 확인한 것).
- * 단추 · 링크 이름에 브랜드 · 제목을 넣어 화면 읽기 프로그램이 어느 글의 것인지 알게 한다.
+ * 단추 · 링크 이름에 브랜드 · 제목을 넣어 화면 읽기 프로그램이 어느 글의 것인지 알게 한다. 색인 자동 확인이 적은 칸은 칩에 「· 자동」을
+ * 붙이고(날짜 글자만으로는 표 · 스크린숏 · 화면 읽기에서 사라진다) 날짜를 「자동 확인」으로 쓴다. 자동 「아직」은 site: 검색에서 못 본
+ * 것이지 미색인 확정이 아니라 칩 툴팁에 그 뜻과 자동 확인 기록을 둔다.
  */
-function IndexCell({ row, engine, busy, onMark }: { row: PublishStatusRow; engine: IndexEngine; busy: boolean; onMark: MarkFn }) {
+function IndexCell({ row, engine, busy, onMark, auto }: { row: PublishStatusRow; engine: IndexEngine; busy: boolean; onMark: MarkFn; auto?: AutoCellExtra }) {
   if (row.kind === 'unposted') return <td className="ps-index muted">—</td>
   const check = row[engine]
   const tone = check?.state === 'shown' ? ' good' : check ? ' warn' : ''
   const searchUrl = engine === 'naver' ? naverSearchUrl(row) : row.url ? googleSearchUrl(row.url) : null
   const name = ENGINE_NAME[engine]
+  const isAuto = check?.source === 'auto'
+  const chipTitle = [isAuto && check?.state === 'not-yet' ? AUTO_NOT_FOUND_NOTE : '', auto?.history ?? ''].filter(Boolean).join('\n')
   return (
     <td className="ps-index">
-      <span className={`chip${tone}`}>{indexStateLabel(engine, check)}</span>
+      <span className={`chip${tone}`} title={chipTitle || undefined}>
+        {indexStateLabel(engine, check)}
+        {isAuto && <span className="ps-auto-tag"> · 자동</span>}
+      </span>
       {check && (
-        <span className="ps-date" title={`${check.source === 'auto' ? '자동 확인' : '직접 확인'} · ${check.checkedAt}`}>
-          {monthDay(check.checkedOn)} 확인{row.checkFrom ? ` · ${row.checkFrom} 줄에서` : ''}
+        <span className="ps-date" title={`${isAuto ? '자동 확인' : '직접 확인'} · ${check.checkedAt}`}>
+          {monthDay(check.checkedOn)} {isAuto ? '자동 확인' : '확인'}
+          {row.checkFrom ? ` · ${row.checkFrom} 줄에서` : ''}
         </span>
       )}
+      {auto?.notes.map((note) => (
+        <span key={note.text} className="ps-auto-note" title={note.title}>
+          {note.text}
+        </span>
+      ))}
       {!row.removed && (
         <div className="ps-index-actions">
           {searchUrl && (
@@ -361,12 +382,18 @@ function ExternalManage({
  * 발행 현황 — 고객 브랜드 모두의 올린 글을 한 표로(server/publishStatus.ts · src/lib/publishStatus.ts). 작성자별 진행(올림 n/배정 수)과
  * 아직 안 올린 배정 글, 네이버 노출 · 구글 색인 확인, 다시 볼 날(올린 뒤 3 · 7 · 14일째)을 함께 본다.
  *
- * 색인 확인은 지금 두 엔진 모두 사람이 한다 — 「네이버에서 확인」 · 「구글에서 확인」으로 검색 창을 연 뒤 본 결과를 누른다. 누르지 않은 글은
- * 「미확인」이다. 데스크톱 앱 전용(웹에는 라우트가 없다).
+ * 색인 확인 — 네이버는 사람이 「네이버에서 확인」으로 검색 창을 연 뒤 본 결과를 누른다. 구글은 사람이 「구글에서 확인」으로 보고 누르거나,
+ * 이 PC에 SerpAPI 키가 있으면 「구글 자동 확인」(src/components/IndexAutoPanel.tsx — 단추를 눌러야 검색한다)이 14일째 차례에 대신 보고 적는다.
+ * 누르지 않은 글은 「미확인」이다. 데스크톱 앱 전용(웹에는 라우트가 없다).
  */
 export default function PublishStatus() {
   const [state, setState] = useState<{ loaded: boolean; value: PublishStatusData | null; error: string | null }>({ loaded: false, value: null, error: null })
   const [reloadKey, setReloadKey] = useState(0)
+  // 색인 자동 확인 상태(검색 · 계정 읽기 없음) — 표를 다시 읽을 때 함께 다시 읽는다. 패널 펼침은 머리 단추와 함께 쓴다.
+  const [autoLoad, setAutoLoad] = useState<IndexAutoLoad>({ kind: 'loading' })
+  const [autoOpen, setAutoOpen] = useState(false)
+  const setAutoStatus = useCallback((status: IndexAutoStatus) => setAutoLoad({ kind: 'ready', status }), [])
+  const reload = useCallback(() => setReloadKey((k) => k + 1), [])
   const [filterState, setFilter] = useState<StatusFilter>(DEFAULT_FILTER)
   // 작성자 칩으로 거르기를 켜기 전의 브랜드 거르기 — 칩을 끄면 여기로 돌아간다. 손으로 고르면 null.
   const [chipBefore, setChipBefore] = useState<string | null>(null)
@@ -397,6 +424,21 @@ export default function PublishStatus() {
       },
       (err: unknown) => {
         if (alive) setState((s) => ({ ...s, loaded: true, error: err instanceof Error ? err.message : String(err) }))
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [reloadKey])
+
+  useEffect(() => {
+    let alive = true
+    loadIndexAuto().then(
+      (status) => {
+        if (alive) setAutoLoad(status ? { kind: 'ready', status } : { kind: 'off' })
+      },
+      (err: unknown) => {
+        if (alive) setAutoLoad({ kind: 'error', error: err instanceof Error ? err.message : String(err) })
       },
     )
     return () => {
@@ -441,12 +483,33 @@ export default function PublishStatus() {
   const sameUrl = sameUrlBrands(rows)
   const empty = data ? emptyStateOf(data) : null
 
-  const exportCsv = () => downloadCsv(safeFileName(publishStatusFileName(today)), publishStatusCsv(shown, today))
+  // 색인 자동 확인 — 키 · 연결 설정이 맞을 때만 머리 단추 · 구글 자동 문장 · 칸 아래 시도 안내를 보인다(웹 · 키 없음이면 지금처럼 직접만).
+  const autoStatus = autoLoad.kind === 'ready' ? autoLoad.status : null
+  const autoOn = Boolean(autoStatus?.configured && !autoStatus.configError)
+  const autoRunning = autoStatus?.running ?? null
+  const attemptsByKey = autoStatus?.attemptsByKey ?? {}
+  const autoCount = autoOn && data ? estimateAutoTargets(rows, today, attemptsByKey) : 0
+  const googleAuto = (r: PublishStatusRow): AutoCellExtra => {
+    const attempts = r.key ? attemptsByKey[r.key] : undefined
+    return { notes: autoCellNotes(r, today, attempts, autoOn), history: autoAttemptsText(attempts) }
+  }
+  const openAuto = () => {
+    setAutoOpen(true)
+    document.getElementById('iap-toggle')?.focus()
+  }
+
+  // CSV 끝에 「네이버/구글 확인 방법」(직접 · 자동) 두 열 — 자동 「아직」을 사람이 본 「아직」과 가른다(D9 A).
+  const exportCsv = () => downloadCsv(safeFileName(publishStatusFileName(today)), publishStatusCsv(shown, today, { checkMethods: true }))
   const tiles = [
     // 앱 밖 글이 있으면 올린 글을 앱 글 · 앱 밖 글로 나눠 보인다(같은 주소가 한 브랜드에서라도 앱 글이면 앱 글 — 합이 올린 글).
     { label: '올린 글', value: sum.posted, sub: sum.external > 0 ? `앱 글 ${sum.app} · 앱 밖 ${sum.external}` : '뺀 글 · 안 올린 글 제외', tone: '' },
     { label: '네이버 노출', value: sum.naverShown, sub: '노출됨으로 표시한 글', tone: 'good' },
-    { label: '구글 색인', value: sum.googleShown, sub: '색인됨으로 표시한 글', tone: 'good' },
+    {
+      label: '구글 색인',
+      value: sum.googleShown,
+      sub: autoOn || rows.some((r) => r.google?.source === 'auto') ? '색인됨인 글(자동 확인 포함)' : '색인됨으로 표시한 글',
+      tone: 'good',
+    },
     { label: '미확인', value: sum.unknown, sub: '한 엔진이라도 아직 안 본 글', tone: '' },
     { label: '오늘 다시 볼', value: sum.due, sub: '올린 뒤 3 · 7 · 14일째', tone: 'warn' },
   ]
@@ -459,19 +522,34 @@ export default function PublishStatus() {
           <h1>발행 현황</h1>
         </div>
         <div className="page-actions">
+          {autoOn && (
+            <button type="button" className="btn" aria-controls="iap-body" aria-expanded={autoOpen} disabled={!autoRunning && autoCount === 0} onClick={openAuto}>
+              {autoRunning ? `확인하는 중… ${autoRunning.done}/${autoRunning.total}` : autoCount > 0 ? `구글 자동 확인(${autoCount}편)` : '구글 자동 확인(오늘 볼 글 없음)'}
+            </button>
+          )}
           <button type="button" className="btn" onClick={exportCsv} disabled={!data || shown.length === 0}>
             CSV로 받기
           </button>
-          <button type="button" className="btn" onClick={() => setReloadKey((k) => k + 1)}>
+          <button type="button" className="btn" onClick={reload}>
             다시 읽기
           </button>
         </div>
       </header>
-      <p className="page-lead">
-        고객 브랜드에 올린 글을 한 표로 봅니다. 네이버 · 구글은 지금 직접 검색해 확인합니다 — 「네이버에서 확인」 · 「구글에서 확인」으로 검색 창을 연 뒤
-        본 결과대로 「노출됨 · 색인됨」 또는 「아직」을 누르세요. 누르지 않은 글은 「미확인」입니다. 올린 뒤 3 · 7 · 14일째에 다시 봅니다. 「앱 밖 글」은
-        앱에서 만들지 않은 글입니다 — 작성자 진행 · 점수 · 보고서에는 넣지 않고, 다시 볼 날은 추적을 시작한 날부터 셉니다.
-      </p>
+      {autoOn ? (
+        <p className="page-lead">
+          고객 브랜드에 올린 글을 한 표로 봅니다. 네이버는 직접 검색해 확인합니다 — 「네이버에서 확인」으로 검색 창을 연 뒤 본 결과대로 「노출됨」 또는
+          「아직」을 누르세요. 구글은 14일째 차례에 「구글 자동 확인」으로 앱이 대신 검색할 수 있고(검색 한 번마다 SerpAPI 사용량이 듭니다), 「구글에서
+          확인」으로 직접 보고 눌러도 됩니다. 누르지 않은 글은 「미확인」입니다. 올린 뒤 3 · 7 · 14일째에 다시 봅니다. 「앱 밖 글」은 앱에서 만들지 않은
+          글입니다 — 작성자 진행 · 점수 · 보고서에는 넣지 않고, 다시 볼 날은 추적을 시작한 날부터 셉니다.
+        </p>
+      ) : (
+        <p className="page-lead">
+          고객 브랜드에 올린 글을 한 표로 봅니다. 네이버 · 구글은 지금 직접 검색해 확인합니다 — 「네이버에서 확인」 · 「구글에서 확인」으로 검색 창을 연 뒤
+          본 결과대로 「노출됨 · 색인됨」 또는 「아직」을 누르세요. 누르지 않은 글은 「미확인」입니다. 올린 뒤 3 · 7 · 14일째에 다시 봅니다. 「앱 밖 글」은
+          앱에서 만들지 않은 글입니다 — 작성자 진행 · 점수 · 보고서에는 넣지 않고, 다시 볼 날은 추적을 시작한 날부터 셉니다.
+        </p>
+      )}
+      <IndexAutoPanel load={autoLoad} open={autoOpen} onOpenChange={setAutoOpen} onStatus={setAutoStatus} onRunEnd={reload} onRetry={reload} />
       {/* 작성자들이 보낸 주소를 한꺼번에 적는다 — 적으면 이 표를 다시 읽는다. 오늘은 서버가 센 날(읽기 전이면 이 PC의 한국 날짜). */}
       <PostImportPanel
         today={today || todayKst()}
@@ -701,7 +779,7 @@ export default function PublishStatus() {
                           </td>
                           <td className="mono">{r.kind === 'unposted' ? '—' : (r.publishedOn ?? '모름')}</td>
                           <IndexCell row={r} engine="naver" busy={busy === `${r.rowKey}|naver`} onMark={mark} />
-                          <IndexCell row={r} engine="google" busy={busy === `${r.rowKey}|google`} onMark={mark} />
+                          <IndexCell row={r} engine="google" busy={busy === `${r.rowKey}|google`} onMark={mark} auto={googleAuto(r)} />
                           <RecheckView row={r} today={today} />
                         </tr>
                       ))}

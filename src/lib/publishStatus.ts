@@ -10,10 +10,11 @@
  * 10/30 · 채널 줄 11/02 「오늘」)를 두 줄로 두면 표시가 줄마다 갈라지고 요약이 두 번 센다(검토 실측 web4ai). 발행일은 가장 이른 날이다.
  * 「뺀 글 보기」를 켜면 내린 글 · 잘못 적은 주소도 흐리게 보인다.
  *
- * ── 색인 확인은 사람이 본 것만 ─────────────────────────────────────────────
- * 지금은 네이버 · 구글 모두 사람이 검색해 보고 「노출됨/색인됨」 · 「아직」을 누른다. 누르지 않은 글은 「미확인」이다 — 「아직」으로 채우지
- * 않는다. 기록은 원장과 따로 data/<tenant>/index-checks.json에 두고(원장 모양은 바꾸지 않는다), 기록마다 출처(manual · auto)를 남겨 나중에
- * 네이버 검색 API로 자동 확인해도 같은 칸에 쓴다.
+ * ── 색인 확인은 본 것만 ─────────────────────────────────────────────────────
+ * 네이버는 사람이 검색해 보고 「노출됨」 · 「아직」을 누른다. 구글은 사람이 누르거나, 「구글 자동 확인」(src/lib/indexAuto.ts ·
+ * server/indexAuto.ts — SerpAPI site: 검색, 2026-11-10)이 14일째 차례에 대신 보고 적는다. 누르지 않은 글은 「미확인」이다 — 「아직」으로
+ * 채우지 않는다(자동으로 가리지 못한 글도 적지 않는다). 기록은 원장과 따로 data/<tenant>/index-checks.json에 두고(원장 모양은 바꾸지 않는다),
+ * 기록마다 출처(manual 직접 · auto 자동)를 남긴다 — 칸 · CSV가 「자동」을 따로 보인다.
  *
  * 한 주소의 상태는 기록 하나다 — 그 주소의 기록(줄 id · 주소 키, 다른 고객 브랜드 포함 — 범위 변형 두 브랜드에 같은 글을 적는다) 가운데
  * 가장 나중에 고친 것. 적을 때 늘 그 기록을 이어받아 새 기록이 가장 나중이 된다(findIndexRecord). 올린 날보다 앞선 확인은 그 올림의
@@ -34,7 +35,7 @@
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다.
  */
 import { externalIndexBasis, externalRegistrationCheck, type ExternalPostView, type TakedownRowLike } from './externalPosts.js'
-import { kstDate, todayKst } from './publishedUrl.js'
+import { kstDate, todayKst, TRACKING_PARAM, trackingKey } from './publishedUrl.js'
 import { planWriters, writerArticle, type PlanWriter, type WriterPlan, type WriterPlanArticle } from './probePlan.js'
 
 export const INDEX_CHECKS_FORMAT = 'index-checks/1'
@@ -42,7 +43,7 @@ export const INDEX_ENGINES = ['naver', 'google'] as const
 export type IndexEngine = (typeof INDEX_ENGINES)[number]
 export const INDEX_STATES = ['shown', 'not-yet'] as const
 export type IndexState = (typeof INDEX_STATES)[number]
-/** manual — 사람이 검색해 보고 눌렀다. auto — 나중에 붙일 자동 확인(네이버 검색 API). */
+/** manual — 사람이 검색해 보고 눌렀다. auto — 색인 자동 확인(구글 — SerpAPI site: 검색, src/lib/indexAuto.ts). */
 export type IndexSource = 'manual' | 'auto'
 
 export const ENGINE_NAME: Record<IndexEngine, string> = { naver: '네이버', google: '구글' }
@@ -715,6 +716,12 @@ export function indexStateLabel(engine: IndexEngine, check: IndexCheck | null): 
   return SHOWN_WORD[engine]
 }
 
+/** 확인 방법 — 사람이 눌렀으면 「직접」, 색인 자동 확인이 적었으면 「자동」. 기록이 없으면 빈 글자. */
+export function checkSourceLabel(check: IndexCheck | null): string {
+  if (!check) return ''
+  return check.source === 'auto' ? '자동' : '직접'
+}
+
 // ── 요약 · 거르기 ────────────────────────────────────────────────────────────
 
 export interface StatusSummary {
@@ -864,9 +871,64 @@ export function naverSearchUrl(row: Pick<PublishStatusRow, 'url' | 'title' | 'pl
   return `https://search.naver.com/search.naver?where=${where}&query=${encodeURIComponent(query)}`
 }
 
-/** 「구글에서 확인」 — site:<주소>로 그 글이 색인됐는지 본다. */
+/** 자동으로 찾지 않는 까닭 — platform 유튜브 · 인스타그램, query 추적 질의를 떼고도 질의가 남음(site:로 못 가림), form 주소 모양. */
+export type QueryRefusal = 'platform' | 'query' | 'form'
+export type SiteQuery = { ok: true; q: string } | { ok: false; reason: QueryRefusal }
+
+const SITE_QUERY_MAX = 1500
+
+/** 등록 주소의 경로 그대로(퍼센트 인코딩 · 한글 원문 그대로) — 질의 · 해시 · 끝 슬래시만 뗀다. */
+function registeredPath(url: string): string {
+  const rest = url.trim().replace(/^https?:\/\//i, '')
+  const cut = rest.search(/[/?#]/)
+  if (cut < 0) return ''
+  return rest.slice(cut).replace(/#.*$/, '').replace(/\?.*$/, '').replace(/\/+$/, '')
+}
+
+const siteOr = (forms: string[]): SiteQuery => {
+  const q = forms.map((f) => `site:${f}`).join(' OR ')
+  return q.length > SITE_QUERY_MAX ? { ok: false, reason: 'form' } : { ok: true, q }
+}
+
+/**
+ * 구글 site: 검색어 — 색인 자동 확인(src/lib/indexAuto.ts)과 사람이 여는 「구글에서 확인」이 같은 검색어를 쓴다. 티스토리는 /m/ 모바일 주소로도
+ * 색인될 수 있어 두 모양을, 네이버 블로그는 /아이디/글번호로(PostView 모양으로 적은 글도) blog · m.blog 두 모양을, www가 붙은 주소는 www 있는 ·
+ * 없는 두 모양을 OR로 묻는다. 경로가 붙은 site: · OR · 한글 경로의 동작은 실제 키 시험 전이라 [모름] — 자동 판정이 정확한 주소 키로만
+ * 「색인됨」을 적으므로 틀려도 「색인됨」을 잘못 적지는 않는다.
+ */
+export function googleSiteQuery(url: string, platform: PlatformKey | null): SiteQuery {
+  if (platform === 'youtube' || platform === 'instagram') return { ok: false, reason: 'platform' }
+  let u: URL
+  try {
+    u = new URL(url.trim())
+  } catch {
+    // 주소로 읽히지 않는 값 — 검색어를 만들 수 없다.
+    return { ok: false, reason: 'form' }
+  }
+  if ((u.protocol !== 'http:' && u.protocol !== 'https:') || u.port || u.username || u.password) return { ok: false, reason: 'form' }
+  const host = u.hostname.toLowerCase()
+  if (platform === 'naver-blog') {
+    const m = /^blog\.naver\.com\/([a-z0-9_-]+)\/(\d+)$/.exec(trackingKey(url) ?? '')
+    return m ? siteOr([`blog.naver.com/${m[1]}/${m[2]}`, `m.blog.naver.com/${m[1]}/${m[2]}`]) : { ok: false, reason: 'form' }
+  }
+  const path = registeredPath(url)
+  if (!path || /[\s"\\]/.test(path)) return { ok: false, reason: 'form' }
+  if (platform === 'tistory') {
+    const p = path.replace(/^\/m(?=\/)/i, '')
+    return siteOr([`${host}${p}`, `${host}/m${p}`])
+  }
+  if ([...u.searchParams.keys()].some((k) => !TRACKING_PARAM.test(k))) return { ok: false, reason: 'query' }
+  return host.startsWith('www.') ? siteOr([`${host}${path}`, `${host.slice(4)}${path}`]) : siteOr([`${host}${path}`])
+}
+
+/**
+ * 「구글에서 확인」 — 색인 자동 확인과 같은 site: 검색어 · 같은 조건(google.co.kr · hl=ko · gl=kr — 사람이 한국에서 보는 구글)으로 연다
+ * (2026-11-10 D9 A). 자동으로 안 찾는 주소(유튜브 · 인스타그램 · 질의가 남는 주소 등)는 site:<주소>로 사람이 본다.
+ */
 export function googleSearchUrl(url: string): string {
-  return `https://www.google.com/search?q=${encodeURIComponent(`site:${withoutScheme(url)}`)}`
+  const site = googleSiteQuery(url, platformOf(url, [])?.key ?? null)
+  const q = site.ok ? site.q : `site:${withoutScheme(url)}`
+  return `https://www.google.co.kr/search?q=${encodeURIComponent(q)}&hl=ko&gl=kr`
 }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
@@ -897,29 +959,32 @@ export function recheckCell(row: PublishStatusRow, today: string): string {
 /** 아직 안 올린 배정 글의 표시 — 판을 몰라 올렸는지 모르는 글은 「올렸는지 미확인」. */
 export const unpostedLabel = (row: Pick<PublishStatusRow, 'postedUnknown'>) => (row.postedUnknown ? '올렸는지 미확인' : '아직 안 올림')
 
-/** 표에 보이는 줄 그대로 — 열은 표와 같고 엔진마다 확인일을 더한다. 엑셀이 한글을 깨뜨리지 않게 BOM을 붙이고 줄은 CRLF. */
-export function publishStatusCsv(rows: PublishStatusRow[], today: string): string {
+/**
+ * 표에 보이는 줄 그대로 — 열은 표와 같고 엔진마다 확인일을 더한다. 엑셀이 한글을 깨뜨리지 않게 BOM을 붙이고 줄은 CRLF. checkMethods면 끝에
+ * 「네이버 확인 방법」 「구글 확인 방법」(직접 · 자동 · 빈칸) 두 열을 더한다 — 자동 「아직」(site: 검색에서 못 봄)을 사람이 본 「아직」과 가르려고
+ * (색인 자동 확인 D9 A). 발행 현황 화면은 늘 켠다. 앞 열 순서는 그대로다.
+ */
+export function publishStatusCsv(rows: PublishStatusRow[], today: string, opts: { checkMethods?: boolean } = {}): string {
   const head = ['브랜드', '작성자', '글 제목', '플랫폼', '주소', '발행일', '네이버 노출', '네이버 확인일', '구글 색인', '구글 확인일', '다시 볼 날']
+  if (opts.checkMethods) head.push('네이버 확인 방법', '구글 확인 방법')
   const lines = [head.map(csvCell).join(',')]
   for (const r of rows) {
     const posted = r.kind === 'posted'
-    lines.push(
-      [
-        r.brand,
-        writerLabel(r),
-        r.title ?? '제목 미확인',
-        r.platform?.label ?? '',
-        r.url ?? '',
-        posted ? (r.publishedOn ?? '모름') : unpostedLabel(r),
-        posted ? indexStateLabel('naver', r.naver) : '',
-        r.naver?.checkedOn ?? '',
-        posted ? indexStateLabel('google', r.google) : '',
-        r.google?.checkedOn ?? '',
-        posted ? recheckCell(r, today) : '',
-      ]
-        .map(csvCell)
-        .join(','),
-    )
+    const cells = [
+      r.brand,
+      writerLabel(r),
+      r.title ?? '제목 미확인',
+      r.platform?.label ?? '',
+      r.url ?? '',
+      posted ? (r.publishedOn ?? '모름') : unpostedLabel(r),
+      posted ? indexStateLabel('naver', r.naver) : '',
+      r.naver?.checkedOn ?? '',
+      posted ? indexStateLabel('google', r.google) : '',
+      r.google?.checkedOn ?? '',
+      posted ? recheckCell(r, today) : '',
+    ]
+    if (opts.checkMethods) cells.push(posted ? checkSourceLabel(r.naver) : '', posted ? checkSourceLabel(r.google) : '')
+    lines.push(cells.map(csvCell).join(','))
   }
   return '﻿' + lines.join('\r\n') + '\r\n'
 }

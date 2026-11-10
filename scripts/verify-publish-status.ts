@@ -27,6 +27,7 @@ import {
   appHolderBrands,
   applyIndexCheck,
   buildTenantStatus,
+  checkSourceLabel,
   csvCell,
   emptyStateOf,
   filterRows,
@@ -376,10 +377,42 @@ ok(
     nu === `https://search.naver.com/search.naver?where=web&query=${encodeURIComponent('fake.tistory.com/12')}` &&
     naverSearchUrl(row({ kind: 'unposted', url: null })) === null,
 )
+// 2026-11-10 승인(색인 자동 확인 D9 A) — 사람이 여는 검색도 자동 확인과 같은 검색어 · 같은 조건(google.co.kr · hl=ko · gl=kr)이다.
+const googleKr = (q: string) => `https://www.google.co.kr/search?q=${encodeURIComponent(q)}&hl=ko&gl=kr`
 ok(
-  '구글 확인 주소 — site:<주소에서 http(s)://를 뗀 것>',
-  googleSearchUrl('https://fake.tistory.com/12/') === `https://www.google.com/search?q=${encodeURIComponent('site:fake.tistory.com/12')}` &&
-    googleSearchUrl('http://blog.naver.com/fakeid/224000000001#top') === `https://www.google.com/search?q=${encodeURIComponent('site:blog.naver.com/fakeid/224000000001')}`,
+  '구글 확인 주소 — 자동 확인과 같은 site: 검색어(티스토리 /m/ · 네이버 m.blog 두 모양) · google.co.kr · hl=ko · gl=kr',
+  googleSearchUrl('https://fake.tistory.com/12/') === googleKr('site:fake.tistory.com/12 OR site:fake.tistory.com/m/12') &&
+    googleSearchUrl('http://blog.naver.com/fakeid/224000000001#top') === googleKr('site:blog.naver.com/fakeid/224000000001 OR site:m.blog.naver.com/fakeid/224000000001'),
+)
+ok(
+  '구글 확인 주소 — 네이버 PostView 모양 · www 주소 · 추적 질의도 자동 확인과 같은 검색어',
+  googleSearchUrl('https://blog.naver.com/PostView.naver?blogId=fakeid&logNo=224000000001') === googleKr('site:blog.naver.com/fakeid/224000000001 OR site:m.blog.naver.com/fakeid/224000000001') &&
+    googleSearchUrl('https://www.stay.example/blog/1') === googleKr('site:www.stay.example/blog/1 OR site:stay.example/blog/1') &&
+    googleSearchUrl('https://wp.example/post?utm_source=openai') === googleKr('site:wp.example/post'),
+)
+ok(
+  '구글 확인 주소 — 자동으로 안 찾는 주소(유튜브 · 질의가 남는 주소)는 지금처럼 site:<주소>로 사람이 본다',
+  googleSearchUrl('https://www.youtube.com/watch?v=fakeVid') === googleKr('site:www.youtube.com/watch?v=fakeVid') &&
+    googleSearchUrl('https://board.example/view?idx=5') === googleKr('site:board.example/view?idx=5'),
+)
+ok(
+  '확인 방법 — 사람이 누른 기록은 「직접」, 자동 확인은 「자동」, 기록이 없으면 빈칸',
+  checkSourceLabel(shown('2026-11-04')) === '직접' && checkSourceLabel(shown('2026-11-04', 'auto')) === '자동' && checkSourceLabel(null) === '',
+)
+const methodCsv = publishStatusCsv(
+  [
+    row({ naver: shown('2026-11-04'), google: { state: 'not-yet', checkedOn: '2026-11-05', checkedAt: '2026-11-05T01:00:00.000Z', source: 'auto' } }),
+    row({ rowKey: 'u', kind: 'unposted', postId: null, url: null, platform: null, publishedOn: null, writer: W2, title: '가상시 바다 보이는 숙소' }),
+  ],
+  '2026-11-05',
+  { checkMethods: true },
+).split('\r\n')
+ok(
+  'CSV 확인 방법 — 앞 열은 그대로 두고 끝에 「네이버 확인 방법」 「구글 확인 방법」(직접 · 자동 · 빈칸), 안 올린 글은 빈칸',
+  methodCsv[0] === '﻿브랜드,작성자,글 제목,플랫폼,주소,발행일,네이버 노출,네이버 확인일,구글 색인,구글 확인일,다시 볼 날,네이버 확인 방법,구글 확인 방법' &&
+    (methodCsv[1] ?? '').includes(',노출됨,2026-11-04,아직,2026-11-05,') &&
+    (methodCsv[1] ?? '').endsWith(',직접,자동') &&
+    methodCsv[2] === '가상스테이,w2 · 이가상,가상시 바다 보이는 숙소,,,아직 안 올림,,,,,,,',
 )
 
 // ── 9) 검토 반영(2026-11-09) ────────────────────────────────────────────────

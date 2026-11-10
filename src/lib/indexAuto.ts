@@ -26,8 +26,23 @@
  *
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다.
  */
-import { addDays, findIndexRecord, recheckOf, rowName, type IndexCheck, type PlatformKey, type PublishStatusRow, type RowOrigin, type TenantChecks } from './publishStatus.js'
-import { matchKind, TRACKING_PARAM, trackingKey } from './publishedUrl.js'
+import {
+  addDays,
+  findIndexRecord,
+  googleSiteQuery,
+  recheckOf,
+  rowName,
+  type IndexCheck,
+  type PlatformKey,
+  type PublishStatusRow,
+  type QueryRefusal,
+  type RowOrigin,
+  type TenantChecks,
+} from './publishStatus.js'
+import { matchKind, trackingKey } from './publishedUrl.js'
+
+// 검색어는 사람이 여는 「구글에서 확인」과 같아야 해서 발행 현황 모듈(src/lib/publishStatus.ts)에 둔다 — 여기서 그대로 내보낸다.
+export { googleSiteQuery, type QueryRefusal, type SiteQuery } from './publishStatus.js'
 
 export const INDEX_AUTO_FORMAT = 'index-auto/1'
 /** 자동으로 보는 차례 — 14일째(RECHECK_DAYS의 마지막). 3 · 7일째는 사람이 본다. */
@@ -47,59 +62,10 @@ export const GOOGLE_NO_RESULTS = "Google hasn't returned any results for this qu
 export const EXACT_SPELLING = 'Results for exact spelling'
 /** 한 쪽 결과 수 — 이만큼 차면 site: 접두어 일치가 다른 글(/2 → /20 · /21…)을 함께 잡아 2쪽에 우리 글이 있을 수 있다. */
 const PAGE_SIZE = 10
-const QUERY_MAX = 1500
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
 // ── 검색어 ───────────────────────────────────────────────────────────────────
-
-/** 자동으로 찾지 않는 까닭 — platform 유튜브 · 인스타그램, query 추적 질의를 떼고도 질의가 남음(site:로 못 가림), form 주소 모양. */
-export type QueryRefusal = 'platform' | 'query' | 'form'
-export type SiteQuery = { ok: true; q: string } | { ok: false; reason: QueryRefusal }
-
-/** 등록 주소의 경로 그대로(퍼센트 인코딩 · 한글 원문 그대로) — 질의 · 해시 · 끝 슬래시만 뗀다. */
-function registeredPath(url: string): string {
-  const rest = url.trim().replace(/^https?:\/\//i, '')
-  const cut = rest.search(/[/?#]/)
-  if (cut < 0) return ''
-  return rest.slice(cut).replace(/#.*$/, '').replace(/\?.*$/, '').replace(/\/+$/, '')
-}
-
-const siteOr = (forms: string[]): SiteQuery => {
-  const q = forms.map((f) => `site:${f}`).join(' OR ')
-  return q.length > QUERY_MAX ? { ok: false, reason: 'form' } : { ok: true, q }
-}
-
-/**
- * 구글 site: 검색어 — 사람이 「구글에서 확인」으로 여는 검색과 같은 모양. 티스토리는 /m/ 모바일 주소로도 색인될 수 있어 두 모양을, 네이버
- * 블로그는 /아이디/글번호로(PostView 모양으로 적은 글도) blog · m.blog 두 모양을, www가 붙은 주소는 www 있는 · 없는 두 모양을 OR로 묻는다.
- * 경로가 붙은 site: · OR · 한글 경로의 동작은 실제 키 시험 전이라 [모름] — 판정이 정확한 주소 키로만 「색인됨」을 적으므로 틀려도 「색인됨」을
- * 잘못 적지는 않는다.
- */
-export function googleSiteQuery(url: string, platform: PlatformKey | null): SiteQuery {
-  if (platform === 'youtube' || platform === 'instagram') return { ok: false, reason: 'platform' }
-  let u: URL
-  try {
-    u = new URL(url.trim())
-  } catch {
-    // 주소로 읽히지 않는 값 — 검색어를 만들 수 없다.
-    return { ok: false, reason: 'form' }
-  }
-  if ((u.protocol !== 'http:' && u.protocol !== 'https:') || u.port || u.username || u.password) return { ok: false, reason: 'form' }
-  const host = u.hostname.toLowerCase()
-  if (platform === 'naver-blog') {
-    const m = /^blog\.naver\.com\/([a-z0-9_-]+)\/(\d+)$/.exec(trackingKey(url) ?? '')
-    return m ? siteOr([`blog.naver.com/${m[1]}/${m[2]}`, `m.blog.naver.com/${m[1]}/${m[2]}`]) : { ok: false, reason: 'form' }
-  }
-  const path = registeredPath(url)
-  if (!path || /[\s"\\]/.test(path)) return { ok: false, reason: 'form' }
-  if (platform === 'tistory') {
-    const p = path.replace(/^\/m(?=\/)/i, '')
-    return siteOr([`${host}${p}`, `${host}/m${p}`])
-  }
-  if ([...u.searchParams.keys()].some((k) => !TRACKING_PARAM.test(k))) return { ok: false, reason: 'query' }
-  return host.startsWith('www.') ? siteOr([`${host}${path}`, `${host.slice(4)}${path}`]) : siteOr([`${host}${path}`])
-}
 
 /** SerpAPI에 보내는 매개변수(키는 server/serpApi.ts가 붙인다). num · start · no_cache · async는 보내지 않는다. */
 export function googleSearchParams(q: string): Record<string, string> {
@@ -431,4 +397,90 @@ export const AUTO_REASON_TEXT: Record<string, string> = {
 
 export function autoReasonText(reason: string | undefined): string {
   return (reason !== undefined ? AUTO_REASON_TEXT[reason] : undefined) ?? '알 수 없는 까닭으로 가리지 못했어요 — 직접 확인해 주세요.'
+}
+
+// ── 화면(발행 현황 칸 · 머리 단추) ─────────────────────────────────────────────
+
+/** 주소 키 하나의 자동 시도(서버 GET /api/index-auto attemptsByKey — 새것부터 3건까지). */
+export interface AutoAttemptView {
+  at: string
+  on: string
+  turn: string
+  outcome: string
+  reason?: string
+  matched?: string
+  wrote?: string
+  skipped?: string
+}
+
+/** 칸 아래에 붙이는 짧은 까닭(긴 풀이는 autoReasonText — 툴팁). */
+export const AUTO_REASON_SHORT: Record<string, string> = {
+  'similar-many': '비슷한 주소가 많음',
+  'other-url': '?…만 다른 주소로 나옴',
+  corrected: '구글이 검색어를 고쳐 보임',
+  'naver-form': '네이버 블로그 글의 구글 주소 모양 확인 중',
+  timeout: 'SerpAPI 응답 시간 초과',
+  upstream: 'SerpAPI 응답 오류',
+  parse: '검색 결과 모양을 못 읽음',
+  interrupted: '확인하는 사이 앱이 꺼짐',
+}
+
+/** 자동 「아직」의 뜻 — 칩 툴팁 · 칸 안내. */
+export const AUTO_NOT_FOUND_NOTE = '구글 site: 검색에서 이 주소를 못 찾았어요 — 색인이 안 됐다는 확정은 아니에요'
+
+const md = (day: string) => `${Number(day.slice(5, 7))}/${Number(day.slice(8, 10))}`
+
+export interface AutoCellNote {
+  text: string
+  /** 툴팁 — 까닭의 긴 풀이. */
+  title: string
+}
+
+/**
+ * 구글 칸 아래 안내(D10 A · K18). autoOn은 이 PC에서 자동 확인을 쓸 수 있는가(키 · 연결 설정).
+ * - 자동으로 못 가림: 결정적 까닭(또는 같은 차례에 일시 못 가림 두 번 — 다시 찾지 않는다)은 그 차례 동안 「자동으로 못 가림 — 직접 확인해
+ *   주세요(까닭)」, 일시 못 가림은 그날만 「오늘 자동으로 못 가림 — 까닭」. 그 시도 뒤에 사람 · 자동이 칸을 적었으면 보이지 않는다.
+ * - 14일 지남 + 지금 기록이 자동 「아직」: 「마지막 확인이 자동이에요 — 한 번 직접 확인해 보세요」 — 확인 기록(index-checks.json)만으로
+ *   센다(자동 기록 파일이 없어도 보인다). 30일째 전이면(자동을 쓸 수 있을 때) 「30일째(날)에 자동으로 한 번 더 봐요」.
+ */
+export function autoCellNotes(row: PublishStatusRow, today: string, attempts: readonly AutoAttemptView[] | undefined, autoOn: boolean): AutoCellNote[] {
+  const notes: AutoCellNote[] = []
+  if (row.kind !== 'posted' || row.removed) return notes
+  const from = fromOf(row)
+  const g = row.google
+  const last = autoOn && row.key ? attempts?.find((a) => a.outcome === 'unknown' && (isDecisiveReason(a.reason) || isTransientReason(a.reason))) : undefined
+  if (last && row.key && last.at > (g?.checkedAt ?? '')) {
+    const turn = autoTurnOf(row, today)
+    const key = row.key
+    const settled = turn !== null && last.turn === turn.turn && (isDecisiveReason(last.reason) || turnProgress((attempts ?? []).map((a) => ({ ...a, key })), key, turn.turn).settled)
+    const short = AUTO_REASON_SHORT[last.reason!] ?? last.reason!
+    if (settled) notes.push({ text: `자동으로 못 가림 — 직접 확인해 주세요(${short})`, title: autoReasonText(last.reason) })
+    else if (isTransientReason(last.reason) && last.on === today) notes.push({ text: `오늘 자동으로 못 가림 — ${short}`, title: autoReasonText(last.reason) })
+  }
+  if (from && g?.source === 'auto' && g.state === 'not-yet' && recheckOf(from, g, today).kind === 'over') {
+    notes.push({ text: '마지막 확인이 자동이에요 — 한 번 직접 확인해 보세요', title: AUTO_NOT_FOUND_NOTE })
+    const day30 = addDays(from, AUTO_LATE_DAY)
+    if (autoOn && g.checkedOn < day30 && today < day30) notes.push({ text: `30일째(${md(day30)})에 자동으로 한 번 더 봐요`, title: '마지막 확인이 자동 「아직」뿐인 글은 30일째에 구글을 한 번 더 자동으로 봐요.' })
+  }
+  return notes
+}
+
+const OUTCOME_WORD: Record<string, string> = { found: '찾음', 'not-found': '못 찾음', unknown: '못 가림', pending: '확인 중', 'not-sent': '보내지 않음' }
+
+/** 칸 툴팁의 자동 확인 기록 — 오래된 것부터 「자동 확인 기록: 11/13 못 찾음 · 11/17 찾음」. 없으면 빈 글자. */
+export function autoAttemptsText(attempts: readonly AutoAttemptView[] | undefined): string {
+  if (!attempts || attempts.length === 0) return ''
+  return `자동 확인 기록: ${[...attempts]
+    .reverse()
+    .map((a) => `${/^\d{4}-\d{2}-\d{2}$/.test(a.on) ? md(a.on) : '날짜 모름'} ${OUTCOME_WORD[a.outcome] ?? '알 수 없음'}`)
+    .join(' · ')}`
+}
+
+/**
+ * 머리 단추의 「오늘 자동으로 볼 글」 어림 — 화면에 있는 줄 · 최근 시도로 계획과 같은 규칙(planAutoTargets)을 돌린다. 원본 확인 기록 · 오래된
+ * 시도는 모르므로 어림이다(정확한 수 · 검색 수는 계획이 준다).
+ */
+export function estimateAutoTargets(rows: readonly PublishStatusRow[], today: string, attemptsByKey: Readonly<Record<string, readonly AutoAttemptView[]>>): number {
+  const attempts: AttemptLike[] = Object.entries(attemptsByKey).flatMap(([key, list]) => list.map((a) => ({ key, turn: a.turn, outcome: a.outcome, ...(a.reason !== undefined ? { reason: a.reason } : {}) })))
+  return planAutoTargets({ rows, today, checks: [], attempts, tenantOrder: [] }).targets.length
 }
