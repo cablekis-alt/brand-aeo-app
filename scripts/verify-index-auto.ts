@@ -153,7 +153,7 @@ ok('판정 — 빈 결과 문구와 정확히 같지 않은 오류 → upstream'
 ok('판정 — 메타 없음 · 객체 아님 → parse', judge({ organic_results: [] }).outcome === 'unknown' && judge('x').outcome === 'unknown' && (judge(null) as { reason?: string }).reason === 'parse')
 const j12 = judgeGoogle('blog.naver.com/fakeid/224000000009', 'naver-blog', res(['https://blog.naver.com/fakeid/2240000000091']))
 const j13 = judgeGoogle('blog.naver.com/fakeid/224000000009', 'naver-blog', { search_metadata: { status: 'Success' }, error: GOOGLE_NO_RESULTS })
-ok('판정 — 네이버 블로그 글은 못 찾으면 적지 않음(naver-form)', j12.outcome === 'unknown' && j12.reason === 'naver-form' && j13.outcome === 'unknown' && j13.reason === 'naver-form', { j12, j13 })
+ok('판정 — 네이버 블로그 글도 못 찾으면 「못 찾음」(아직 · 자동 — 2026-11-11 D12 풂)', j12.outcome === 'not-found' && j12.results === 1 && j13.outcome === 'not-found' && j13.results === 0, { j12, j13 })
 ok(
   '판정 — sitelinks · 광고는 보지 않는다',
   judge(res([{ link: 'https://fake.tistory.com/20', sitelinks: { inline: [{ link: 'https://fake.tistory.com/2' }] } }], { ads: [{ link: 'https://fake.tistory.com/2' }] })).outcome === 'not-found',
@@ -219,7 +219,8 @@ ok('시도 — 없음 → 열림', JSON.stringify(tp([])) === JSON.stringify({ s
 ok('시도 — 일시 오류 1회 → 열림(두 번째 시도 남음)', ['timeout', 'upstream', 'parse', 'interrupted'].every((r) => JSON.stringify(tp([att('unknown', r)])) === JSON.stringify({ settled: false, transient: 1 })))
 ok('시도 — 대기(pending)도 일시 1회로 셈', tp([att('pending')]).transient === 1 && !tp([att('pending')]).settled)
 ok('시도 — 일시 오류 합계 2회 → 끝', tp([att('unknown', 'timeout'), att('unknown', 'parse')]).settled)
-ok('시도 — 결정적 못 가림은 1회로 끝', ['similar-many', 'other-url', 'corrected', 'naver-form'].every((r) => tp([att('unknown', r)]).settled))
+ok('시도 — 결정적 못 가림은 1회로 끝', ['similar-many', 'other-url', 'corrected'].every((r) => tp([att('unknown', r)]).settled))
+ok('시도 — 앞선 판의 naver-form은 세지 않아 차례가 다시 열린다', JSON.stringify(tp([att('unknown', 'naver-form')])) === JSON.stringify({ settled: false, transient: 0 }) && tp([att('unknown', 'naver-form'), att('not-found')]).settled)
 ok('시도 — 찾음 · 못 찾음(적음 · 건너뜀) → 끝', tp([att('found')]).settled && tp([att('not-found')]).settled)
 ok(
   '시도 — 실행을 멈춘 오류 · 보내지 않은 시도는 세지 않는다',
@@ -896,30 +897,30 @@ try {
   const items = new Map((last1?.items ?? []).map((it) => [it.key, it]))
   const it = (url: string) => items.get(tk(url))
   ok(
-    '결과 — 줄마다: 찾음 4(적음) · 사이에 누른 글 1(건너뜀) · 못 찾음 3(적음) · 다른 줄 색인됨인 못 찾음 1(건너뜀) · 못 가림 7',
-    last1?.endedAt !== null && last1?.searched === 16 && last1.found === 5 && last1.notFound === 4 && last1.unknown === 7 && last1.skipped === 2 && last1.notRun === 0 && last1.stoppedBy === null,
+    '결과 — 줄마다: 찾음 4(적음) · 사이에 누른 글 1(건너뜀) · 못 찾음 4(적음, 네이버 1 포함) · 다른 줄 색인됨인 못 찾음 1(건너뜀) · 못 가림 6',
+    last1?.endedAt !== null && last1?.searched === 16 && last1.found === 5 && last1.notFound === 5 && last1.unknown === 6 && last1.skipped === 2 && last1.notRun === 0 && last1.stoppedBy === null,
     { ...last1, items: undefined },
   )
   ok(
     '결과 — 적은 것: 찾음 → shown, 못 찾음 → not-yet, 사이에 누름 → changed',
     it(URLS.found)?.wrote === 'shown' && it(URLS.naverFound)?.wrote === 'shown' && it(URLS.shared)?.wrote === 'shown' && it(URLS.late)?.wrote === 'shown' &&
-      it(URLS.none)?.wrote === 'not-yet' && it(URLS.empty)?.wrote === 'not-yet' && it(URLS.mix)?.wrote === 'not-yet' && it(URLS.cas)?.skipped === 'changed' &&
+      it(URLS.none)?.wrote === 'not-yet' && it(URLS.empty)?.wrote === 'not-yet' && it(URLS.mix)?.wrote === 'not-yet' && it(URLS.naverNf)?.outcome === 'not-found' && it(URLS.naverNf)?.wrote === 'not-yet' && it(URLS.cas)?.skipped === 'changed' &&
       it(URLS.elsewhere)?.outcome === 'not-found' && it(URLS.elsewhere)?.skipped === 'already-shown' && it(URLS.elsewhere)?.wrote === undefined,
     [...items.values()],
   )
   ok(
-    '결과 — 못 가림 까닭(similar-many · other-url · corrected · parse · naver-form · upstream · timeout)',
+    '결과 — 못 가림 까닭(similar-many · other-url · corrected · parse · upstream · timeout)',
     it(URLS.many)?.reason === 'similar-many' && it(URLS.other)?.reason === 'other-url' && it(URLS.other)?.matched === 'https://wp-other.example/post-a?amp=1' && it(URLS.corr)?.reason === 'corrected' &&
-      it(URLS.parse)?.reason === 'parse' && it(URLS.naverNf)?.reason === 'naver-form' && it(URLS.serr)?.reason === 'upstream' && it(URLS.slow)?.reason === 'timeout' &&
-      [URLS.many, URLS.other, URLS.corr, URLS.parse, URLS.naverNf, URLS.serr, URLS.slow].every((u) => it(u)?.wrote === undefined),
+      it(URLS.parse)?.reason === 'parse' && it(URLS.serr)?.reason === 'upstream' && it(URLS.slow)?.reason === 'timeout' &&
+      [URLS.many, URLS.other, URLS.corr, URLS.parse, URLS.serr, URLS.slow].every((u) => it(u)?.wrote === undefined),
     [...items.values()],
   )
   const ck = readJson<{ checks: Record<string, { google?: IndexCheck & Record<string, unknown>; naver?: IndexCheck }> }>(path.join(dir, 'data', 'vauto-a', 'index-checks.json')).checks
-  const autoCells = ['p-va01', 'p-va02', 'p-va08', 'p-va09', 'p-va18', 'p-va21'].map((id) => ck[id]?.google)
+  const autoCells = ['p-va01', 'p-va02', 'p-va07', 'p-va08', 'p-va09', 'p-va18', 'p-va21'].map((id) => ck[id]?.google)
   ok(
     'index-checks.json — 자동 칸은 source auto · 오늘 · state · checkedOn · checkedAt · source만',
     autoCells.every((c) => c?.source === 'auto' && c.checkedOn === today && JSON.stringify(Object.keys(c).sort()) === JSON.stringify(['checkedAt', 'checkedOn', 'source', 'state'])) &&
-      ck['p-va01']?.google?.state === 'shown' && ck['p-va02']?.google?.state === 'not-yet' && ck['p-va21']?.google?.state === 'shown',
+      ck['p-va01']?.google?.state === 'shown' && ck['p-va02']?.google?.state === 'not-yet' && ck['p-va07']?.google?.state === 'not-yet' && ck['p-va21']?.google?.state === 'shown',
     autoCells,
   )
   ok(
@@ -929,7 +930,7 @@ try {
   )
   ok(
     'index-checks.json — 못 가린 글 · 안 찾는 주소 · 직접 보는 글에는 아무것도 적지 않는다',
-    ['p-va03', 'p-va04', 'p-va05', 'p-va06', 'p-va07', 'p-va10', 'p-va11', 'p-va12', 'p-va13', 'p-va14', 'p-va15', 'p-va20'].every((id) => ck[id] === undefined),
+    ['p-va03', 'p-va04', 'p-va05', 'p-va06', 'p-va10', 'p-va11', 'p-va12', 'p-va13', 'p-va14', 'p-va15', 'p-va20'].every((id) => ck[id] === undefined),
   )
   ok(
     'index-checks.json — 옛 판(v0.4.63 · v0.4.64) 파서가 자동이 쓴 파일을 모두 읽는다',
@@ -965,9 +966,9 @@ try {
   // ── C4. 차례 규칙 — 같은 날 다시 ──
   const p2 = await makePlan()
   ok(
-    '둘째 계획 — 일시 오류 글(parse · upstream · timeout)만 두 번째 시도, 결정적 4편 · 앞선 「색인됨」으로 건너뛴 1편은 다시 찾지 않음',
+    '둘째 계획 — 일시 오류 글(parse · upstream · timeout)만 두 번째 시도, 결정적 3편 · 앞선 「색인됨」으로 건너뛴 1편은 다시 찾지 않음',
     p2.body.searches === 3 && JSON.stringify(p2.body.targets.map((t) => t.key).sort()) === JSON.stringify([tk(URLS.parse), tk(URLS.serr), tk(URLS.slow)].sort()) &&
-      p2.body.targets.every((t) => t.batch === 'retry') && p2.body.settled === 5,
+      p2.body.targets.every((t) => t.batch === 'retry') && p2.body.settled === 4,
     { ...p2.body, quota: undefined },
   )
   const n2 = searches().length
@@ -975,7 +976,7 @@ try {
   await waitRun()
   ok('둘째 실행 — 검색 3회', searches().length === n2 + 3)
   const p3 = await makePlan()
-  ok('셋째 계획 — 차례마다 일시 2회를 다 써서 대상 0 · 계획 id 없음', p3.body.searches === 0 && p3.body.candidates === 0 && p3.body.planId === null && p3.body.settled === 8, { ...p3.body, quota: undefined })
+  ok('셋째 계획 — 차례마다 일시 2회를 다 써서 대상 0 · 계획 id 없음', p3.body.searches === 0 && p3.body.candidates === 0 && p3.body.planId === null && p3.body.settled === 7, { ...p3.body, quota: undefined })
   ok('셋째 — 검색 0', searches().length === n2 + 3)
 
   // ── C5. 멈춤 오류 ──

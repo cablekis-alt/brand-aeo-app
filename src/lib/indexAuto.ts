@@ -11,13 +11,15 @@
  *
  * ── 차례 단위 시도(D11) ─────────────────────────────────────────────────────
  * 차례 id = (주소 키, 'd14:'+14일째 날) · (주소 키, 'd30:'+30일째 날). 같은 차례에서 찾음 · 못 찾음(적었든 건너뛰었든) · 결정적 못 가림
- * (similar-many · other-url · corrected · naver-form)은 1회로 끝, 일시 못 가림(timeout · upstream · parse · interrupted)은 합계 2회까지.
+ * (similar-many · other-url · corrected)은 1회로 끝, 일시 못 가림(timeout · upstream · parse · interrupted)은 합계 2회까지.
  * 실행을 멈춘 오류(키 · 한도 · 계정 · 장부 등)와 보내지 않은 시도는 세지 않는다. 모르는 결과 · 까닭(나중 판)은 끝으로 본다(돈이 덜 드는 쪽).
+ * v0.4.66의 naver-form(네이버 블로그 글 못 찾음을 보류한 시도)은 세지 않는다 — 그 차례를 다시 열어 새 규칙(「아직 · 자동」)으로 한 번 찾는다.
  *
  * ── 판정(D3 A · D12) ────────────────────────────────────────────────────────
  * 결과 링크(organic_results[].link만 — sitelinks · 광고는 안 봄)를 trackingKey로 맞춘다. 같은 주소면 「색인됨」, 검색이 성공했고 덜 찬 쪽에 같은
- * 주소가 없으면 「아직 · 자동」. 그 밖(오류 · 모양 이상 · 자동 교정 · 비슷한 주소가 많음 · ?…만 다른 주소 · 네이버 블로그 글 못 찾음)은
- * 「자동으로 못 가림」 — 아무것도 적지 않는다(짐작하지 않는다).
+ * 주소가 없으면 「아직 · 자동」 — 네이버 블로그 글도 같다(2026-11-10 실제 키 시험: 구글이 m.blog · blog 주소로 담고 trackingKey가 둘 다
+ * /아이디/글번호로 맞춤 → 2026-11-11 사용자 결정으로 D12 naver-form을 풂). 그 밖(오류 · 모양 이상 · 자동 교정 · 비슷한 주소가 많음 · ?…만 다른
+ * 주소)은 「자동으로 못 가림」 — 아무것도 적지 않는다(짐작하지 않는다).
  *
  * ── 사람 표시가 먼저(D4 A) ──────────────────────────────────────────────────
  * 「색인됨」인 칸은 차례가 아니다(recheckOf done — R1). 원본(신선도로 거르기 전) 최신 기록이 「색인됨」인 주소 — 다른 줄 · 내리기 전 올림에서
@@ -75,7 +77,10 @@ export function googleSearchParams(q: string): Record<string, string> {
 
 // ── 판정 ─────────────────────────────────────────────────────────────────────
 
-/** 자동으로 못 가린 까닭 — 결정적(차례당 1회) · 일시(차례당 합계 2회). */
+/**
+ * 자동으로 못 가린 까닭 — 결정적(차례당 1회) · 일시(차례당 합계 2회). naver-form은 v0.4.66 기록에만 있다(판정은 더 내지 않고, 그 시도는
+ * 차례에 세지 않는다 — attemptWeight).
+ */
 export type DecisiveReason = 'similar-many' | 'other-url' | 'corrected' | 'naver-form'
 export type TransientReason = 'timeout' | 'upstream' | 'parse' | 'interrupted'
 export type AutoReason = DecisiveReason | TransientReason
@@ -90,16 +95,15 @@ const linkText = (s: string) => s.slice(0, 500)
 /**
  * HTTP 200 응답 한 건의 판정. 위에서부터 처음 맞는 줄로 정한다: 메타 없음 → parse, status가 Success 아님 → upstream, 오류 글자가 빈 결과 문구와
  * 다름 → upstream, 빈 결과 문구 → 못 찾음(0건), organic_results가 배열 아님 → parse(「0건」으로 읽지 않는다), 자동 교정 → corrected, 같은 주소 →
- * 찾음, ?…만 다른 주소 → other-url, 쪽이 참 · 다음 쪽 → similar-many, 그 밖 → 못 찾음. 네이버 블로그 글의 「못 찾음」은 구글 색인 모양을
- * 확인하기 전까지 naver-form(D12).
+ * 찾음, ?…만 다른 주소 → other-url, 쪽이 참 · 다음 쪽 → similar-many, 그 밖 → 못 찾음. 네이버 블로그 글도 같은 규칙이다(2026-11-11 D12 풂 —
+ * 플랫폼 인자는 부르는 쪽과의 계약으로 남긴다).
  */
-export function judgeGoogle(rowKey: string, platform: PlatformKey | null, json: unknown): Judgement {
+export function judgeGoogle(rowKey: string, _platform: PlatformKey | null, json: unknown): Judgement {
   if (!isObj(json) || !isObj(json.search_metadata)) return { outcome: 'unknown', reason: 'parse', results: null, organicState: null }
   const info = json.search_information
   const organicState = isObj(info) && typeof info.organic_results_state === 'string' ? info.organic_results_state.slice(0, 120) : null
   if (json.search_metadata.status !== 'Success') return { outcome: 'unknown', reason: 'upstream', results: null, organicState }
-  const notFound = (results: number): Judgement =>
-    platform === 'naver-blog' ? { outcome: 'unknown', reason: 'naver-form', results, organicState } : { outcome: 'not-found', results, organicState }
+  const notFound = (results: number): Judgement => ({ outcome: 'not-found', results, organicState })
   if (json.error !== undefined) return json.error === GOOGLE_NO_RESULTS ? notFound(0) : { outcome: 'unknown', reason: 'upstream', results: null, organicState }
   if (!Array.isArray(json.organic_results)) return { outcome: 'unknown', reason: 'parse', results: null, organicState }
   const results = json.organic_results.length
@@ -161,7 +165,9 @@ export function manualTurnOf(row: TurnRow, today: string): boolean {
 
 // ── 차례 단위 시도(D11) ─────────────────────────────────────────────────────
 
-const DECISIVE = new Set<string>(['similar-many', 'other-url', 'corrected', 'naver-form'])
+const DECISIVE = new Set<string>(['similar-many', 'other-url', 'corrected'])
+/** 앞선 판(v0.4.66)만 낸 까닭 — 그 시도는 차례에 세지 않아, 새 규칙으로 한 번 더 찾는다. */
+const LEGACY_REOPEN = new Set<string>(['naver-form'])
 const TRANSIENT = new Set<string>(['timeout', 'upstream', 'parse', 'interrupted'])
 /** 실행을 멈춘 오류 · 우리 쪽 검사 — 그 글의 차례 몫에 넣지 않는다. */
 const STOP = new Set<string>(['no-key', 'config', 'key', 'forbidden', 'quota-month', 'rate-hour', 'bad-request', 'ledger', 'account', 'feature-cap', 'floor', 'hour', 'write'])
@@ -183,7 +189,7 @@ function attemptWeight(a: AttemptLike): 'settles' | 'transient' | 'ignored' {
   if (a.outcome === 'not-sent') return 'ignored'
   if (a.outcome === 'pending') return 'transient'
   if (a.outcome === 'unknown' && a.reason !== undefined) {
-    if (STOP.has(a.reason)) return 'ignored'
+    if (STOP.has(a.reason) || LEGACY_REOPEN.has(a.reason)) return 'ignored'
     if (TRANSIENT.has(a.reason)) return 'transient'
   }
   return 'settles'
@@ -381,7 +387,7 @@ export const AUTO_REASON_TEXT: Record<string, string> = {
   'similar-many': '비슷한 주소가 많아 이 글을 가리지 못했어요 — 직접 확인해 주세요.',
   'other-url': '주소 뒤에 ?…만 다른 주소로 나왔어요 — 직접 확인해 주세요.',
   corrected: '구글이 검색어를 고쳐 보여 줘서 가리지 못했어요 — 직접 확인해 주세요.',
-  'naver-form': '네이버 블로그 글은 구글이 어떤 주소로 색인하는지 아직 확인 중이라, 못 찾았을 때는 적지 않아요 — 직접 확인해 주세요.',
+  'naver-form': '앞선 판에서는 네이버 블로그 글을 못 찾았을 때 적지 않았어요 — 이제는 「아직 · 자동」으로 적으니 다음 실행에서 한 번 더 찾아요.',
   timeout: 'SerpAPI가 시간 안에 답하지 않았어요 — 다음에 한 번 더 찾아요.',
   upstream: 'SerpAPI 응답 오류로 가리지 못했어요 — 다음에 한 번 더 찾아요.',
   parse: '검색 결과 모양을 읽지 못했어요 — 다음에 한 번 더 찾아요.',
@@ -414,7 +420,7 @@ export const AUTO_REASON_SHORT: Record<string, string> = {
   'similar-many': '비슷한 주소가 많음',
   'other-url': '?…만 다른 주소로 나옴',
   corrected: '구글이 검색어를 고쳐 보임',
-  'naver-form': '네이버 블로그 글의 구글 주소 모양 확인 중',
+  'naver-form': '앞선 판의 네이버 보류 — 다시 찾음',
   timeout: 'SerpAPI 응답 시간 초과',
   upstream: 'SerpAPI 응답 오류',
   parse: '검색 결과 모양을 못 읽음',
