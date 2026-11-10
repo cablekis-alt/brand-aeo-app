@@ -37,6 +37,9 @@ const serverBuild = {
   logLevel: 'info',
 }
 for (const name of SERPAPI_TEST_ENV) serverBuild.define[`process.env.${name}`] = 'undefined'
+// 진짜 SerpAPI 주소는 설치본 묶음에서만 쓴다 — 여기서 "1"로 박는다. dev · 시험 서버(tsx)는 SERPAPI_LIVE=1을 따로 주지 않으면 주소가 비어 있을 때
+// 시작하지 않는다(저장소 .env의 진짜 키가 dev 화면에서 진짜 검색으로 나가지 않게 — server/serpApi.ts resolveSerpBase).
+serverBuild.define['process.env.SERPAPI_LIVE'] = '"1"'
 await build(serverBuild)
 
 console.log('[build-electron-server] dist-electron/server.cjs 생성 완료')

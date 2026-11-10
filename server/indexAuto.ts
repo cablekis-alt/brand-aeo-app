@@ -29,6 +29,7 @@ import {
   serpApiUnavailable,
   SerpApiBudgetError,
   SerpApiError,
+  serpRunElsewhere,
   serpRunHolder,
   serpSearch,
   type SerpApiAccountView,
@@ -43,8 +44,10 @@ import type { TenantConfig } from './types.js';
  * - 사람이 단추를 눌러야 돈다: 계획(planIndexAuto — 검색 0, 계정만 무료로 읽어 대상 · 검색 수 · 이번 결제 주기 몫을 보인다, 계획 id는 서버 메모리에
  *   10분) → 실행(startIndexAuto — 그 계획 id로만, 계획에 있던 차례만 · 계획의 검색 수까지). 「열 때 하루 한 번」 설정은 있으나 기본 끔이고, 켜도
  *   같은 계획 → 실행 길을 지난다(openRunOn으로 하루 한 번). 정해진 시각 예약은 없다.
- * - 한 번에 하나(SerpAPI 공용 실행 잠금 — 나중의 AI 개요 시범과도). 검색은 공용 순차 줄에서 하나씩, 결과 하나마다 짧게 쓰기 줄을 잡아 적는다 —
- *   실행 중에도 사람 표시 · 다른 저장이 막히지 않는다. 확인하는 사이 사람이 누른 칸은 덮지 않는다(CAS).
+ * - 한 번에 하나(SerpAPI 공용 실행 잠금 — 나중의 AI 개요 시범과도, 앱을 두 번 켠 두 서버 사이에도). 검색은 공용 순차 줄에서 하나씩, 결과
+ *   하나마다 짧게 쓰기 줄을 잡아 적는다 — 실행 중에도 사람 표시 · 다른 저장이 막히지 않는다. 확인하는 사이 사람이 누른 칸은 덮지 않는다(CAS).
+ *   다른 서버가 실행 잠금을 쥔 동안에는 이 서버가 기록 파일을 고치지 않는다(설정 저장 409, 그쪽 pending을 닫지 않는다) — 두 프로세스가 같은 파일을
+ *   읽고 다시 쓰면 한쪽 시도가 사라진다. 실행 기록은 글 하나가 끝날 때마다 함께 적는다(끊겨도 어디까지 했는지 남는다).
  * - 멈춤: 키(401) · 권한(403) · 결제 주기 소진 · 시간당 한도(429) · 요청 거절(400) · 계정 · 장부 · 몫 · 바닥에서 바로, 시간 초과 · 응답 오류가 3번
  *   잇따르면. 시간 초과는 다시 보내지 않는다(이미 과금됐을 수 있다).
  * - 기록(stateFilePath('index-auto.json'), 앱 전체에 하나): 설정 · 시도 · 실행. 부르기 직전에 시도를 pending으로 적고 응답 뒤 고친다 — 앱이
@@ -65,6 +68,8 @@ const STREAK_STOP = 3;
 
 const BROKEN = '자동 확인 기록 파일(index-auto.json)이 깨져 있어 시작하지 않았어요.';
 const PLAN_CHANGED = '계획이 바뀌었어요 — 계획을 다시 받아 주세요.';
+const BUSY = '이미 구글 자동 확인이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.';
+const BUSY_ELSEWHERE = '이 PC에서 앱이 한 번 더 켜져 있고, 그쪽에서 SerpAPI 작업(구글 자동 확인 등)이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.';
 const OPEN_OFF = '「발행 현황을 열 때 하루 한 번 자동으로」가 꺼져 있어요.';
 const OPEN_DONE = '오늘은 이미 열 때 자동 확인을 했어요.';
 const STREAK_MESSAGE = 'SerpAPI가 잇따라 답하지 않거나 오류를 내 멈췄어요 — 잠시 뒤 다시 눌러 주세요.';
@@ -76,13 +81,18 @@ const LIMIT_MESSAGE: Record<PlanLimit, string> = {
   account: 'SerpAPI 계정 상태로는 검색할 수 없어 시작하지 않았어요.',
 };
 
+/** 409의 까닭 — 화면이 글자 대신 이것으로 할 일을 고른다(계획을 새로 받기 · 진행으로 넘어가기). */
+export type IndexAutoErrorCode = 'plan-changed' | 'busy' | 'busy-elsewhere' | 'open-off' | 'open-done' | 'limit';
+
 /** 라우트가 그대로 상태 코드로 쓰는 오류. */
 export class IndexAutoError extends Error {
   readonly status: number;
-  constructor(message: string, status: number) {
+  readonly code: IndexAutoErrorCode | null;
+  constructor(message: string, status: number, code: IndexAutoErrorCode | null = null) {
     super(message);
     this.name = 'IndexAutoError';
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -173,6 +183,8 @@ export interface IndexAutoStatusView {
   attemptsByKey: Record<string, IndexAutoAttemptView[]>;
   /** 오늘 「열 때 자동」을 이미 했다. */
   openRunToday: boolean;
+  /** 앱을 두 번 켠 다른 서버가 SerpAPI 실행을 쥐고 있으면 그 안내(그동안 이 서버는 시작하지 않는다). */
+  busyElsewhere: string | null;
 }
 
 export interface IndexAutoTargetView {
@@ -221,7 +233,6 @@ export interface IndexAutoPlanView {
   manual: number;
   unsupported: { key: string; rowName: string; reason: QueryRefusal; text: string }[];
   settled: number;
-  shownElsewhere: number;
   quota: IndexAutoQuotaView | null;
   settings: IndexAutoSettings;
 }
@@ -274,8 +285,11 @@ interface ActiveRun {
 }
 let active: ActiveRun | null = null;
 
-/** 줄 안에서 읽는다. 없으면 기본값, 깨졌으면 500. 끊긴 실행의 pending은 interrupted로 닫고, 오래된 시도 · 실행은 덜어 낸다(dirty). */
-async function loadInLock(): Promise<{ file: IndexAutoFile; dirty: boolean }> {
+/**
+ * 줄 안에서 읽는다. 없으면 기본값, 깨졌으면 500. tidy면 끊긴 실행의 pending은 interrupted로 닫고, 오래된 시도 · 실행은 덜어 낸다(dirty) — 다른
+ * 서버가 실행 잠금을 쥔 동안에는 그쪽 pending일 수 있으니 부르는 쪽이 tidy를 끈다.
+ */
+async function loadInLock(tidy = true): Promise<{ file: IndexAutoFile; dirty: boolean }> {
   let text: string | null = null;
   try {
     text = await readFile(FILE, 'utf-8');
@@ -290,6 +304,7 @@ async function loadInLock(): Promise<{ file: IndexAutoFile; dirty: boolean }> {
   } catch {
     throw new IndexAutoError(BROKEN, 500);
   }
+  if (!tidy) return { file, dirty: false };
   let dirty = false;
   for (const a of file.attempts) {
     if (isRecord(a) && a.outcome === 'pending' && a.runId !== active?.runId) {
@@ -311,16 +326,31 @@ async function loadInLock(): Promise<{ file: IndexAutoFile; dirty: boolean }> {
   return { file, dirty };
 }
 
-function readState(): Promise<IndexAutoFile> {
+/** 앱을 두 번 켠 다른 서버가 SerpAPI 실행을 쥐고 있는가(그 서버가 이 파일을 고치는 중일 수 있다). */
+async function heldElsewhere(): Promise<boolean> {
+  try {
+    return (await serpRunElsewhere()) !== null;
+  } catch (err) {
+    // 잠금 파일을 못 읽으면 누가 쥐었는지 모른다 — 남의 것으로 보고 고치지 않는다(막힌 쪽).
+    console.warn('[indexAuto] SerpAPI 실행 잠금을 읽지 못했습니다 — 다른 서버가 쥔 것으로 봅니다:', err instanceof Error ? err.message : String(err));
+    return true;
+  }
+}
+
+/** 읽기 — 다른 서버가 실행 잠금을 쥔 동안에는 닫기 · 덜어 내기 없이 읽기만 한다(다시 쓰면 그쪽 시도가 사라질 수 있다). */
+function readState(): Promise<{ file: IndexAutoFile; elsewhere: boolean }> {
   return queueTenantWrite(LOCK, async () => {
-    const { file, dirty } = await loadInLock();
+    const elsewhere = await heldElsewhere();
+    const { file, dirty } = await loadInLock(!elsewhere);
     if (dirty) await writeJsonAtomic(FILE, file);
-    return file;
+    return { file, elsewhere };
   });
 }
 
+/** 고치기 — 다른 서버가 실행 잠금을 쥔 동안에는 409(이 서버가 실행을 쥐었으면 그쪽은 쥘 수 없다). */
 function updateState<T>(fn: (file: IndexAutoFile) => T): Promise<T> {
   return queueTenantWrite(LOCK, async () => {
+    if (await heldElsewhere()) throw new IndexAutoError(BUSY_ELSEWHERE, 409, 'busy-elsewhere');
     const { file } = await loadInLock();
     const out = fn(file);
     await writeJsonAtomic(FILE, file);
@@ -350,7 +380,7 @@ const lastRunOf = (file: IndexAutoFile): IndexAutoRunRecord | null => {
 
 /** 화면이 2초마다 묻는 상태 — 계정은 부르지 않는다(검색 · 비용 0). 기록 파일이 깨졌으면 500. */
 export async function indexAutoStatus(): Promise<IndexAutoStatusView> {
-  const file = await readState();
+  const { file, elsewhere } = await readState();
   const off = serpApiUnavailable();
   const byKey = new Map<string, IndexAutoAttemptView[]>();
   for (let i = file.attempts.length - 1; i >= 0; i -= 1) {
@@ -367,6 +397,7 @@ export async function indexAutoStatus(): Promise<IndexAutoStatusView> {
     lastRun: lastRunOf(file),
     attemptsByKey: Object.fromEntries(byKey),
     openRunToday: file.openRunOn === todayKst(),
+    busyElsewhere: elsewhere && !active ? BUSY_ELSEWHERE : null,
   };
 }
 
@@ -394,11 +425,12 @@ function unavailableError(): IndexAutoError | null {
   return off ? new IndexAutoError(off.message, 503) : null;
 }
 
-function busyError(): IndexAutoError | null {
+/** 이 서버 · 앱을 두 번 켠 다른 서버에서 SerpAPI 실행이 도는 중이면 409. */
+async function busyError(): Promise<IndexAutoError | null> {
   const holder = serpRunHolder();
-  if (active || holder === 'index') return new IndexAutoError('이미 구글 자동 확인이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.', 409);
-  if (holder) return new IndexAutoError(`다른 SerpAPI 작업(${FEATURE_LABEL[holder]})이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.`, 409);
-  return null;
+  if (active || holder === 'index') return new IndexAutoError(BUSY, 409, 'busy');
+  if (holder) return new IndexAutoError(`다른 SerpAPI 작업(${FEATURE_LABEL[holder]})이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.`, 409, 'busy');
+  return (await heldElsewhere()) ? new IndexAutoError(BUSY_ELSEWHERE, 409, 'busy-elsewhere') : null;
 }
 
 /** 대상 — 발행 현황과 원본 확인 기록을 같은 순간에 읽고(CAS 기준값), 시도 기록으로 차례 규칙을 건다. */
@@ -445,13 +477,13 @@ export async function planIndexAuto(tenants: TenantConfig[], body: unknown): Pro
   const trigger: IndexAutoTrigger = input.trigger;
   const off = unavailableError();
   if (off) throw off;
-  const busy = busyError();
+  const busy = await busyError();
   if (busy) throw busy;
-  const file = await readState();
+  const { file } = await readState();
   const settings = settingsOf(file);
   if (trigger === 'open') {
-    if (!settings.autoOnOpen) throw new IndexAutoError(OPEN_OFF, 409);
-    if (file.openRunOn === todayKst()) throw new IndexAutoError(OPEN_DONE, 409);
+    if (!settings.autoOnOpen) throw new IndexAutoError(OPEN_OFF, 409, 'open-off');
+    if (file.openRunOn === todayKst()) throw new IndexAutoError(OPEN_DONE, 409, 'open-done');
   }
   const { today, plan } = await targetsNow(tenants, file);
   const { allowance, quota, blocked } = quotaOf(await serpApiAccountView({ fresh: true }));
@@ -487,7 +519,6 @@ export async function planIndexAuto(tenants: TenantConfig[], body: unknown): Pro
     manual: plan.manual,
     unsupported: plan.unsupported.map((u) => ({ ...u, text: autoReasonText(u.reason) })),
     settled: plan.settled,
-    shownElsewhere: plan.shownElsewhere,
     quota,
     settings,
   };
@@ -505,28 +536,31 @@ export async function startIndexAuto(tenants: TenantConfig[], body: unknown): Pr
   if (typeof input.planId !== 'string' || !input.planId) throw new IndexAutoError('planId가 필요해요 — 계획을 먼저 받아 주세요.', 400);
   const off = unavailableError();
   if (off) throw off;
-  const busy = busyError();
+  const busy = await busyError();
   if (busy) throw busy;
   const stored = plans.get(input.planId);
   plans.delete(input.planId);
-  if (!stored || stored.expires < Date.now()) throw new IndexAutoError(PLAN_CHANGED, 409);
-  const release = claimSerpRun('index');
-  if (!release) throw busyError() ?? new IndexAutoError('다른 SerpAPI 작업이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.', 409);
+  if (!stored || stored.expires < Date.now()) throw new IndexAutoError(PLAN_CHANGED, 409, 'plan-changed');
+  // 실행 잠금 — 이 서버 안에서도, 앱을 두 번 켠 다른 서버와도 하나만. 잡은 뒤에 기록 파일을 다시 읽어 「열 때 하루 한 번」을 다시 본다.
+  const release = await claimSerpRun('index');
+  if (!release) throw (await busyError()) ?? new IndexAutoError(BUSY_ELSEWHERE, 409, 'busy-elsewhere');
   const run: ActiveRun = { runId: `r-${randomUUID()}`, trigger: stored.trigger, startedAt: new Date().toISOString(), total: 0, done: 0 };
   active = run;
   let targets: AutoTarget[];
   try {
-    const file = await readState();
+    const { file } = await readState();
     const settings = settingsOf(file);
     const today = todayKst();
-    if (stored.trigger === 'open' && (!settings.autoOnOpen || file.openRunOn === today)) throw new IndexAutoError(settings.autoOnOpen ? OPEN_DONE : OPEN_OFF, 409);
+    if (stored.trigger === 'open' && (!settings.autoOnOpen || file.openRunOn === today)) {
+      throw settings.autoOnOpen ? new IndexAutoError(OPEN_DONE, 409, 'open-done') : new IndexAutoError(OPEN_OFF, 409, 'open-off');
+    }
     const { allowance, blocked } = quotaOf(await serpApiAccountView({ fresh: true }));
     if (blocked) throw new IndexAutoError(blocked, 502);
     const { plan } = await targetsNow(tenants, file);
     const selected = plan.targets.filter((t) => stored.turns.has(turnIdOf(t)));
-    if (selected.length === 0) throw new IndexAutoError(PLAN_CHANGED, 409);
+    if (selected.length === 0) throw new IndexAutoError(PLAN_CHANGED, 409, 'plan-changed');
     const { searches, limitedBy } = planSearches(selected.length, Math.min(settings.runCap, stored.searches), allowance);
-    if (searches === 0) throw new IndexAutoError(LIMIT_MESSAGE[limitedBy ?? 'run-cap'], 409);
+    if (searches === 0) throw new IndexAutoError(LIMIT_MESSAGE[limitedBy ?? 'run-cap'], 409, limitedBy === 'run-cap' || limitedBy === null ? 'plan-changed' : 'limit');
     targets = selected.slice(0, searches);
     run.total = targets.length;
     await updateState((f) => {
@@ -550,13 +584,13 @@ export async function startIndexAuto(tenants: TenantConfig[], body: unknown): Pr
     });
   } catch (err) {
     active = null;
-    release();
+    await release();
     throw err;
   }
   plans.clear();
-  void runLoop(run, targets, tenants).finally(() => {
+  void runLoop(run, targets, tenants).finally(async () => {
     active = null;
-    release();
+    await release();
   });
   return { runId: run.runId, total: run.total };
 }
@@ -596,8 +630,8 @@ async function writeAuto(
   }
 }
 
-/** 글 하나 — 시도를 pending으로 적고 → 검색 → 판정 → 적기 → 시도를 고친다. */
-async function checkOne(runId: string, t: AutoTarget, customers: readonly string[]): Promise<Step> {
+/** 글 하나 — 시도를 pending으로 적고 → 검색 → 판정 → 적기. 시도 고치기는 부르는 쪽이 실행 기록과 한 번에 적는다(patch). */
+async function checkOne(runId: string, t: AutoTarget, customers: readonly string[]): Promise<{ step: Step; attemptId: string; patch: Partial<AttemptRecord> }> {
   const id = `a-${randomUUID()}`;
   const now = Date.now();
   const pending: AttemptRecord = { id, at: new Date(now).toISOString(), on: todayKst(now), runId, engine: 'google', key: t.key, turn: t.turn, tier: t.tier, query: t.query, outcome: 'pending' };
@@ -633,23 +667,40 @@ async function checkOne(runId: string, t: AutoTarget, customers: readonly string
     patch = { outcome: f.sent ? 'unknown' : 'not-sent', reason: f.reason };
     step = { sent: f.sent, item: f.sent ? { ...base, outcome: 'unknown', reason: f.reason } : null, stop: f.stop, streak: f.streak };
   }
-  await updateState((f) => {
-    const i = f.attempts.findIndex((a) => isRecord(a) && a.id === id);
-    if (i >= 0) f.attempts[i] = { ...(f.attempts[i] as Record<string, unknown>), ...patch };
-  });
-  return step;
+  return { step, attemptId: id, patch };
 }
 
-/** 실행 — 차례대로 하나씩. 멈춤 까닭이 나오면 거기서 멈추고, 끝나면 실행 기록을 마무리한다. */
+/** 실행 기록(runs)에서 이 실행을 찾아 고친다 — 없으면(덜어 냄 · 손으로 지움) 붙인다. */
+function putRun(f: IndexAutoFile, runId: string, patch: Partial<IndexAutoRunRecord>, whole: () => IndexAutoRunRecord): void {
+  const i = f.runs.findIndex((r) => isRecord(r) && r.runId === runId);
+  if (i >= 0) f.runs[i] = { ...(f.runs[i] as Record<string, unknown>), ...patch };
+  else f.runs.push(whole());
+}
+
+/**
+ * 실행 — 차례대로 하나씩. 글 하나가 끝날 때마다 시도와 실행 기록(보낸 수 · 결과 · 줄마다)을 한 번에 적는다 — 앱이 꺼져 끊겨도 어디까지 했는지
+ * 남는다(endedAt null). 멈춤 까닭이 나오면 거기서 멈추고, 끝나면 실행 기록을 마무리한다.
+ */
 async function runLoop(run: ActiveRun, targets: readonly AutoTarget[], tenants: TenantConfig[]): Promise<void> {
   const customers = tenants.filter((t) => !t.cohortOnly).map((t) => t.tenantId);
   const tally = { searched: 0, found: 0, notFound: 0, unknown: 0, skipped: 0 };
   const items: IndexAutoRunItem[] = [];
   let stoppedBy: IndexAutoStop | null = null;
   let streak = 0;
+  const recordOf = (endedAt: string | null, notRun: number): IndexAutoRunRecord => ({
+    runId: run.runId,
+    trigger: run.trigger,
+    startedAt: run.startedAt,
+    endedAt,
+    planned: targets.length,
+    ...tally,
+    notRun,
+    stoppedBy,
+    items: [...items],
+  });
   try {
     for (const t of targets) {
-      const step = await checkOne(run.runId, t, customers);
+      const { step, attemptId, patch } = await checkOne(run.runId, t, customers);
       if (step.sent) tally.searched += 1;
       if (step.item) {
         items.push(step.item);
@@ -658,6 +709,11 @@ async function runLoop(run: ActiveRun, targets: readonly AutoTarget[], tenants: 
         else tally.unknown += 1;
         if (step.item.skipped) tally.skipped += 1;
       }
+      await updateState((f) => {
+        const i = f.attempts.findIndex((a) => isRecord(a) && a.id === attemptId);
+        if (i >= 0) f.attempts[i] = { ...(f.attempts[i] as Record<string, unknown>), ...patch };
+        putRun(f, run.runId, { ...tally, items: [...items] }, () => recordOf(null, 0));
+      });
       run.done += 1;
       streak = step.streak ? streak + 1 : 0;
       stoppedBy = step.stop ?? (streak >= STREAK_STOP ? { kind: 'upstream-streak', message: STREAK_MESSAGE } : null);
@@ -669,23 +725,9 @@ async function runLoop(run: ActiveRun, targets: readonly AutoTarget[], tenants: 
   }
   const notRun = targets.length - tally.searched;
   if (stoppedBy && notRun > 0) stoppedBy = { ...stoppedBy, message: `${stoppedBy.message} 남은 ${notRun}편은 확인하지 않았어요.` };
-  const record: IndexAutoRunRecord = {
-    runId: run.runId,
-    trigger: run.trigger,
-    startedAt: run.startedAt,
-    endedAt: new Date().toISOString(),
-    planned: targets.length,
-    ...tally,
-    notRun,
-    stoppedBy,
-    items,
-  };
+  const record = recordOf(new Date().toISOString(), notRun);
   try {
-    await updateState((f) => {
-      const i = f.runs.findIndex((r) => isRecord(r) && r.runId === run.runId);
-      if (i >= 0) f.runs[i] = { ...(f.runs[i] as Record<string, unknown>), ...record };
-      else f.runs.push(record);
-    });
+    await updateState((f) => putRun(f, run.runId, record, () => record));
   } catch (err) {
     console.error('[indexAuto] 실행 기록을 마무리하지 못했습니다(끊김으로 보입니다):', err);
   }

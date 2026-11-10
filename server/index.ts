@@ -110,7 +110,7 @@ import {
   type MapImageRecord,
 } from './maps.js';
 import { findRegionTourPhotos, findTourPhotos, scrubTourKey, tourApiConfigured, tourPhotoInfo } from './tourPhotos.js';
-import { scrubSerpKey, serpApiAccountView, serpApiConfigured } from './serpApi.js';
+import { localRequestProblem, scrubSerpKey, serpApiAccountView, serpApiConfigured } from './serpApi.js';
 import { describeLocalPhoto, describePhotoScenes, photoScenesConfigured, SCENE_MAX_NEW, SCENE_MAX_SRCS, scrubSceneKey } from './photoScenes.js';
 import {
   addOwnerPhoto,
@@ -2737,6 +2737,19 @@ app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
   }
 });
 
+// SerpAPI를 쓰는 라우트(계정 · 색인 자동 확인 — 검색 한 번마다 돈이 든다)는 이 PC의 앱 화면에서 온 요청만 받는다: Host가 127.0.0.1 · localhost ·
+// [::1]이고 Origin이 있으면 그것도 같아야 한다(server/serpApi.ts localRequestProblem). DNS 리바인딩 페이지는 브라우저가 보기에 같은 출처라 CORS
+// 사전 요청으로는 막히지 않는다 — Host · Origin에 남는 그 페이지 이름으로 막는다(403, 계정 · 검색 0). dev는 vite 프록시가 Host를 localhost:5173
+// 그대로 넘기고, 설치본 창은 http://localhost:<포트>에서 연다.
+app.use(['/api/serpapi', '/api/index-auto'], (req, res, next) => {
+  const problem = localRequestProblem(req.headers.host, typeof req.headers.origin === 'string' ? req.headers.origin : undefined);
+  if (problem) {
+    res.status(403).json({ error: problem });
+    return;
+  }
+  next();
+});
+
 // SerpAPI 공용 연결(server/serpApi.ts) — 계정(무료 account.json, 허용 칸만 · 60초 캐시) · 몫(요금제 월 검색 수의 비율) · 이 PC 장부의 이번
 // 결제 주기 사용(기능별). 검색은 하지 않는다. 키 · 계정 이메일 · 계정 id는 싣지 않는다. 키가 없거나 연결 주소 설정이 틀렸으면 아무 데도
 // 부르지 않고 configured · configError로 알린다. Express 전용(Vercel 함수 12/12 — 웹은 404를 「이 환경에는 없음」으로 읽는다).
@@ -2751,11 +2764,13 @@ app.get('/api/serpapi/account', async (_req, res) => {
 // 색인 자동 확인(server/indexAuto.ts · 규칙 src/lib/indexAuto.ts) — 발행 현황의 구글 색인 칸을 SerpAPI site: 검색으로 대신 본다. 사람이 단추를
 // 눌러야 돈다: POST plan(계획 — 검색 0, 계정만 무료로 읽어 대상 · 검색 수 · 이번 결제 주기 몫을 보인다) → POST run(그 계획 id로만 — 검색이 든다,
 // 202 뒤 GET으로 진행을 묻는다). 돈이 드는 길(plan · run · settings)은 Content-Type application/json만 받는다 — 다른 사이트가 보내는 text/plain ·
-// form 단순 요청은 415로 막히고, JSON 요청은 서버에 CORS가 없어 사전 요청에서 막힌다. 오류: 400 본문 모양, 409 도는 중 · 계획이 바뀜 · 오늘 이미
+// form 단순 요청은 415로 막히고, JSON 요청은 서버에 CORS가 없어 사전 요청에서 막힌다(같은 출처로 보이는 DNS 리바인딩 페이지는 위 Host · Origin
+// 검사가 403으로 막는다). 오류: 400 본문 모양, 409 도는 중(앱을 두 번 켠 다른 창 포함) · 계획이 바뀜 · 오늘 이미
 // 함, 502 계정을 못 읽음, 503 키 없음 · 연결 설정 틀림, 500 기록 파일이 깨짐(덮어쓰지 않는다). Express 전용(Vercel 함수 12/12 — 웹은 404).
 function sendIndexAutoError(res: import('express').Response, err: unknown) {
   if (!(err instanceof IndexAutoError)) console.error('[index-auto]', err);
-  res.status(err instanceof IndexAutoError ? err.status : 500).json({ error: scrubSerpKey(err instanceof Error ? err.message : String(err)) });
+  const code = err instanceof IndexAutoError ? err.code : null;
+  res.status(err instanceof IndexAutoError ? err.status : 500).json({ error: scrubSerpKey(err instanceof Error ? err.message : String(err)), ...(code ? { code } : {}) });
 }
 
 /** 본문이 JSON이 아니면 415로 끝낸다(검색 0). */

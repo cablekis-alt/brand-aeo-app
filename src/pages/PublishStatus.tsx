@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import IndexAutoPanel, { type IndexAutoLoad } from '../components/IndexAutoPanel'
 import PostImportPanel from '../components/PostImportPanel'
-import { commitPostImport, loadIndexAuto, loadPublishStatus, patchExternalPost, saveIndexCheck, type IndexAutoStatus } from '../lib/api'
+import { commitPostImport, loadIndexAuto, loadPublishStatus, patchExternalPost, saveIndexCheck, type IndexAutoPlan, type IndexAutoStatus } from '../lib/api'
 import { downloadCsv } from '../lib/fileDownload'
 import { safeFileName } from '../lib/markdownFile'
 import { repostDayProblem, takenDownBefore } from '../lib/externalPosts'
@@ -392,6 +392,8 @@ export default function PublishStatus() {
   // 색인 자동 확인 상태(검색 · 계정 읽기 없음) — 표를 다시 읽을 때 함께 다시 읽는다. 패널 펼침은 머리 단추와 함께 쓴다.
   const [autoLoad, setAutoLoad] = useState<IndexAutoLoad>({ kind: 'loading' })
   const [autoOpen, setAutoOpen] = useState(false)
+  // 패널이 받은 마지막 계획 — 받은 뒤에는 머리 단추가 이 편 수를 쓴다(화면 어림은 원본 확인 기록 · 몫을 모른다).
+  const [autoPlan, setAutoPlan] = useState<IndexAutoPlan | null>(null)
   const setAutoStatus = useCallback((status: IndexAutoStatus) => setAutoLoad({ kind: 'ready', status }), [])
   const reload = useCallback(() => setReloadKey((k) => k + 1), [])
   const [filterState, setFilter] = useState<StatusFilter>(DEFAULT_FILTER)
@@ -489,6 +491,15 @@ export default function PublishStatus() {
   const autoRunning = autoStatus?.running ?? null
   const attemptsByKey = autoStatus?.attemptsByKey ?? {}
   const autoCount = autoOn && data ? estimateAutoTargets(rows, today, attemptsByKey) : 0
+  // 머리 단추 — 계획을 받기 전에는 화면 어림, 받은 뒤에는 계획의 검색 수(볼 글은 있는데 몫 · 바닥 · 계정 때문에 검색하지 않으면 그렇게).
+  const headCount = autoPlan ? autoPlan.searches : autoCount
+  const headLabel = autoRunning
+    ? `확인하는 중… ${autoRunning.done}/${autoRunning.total}`
+    : autoPlan && autoPlan.searches <= 0 && autoPlan.candidates > 0
+      ? `구글 자동 확인(${autoPlan.candidates}편 · 지금은 검색 안 함)`
+      : headCount > 0
+        ? `구글 자동 확인(${headCount}편)`
+        : '구글 자동 확인(오늘 볼 글 없음)'
   const googleAuto = (r: PublishStatusRow): AutoCellExtra => {
     const attempts = r.key ? attemptsByKey[r.key] : undefined
     return { notes: autoCellNotes(r, today, attempts, autoOn), history: autoAttemptsText(attempts) }
@@ -522,9 +533,10 @@ export default function PublishStatus() {
           <h1>발행 현황</h1>
         </div>
         <div className="page-actions">
+          {/* 누르면 패널을 펼치고 포커스를 옮기기만 한다(접지 않는다) — 펼침 단추가 아니라 aria-expanded는 패널 머리에만 둔다. */}
           {autoOn && (
-            <button type="button" className="btn" aria-controls="iap-body" aria-expanded={autoOpen} disabled={!autoRunning && autoCount === 0} onClick={openAuto}>
-              {autoRunning ? `확인하는 중… ${autoRunning.done}/${autoRunning.total}` : autoCount > 0 ? `구글 자동 확인(${autoCount}편)` : '구글 자동 확인(오늘 볼 글 없음)'}
+            <button type="button" className="btn" aria-controls="iap-body" disabled={!autoRunning && headCount === 0} onClick={openAuto}>
+              {headLabel}
             </button>
           )}
           <button type="button" className="btn" onClick={exportCsv} disabled={!data || shown.length === 0}>
@@ -549,7 +561,7 @@ export default function PublishStatus() {
           앱에서 만들지 않은 글입니다 — 작성자 진행 · 점수 · 보고서에는 넣지 않고, 다시 볼 날은 추적을 시작한 날부터 셉니다.
         </p>
       )}
-      <IndexAutoPanel load={autoLoad} open={autoOpen} onOpenChange={setAutoOpen} onStatus={setAutoStatus} onRunEnd={reload} onRetry={reload} />
+      <IndexAutoPanel load={autoLoad} open={autoOpen} onOpenChange={setAutoOpen} onStatus={setAutoStatus} onRunEnd={reload} onRetry={reload} onPlan={setAutoPlan} />
       {/* 작성자들이 보낸 주소를 한꺼번에 적는다 — 적으면 이 표를 다시 읽는다. 오늘은 서버가 센 날(읽기 전이면 이 PC의 한국 날짜). */}
       <PostImportPanel
         today={today || todayKst()}

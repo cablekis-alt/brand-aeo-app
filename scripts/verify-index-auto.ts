@@ -15,11 +15,11 @@
  * A. 순수 함수 — 검색어(site: · 티스토리 /m/ · 네이버 두 모양 · www 두 모양 · 추적 질의 떼기 · 안 찾는 주소), 판정(정확 일치 · /m/ · m. ·
  *    덜 찬 쪽 · 꽉 찬 쪽 · 다음 쪽 · ?… 변형 · 빈 결과 문구 · 모양 이상 · 자동 교정 · 오류 · 네이버 블로그), 대상(14일째 차례 · 자동 「아직」뿐인
  *    글의 30일째 · 3 · 7일째는 직접 · 대표 줄 · 같은 주소 1번 · 묶음 순서), 차례 규칙(결정적 1회 · 일시 2회 · 멈춤 오류는 안 셈), 몫 계산.
- * B. writeIndexCheck — 사람 표시는 그대로, 자동은 계획 때 본 원본 기록과 같을 때만(CAS) · 원본이 「색인됨」이면 건드리지 않음 · 옛 판(v0.4.63 ·
- *    v0.4.64) 파서가 자동이 쓴 파일을 읽는다.
+ * B. writeIndexCheck — 사람 표시는 그대로, 자동은 계획 때 본 원본 기록과 같을 때만(CAS) · 이 줄이 「색인됨」이면 건드리지 않음(R1) · 원본이
+ *    「색인됨」이면 「아직」은 쓰지 않고 찾음은 적음(R4 — 다시 올린 글) · 옛 판(v0.4.63 · v0.4.64) 파서가 자동이 쓴 파일을 읽는다.
  * C. 서버 — 계획(검색 0) · 실행(주소 키마다 1번 · 매개변수) · 결과를 줄마다 · CAS · 격리(원장 · 집행 상태 · 앱 밖 글 바이트 같음) · 차례 규칙 ·
- *    401 · 403 · 429(두 가지) 멈춤 · 몫 · 바닥 · 계정 · 끊김 · JSON만(415) · 계획 id · 한 번에 하나 · 열 때 하루 한 번 · 키 없음 · 막힌 쪽 주소 ·
- *    깨진 기록 파일 · 모르는 값 보존 · 키가 어디에도 없음.
+ *    401 · 403 · 429(두 가지) 멈춤 · 몫 · 바닥 · 계정 · 끊김(어디까지 했는지 남음) · JSON만(415) · Host · Origin(DNS 리바인딩 403) · 계획 id ·
+ *    한 번에 하나(앱을 두 번 켠 두 서버 사이에도) · 열 때 하루 한 번 · 키 없음 · 막힌 쪽 주소 · 깨진 기록 파일 · 모르는 값 보존 · 키가 어디에도 없음.
  *
  *   npx tsx scripts/verify-index-auto.ts
  */
@@ -52,6 +52,8 @@ const MOCK_PORT = 4195
 const APP_PORT = 4194
 const MOCK_BASE = `http://127.0.0.1:${MOCK_PORT}`
 const APP_BASE = `http://127.0.0.1:${APP_PORT}`
+/** 앱을 두 번 켠 경우의 둘째 서버(같은 APP_DATA_DIR). */
+const APP2_PORT = 4193
 const FAKE_KEY = `test-serp-${randomBytes(6).toString('hex')}`
 
 // 안전 — 이 프로세스의 fetch는 127.0.0.1만 나간다(그 밖은 막고 기록한다).
@@ -272,7 +274,7 @@ const plan = planAutoTargets({ rows: planRows, today: TODAY, checks: CHECKS, att
 const keysOf = plan.targets.map((t) => t.key)
 ok(
   '대상 — 순서: 14일째 첫 시도(since 오래된 것부터) → 30일째 → 일시 오류 두 번째 시도',
-  JSON.stringify(keysOf) === JSON.stringify(['k10.tistory.com/10', 'k2.tistory.com/2', 'k1.tistory.com/1', 'k3.tistory.com/3', 'k5.tistory.com/5', 'k6.tistory.com/6']),
+  JSON.stringify(keysOf) === JSON.stringify(['k10.tistory.com/10', 'k2.tistory.com/2', 'k1.tistory.com/1', 'k3.tistory.com/3', 'k9.tistory.com/9', 'k5.tistory.com/5', 'k6.tistory.com/6']),
   keysOf,
 )
 const byKey = (k: string) => plan.targets.find((t) => t.key === k)
@@ -289,7 +291,11 @@ ok(
 ok('대상 — 3 · 7일째만 차례인 주소는 직접 보는 글로 센다', plan.manual === 1, plan.manual)
 ok('대상 — 이번 차례에 자동으로 못 가린 주소(결정적 · 일시 2회)는 다시 찾지 않는다', plan.settled === 2, plan.settled)
 ok('대상 — 유튜브는 자동으로 안 찾는 주소', plan.unsupported.length === 1 && plan.unsupported[0]?.reason === 'platform' && plan.unsupported[0]?.key === 'youtube.com/watch?v=fakeVid', plan.unsupported)
-ok('대상 — 원본 기록이 「색인됨」인 주소(다른 줄 · 앞선 올림)는 자동이 건드리지 않는다', plan.shownElsewhere === 1 && !byKey('k9.tistory.com/9'))
+ok(
+  '대상 — 원본 기록이 「색인됨」인 주소(다른 줄 · 내리기 전 올림)도 대상(R4 — 찾으면 적고 「아직」은 쓰는 쪽이 건너뜀) · CAS 기준값은 그 기록',
+  byKey('k9.tistory.com/9')?.tenantId === 'vt-a' && byKey('k9.tistory.com/9')?.expectRawCheckedAt === '2026-11-10T03:00:00.000Z' && !('shownElsewhere' in plan),
+  byKey('k9.tistory.com/9'),
+)
 ok('대상 — 뺀 줄은 대상이 아니다', !byKey('k12.tistory.com/12'))
 
 // ── 몫 계산 ──
@@ -398,11 +404,24 @@ ok('CAS — 같으면 적는다(자동 「색인됨」)', u4.record?.google?.sta
 const bytesA2 = readData(unitDir, 'vu-a', 'index-checks.json')
 const u5 = await autoWrite('vu-a', 'p-vu-a1', 'not-yet', ['vu-b'], u4.record?.google?.checkedAt ?? null, Date.now() + 3000)
 const u6 = await autoWrite('vu-a', 'p-vu-a1', 'shown', ['vu-b'], u4.record?.google?.checkedAt ?? null, Date.now() + 3000)
-ok('원본 기록이 「색인됨」이면 자동은 건드리지 않는다(already-shown, 「아직」 · 「색인됨」 모두)', u5.skipped === 'already-shown' && u6.skipped === 'already-shown' && readData(unitDir, 'vu-a', 'index-checks.json') === bytesA2, { u5, u6 })
+ok('이 줄에 「색인됨」이 보이면 자동은 건드리지 않는다(R1 — already-shown, 「아직」 · 「색인됨」 모두)', u5.skipped === 'already-shown' && u6.skipped === 'already-shown' && readData(unitDir, 'vu-a', 'index-checks.json') === bytesA2, { u5, u6 })
 const callAny = ic.writeIndexCheck as unknown as (...a: unknown[]) => Promise<unknown>
 const noGuard = await callAny('vu-a', 'p-vu-a1', 'google', 'not-yet', [], Date.now(), 'auto').then(() => 'written', (e: { status?: number }) => e.status)
 const autoClear = await callAny('vu-a', 'p-vu-a1', 'google', null, [], Date.now(), 'auto', { expectRawCheckedAt: null }).then(() => 'written', (e: { status?: number }) => e.status)
 ok('자동 쓰기 — 조건(guard) 없이 · 지우기(null)로는 적지 않는다', noGuard === 400 && autoClear === 400 && readData(unitDir, 'vu-a', 'index-checks.json') === bytesA2, { noGuard, autoClear })
+// 다시 올린 글(R4) — 다른 브랜드 줄의 「색인됨」(이 줄 올린 날보다 앞서 신선도로 가려짐)이 원본 최신 기록이다. 자동 「아직」은 쓰지 않고, 찾음은 적는다.
+const RE_URL = 'https://unit-re.tistory.com/3'
+writeData(unitDir, 'vu-c', 'published-posts.json', ledgerFile([post('p-vu-c1', RE_URL, D(5), '가상 다시 올린 글')]))
+writeData(unitDir, 'vu-d', 'index-checks.json', JSON.stringify({ format: 'index-checks/1', checks: { 'p-vu-d0': { postId: 'p-vu-d0', key: tk(RE_URL), url: RE_URL, google: g('shown', D(20)), updatedAt: `${D(20)}T03:00:00.000Z` } } }))
+const reExpect = `${D(20)}T03:00:00.000Z`
+const reNotYet = await autoWrite('vu-c', 'p-vu-c1', 'not-yet', ['vu-d'], reExpect)
+const reNotYetFile = readData(unitDir, 'vu-c', 'index-checks.json')
+const reShown = await autoWrite('vu-c', 'p-vu-c1', 'shown', ['vu-d'], reExpect)
+ok(
+  '다시 올린 글(R4) — 원본 「색인됨」이 신선도로 가려진 줄: 자동 「아직」은 already-shown(파일 없음), 찾음은 「색인됨 · 자동」으로 적는다',
+  reNotYet.skipped === 'already-shown' && reNotYetFile === '' && reShown.record?.google?.state === 'shown' && reShown.record.google.source === 'auto' && reShown.record.google.checkedOn === today,
+  { reNotYet, reShown },
+)
 const gone = await autoWrite('vu-a', 'p-nope', 'not-yet', [], null).then(() => 0, (e: { status?: number }) => e.status ?? -1)
 ok('자동 쓰기 — 없는 줄은 404(실행기는 row-gone으로 넘긴다)', gone === 404, gone)
 
@@ -486,6 +505,7 @@ const mock = http.createServer((req, res2) => {
     case 'blog.naver.com/fakeid/224000000009':
     case 'empty.tistory.com/5':
     case 'mix.tistory.com/4':
+    case 'else.tistory.com/8':
       return send(200, EMPTY)
     case 'blog.naver.com/fakeid/224000000010':
       return send(200, res(['https://m.blog.naver.com/fakeid/224000000010']))
@@ -496,7 +516,9 @@ const mock = http.createServer((req, res2) => {
     case 'cas.tistory.com/7':
       return later(1500, 200, found(s.first))
     case 'conc.tistory.com/1':
-      return later(2000, 200, found(s.first))
+    case 'twoproc.tistory.com/1':
+    case 'twoproc.tistory.com/2':
+      return later(1500, 200, found(s.first))
     case 'hang.tistory.com/1':
       return hangMode ? undefined : send(200, found(s.first))
     case 'wbreak.tistory.com/1':
@@ -530,7 +552,7 @@ const GUARD = `data:text/javascript,${encodeURIComponent(
   ].join('\n'),
 )}`
 
-for (const port of [MOCK_PORT, APP_PORT]) {
+for (const port of [MOCK_PORT, APP_PORT, APP2_PORT]) {
   if (!(await portFree(port))) {
     console.error(`포트 ${port}을 다른 프로그램이 쓰고 있어 확인하지 못했습니다.`)
     for (const d of [dir, unitDir, oldDir]) rmSync(d, { recursive: true, force: true })
@@ -648,11 +670,11 @@ const sameSnapshot = (a: Map<string, string>, b: Map<string, string>) => a.size 
 // ── 앱 서버 ──
 let logs = ''
 const children: ChildProcess[] = []
-const start = async (over: Record<string, string> = {}): Promise<ChildProcess> => {
+const start = async (over: Record<string, string> = {}, port = APP_PORT): Promise<ChildProcess> => {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     APP_DATA_DIR: dir,
-    PORT: String(APP_PORT),
+    PORT: String(port),
     USE_MOCK_ENGINES: 'true',
     DOTENV_CONFIG_PATH: path.join(dir, 'no-such.env'),
     BLOB_READ_WRITE_TOKEN: '',
@@ -672,16 +694,16 @@ const start = async (over: Record<string, string> = {}): Promise<ChildProcess> =
   srv.stdout?.on('data', (d: Buffer) => (logs += d.toString()))
   srv.stderr?.on('data', (d: Buffer) => (logs += d.toString()))
   for (let i = 0; i < 120; i += 1) {
-    if (await fetch(`${APP_BASE}/api/health`).then((r) => r.ok, () => false)) return srv
+    if (await fetch(`http://127.0.0.1:${port}/api/health`).then((r) => r.ok, () => false)) return srv
     await sleep(500)
   }
   throw new Error(`앱 서버가 뜨지 않았습니다:\n${logs.slice(-2000)}`)
 }
-const stop = async (srv: ChildProcess) => {
+const stop = async (srv: ChildProcess, port = APP_PORT) => {
   const exited = new Promise<void>((resolve) => (srv.exitCode !== null || srv.signalCode !== null ? resolve() : srv.once('exit', () => resolve())))
   srv.kill()
   await exited
-  for (let i = 0; i < 20 && !(await portFree(APP_PORT)); i += 1) await sleep(250)
+  for (let i = 0; i < 20 && !(await portFree(port)); i += 1) await sleep(250)
 }
 const bodies: string[] = []
 const call = async <T = Record<string, unknown>>(method: string, p: string, body?: unknown, raw?: { text: string; type?: string }) => {
@@ -699,9 +721,40 @@ const call = async <T = Record<string, unknown>>(method: string, p: string, body
   bodies.push(text)
   return { status: r.status, body: (text.startsWith('{') ? JSON.parse(text) : {}) as T & { error?: string } }
 }
+/** Host · Origin을 마음대로 붙이는 요청(fetch는 Host를 못 바꾼다) — 127.0.0.1의 앱 서버로만 간다. */
+const rawCall = (method: string, p: string, headers: Record<string, string>, body?: unknown, port = APP_PORT) =>
+  new Promise<{ status: number; text: string }>((resolve, reject) => {
+    const payload = body === undefined ? undefined : JSON.stringify(body)
+    const rq = http.request(
+      { host: '127.0.0.1', port, path: p, method, headers: { ...headers, ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': String(Buffer.byteLength(payload)) } : {}) } },
+      (rs) => {
+        let text = ''
+        rs.on('data', (d: Buffer) => (text += d.toString()))
+        rs.on('end', () => resolve({ status: rs.statusCode ?? 0, text }))
+      },
+    )
+    rq.on('error', reject)
+    if (payload) rq.write(payload)
+    rq.end()
+  })
 const status = () => call<IndexAutoStatusView>('GET', '/api/index-auto')
 const makePlan = (trigger: 'button' | 'open' = 'button') => call<IndexAutoPlanView>('POST', '/api/index-auto/plan', { trigger })
 const runPlan = (planId: string | null) => call<{ runId: string; total: number }>('POST', '/api/index-auto/run', { planId })
+/** 둘째 서버(APP2_PORT)로 — JSON 본문만. */
+const callOn = async <T = Record<string, unknown>>(port: number, method: string, p: string, body?: unknown) => {
+  const r = await fetch(`http://127.0.0.1:${port}${p}`, { method, headers: body === undefined ? {} : { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
+  const text = await r.text()
+  bodies.push(text)
+  return { status: r.status, body: (text.startsWith('{') ? JSON.parse(text) : {}) as T & { error?: string; code?: string } }
+}
+const waitRunOn = async (port: number): Promise<IndexAutoRunRecord | null> => {
+  for (let i = 0; i < 400; i += 1) {
+    const s = await callOn<IndexAutoStatusView>(port, 'GET', '/api/index-auto')
+    if (s.status === 200 && s.body.running === null) return s.body.lastRun
+    await sleep(250)
+  }
+  return null
+}
 const waitRun = async (): Promise<IndexAutoRunRecord | null> => {
   for (let i = 0; i < 400; i += 1) {
     const s = await status()
@@ -750,10 +803,30 @@ try {
   const unknownRun = await runPlan('plan-that-does-not-exist')
   ok(
     '실행 — 다른 사이트의 단순 요청(text/plain · form)은 415, planId 없음 · 모르는 칸 400, 모르는 planId 409',
-    textRun.status === 415 && formRun.status === 415 && noIdRun.status === 400 && extraRun.status === 400 && unknownRun.status === 409 && /계획/.test(unknownRun.body.error ?? ''),
+    textRun.status === 415 && formRun.status === 415 && noIdRun.status === 400 && extraRun.status === 400 && unknownRun.status === 409 && /계획/.test(unknownRun.body.error ?? '') &&
+      (unknownRun.body as { code?: string }).code === 'plan-changed',
     [textRun.status, formRun.status, noIdRun.status, extraRun.status, unknownRun.status, unknownRun.body],
   )
   ok('요청 모양 시험 — 가짜 서버가 받은 검색 0', searches().length === 0)
+
+  // DNS 리바인딩 — 브라우저가 보기엔 같은 출처라 CORS가 막지 못한다. Host · Origin이 이 PC가 아니면 계획 · 실행 · 설정 모두 403(계정 · 검색 0).
+  const evil = { Host: `rebind.attacker.example:${APP_PORT}`, Origin: `http://rebind.attacker.example:${APP_PORT}` }
+  const accountBeforeEvil = seen.filter((s) => s.path === '/account.json').length
+  const evilCalls = [
+    await rawCall('POST', '/api/index-auto/plan', evil, { trigger: 'button' }),
+    await rawCall('POST', '/api/index-auto/run', evil, { planId: 'x' }),
+    await rawCall('PUT', '/api/index-auto/settings', evil, { autoOnOpen: true }),
+    await rawCall('GET', '/api/index-auto', evil),
+    await rawCall('POST', '/api/index-auto/plan', { Host: `127.0.0.1:${APP_PORT}`, Origin: 'http://evil.example' }, { trigger: 'button' }),
+  ]
+  const afterEvil = await status()
+  ok(
+    'DNS 리바인딩 — Host · Origin이 이 PC가 아니면 계획 · 실행 · 설정 · 상태 모두 403, 계정 · 검색 0, 설정 그대로',
+    evilCalls.every((r) => r.status === 403) && seen.filter((s) => s.path === '/account.json').length === accountBeforeEvil && searches().length === 0 && afterEvil.body.settings.autoOnOpen === false,
+    evilCalls.map((r) => r.status),
+  )
+  const localOk = await rawCall('GET', '/api/index-auto', { Host: `localhost:${APP_PORT}`, Origin: `http://localhost:${APP_PORT}` })
+  ok('Host · Origin이 이 PC(localhost)면 그대로 받는다', localOk.status === 200, localOk.status)
 
   // ── C2. 계획 — 검색 0 ──
   const p1 = await makePlan()
@@ -764,6 +837,7 @@ try {
     tk(URLS.naverFound),
     tk(URLS.cas),
     tk(URLS.corr),
+    tk(URLS.elsewhere),
     tk(URLS.empty),
     tk(URLS.found),
     tk(URLS.mix),
@@ -776,9 +850,9 @@ try {
     tk(URLS.late),
   ]
   ok(
-    '계획 — 14일째 차례 · 30일째 한 번 더 · 같은 주소 1번(15편), 3 · 7일째 2편은 직접, 안 찾는 주소 2편, 다른 줄 색인됨 1편',
-    p1.status === 200 && typeof p1.body.planId === 'string' && p1.body.searches === 15 && p1.body.candidates === 15 && JSON.stringify(p1Keys) === JSON.stringify(expected1) &&
-      p1.body.manual === 2 && p1.body.unsupported.length === 2 && p1.body.shownElsewhere === 1 && p1.body.settled === 0 && p1.body.limitedBy === null && p1.body.blocked === null,
+    '계획 — 14일째 차례 · 30일째 한 번 더 · 같은 주소 1번 · 다른 줄에 「색인됨」이 있는 주소도(16편), 3 · 7일째 2편은 직접, 안 찾는 주소 2편',
+    p1.status === 200 && typeof p1.body.planId === 'string' && p1.body.searches === 16 && p1.body.candidates === 16 && JSON.stringify(p1Keys) === JSON.stringify(expected1) &&
+      p1.body.manual === 2 && p1.body.unsupported.length === 2 && !('shownElsewhere' in p1.body) && p1.body.settled === 0 && p1.body.limitedBy === null && p1.body.blocked === null,
     { status: p1.status, keys: p1Keys, body: { ...p1.body, targets: undefined } },
   )
   ok(
@@ -794,16 +868,16 @@ try {
   const before = snapshotData(true)
   const checksBBefore = readData(dir, 'vauto-b', 'index-checks.json')
   const run1 = await runPlan(p1.body.planId)
-  ok('실행 — 202 · 실행 id · 검색 15회 예정', run1.status === 202 && typeof run1.body.runId === 'string' && run1.body.total === 15, run1)
+  ok('실행 — 202 · 실행 id · 검색 16회 예정', run1.status === 202 && typeof run1.body.runId === 'string' && run1.body.total === 16, run1)
   const reused = await runPlan(p1.body.planId)
-  ok('실행 — 같은 계획 id는 다시 못 쓴다(409)', reused.status === 409)
+  ok('실행 — 같은 계획 id는 다시 못 쓴다(409 — 도는 중)', reused.status === 409 && (reused.body as { code?: string }).code === 'busy', reused.body)
   // 사이에 누름(CAS) — cas 글 검색이 가짜 서버에 닿은 뒤 사람이 그 칸을 「아직」으로 누른다.
   for (let i = 0; i < 200 && !searches().some((s) => s.first === 'cas.tistory.com/7'); i += 1) await sleep(50)
   const humanCas = await call('PUT', '/api/index-checks/vauto-a/p-va17', { engine: 'google', state: 'not-yet' })
   ok('CAS — 확인하는 사이 사람이 누른 표시는 받는다(200)', humanCas.status === 200, humanCas)
   const last1 = await waitRun()
   const s1 = searches()
-  ok('실행 — 가짜 서버가 받은 검색은 정확히 15회(같은 주소 1번 · 안 찾는 주소 · 직접 보는 글 · 다른 줄 색인됨 0)', s1.length === 15 && new Set(s1.map((s) => s.first)).size === 15, s1.map((s) => s.first))
+  ok('실행 — 가짜 서버가 받은 검색은 정확히 16회(같은 주소 1번 · 안 찾는 주소 · 직접 보는 글 0)', s1.length === 16 && new Set(s1.map((s) => s.first)).size === 16, s1.map((s) => s.first))
   ok(
     '실행 — 매번 가짜 키 · engine=google · google.co.kr · gl=kr · hl=ko · nfpr=1 · filter=0(num · start · no_cache · async 없음)',
     s1.every(
@@ -822,14 +896,15 @@ try {
   const items = new Map((last1?.items ?? []).map((it) => [it.key, it]))
   const it = (url: string) => items.get(tk(url))
   ok(
-    '결과 — 줄마다: 찾음 4(적음) · 사이에 누른 글 1(건너뜀) · 못 찾음 3(적음) · 못 가림 7',
-    last1?.endedAt !== null && last1?.searched === 15 && last1.found === 5 && last1.notFound === 3 && last1.unknown === 7 && last1.skipped === 1 && last1.notRun === 0 && last1.stoppedBy === null,
+    '결과 — 줄마다: 찾음 4(적음) · 사이에 누른 글 1(건너뜀) · 못 찾음 3(적음) · 다른 줄 색인됨인 못 찾음 1(건너뜀) · 못 가림 7',
+    last1?.endedAt !== null && last1?.searched === 16 && last1.found === 5 && last1.notFound === 4 && last1.unknown === 7 && last1.skipped === 2 && last1.notRun === 0 && last1.stoppedBy === null,
     { ...last1, items: undefined },
   )
   ok(
     '결과 — 적은 것: 찾음 → shown, 못 찾음 → not-yet, 사이에 누름 → changed',
     it(URLS.found)?.wrote === 'shown' && it(URLS.naverFound)?.wrote === 'shown' && it(URLS.shared)?.wrote === 'shown' && it(URLS.late)?.wrote === 'shown' &&
-      it(URLS.none)?.wrote === 'not-yet' && it(URLS.empty)?.wrote === 'not-yet' && it(URLS.mix)?.wrote === 'not-yet' && it(URLS.cas)?.skipped === 'changed',
+      it(URLS.none)?.wrote === 'not-yet' && it(URLS.empty)?.wrote === 'not-yet' && it(URLS.mix)?.wrote === 'not-yet' && it(URLS.cas)?.skipped === 'changed' &&
+      it(URLS.elsewhere)?.outcome === 'not-found' && it(URLS.elsewhere)?.skipped === 'already-shown' && it(URLS.elsewhere)?.wrote === undefined,
     [...items.values()],
   )
   ok(
@@ -868,15 +943,18 @@ try {
     googleOf(ps1, 'vauto-b', 'p-vb18')?.state === 'shown' && googleOf(ps1, 'vauto-b', 'p-vb18')?.source === 'auto' && googleOf(ps1, 'vauto-b', 'x-bbbbbbbb0019')?.state === 'not-yet' &&
       googleOf(ps1, 'vauto-b', 'x-bbbbbbbb0019')?.source === 'auto' && googleOf(ps1, 'vauto-c', 'p-vc19')?.source === 'auto',
   )
-  ok('표시 — 다른 줄의 사람 「색인됨」은 그대로 보인다', googleOf(ps1, 'vauto-b', 'x-bbbbbbbb0020')?.state === 'shown' && googleOf(ps1, 'vauto-b', 'x-bbbbbbbb0020')?.source === 'manual')
+  ok(
+    '표시 — 다른 줄의 사람 「색인됨」은 그대로 보인다(못 찾은 자동 「아직」이 가리지 않는다)',
+    googleOf(ps1, 'vauto-b', 'x-bbbbbbbb0020')?.state === 'shown' && googleOf(ps1, 'vauto-b', 'x-bbbbbbbb0020')?.source === 'manual' && googleOf(ps1, 'vauto-a', 'p-va20') === null,
+  )
   const af1 = attemptsFile()
   ok(
-    'index-auto.json — 시도 15건 · 대기 없음 · 차례 id · 검색어만(요청 주소 없음)',
-    af1.format === 'index-auto/1' && af1.attempts.length === 15 && af1.attempts.every((a) => a.outcome !== 'pending' && /^d(14|30):\d{4}-\d{2}-\d{2}$/.test(a.turn) && typeof a.query === 'string' && a.query.startsWith('site:')) &&
+    'index-auto.json — 시도 16건 · 대기 없음 · 차례 id · 검색어만(요청 주소 없음)',
+    af1.format === 'index-auto/1' && af1.attempts.length === 16 && af1.attempts.every((a) => a.outcome !== 'pending' && /^d(14|30):\d{4}-\d{2}-\d{2}$/.test(a.turn) && typeof a.query === 'string' && a.query.startsWith('site:')) &&
       af1.attempts.find((a) => a.key === tk(URLS.late))?.turn === `d30:${D(1)}` && af1.attempts.find((a) => a.key === tk(URLS.found))?.turn === `d14:${today}`,
     af1.attempts,
   )
-  ok('장부 — 이번 주기 색인 15회(보낸 것 모두)', sentInLedger() === 15, sentInLedger())
+  ok('장부 — 이번 주기 색인 16회(보낸 것 모두)', sentInLedger() === 16, sentInLedger())
   const st1 = await status()
   ok(
     'GET — 주소마다 최근 자동 시도(3건까지) · 마지막 실행',
@@ -887,9 +965,9 @@ try {
   // ── C4. 차례 규칙 — 같은 날 다시 ──
   const p2 = await makePlan()
   ok(
-    '둘째 계획 — 일시 오류 글(parse · upstream · timeout)만 두 번째 시도, 결정적 4편은 다시 찾지 않음',
+    '둘째 계획 — 일시 오류 글(parse · upstream · timeout)만 두 번째 시도, 결정적 4편 · 앞선 「색인됨」으로 건너뛴 1편은 다시 찾지 않음',
     p2.body.searches === 3 && JSON.stringify(p2.body.targets.map((t) => t.key).sort()) === JSON.stringify([tk(URLS.parse), tk(URLS.serr), tk(URLS.slow)].sort()) &&
-      p2.body.targets.every((t) => t.batch === 'retry') && p2.body.settled === 4,
+      p2.body.targets.every((t) => t.batch === 'retry') && p2.body.settled === 5,
     { ...p2.body, quota: undefined },
   )
   const n2 = searches().length
@@ -897,7 +975,7 @@ try {
   await waitRun()
   ok('둘째 실행 — 검색 3회', searches().length === n2 + 3)
   const p3 = await makePlan()
-  ok('셋째 계획 — 차례마다 일시 2회를 다 써서 대상 0 · 계획 id 없음', p3.body.searches === 0 && p3.body.candidates === 0 && p3.body.planId === null && p3.body.settled === 7, { ...p3.body, quota: undefined })
+  ok('셋째 계획 — 차례마다 일시 2회를 다 써서 대상 0 · 계획 id 없음', p3.body.searches === 0 && p3.body.candidates === 0 && p3.body.planId === null && p3.body.settled === 8, { ...p3.body, quota: undefined })
   ok('셋째 — 검색 0', searches().length === n2 + 3)
 
   // ── C5. 멈춤 오류 ──
@@ -1069,8 +1147,47 @@ try {
     [cr1.status, cr2.status, cpDuring.status, stDuring.body.running],
   )
 
+  // ── C9-b. 앱을 두 번 켬 — 같은 사용자 데이터를 쓰는 두 서버도 한 번에 하나(실행 잠금 파일) ──
+  withLedger([post('p-vp01', 'https://twoproc.tistory.com/1', D(14), '가상 두 창 글'), post('p-vp02', 'https://twoproc.tistory.com/2', D(14), '가상 두 창 글 2')])
+  const app2 = await start({}, APP2_PORT)
+  try {
+    const tp1 = await makePlan()
+    const tp2 = await callOn<IndexAutoPlanView>(APP2_PORT, 'POST', '/api/index-auto/plan', { trigger: 'button' })
+    const beforeTwo = searches().length
+    const [tr1, tr2] = await Promise.all([runPlan(tp1.body.planId), callOn<{ runId: string; total: number }>(APP2_PORT, 'POST', '/api/index-auto/run', { planId: tp2.body.planId })])
+    const winner = tr1.status === 202 ? APP_PORT : APP2_PORT
+    const loser = winner === APP_PORT ? APP2_PORT : APP_PORT
+    const lost = winner === APP_PORT ? tr2 : tr1
+    const loserStatus = await callOn<IndexAutoStatusView>(loser, 'GET', '/api/index-auto')
+    const loserPlan = await callOn<IndexAutoPlanView>(loser, 'POST', '/api/index-auto/plan', { trigger: 'button' })
+    const loserPut = await callOn(loser, 'PUT', '/api/index-auto/settings', { runCap: 7 })
+    const pendingWhile = attemptsFile().attempts.filter((a) => a.key.startsWith('twoproc.') && a.outcome === 'pending').length
+    const twoRun = await waitRunOn(winner)
+    const twoAttempts = attemptsFile().attempts.filter((a) => a.key.startsWith('twoproc.'))
+    ok(
+      '앱을 두 번 켬 — 두 서버가 함께 눌러도 한쪽만 202, 다른 쪽은 409(다른 창에서 도는 중)',
+      tp1.body.searches === 2 && tp2.body.searches === 2 && [tr1.status, tr2.status].sort().join(',') === '202,409' && (lost.body as { code?: string }).code === 'busy-elsewhere',
+      [tr1.status, tr2.status, lost.body],
+    )
+    ok(
+      '앱을 두 번 켬 — 도는 동안 다른 서버는 계획 409 · 설정 저장 409 · 상태에 「다른 창」 안내, 그쪽 대기 시도를 끊김으로 닫지 않는다',
+      loserPlan.status === 409 && loserPlan.body.code === 'busy-elsewhere' && loserPut.status === 409 && loserStatus.status === 200 && loserStatus.body.running === null &&
+        typeof loserStatus.body.busyElsewhere === 'string' && pendingWhile <= 1 && (await status()).body.settings.runCap === 40,
+      { loserPlan: loserPlan.status, loserPut: loserPut.status, busyElsewhere: loserStatus.body.busyElsewhere, pendingWhile },
+    )
+    ok(
+      '앱을 두 번 켬 — 가짜 서버가 받은 검색은 계획 수(2)와 같고, 시도 2건 모두 찾음(끊김 · 덮어쓰기 없음)',
+      searches().length - beforeTwo === 2 && twoRun?.searched === 2 && twoAttempts.length === 2 && twoAttempts.every((a) => a.outcome === 'found' && a.reason === undefined),
+      { got: searches().length - beforeTwo, twoAttempts },
+    )
+    const loserAfter = await callOn<IndexAutoStatusView>(loser, 'GET', '/api/index-auto')
+    ok('앱을 두 번 켬 — 끝나면 다른 서버의 「다른 창」 안내도 사라진다', loserAfter.body.busyElsewhere === null, loserAfter.body.busyElsewhere)
+  } finally {
+    await stop(app2, APP2_PORT)
+  }
+
   // ── C10. 끊김 — 응답을 기다리는 사이 앱이 꺼짐 ──
-  withLedger([post('p-vh01', 'https://hang.tistory.com/1', D(14), '가상 끊김 글')])
+  withLedger([post('p-vh00', 'https://aaa-hang.tistory.com/1', D(14), '가상 끊김 앞 글'), post('p-vh01', 'https://hang.tistory.com/1', D(14), '가상 끊김 글')])
   const hp = await makePlan()
   const ledgerBeforeHang = sentInLedger()
   const fakeBeforeHang = searches().length
@@ -1084,8 +1201,14 @@ try {
   const closed = attemptsFile().attempts.find((a) => a.id === pendingLeft?.id)
   ok('끊김 — 다시 켜면 대기 시도를 interrupted로 닫고 실행은 끊김(endedAt null)으로 둔다', closed?.outcome === 'unknown' && closed.reason === 'interrupted' && st10.body.lastRun?.endedAt === null && st10.body.running === null, { closed, lastRun: st10.body.lastRun })
   ok(
+    '끊김 — 끊긴 실행 기록에 끊기기 전에 끝난 글(1편 · 찾음)이 남는다(보낸 수 · 줄마다)',
+    st10.body.lastRun?.planned === 2 && st10.body.lastRun.searched === 1 && st10.body.lastRun.found === 1 && st10.body.lastRun.items.length === 1 &&
+      st10.body.lastRun.items[0]?.key === 'aaa-hang.tistory.com/1' && st10.body.lastRun.items[0]?.wrote === 'shown',
+    st10.body.lastRun,
+  )
+  ok(
     '끊김 — 장부는 가짜 서버가 받은 검색 수 이상(덜 세지 않음)',
-    searches().length - fakeBeforeHang === 1 && sentInLedger() - ledgerBeforeHang >= searches().length - fakeBeforeHang,
+    searches().length - fakeBeforeHang === 2 && sentInLedger() - ledgerBeforeHang >= searches().length - fakeBeforeHang,
     { ledger: sentInLedger() - ledgerBeforeHang, fake: searches().length - fakeBeforeHang },
   )
   const hp2 = await makePlan()

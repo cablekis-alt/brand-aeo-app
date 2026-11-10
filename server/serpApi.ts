@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat, unlink, utimes, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { stateFilePath } from './appPaths.js';
@@ -10,9 +10,14 @@ import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
  *
  * - 키: process.env.SERPAPI_API_KEY를 이 서버에서만 읽는다. 화면 · 로그 · 오류 · 파일에 싣지 않는다(scrubSerpKey). 키가 질의 문자열에
  *   들어가므로 요청 주소는 어디에도 남기지 않는다(검색어만 부르는 쪽이 남긴다).
- * - 주소: https://serpapi.com 고정. 시험용 덮어쓰기는 정확히 http://127.0.0.1:<포트>만 받고, 그 밖의 값이면 진짜 주소로 돌아가지 않고
- *   시작하지 않는다(server/tourPhotos.ts baseUrl과 다른 점). 시험 전용 env 두 개는 설치본 묶음에서 이름째 지운다
- *   (scripts/build-electron-server.mjs).
+ * - 주소: 진짜 주소 https://serpapi.com은 설치본 묶음에서만 쓴다 — 묶을 때 SERPAPI_LIVE를 "1"로 박고(scripts/build-electron-server.mjs),
+ *   dev · 시험 서버(tsx)는 SERPAPI_LIVE=1을 따로 주지 않으면 주소가 비어 있을 때 시작하지 않는다(저장소 .env의 진짜 키가 dev 화면에서 진짜
+ *   검색으로 나가지 않게). 시험용 덮어쓰기는 정확히 http://127.0.0.1:<포트>만 받고, 그 밖의 값이면 진짜 주소로 돌아가지 않고 시작하지 않는다
+ *   (server/tourPhotos.ts baseUrl과 다른 점). 시험 전용 env 두 개는 설치본 묶음에서 이름째 지운다. 3xx는 따라가지 않는다 — 따라가면 키가 붙은
+ *   질의째 다른 주소로 나간다.
+ * - 실행 잠금(stateFilePath('serpapi-run.lock')): 검색은 실행 잠금을 잡은 프로세스만 보낸다. 앱을 두 번 켜면 두 서버가 같은 사용자 데이터를
+ *   쓰므로 잠금은 프로세스 사이에도 건다(파일을 배타적으로 만들고 pid를 적는다). 다른 프로세스가 살아서 잡고 있으면 못 잡고, 죽었거나 2분
+ *   넘게 소식(20초마다 파일 시각을 고침)이 없으면 넘겨받는다. 장부에 sent+1을 적기 전에 잠금이 아직 이 프로세스 것인지 본다.
  * - 계정(account.json — 무료, 검색 수에 안 셈): 허용 칸만 담는다(api_key · account_email · account_id 등은 버림). 60초 캐시 · 5초 시간 초과.
  *   못 읽거나, Active가 아니거나, 갱신일(YYYY-MM-DD) · 월 검색 수 · 남은 수 · 시간당 한도를 못 읽으면 검색하지 않는다.
  * - 장부(stateFilePath('serpapi-usage.json')): 결제 주기(plan_renewal_date)마다 기능별로 이 PC가 보낸 수를 센다. 보내기 직전에 sent+1과
@@ -45,6 +50,10 @@ const ACCOUNT_TTL_MS = 60_000;
 const ACCOUNT_REFRESH_EVERY = 10;
 const GAP_MS = 1_000;
 const RENEWAL_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const RUN_LOCK_FILE = stateFilePath('serpapi-run.lock');
+const RUN_LOCK_FORMAT = 'serpapi-run-lock/1';
+const RUN_LOCK_BEAT_MS = 20_000;
+const RUN_LOCK_STALE_MS = 120_000;
 /** 부르는 쪽이 넘기면 안 되는 매개변수 — 키는 여기서만 붙이고, 비동기 · HTML 응답은 이 연결이 읽지 않는다. */
 const RESERVED_PARAMS = new Set(['api_key', 'async', 'output']);
 
@@ -94,6 +103,12 @@ const NO_KEY_MESSAGE =
   '이 PC에 SerpAPI 키가 없어요 — %APPDATA%\\brand-aeo-app\\.env에 SERPAPI_API_KEY=… 한 줄을 넣고 앱을 다시 켜 주세요.';
 const CONFIG_MESSAGE = 'SerpAPI 연결 주소 설정이 올바르지 않아 시작하지 않았어요 — 시험용 주소는 http://127.0.0.1:<포트>만 받아요.';
 const LEDGER_MESSAGE = 'SerpAPI 사용 기록 파일이 깨져 있어 시작하지 않았어요.';
+const DEV_LIVE_MESSAGE =
+  '이 서버는 설치본이 아니라 진짜 SerpAPI를 부르지 않아요 — 시험은 가짜 SerpAPI 주소(http://127.0.0.1:<포트>)로 하고, 꼭 진짜로 불러야 하면 SERPAPI_LIVE=1을 함께 주고 서버를 다시 켜 주세요.';
+const KEY_MESSAGE = 'SerpAPI 키가 맞지 않아요(HTTP 401) — %APPDATA%\\brand-aeo-app\\.env의 SERPAPI_API_KEY를 확인하고 앱을 다시 켜 주세요.';
+const NO_RUN_LOCK_MESSAGE = 'SerpAPI 실행 잠금 없이 보내지 않았어요 — 앱 문제예요.';
+const LOST_RUN_LOCK_MESSAGE = 'SerpAPI 실행 잠금을 잃어 보내지 않았어요 — 앱을 두 번 켰다면 하나만 남기고 다시 눌러 주세요.';
+const RUN_LOCK_FILE_MESSAGE = 'SerpAPI 실행 잠금 파일을 다루지 못해 시작하지 않았어요.';
 
 function serpKey(): string {
   return (process.env.SERPAPI_API_KEY ?? '').trim();
@@ -113,15 +128,29 @@ export function scrubSerpKey(text: string): string {
 }
 
 /**
- * 부를 주소의 뿌리. 비어 있으면 진짜 주소, 값이 있으면 정확히 http://127.0.0.1:<포트>(이 PC의 가짜 서버)만 받는다. 그 밖의 값(localhost ·
- * https · 경로 · 다른 호스트 · 진짜 주소를 적은 것까지)은 진짜 주소로 돌아가지 않고 설정 오류다 — 오타 하나로 진짜 키가 진짜 검색으로
- * 나가지 않게.
+ * 부를 주소의 뿌리. 값이 있으면 정확히 http://127.0.0.1:<포트>(이 PC의 가짜 서버)만 받는다. 그 밖의 값(localhost · https · 경로 · 다른 호스트 ·
+ * 진짜 주소를 적은 것까지)은 진짜 주소로 돌아가지 않고 설정 오류다 — 오타 하나로 진짜 키가 진짜 검색으로 나가지 않게. 비어 있으면 live가
+ * 정확히 '1'일 때만 진짜 주소다(설치본 묶음은 묶을 때 박고, dev · 시험 서버는 따로 주지 않으면 설정 오류).
  */
-export function resolveSerpBase(raw: string | undefined): { base: string } | { error: string } {
+export function resolveSerpBase(raw: string | undefined, live: string | undefined = process.env.SERPAPI_LIVE): { base: string } | { error: string } {
   const value = (raw ?? '').trim();
-  if (!value) return { base: SERPAPI_DEFAULT_BASE };
+  if (!value) return live === '1' ? { base: SERPAPI_DEFAULT_BASE } : { error: DEV_LIVE_MESSAGE };
   const m = /^http:\/\/127\.0\.0\.1:([1-9]\d{0,4})$/.exec(value);
   return m && Number(m[1]) <= 65535 ? { base: value } : { error: CONFIG_MESSAGE };
+}
+
+const LOCAL_HOST = /^(127\.0\.0\.1|localhost|\[::1\])(:\d{1,5})?$/i;
+const LOCAL_ORIGIN = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d{1,5})?$/i;
+
+/**
+ * 돈이 드는 라우트(검색 · 계정 · 설정)를 부른 요청이 이 PC의 앱 화면에서 온 것인가 — Host가 127.0.0.1 · localhost · [::1](포트는 무엇이든)이고,
+ * Origin이 있으면 그것도 같은 호스트여야 한다. DNS 리바인딩 페이지는 브라우저가 보기에 같은 출처라 CORS가 막지 못하지만 Host · Origin에는
+ * 그 페이지의 이름이 남는다. 받으면 null, 아니면 까닭.
+ */
+export function localRequestProblem(host: string | undefined, origin: string | undefined): string | null {
+  if (!host || !LOCAL_HOST.test(host)) return '이 PC의 앱 화면에서 온 요청만 받아요(Host가 이 PC가 아니에요).';
+  if (origin !== undefined && !LOCAL_ORIGIN.test(origin)) return '이 PC의 앱 화면에서 온 요청만 받아요(Origin이 이 PC가 아니에요).';
+  return null;
 }
 
 /** 연결 설정이 틀렸으면 그 까닭(그러면 검색 · 계정 모두 시작하지 않는다), 맞으면 null. */
@@ -226,7 +255,9 @@ const sentSinceSnapshot = (s: Snapshot) => sentTotal - s.baseSent;
 function transportReason(err: unknown, timeoutMs: number): { timeout: boolean; text: string } {
   const name = (err as { name?: string } | null)?.name ?? '';
   if (name === 'TimeoutError' || name === 'AbortError') return { timeout: true, text: `${Math.round(timeoutMs / 100) / 10}초 안에 답하지 않았어요` };
-  const code = (err as { cause?: { code?: unknown } } | null)?.cause?.code;
+  const cause = (err as { cause?: { code?: unknown; message?: unknown } } | null)?.cause;
+  if (cause?.message === 'unexpected redirect') return { timeout: false, text: '다른 주소로 돌려보내 따라가지 않았어요' };
+  const code = cause?.code;
   return { timeout: false, text: `연결하지 못했어요${typeof code === 'string' && /^[A-Z_]{3,32}$/.test(code) ? ` — ${code}` : ''}` };
 }
 
@@ -234,6 +265,12 @@ function httpReason(status: number): string {
   if (status === 401) return 'HTTP 401 — 키가 맞지 않아요';
   if (status === 403) return 'HTTP 403 — 계정이 허락하지 않았어요';
   return `HTTP ${status}`;
+}
+
+/** 계정을 못 읽었다 — 까닭(detail)은 실행 중 다시 읽기 실패 문구에 다시 쓴다. 키가 틀리면(401) 고칠 곳을 알린다. kind는 늘 account(검색은 나가지 않았다). */
+function accountError(reason: string, httpStatus?: number): SerpApiError {
+  const message = httpStatus === 401 ? KEY_MESSAGE : `SerpAPI 계정 상태를 읽지 못해 시작하지 않았어요(${reason}).`;
+  return new SerpApiError('account', message, { httpStatus, detail: reason });
 }
 
 async function fetchAccount(): Promise<SerpAccount> {
@@ -245,20 +282,21 @@ async function fetchAccount(): Promise<SerpAccount> {
     const res = await fetch(`${base}/account.json?${new URLSearchParams({ api_key: key }).toString()}`, {
       signal: AbortSignal.timeout(ms),
       headers: { Accept: 'application/json' },
+      redirect: 'error',
     });
     status = res.status;
     text = await res.text();
   } catch (err) {
-    throw new SerpApiError('account', `SerpAPI 계정 상태를 읽지 못해 시작하지 않았어요(${transportReason(err, ms).text}).`);
+    throw accountError(transportReason(err, ms).text);
   }
-  if (status !== 200) throw new SerpApiError('account', `SerpAPI 계정 상태를 읽지 못해 시작하지 않았어요(${httpReason(status)}).`, { httpStatus: status });
+  if (status !== 200) throw accountError(httpReason(status), status);
   let json: unknown;
   try {
     json = JSON.parse(text);
   } catch {
-    throw new SerpApiError('account', 'SerpAPI 계정 상태를 읽지 못해 시작하지 않았어요(응답이 JSON이 아니에요).');
+    throw accountError('응답이 JSON이 아니에요');
   }
-  if (!isRecord(json)) throw new SerpApiError('account', 'SerpAPI 계정 상태를 읽지 못해 시작하지 않았어요(응답 모양이 달라요).');
+  if (!isRecord(json)) throw accountError('응답 모양이 달라요');
   return pickAccount(json, new Date().toISOString());
 }
 
@@ -379,8 +417,11 @@ function parseUsage(raw: unknown): SerpUsageFile {
 /** 이 프로세스가 지금 응답을 기다리는 요청의 pending id — 장부에 이 밖의 pending이 있으면 끊긴 프로세스가 남긴 것이다. */
 const inflightPending = new Set<string>();
 
-/** 줄 안에서 읽는다. 없으면 빈 장부, 깨졌으면 SerpApiError('ledger'). 끊긴 pending은 걷어 내고 dirty로 알린다. */
-async function loadUsageInLock(): Promise<{ usage: SerpUsageFile; dirty: boolean }> {
+/**
+ * 줄 안에서 읽는다. 없으면 빈 장부, 깨졌으면 SerpApiError('ledger'). clean이면 끊긴 pending(이 프로세스가 기다리지 않는 것)은 걷어 내고 dirty로
+ * 알린다 — 다른 프로세스가 실행 잠금을 잡고 있으면 그쪽 pending일 수 있으니 부르는 쪽이 clean을 끈다(지우고 다시 쓰면 그쪽 sent+1이 사라질 수 있다).
+ */
+async function loadUsageInLock(clean = true): Promise<{ usage: SerpUsageFile; dirty: boolean }> {
   let text: string | null = null;
   try {
     text = await readFile(USAGE_FILE, 'utf-8');
@@ -394,6 +435,7 @@ async function loadUsageInLock(): Promise<{ usage: SerpUsageFile; dirty: boolean
   } catch (err) {
     throw new SerpApiError('ledger', LEDGER_MESSAGE, { detail: err instanceof Error ? err.message : null });
   }
+  if (!clean) return { usage, dirty: false };
   const live = usage.pending.filter((p) => inflightPending.has(p.id));
   const dirty = live.length !== usage.pending.length;
   usage.pending = live;
@@ -413,18 +455,26 @@ const sentIn = (usage: SerpUsageFile, cycle: string, feature: SerpFeature): numb
   return isRecord(entry) ? (entry.sent as number) : 0;
 };
 
-/** 이 PC 장부를 읽는다(끊긴 pending은 지워 다시 쓴다). 깨졌으면 SerpApiError('ledger') — 파일은 그대로 둔다. */
+/**
+ * 이 PC 장부를 읽는다(끊긴 pending은 지워 다시 쓴다 — 다른 프로세스가 실행 잠금을 잡고 있으면 지우지도 쓰지도 않는다). 깨졌으면
+ * SerpApiError('ledger') — 파일은 그대로 둔다.
+ */
 function readUsage(): Promise<SerpUsageFile> {
   return queueTenantWrite(USAGE_LOCK, async () => {
-    const { usage, dirty } = await loadUsageInLock();
+    const elsewhere = judgeRunLock(await readRunLock()).kind === 'other';
+    const { usage, dirty } = await loadUsageInLock(!elsewhere);
     if (dirty) await saveUsage(usage);
     return usage;
   });
 }
 
-/** 보내기 직전 — 몫을 검사하고, 지나면 sent+1 · pending을 저장한다(저장이 안 되면 보내지 않는다). pending id를 돌려준다. */
+/**
+ * 보내기 직전 — 실행 잠금이 아직 이 프로세스 것인지 보고, 몫을 검사하고, 지나면 sent+1 · pending을 저장한다(저장이 안 되면 보내지 않는다).
+ * 장부를 고치는 것은 잠금을 쥔 프로세스뿐이다. pending id를 돌려준다.
+ */
 function reserve(feature: SerpFeature, snap: Snapshot): Promise<string> {
   return queueTenantWrite(USAGE_LOCK, async () => {
+    await assertRunLockHeld(feature);
     const { usage, dirty } = await loadUsageInLock();
     const acc = snap.account;
     const cycle = acc.planRenewalDate as string;
@@ -487,7 +537,7 @@ function errorTextOf(text: string): string | null {
 function classifyHttp(status: number, text: string): SerpApiError {
   const detail = errorTextOf(text);
   const extra = { httpStatus: status, detail };
-  if (status === 401) return new SerpApiError('key', 'SerpAPI 키가 맞지 않아요(HTTP 401) — .env의 SERPAPI_API_KEY를 확인하고 앱을 다시 켜 주세요.', extra);
+  if (status === 401) return new SerpApiError('key', KEY_MESSAGE, extra);
   if (status === 403) return new SerpApiError('forbidden', 'SerpAPI 계정이 이 검색을 허락하지 않았어요(HTTP 403) — 계정 상태를 확인해 주세요.', extra);
   if (status === 429 && /run out of searches/i.test(detail ?? text)) return new SerpApiError('quota-month', 'SerpAPI 계정의 이번 결제 주기 검색을 다 썼어요(HTTP 429).', extra);
   if (status === 429) return new SerpApiError('rate-hour', '이번 시간 검색 한도에 닿았어요(HTTP 429) — 한 시간쯤 뒤 다시 눌러 주세요.', extra);
@@ -514,6 +564,7 @@ async function send(base: string, key: string, params: Record<string, string>): 
     const res = await fetch(`${base}/search.json?${new URLSearchParams({ ...params, api_key: key }).toString()}`, {
       signal: AbortSignal.timeout(ms),
       headers: { Accept: 'application/json' },
+      redirect: 'error',
     });
     status = res.status;
     text = await res.text();
@@ -532,10 +583,21 @@ async function send(base: string, key: string, params: Record<string, string>): 
   return { json, elapsedMs: Date.now() - started };
 }
 
+/** 실행 중 계정 다시 읽기 — 못 읽으면 「다시 읽지 못해 멈췄어요」(키가 틀렸으면 고칠 곳 안내 그대로). */
+async function refreshAccountMidRun(): Promise<void> {
+  try {
+    await serpAccount({ fresh: true });
+  } catch (err) {
+    if (!(err instanceof SerpApiError) || err.kind !== 'account' || err.httpStatus === 401) throw err;
+    throw new SerpApiError('account', `SerpAPI 계정 상태를 다시 읽지 못해 멈췄어요(${err.detail ?? '까닭 모름'}).`, { httpStatus: err.httpStatus ?? undefined, detail: err.detail });
+  }
+}
+
 /**
- * SerpAPI 검색 한 번(search.json). 프로세스 전역 순차 줄에서 돈다: 앞 요청이 끝나고 1초 뒤 → 계정(60초 · 10회마다 다시) → 몫 검사 →
- * 장부에 sent+1 · pending 저장 → 보냄 → pending 지움. 우리 쪽 검사로 막히면 SerpApiBudgetError(요청 0 · 장부 그대로), 그 밖은
- * SerpApiError(kind로 까닭). 키는 여기서만 붙인다 — params에 api_key · async · output을 넣으면 보내지 않는다.
+ * SerpAPI 검색 한 번(search.json). 이 기능의 실행 잠금(claimSerpRun)을 쥔 동안에만 보낸다. 프로세스 전역 순차 줄에서 돈다: 앞 요청이 끝나고
+ * 1초 뒤 → 계정(60초 · 10회마다 다시) → 잠금 · 몫 검사 → 장부에 sent+1 · pending 저장 → 보냄 → pending 지움. 우리 쪽 검사로 막히면
+ * SerpApiBudgetError(요청 0 · 장부 그대로), 그 밖은 SerpApiError(kind로 까닭). 키는 여기서만 붙인다 — params에 api_key · async · output을
+ * 넣으면 보내지 않는다.
  */
 export function serpSearch(feature: SerpFeature, params: Record<string, string>): Promise<SerpSearchResult> {
   try {
@@ -545,9 +607,10 @@ export function serpSearch(feature: SerpFeature, params: Record<string, string>)
   }
   return queueTenantWrite(REQUEST_QUEUE, async () => {
     const { base, key } = ready();
+    await assertRunLockHeld(feature);
     const wait = lastEndAt + GAP_MS - Date.now();
     if (wait > 0) await sleep(wait);
-    if (!snapshot || Date.now() - snapshot.at >= ACCOUNT_TTL_MS || sentSinceSnapshot(snapshot) >= ACCOUNT_REFRESH_EVERY) await serpAccount({ fresh: true });
+    if (!snapshot || Date.now() - snapshot.at >= ACCOUNT_TTL_MS || sentSinceSnapshot(snapshot) >= ACCOUNT_REFRESH_EVERY) await refreshAccountMidRun();
     // 어림은 이 값을 읽은 뒤 보낸 수를 뺀다 — 그 사이 다른 곳(계정 보기)이 새로 읽어도 이 값 기준으로 많게 센다.
     const snap = snapshot;
     if (!snap) throw new SerpApiError('account', 'SerpAPI 계정 상태를 읽지 못해 시작하지 않았어요.');
@@ -569,20 +632,145 @@ export function serpSearch(feature: SerpFeature, params: Record<string, string>)
 // ── 실행 잠금 ─────────────────────────────────────────────────────────────────
 
 let runHolder: SerpFeature | null = null;
+/** 이 프로세스가 쥔 잠금 파일의 표 — 파일에 이 값이 있으면 이 프로세스 것이다. */
+let runToken: string | null = null;
+
+interface RunLockSeen {
+  token: string | null;
+  pid: number | null;
+  feature: string | null;
+  mtimeMs: number;
+}
+
+/** 잠금 파일을 읽는다 — 없으면 null. 모양이 틀리면(막 만들어 비었거나 깨짐) 칸은 null. 못 읽으면 SerpApiError('ledger'). */
+async function readRunLock(): Promise<RunLockSeen | null> {
+  let text: string;
+  let mtimeMs: number;
+  try {
+    [text, { mtimeMs }] = await Promise.all([readFile(RUN_LOCK_FILE, 'utf-8'), stat(RUN_LOCK_FILE)]);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return null;
+    throw new SerpApiError('ledger', RUN_LOCK_FILE_MESSAGE, { detail: code ?? null });
+  }
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    // 막 만들어 아직 비었거나 깨진 잠금 — 칸 없이 본다(살아 있는 것으로 치고, 2분 지나면 넘겨받는다).
+    raw = null;
+  }
+  const r = isRecord(raw) && raw.format === RUN_LOCK_FORMAT ? raw : {};
+  return {
+    token: typeof r.token === 'string' ? r.token : null,
+    pid: typeof r.pid === 'number' && Number.isInteger(r.pid) && r.pid > 0 ? r.pid : null,
+    feature: typeof r.feature === 'string' ? r.feature : null,
+    mtimeMs,
+  };
+}
+
+function pidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    // EPERM은 살아 있지만 신호를 보낼 권한이 없는 것이다.
+    return (err as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
+
+type RunLockState = { kind: 'free' } | { kind: 'mine' } | { kind: 'other'; feature: string | null } | { kind: 'stale' };
+
+/** 잠금 파일이 누구 것인가 — 다른 프로세스가 살아서(2분 안에 소식) 쥐고 있으면 other, 죽었거나 소식이 끊겼거나 이 프로세스가 놓지 못한 것이면 stale. */
+function judgeRunLock(seen: RunLockSeen | null): RunLockState {
+  if (!seen) return { kind: 'free' };
+  if (runToken !== null && seen.token === runToken) return { kind: 'mine' };
+  if (Date.now() - seen.mtimeMs > RUN_LOCK_STALE_MS) return { kind: 'stale' };
+  if (seen.pid === null) return { kind: 'other', feature: seen.feature };
+  if (seen.pid === process.pid) return { kind: 'stale' };
+  return pidAlive(seen.pid) ? { kind: 'other', feature: seen.feature } : { kind: 'stale' };
+}
+
+/** 잠금 파일을 배타적으로 만든다 — 이미 있으면 살아 있는 남의 것인지 보고, 끊긴 것이면 지우고 한 번 더. 잡으면 true. */
+async function takeRunLock(feature: SerpFeature, token: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await writeFile(RUN_LOCK_FILE, JSON.stringify({ format: RUN_LOCK_FORMAT, pid: process.pid, feature, token, at: new Date().toISOString() }), { flag: 'wx' });
+      return true;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code !== 'EEXIST') throw new SerpApiError('ledger', RUN_LOCK_FILE_MESSAGE, { detail: code ?? null });
+    }
+    const seen = await readRunLock();
+    const state = judgeRunLock(seen);
+    if (state.kind === 'other' || state.kind === 'mine') return false;
+    if (state.kind === 'stale' && seen) {
+      // 지우기 직전에 다시 본다 — 그 사이 다른 프로세스가 넘겨받아 새로 만든 잠금을 지우지 않게.
+      const again = await readRunLock();
+      if (again && judgeRunLock(again).kind === 'stale' && again.token === seen.token && again.mtimeMs === seen.mtimeMs) await removeRunLockFile();
+    }
+  }
+  return false;
+}
+
+async function removeRunLockFile(): Promise<void> {
+  try {
+    await unlink(RUN_LOCK_FILE);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw new SerpApiError('ledger', RUN_LOCK_FILE_MESSAGE, { detail: (err as NodeJS.ErrnoException).code ?? null });
+  }
+}
+
+/** 이 기능의 실행 잠금을 이 프로세스가 아직 쥐고 있는가 — 아니면 보내지 않는다(잃었으면 ledger, 처음부터 없으면 config). */
+async function assertRunLockHeld(feature: SerpFeature): Promise<void> {
+  if (runHolder !== feature || runToken === null) throw new SerpApiError('config', NO_RUN_LOCK_MESSAGE);
+  if (judgeRunLock(await readRunLock()).kind !== 'mine') throw new SerpApiError('ledger', LOST_RUN_LOCK_MESSAGE);
+}
 
 /**
- * 앱 전체에서 SerpAPI를 쓰는 실행(색인 자동 확인 · 나중의 AI 개요 시범)은 한 번에 하나 — 두 실행이 시간당 한도 · 몫을 나눠 셈하지 않게.
- * 잡으면 놓는 함수를 돌려주고(두 번 불러도 한 번만 놓는다), 이미 누가 잡았으면 null.
+ * 앱 전체에서 SerpAPI를 쓰는 실행(색인 자동 확인 · 나중의 AI 개요 시범)은 한 번에 하나 — 두 실행이 시간당 한도 · 몫을 나눠 셈하지 않게. 앱을
+ * 두 번 켠 두 서버 사이에도 하나다(잠금 파일). 잡으면 놓는 함수를 돌려주고(두 번 불러도 한 번만 놓는다, 잃은 잠금은 남의 파일이라 지우지
+ * 않는다), 이미 누가 잡았으면 null. 잠금 파일을 다루지 못하면 SerpApiError('ledger')(시작하지 않는다).
  */
-export function claimSerpRun(feature: SerpFeature): (() => void) | null {
+export async function claimSerpRun(feature: SerpFeature): Promise<(() => Promise<void>) | null> {
   if (runHolder) return null;
   runHolder = feature;
+  const token = randomUUID();
+  let taken = false;
+  try {
+    taken = await takeRunLock(feature, token);
+  } finally {
+    if (!taken) runHolder = null;
+  }
+  if (!taken) return null;
+  runToken = token;
+  const beat = setInterval(() => {
+    readRunLock()
+      .then((seen) => (seen?.token === token ? utimes(RUN_LOCK_FILE, new Date(), new Date()) : undefined))
+      .catch((err: unknown) => console.warn('[serpapi] 실행 잠금 소식을 남기지 못했습니다', err instanceof Error ? err.message : String(err)));
+  }, RUN_LOCK_BEAT_MS);
+  beat.unref();
   let released = false;
-  return () => {
+  return async () => {
     if (released) return;
     released = true;
+    clearInterval(beat);
     runHolder = null;
+    runToken = null;
+    try {
+      const seen = await readRunLock();
+      if (seen?.token === token) await removeRunLockFile();
+    } catch (err) {
+      console.warn('[serpapi] 실행 잠금 파일을 지우지 못했습니다 — 다음 실행이 넘겨받습니다', err instanceof Error ? err.message : String(err));
+    }
   };
+}
+
+/** 다른 프로세스(앱을 두 번 켬)가 살아서 SerpAPI 실행 잠금을 쥐고 있으면 그 기능(모르면 'unknown'), 아니면 null. */
+export async function serpRunElsewhere(): Promise<SerpFeature | 'unknown' | null> {
+  const state = judgeRunLock(await readRunLock());
+  if (state.kind !== 'other') return null;
+  return state.feature !== null && isKnownFeature(state.feature) ? state.feature : 'unknown';
 }
 
 /** 지금 SerpAPI 실행을 잡고 있는 기능(없으면 null). */

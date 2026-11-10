@@ -13,8 +13,10 @@
  * - 임시 폴더(APP_DATA_DIR)만 쓴다. 설치본(포트 4000) · 실데이터는 건드리지 않는다.
  *
  * 무엇을 보나:
- * - 주소: 기본은 https://serpapi.com. SERPAPI_BASE_URL은 정확히 http://127.0.0.1:<포트>만 받고, 그 밖의 값이면 진짜 주소로 돌아가지 않고
- *   시작하지 않는다(요청 0).
+ * - 주소: 기본 https://serpapi.com은 설치본 묶음(SERPAPI_LIVE=1로 묶임)에서만 — dev · 시험 서버는 비어 있으면 설정 오류다. SERPAPI_BASE_URL은
+ *   정확히 http://127.0.0.1:<포트>만 받고, 그 밖의 값이면 진짜 주소로 돌아가지 않고 시작하지 않는다(요청 0). 3xx는 따라가지 않는다(요청 0).
+ * - 실행 잠금(serpapi-run.lock): 검색은 잠금을 잡은 뒤에만 나간다. 다른 프로세스(앱을 두 번 켬)가 살아서 잡고 있으면 못 잡고, 죽었거나
+ *   2분 넘게 소식이 없으면 넘겨받는다. 다른 프로세스가 잡은 동안에는 장부의 그쪽 pending을 지우지 않는다. 잠금을 잃으면 보내지 않는다.
  * - 계정(account.json, 무료): 허용 칸만 담는다(api_key · account_email · account_id 버림). 60초 캐시 · 5초 시간 초과. 못 읽거나 Active가
  *   아니거나 갱신일 · 월 검색 수 · 남은 수 · 시간당 한도를 못 읽으면 검색하지 않는다(막힌 쪽).
  * - 장부(serpapi-usage.json): 결제 주기(plan_renewal_date)마다 기능별로 센다. 보내기 전에 sent+1 · pending을 적고, 응답(성공 · 오류 · 시간
@@ -31,7 +33,7 @@
  */
 import { execSync, spawn, type ChildProcess } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { existsSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import net from 'node:net'
 import { tmpdir } from 'node:os'
@@ -65,6 +67,11 @@ if (CHILD) {
     process.exit(2)
   }
   const child = await import('../server/serpApi')
+  const held = await child.claimSerpRun('index')
+  if (!held) {
+    console.error('자식: 실행 잠금을 잡지 못해 멈춥니다.')
+    process.exit(3)
+  }
   await child.serpSearch('index', { engine: 'google', q: 'hang' }).catch((err: unknown) => console.error(`자식: ${err instanceof Error ? err.message : String(err)}`))
   process.exit(0)
 }
@@ -79,7 +86,9 @@ const dir = mkdtempSync(path.join(tmpdir(), 'verify-serpapi-'))
 const dir2 = mkdtempSync(path.join(tmpdir(), 'verify-serpapi-app-'))
 const LEDGER = path.join(dir, 'serpapi-usage.json')
 const LEDGER2 = path.join(dir2, 'serpapi-usage.json')
+const RUN_LOCK = path.join(dir, 'serpapi-run.lock')
 process.env.SERPAPI_API_KEY = FAKE_KEY
+process.env.SERPAPI_LIVE = ''
 process.env.SERPAPI_BASE_URL = MOCK_BASE
 process.env.SERPAPI_TIMEOUT_MS = '1500'
 process.env.DOTENV_CONFIG_PATH = path.join(dir, 'no-such.env')
@@ -120,7 +129,7 @@ interface Seen {
 }
 const seen: Seen[] = []
 let accountBody: Record<string, unknown> = account()
-let accountMode: 'ok' | 'fail' | 'slow' = 'ok'
+let accountMode: 'ok' | 'fail' | 'slow' | 'redirect' | 'e401' = 'ok'
 let inFlight = 0
 let maxInFlight = 0
 const searches = () => seen.filter((s) => s.path === '/search.json')
@@ -149,13 +158,22 @@ const mock = http.createServer((req, res) => {
     const t = setTimeout(() => send(status, body), ms)
     res.on('close', () => clearTimeout(t))
   }
+  // 3xx를 따라가 닿는 곳 — 받으면 안 된다(따라가면 키가 붙은 질의째 다른 주소로 간다).
+  const redirect = () => {
+    res.writeHead(302, { Location: `${MOCK_BASE}/__landed?${url.searchParams.toString()}` })
+    res.end()
+  }
   if (url.pathname === '/account.json') {
     if (accountMode === 'fail') return send(500, { error: `account down ${FAKE_KEY}` })
     if (accountMode === 'slow') return later(4000, 200, accountBody)
+    if (accountMode === 'redirect') return redirect()
+    if (accountMode === 'e401') return send(401, { error: 'Invalid API key.' })
     return send(200, accountBody)
   }
   if (url.pathname !== '/search.json') return send(404, { error: 'not found' })
   switch (s.q) {
+    case 'redir':
+      return redirect()
     case 'probe':
       s.ledger = existsSync(LEDGER) ? readFileSync(LEDGER, 'utf8') : ''
       return send(200, result({ organic_results: [{ position: 1, link: 'https://example.test/a' }], serpapi_pagination: { next: `${MOCK_BASE}/search.json?api_key=${FAKE_KEY}&q=probe&start=10` } }))
@@ -247,18 +265,42 @@ try {
   const okSearch = (q: string, feature: 'index' | 'aio' = 'index') => serp.serpSearch(feature, { engine: 'google', q })
 
   // ── 1. 주소 · 키 가리기 · 몫(서버 없이) ──────────────────────────────────────
-  const resolved = (v: string | undefined) => {
-    const r = serp.resolveSerpBase(v)
+  const resolved = (v: string | undefined, live?: string) => {
+    const r = serp.resolveSerpBase(v, live)
     return 'base' in r ? r.base : 'config'
   }
-  ok('주소 — 비어 있으면 기본 https://serpapi.com', resolved(undefined) === 'https://serpapi.com' && resolved('') === 'https://serpapi.com' && serp.SERPAPI_DEFAULT_BASE === 'https://serpapi.com')
+  ok(
+    '주소 — 비어 있으면 기본 https://serpapi.com은 설치본 묶음(SERPAPI_LIVE=1)에서만',
+    resolved(undefined, '1') === 'https://serpapi.com' && resolved('', '1') === 'https://serpapi.com' && serp.SERPAPI_DEFAULT_BASE === 'https://serpapi.com',
+  )
+  ok(
+    '주소 — dev · 시험 서버(묶지 않음)는 비어 있으면 진짜 주소로 가지 않고 설정 오류(SERPAPI_LIVE가 정확히 1일 때만 진짜)',
+    ['', undefined, '0', 'true', 'yes', ' 1'].every((live) => resolved(undefined, live) === 'config' && resolved('', live) === 'config') && resolved(undefined) === 'config',
+  )
   ok('주소 — 정확히 http://127.0.0.1:<포트>만 받는다', resolved('http://127.0.0.1:4196') === 'http://127.0.0.1:4196' && resolved('http://127.0.0.1:65535') === 'http://127.0.0.1:65535')
   const refused = [
     'http://localhost:4196', 'https://127.0.0.1:4196', 'http://127.0.0.1', 'http://127.0.0.1:0', 'http://127.0.0.1:65536', 'http://127.0.0.1:4196/',
     'http://127.0.0.1:4196/search', 'http://127.0.0.2:4196', 'http://[::1]:4196', 'http://127.0.0.1:4196@evil.example', 'https://serpapi.com',
     'https://example.com', 'serpapi.com', 'http://0x7f000001:4196',
   ]
-  ok('주소 — 그 밖의 값은 모두 막는다(기본 주소로 돌아가지 않음)', refused.every((v) => resolved(v) === 'config'), refused.filter((v) => resolved(v) !== 'config'))
+  ok('주소 — 그 밖의 값은 모두 막는다(기본 주소로 돌아가지 않음 · 설치본 묶음에서도)', refused.every((v) => resolved(v) === 'config' && resolved(v, '1') === 'config'), refused.filter((v) => resolved(v) !== 'config'))
+  ok(
+    '요청 출처 — Host · Origin이 이 PC(127.0.0.1 · localhost · [::1])일 때만 받는다(DNS 리바인딩 막기)',
+    serp.localRequestProblem('127.0.0.1:4197', undefined) === null && serp.localRequestProblem('localhost:5173', 'http://localhost:5173') === null &&
+      serp.localRequestProblem('[::1]:4000', 'http://[::1]:4000') === null && serp.localRequestProblem('LOCALHOST', undefined) === null &&
+      [
+        ['rebind.attacker.example:4197', 'http://rebind.attacker.example:4197'],
+        ['rebind.attacker.example:4197', undefined],
+        ['127.0.0.1:4197', 'http://evil.example'],
+        ['127.0.0.1:4197', 'null'],
+        ['127.0.0.1.evil.example:4197', undefined],
+        ['evil.example@127.0.0.1:4197', undefined],
+        [undefined, undefined],
+        ['', undefined],
+        ['127.0.0.1:4197', 'http://127.0.0.1:4197/x'],
+        ['127.0.0.1:4197', 'file://'],
+      ].every(([h, o]) => typeof serp.localRequestProblem(h, o) === 'string'),
+  )
   const keyBackup = process.env.SERPAPI_API_KEY
   process.env.SERPAPI_API_KEY = 'test serp+key/=1&x'
   const odd = process.env.SERPAPI_API_KEY
@@ -277,7 +319,7 @@ try {
   ok('기능 — 지금은 index, aio는 몫만 잡아 둠', JSON.stringify(serp.SERP_FEATURES) === JSON.stringify(['index', 'aio']))
 
   // ── 2. 막힌 쪽 주소 · 키 없음 — 요청 0 ─────────────────────────────────────
-  for (const bad of ['http://localhost:4196', 'https://example.com', 'https://serpapi.com', 'http://127.0.0.1:4196/x']) {
+  for (const bad of ['', 'http://localhost:4196', 'https://example.com', 'https://serpapi.com', 'http://127.0.0.1:4196/x']) {
     process.env.SERPAPI_BASE_URL = bad
     const conf = serp.serpApiConfigError()
     const s = await caught(okSearch('ok'))
@@ -294,6 +336,54 @@ try {
   process.env.SERPAPI_API_KEY = FAKE_KEY
   ok('막힌 쪽 · 키 없음 — 가짜 서버도 받은 것이 없다(어디로도 나가지 않음)', seen.length === 0 && blocked.length === 0, { seen: seen.length, blocked })
   ok('주소가 맞으면 설정 오류 없음 · configured', serp.serpApiConfigError() === null && serp.serpApiConfigured())
+
+  // ── 2-b. 실행 잠금 — 앱을 두 번 켜도 한 프로세스만 보낸다 ─────────────────────────
+  const noLock = await caught(okSearch('nolock'))
+  ok('잠금 — 실행 잠금 없이는 보내지 않는다(요청 0)', noLock?.kind === 'config' && seen.length === 0, noLock)
+  const lockAt = (body: unknown, ageMs = 0) => {
+    writeFileSync(RUN_LOCK, typeof body === 'string' ? body : JSON.stringify(body))
+    if (ageMs > 0) {
+      const t = new Date(Date.now() - ageMs)
+      utimesSync(RUN_LOCK, t, t)
+    }
+  }
+  const foreign = (pid: number, token = 't-foreign') => ({ format: 'serpapi-run-lock/1', pid, feature: 'index', token, at: new Date().toISOString() })
+  const deadPid = await new Promise<number>((resolve) => {
+    const c = spawn(process.execPath, ['-e', ''], { stdio: 'ignore' })
+    c.once('exit', () => resolve(c.pid ?? 0))
+  })
+  const r1 = await serp.claimSerpRun('index')
+  const lockText = existsSync(RUN_LOCK) ? readFileSync(RUN_LOCK, 'utf8') : ''
+  ok('잠금 — 잡으면 잠금 파일에 이 프로세스 pid · 기능(키 없음)', r1 !== null && lockText.includes(`"pid":${process.pid}`) && lockText.includes('"feature":"index"') && !lockText.includes(FAKE_KEY), lockText)
+  ok('잠금 — 같은 프로세스에서 두 번째는 못 잡는다', (await serp.claimSerpRun('aio')) === null && (await serp.claimSerpRun('index')) === null)
+  await r1?.()
+  await r1?.()
+  ok('잠금 — 놓으면 잠금 파일을 지운다(두 번 불러도 한 번)', !existsSync(RUN_LOCK))
+  lockAt(foreign(process.ppid))
+  const busy = await serp.claimSerpRun('index')
+  ok('잠금 — 다른 프로세스(살아 있음)가 잡고 있으면 못 잡고 그 기능을 알린다 · 파일 그대로', busy === null && (await serp.serpRunElsewhere()) === 'index' && readFileSync(RUN_LOCK, 'utf8').includes('t-foreign'))
+  lockAt(foreign(process.ppid), 3 * 60_000)
+  const r2 = await serp.claimSerpRun('index')
+  ok('잠금 — 2분 넘게 소식 없는 잠금은 넘겨받는다(pid가 다시 쓰여도 막히지 않게)', r2 !== null && readFileSync(RUN_LOCK, 'utf8').includes(`"pid":${process.pid}`) && (await serp.serpRunElsewhere()) === null)
+  await r2?.()
+  lockAt(foreign(deadPid))
+  const r3 = await serp.claimSerpRun('index')
+  ok('잠금 — 죽은 프로세스의 잠금은 넘겨받는다', deadPid > 0 && r3 !== null, deadPid)
+  await r3?.()
+  lockAt('')
+  const r4 = await serp.claimSerpRun('index')
+  lockAt('', 3 * 60_000)
+  const r5 = await serp.claimSerpRun('index')
+  ok('잠금 — 막 만들어 비어 있는 잠금은 기다리고(못 잡음), 2분 지나면 넘겨받는다', r4 === null && r5 !== null)
+  lockAt(foreign(process.ppid, 't-took-over'))
+  const sentBeforeLost = searches().length
+  const lost = await caught(okSearch('lost'))
+  ok('잠금 — 잠금을 잃으면(다른 프로세스가 넘겨받음) 보내지 않고 장부에도 세지 않는다', lost?.kind === 'ledger' && searches().length === sentBeforeLost && !existsSync(LEDGER), lost)
+  await r5?.()
+  ok('잠금 — 잃은 잠금은 놓을 때 남의 파일을 지우지 않는다', existsSync(RUN_LOCK) && readFileSync(RUN_LOCK, 'utf8').includes('t-took-over'))
+  unlinkSync(RUN_LOCK)
+  let held = await serp.claimSerpRun('index')
+  ok('잠금 — 이 아래 시험은 잠금을 잡고 보낸다', held !== null)
 
   // ── 3. 계정 — 허용 칸만 · 캐시 ───────────────────────────────────────────────
   const view = await serp.serpApiAccountView()
@@ -364,6 +454,11 @@ try {
   const searchesBefore = searches().length
   const refreshFail = await caught(okSearch('ok'))
   ok('11회째 — 계정을 다시 읽고, 못 읽으면 보내지 않는다(막힌 쪽)', accountCalls() === 3 && refreshFail?.kind === 'account' && searches().length === searchesBefore, refreshFail)
+  ok(
+    '11회째 — 실행 중 다시 읽기 실패는 「다시 읽지 못해 멈췄어요(까닭)」(「시작하지 않았어요」가 아님)',
+    refreshFail !== null && refreshFail.message.includes('다시 읽지 못해 멈췄어요') && refreshFail.message.includes('HTTP 500') && !refreshFail.message.includes('시작하지 않았어요'),
+    refreshFail?.message,
+  )
   ok('계정을 못 읽어 멈춘 검색은 장부에 세지 않는다', readLedger().cycles['2026-12-08']?.index?.sent === 10)
   accountMode = 'ok'
   await okSearch('ok')
@@ -384,6 +479,15 @@ try {
   const g2 = searches().find((s) => s.q === 'gap2')
   const gap = g1?.end !== undefined && g2 ? g2.at - g1.end : -1
   ok('순차 줄 — 한 번에 하나, 앞 요청이 끝나고 1초 뒤에 다음 요청', maxInFlight === 1 && gap >= 980, { maxInFlight, gap })
+
+  // ── 7-b. 3xx는 따라가지 않는다 — 따라가면 키가 붙은 질의째 다른 주소(진짜 주소까지)로 나간다 ─────────────
+  const landed = () => seen.filter((s) => s.path === '/__landed').length
+  const redirSearch = await caught(okSearch('redir'))
+  ok('3xx — 검색 응답의 리디렉트는 따라가지 않고 upstream(닿는 곳이 받은 요청 0)', redirSearch?.kind === 'upstream' && landed() === 0 && searches().filter((s) => s.q === 'redir').length === 1, redirSearch)
+  accountMode = 'redirect'
+  const redirAccount = await caught(serp.serpAccount({ fresh: true }))
+  accountMode = 'ok'
+  ok('3xx — 계정 응답의 리디렉트도 따라가지 않고 account(닿는 곳이 받은 요청 0)', redirAccount?.kind === 'account' && landed() === 0, redirAccount)
 
   // ── 8. 몫 — 바닥 · 시간당 · 기능 몫, 결제 주기 ──────────────────────────────
   accountBody = account({ total_searches_left: 501 })
@@ -416,7 +520,13 @@ try {
   const capBytes = readFileSync(LEDGER, 'utf8')
   const capErr = await caught(okSearch('cap1'))
   ok('색인 몫 — 이번 주기 200회를 다 쓰면 feature-cap · 보내지 않음 · 장부 그대로', capErr?.kind === 'feature-cap' && !searches().some((s) => s.q === 'cap1') && readFileSync(LEDGER, 'utf8') === capBytes, capErr)
+  const aioNoLock = await caught(okSearch('aio0', 'aio'))
+  ok('잠금 — 다른 기능(index)의 잠금으로는 aio를 보내지 않는다', aioNoLock?.kind === 'config' && !searches().some((s) => s.q === 'aio0'), aioNoLock)
+  await held?.()
+  held = await serp.claimSerpRun('aio')
   await okSearch('aio1', 'aio')
+  await held?.()
+  held = await serp.claimSerpRun('index')
   const mixed = readLedger()
   ok(
     'AI 개요 몫은 따로 센다 — 색인이 다 차도 aio는 보내고, 모르는 칸(기능 · 후속 수 · 머리 칸)은 버리지 않는다',
@@ -486,6 +596,13 @@ try {
   const accountTimeout = await caught(serp.serpAccount({ fresh: true }))
   const accountMs = Date.now() - ta
   ok('계정 — 시간 초과(5초, 시험은 짧게)면 account · 검색도 시작 안 함', accountTimeout?.kind === 'account' && accountMs < 3500 && (await caught(okSearch('after-timeout')))?.kind === 'account', { accountTimeout, accountMs })
+  accountMode = 'e401'
+  const account401 = await caught(serp.serpAccount({ fresh: true }))
+  ok(
+    '계정 — 401이면 키가 맞지 않는다고 고칠 곳(%APPDATA%\\brand-aeo-app\\.env의 SERPAPI_API_KEY) · 다시 켜기를 알린다(kind account — 검색은 나가지 않음)',
+    account401?.kind === 'account' && account401.message.includes('키가 맞지 않아요') && account401.message.includes('%APPDATA%\\brand-aeo-app\\.env') && account401.message.includes('SERPAPI_API_KEY') && account401.message.includes('다시 켜'),
+    account401?.message,
+  )
   accountMode = 'ok'
 
   // ── 11. 요청 모양 — 앱 문제는 보내지 않음 ────────────────────────────────────
@@ -500,6 +617,8 @@ try {
 
   // ── 12. 끊김 — 응답을 기다리는 사이 프로세스가 죽어도 덜 세지 않는다 ─────────────
   await serp.serpAccount({ fresh: true })
+  // 자식이 잠금을 잡고 보낸다 — 이 프로세스는 놓아 둔다(두 프로세스가 한꺼번에 잡지 못한다).
+  await held?.()
   const self = fileURLToPath(import.meta.url)
   let childLog = ''
   const child = spawn(process.execPath, ['--import', 'tsx', self, '--child-hang'], { cwd: process.cwd(), env: { ...process.env, SERPAPI_TIMEOUT_MS: '' }, stdio: ['ignore', 'pipe', 'pipe'] })
@@ -509,6 +628,13 @@ try {
   for (let i = 0; i < 80 && !searches().some((s) => s.q === 'hang'); i += 1) await sleep(250)
   const hangLedger = existsSync(LEDGER) ? readLedger() : null
   ok('끊김 — 요청이 닿은 때 장부에 sent 1 · pending 1', hangLedger?.cycles['2026-12-08']?.index?.sent === 1 && hangLedger.pending.length === 1, { hangLedger, childLog })
+  const whileChild = await serp.claimSerpRun('index')
+  await serp.serpApiAccountView()
+  ok(
+    '두 프로세스 — 자식이 잡은 동안 이 프로세스는 잠금을 못 잡고, 계정 보기도 자식의 pending을 지우지 않는다(덜 세지 않게)',
+    whileChild === null && (await serp.serpRunElsewhere()) === 'index' && readLedger().pending.length === 1 && readLedger().cycles['2026-12-08']?.index?.sent === 1,
+    readLedger(),
+  )
   const exited = new Promise<void>((resolve) => child.once('exit', () => resolve()))
   child.kill()
   await exited
@@ -520,6 +646,9 @@ try {
       cleaned.cycles['2026-12-08']?.index?.sent === 1 && afterKill.usage?.features.index.sent === 1,
     cleaned,
   )
+  held = await serp.claimSerpRun('index')
+  ok('끊김 — 죽은 자식의 잠금은 넘겨받는다', held !== null && (await serp.serpRunElsewhere()) === null)
+  await held?.()
 
   // ── 13. 키 · 요청 주소는 어디에도 남지 않는다 ────────────────────────────────
   const leakIn = (t: string) => t.includes(FAKE_KEY) || t.includes(encodeURIComponent(FAKE_KEY)) || t.includes('api_key=')
@@ -615,6 +744,23 @@ try {
     ok('서버 — 계정 보기는 검색하지 않는다(계정만 1번)', searches().length === searchesBeforeServer && accountCalls() === accountBeforeServer + 1)
     const l2 = readLedger(LEDGER2)
     ok('서버 — 시작 뒤 첫 읽기에서 끊긴 pending을 지우고 모르는 칸은 남긴다', l2.pending.length === 0 && l2.cycles['2026-12-08']?.index?.sent === 7 && JSON.stringify(l2.cycles['2026-12-08']?.future) === JSON.stringify({ sent: 2 }))
+    // DNS 리바인딩 — 브라우저가 보기엔 같은 출처지만 Host · Origin이 이 PC가 아니다. 계정도 부르지 않는다.
+    const rawGet = (p: string, headers: Record<string, string>) =>
+      new Promise<number>((resolve, reject) => {
+        const rq = http.request({ host: '127.0.0.1', port: APP_PORT, path: p, method: 'GET', headers }, (rs) => {
+          rs.resume()
+          rs.on('end', () => resolve(rs.statusCode ?? 0))
+        })
+        rq.on('error', reject)
+        rq.end()
+      })
+    const accountBeforeRebind = accountCalls()
+    const rebind = [
+      await rawGet('/api/serpapi/account', { Host: `rebind.attacker.example:${APP_PORT}` }),
+      await rawGet('/api/serpapi/account', { Host: `127.0.0.1:${APP_PORT}`, Origin: 'http://evil.example' }),
+      await rawGet('/api/serpapi/account', { Host: `localhost:${APP_PORT}`, Origin: `http://localhost:${APP_PORT}` }),
+    ]
+    ok('서버 — Host · Origin이 이 PC가 아니면 403(계정도 부르지 않음), 이 PC면 그대로', JSON.stringify(rebind) === JSON.stringify([403, 403, 200]) && accountCalls() === accountBeforeRebind, rebind)
     writeFileSync(LEDGER2, '{broken')
     const rb = await getJson('/api/serpapi/account')
     ok('서버 — 깨진 장부는 usageError로 알리고 덮어쓰지 않는다', rb.status === 200 && typeof rb.body.usageError === 'string' && rb.body.usage === null && readFileSync(LEDGER2, 'utf8') === '{broken')
@@ -644,22 +790,31 @@ try {
   // ── 15. 설치본 묶음 · 저장소 ────────────────────────────────────────────────
   const buildScript = readFileSync(path.join(process.cwd(), 'scripts', 'build-electron-server.mjs'), 'utf8')
   ok(
-    '설치본 — 서버 묶음 빌드가 SerpAPI 시험 전용 env를 이름째 지운다',
+    '설치본 — 서버 묶음 빌드가 SerpAPI 시험 전용 env를 이름째 지우고, 진짜 주소 허락(SERPAPI_LIVE)은 1로 박는다',
     buildScript.includes("const SERPAPI_TEST_ENV = ['SERPAPI_BASE_URL', 'SERPAPI_TIMEOUT_MS']") &&
       buildScript.includes("for (const name of SERPAPI_TEST_ENV) serverBuild.define[`process.env.${name}`] = 'undefined'") &&
+      buildScript.includes("serverBuild.define['process.env.SERPAPI_LIVE'] = '\"1\"'") &&
       buildScript.includes("define: { 'process.env.POST_IMPORT_TEST_LOOPBACK': 'undefined' }"),
   )
   const { build } = await import('esbuild')
   const bundle = async (define: Record<string, string>) =>
     (await build({ entryPoints: ['server/index.ts'], bundle: true, platform: 'node', format: 'cjs', target: 'node20', packages: 'external', write: false, logLevel: 'silent', define })).outputFiles[0]!.text
-  const packed = await bundle({ 'process.env.POST_IMPORT_TEST_LOOPBACK': 'undefined', 'process.env.SERPAPI_BASE_URL': 'undefined', 'process.env.SERPAPI_TIMEOUT_MS': 'undefined' })
+  const packed = await bundle({
+    'process.env.POST_IMPORT_TEST_LOOPBACK': 'undefined',
+    'process.env.SERPAPI_BASE_URL': 'undefined',
+    'process.env.SERPAPI_TIMEOUT_MS': 'undefined',
+    'process.env.SERPAPI_LIVE': '"1"',
+  })
   const plain = await bundle({})
   ok(
-    '설치본 — 그 define으로 묶으면 SERPAPI_BASE_URL · SERPAPI_TIMEOUT_MS 글자가 없고 진짜 주소 · 키 이름 · 장부는 남는다',
-    !packed.includes('SERPAPI_BASE_URL') && !packed.includes('SERPAPI_TIMEOUT_MS') && packed.includes('https://serpapi.com') && packed.includes('SERPAPI_API_KEY') &&
-      packed.includes('serpapi-usage.json') && plain.includes('SERPAPI_BASE_URL'),
+    '설치본 — 그 define으로 묶으면 SERPAPI_BASE_URL · SERPAPI_TIMEOUT_MS 글자 · SERPAPI_LIVE 읽기가 없고 진짜 주소 · 키 이름 · 장부 · 잠금은 남는다',
+    !packed.includes('SERPAPI_BASE_URL') && !packed.includes('SERPAPI_TIMEOUT_MS') && !packed.includes('process.env.SERPAPI_LIVE') && packed.includes('https://serpapi.com') && packed.includes('SERPAPI_API_KEY') &&
+      packed.includes('serpapi-usage.json') && packed.includes('serpapi-run.lock') && plain.includes('SERPAPI_BASE_URL') && plain.includes('process.env.SERPAPI_LIVE'),
   )
-  ok('.gitignore — dev 장부(server/serpapi-usage.json)를 올리지 않는다', readFileSync('.gitignore', 'utf8').split(/\r?\n/).includes('server/serpapi-usage.json'))
+  ok(
+    '.gitignore — dev 장부 · 잠금(server/serpapi-usage.json · server/serpapi-run.lock)을 올리지 않는다',
+    ['server/serpapi-usage.json', 'server/serpapi-run.lock'].every((l) => readFileSync('.gitignore', 'utf8').split(/\r?\n/).includes(l)),
+  )
   ok('웹 함수는 그대로 12개(api/)', execSync('git ls-files api', { encoding: 'utf8' }).trim().split(/\r?\n/).length === 12)
   ok('이 프로세스의 fetch가 127.0.0.1 밖으로 나가려 한 적이 없다', blocked.length === 0, blocked)
 } finally {

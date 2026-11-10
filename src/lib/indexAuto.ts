@@ -20,9 +20,10 @@
  * 「자동으로 못 가림」 — 아무것도 적지 않는다(짐작하지 않는다).
  *
  * ── 사람 표시가 먼저(D4 A) ──────────────────────────────────────────────────
- * 「색인됨」인 칸은 차례가 아니다(recheckOf done). 원본(신선도로 거르기 전) 최신 기록이 「색인됨」인 주소 — 다른 줄 · 앞선 올림에서 색인됨으로
- * 본 주소 — 는 자동이 건드리지 않고 사람에게 남긴다(shownElsewhere — 설계는 「찾으면 적는다」였으나, 적으면 그 사람 「색인됨」이 가장 나중
- * 기록에서 밀려나므로 더 조심스러운 쪽을 골랐다). 쓸 때는 계획 때 본 원본 기록의 구글 확인 시각(expectRawCheckedAt)과 같아야 적는다(CAS).
+ * 「색인됨」인 칸은 차례가 아니다(recheckOf done — R1). 원본(신선도로 거르기 전) 최신 기록이 「색인됨」인 주소 — 다른 줄 · 내리기 전 올림에서
+ * 색인됨으로 본 주소, 다시 올린 글이 그 경우다 — 도 대상이다(설계 R4 · D4 A): 찾으면 「색인됨」을 적고, 못 찾으면 자동 「아직」은 적지 않는다
+ * (already-shown — 적으면 가장 나중 기록이 되어 그 「색인됨」을 가린다, 그 차례는 끝이고 칸 아래에 직접 확인을 권한다). 쓸 때는 계획 때 본 원본
+ * 기록의 구글 확인 시각(expectRawCheckedAt)과 같아야 적는다(CAS — server/indexChecks.ts writeIndexCheck).
  *
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다.
  */
@@ -242,10 +243,8 @@ export interface AutoPlan {
   manual: number
   /** 자동으로 안 찾는 주소. */
   unsupported: AutoUnsupported[]
-  /** 이번 차례에 자동으로 못 가려 다시 찾지 않는 주소 수(결정적 1회 · 일시 2회). */
+  /** 이번 차례에 자동으로 못 가려(결정적 1회 · 일시 2회) · 앞선 「색인됨」 때문에 「아직」을 적지 않아 다시 찾지 않는 주소 수. */
   settled: number
-  /** 원본 최신 기록이 「색인됨」이라 자동이 건드리지 않는 주소 수(직접 확인). */
-  shownElsewhere: number
 }
 
 export interface AutoPlanInput {
@@ -276,7 +275,7 @@ export function planAutoTargets(input: AutoPlanInput): AutoPlan {
     if (r.kind !== 'posted' || r.removed || !r.key || !r.postId || !r.url) continue
     byKey.set(r.key, [...(byKey.get(r.key) ?? []), r as LiveRow])
   }
-  const plan: AutoPlan = { targets: [], manual: 0, unsupported: [], settled: 0, shownElsewhere: 0 }
+  const plan: AutoPlan = { targets: [], manual: 0, unsupported: [], settled: 0 }
   for (const [key, rows] of byKey) {
     const turns = rows.map((r) => ({ r, t: autoTurnOf(r, today) }))
     let chosen: { rep: LiveRow; turn: AutoTurn; batch: 'first' | 'retry' } | null = null
@@ -305,6 +304,7 @@ export function planAutoTargets(input: AutoPlanInput): AutoPlan {
       plan.unsupported.push({ key, rowName: rowName(rep), reason: query.reason })
       continue
     }
+    // CAS 기준값 — 원본(신선도로 거르기 전) 최신 기록. 「색인됨」이어도 대상이다(R4 — 찾음은 적고 「아직」은 쓰는 쪽이 건너뛴다).
     const own = input.checks.find((c) => c.tenantId === rep.tenantId) ?? { tenantId: rep.tenantId, checks: {} }
     const raw: IndexCheck | null =
       findIndexRecord(
@@ -313,10 +313,6 @@ export function planAutoTargets(input: AutoPlanInput): AutoPlan {
         [rep.postId],
         key,
       )?.record.google ?? null
-    if (raw?.state === 'shown') {
-      plan.shownElsewhere += 1
-      continue
-    }
     plan.targets.push({
       key,
       tenantId: rep.tenantId,
@@ -427,6 +423,10 @@ export const AUTO_REASON_SHORT: Record<string, string> = {
 
 /** 자동 「아직」의 뜻 — 칩 툴팁 · 칸 안내. */
 export const AUTO_NOT_FOUND_NOTE = '구글 site: 검색에서 이 주소를 못 찾았어요 — 색인이 안 됐다는 확정은 아니에요'
+/** 못 찾았지만 앞선 「색인됨」 때문에 적지 않은 글(already-shown)의 칸 안내 · 풀이. */
+export const AUTO_SHOWN_BEFORE_TEXT = '앞서 색인됨으로 본 주소라 자동 「아직」은 적지 않았어요 — 직접 확인해 주세요'
+const AUTO_SHOWN_BEFORE_NOTE =
+  '이번 자동 검색에서는 못 찾았지만, 이 주소를 앞서(다른 줄 · 내리기 전 올림) 색인됨으로 본 기록이 있어 「아직」으로 적지 않았어요. 「구글에서 확인」으로 직접 보고 눌러 주세요.'
 
 const md = (day: string) => `${Number(day.slice(5, 7))}/${Number(day.slice(8, 10))}`
 
@@ -440,27 +440,36 @@ export interface AutoCellNote {
  * 구글 칸 아래 안내(D10 A · K18). autoOn은 이 PC에서 자동 확인을 쓸 수 있는가(키 · 연결 설정).
  * - 자동으로 못 가림: 결정적 까닭(또는 같은 차례에 일시 못 가림 두 번 — 다시 찾지 않는다)은 그 차례 동안 「자동으로 못 가림 — 직접 확인해
  *   주세요(까닭)」, 일시 못 가림은 그날만 「오늘 자동으로 못 가림 — 까닭」. 그 시도 뒤에 사람 · 자동이 칸을 적었으면 보이지 않는다.
+ * - 이번 차례에 못 찾았지만 앞선 「색인됨」 때문에 적지 않았으면(already-shown) 그 차례 동안 직접 확인을 권한다.
  * - 14일 지남 + 지금 기록이 자동 「아직」: 「마지막 확인이 자동이에요 — 한 번 직접 확인해 보세요」 — 확인 기록(index-checks.json)만으로
- *   센다(자동 기록 파일이 없어도 보인다). 30일째 전이면(자동을 쓸 수 있을 때) 「30일째(날)에 자동으로 한 번 더 봐요」.
+ *   센다(자동 기록 파일이 없어도 보인다). 30일째 전이면(자동을 쓸 수 있을 때) 「30일째(날)부터 「구글 자동 확인」에서 한 번 더 봐요」 —
+ *   단추를 눌러야 돌므로 그날 저절로 보지는 않는다.
  */
 export function autoCellNotes(row: PublishStatusRow, today: string, attempts: readonly AutoAttemptView[] | undefined, autoOn: boolean): AutoCellNote[] {
   const notes: AutoCellNote[] = []
   if (row.kind !== 'posted' || row.removed) return notes
   const from = fromOf(row)
   const g = row.google
+  const turn = autoTurnOf(row, today)
   const last = autoOn && row.key ? attempts?.find((a) => a.outcome === 'unknown' && (isDecisiveReason(a.reason) || isTransientReason(a.reason))) : undefined
   if (last && row.key && last.at > (g?.checkedAt ?? '')) {
-    const turn = autoTurnOf(row, today)
     const key = row.key
     const settled = turn !== null && last.turn === turn.turn && (isDecisiveReason(last.reason) || turnProgress((attempts ?? []).map((a) => ({ ...a, key })), key, turn.turn).settled)
     const short = AUTO_REASON_SHORT[last.reason!] ?? last.reason!
     if (settled) notes.push({ text: `자동으로 못 가림 — 직접 확인해 주세요(${short})`, title: autoReasonText(last.reason) })
     else if (isTransientReason(last.reason) && last.on === today) notes.push({ text: `오늘 자동으로 못 가림 — ${short}`, title: autoReasonText(last.reason) })
   }
+  const shownBefore = autoOn && turn !== null ? attempts?.find((a) => a.skipped === 'already-shown' && a.turn === turn.turn) : undefined
+  if (shownBefore && shownBefore.at > (g?.checkedAt ?? '')) notes.push({ text: AUTO_SHOWN_BEFORE_TEXT, title: AUTO_SHOWN_BEFORE_NOTE })
   if (from && g?.source === 'auto' && g.state === 'not-yet' && recheckOf(from, g, today).kind === 'over') {
     notes.push({ text: '마지막 확인이 자동이에요 — 한 번 직접 확인해 보세요', title: AUTO_NOT_FOUND_NOTE })
     const day30 = addDays(from, AUTO_LATE_DAY)
-    if (autoOn && g.checkedOn < day30 && today < day30) notes.push({ text: `30일째(${md(day30)})에 자동으로 한 번 더 봐요`, title: '마지막 확인이 자동 「아직」뿐인 글은 30일째에 구글을 한 번 더 자동으로 봐요.' })
+    if (autoOn && g.checkedOn < day30 && today < day30) {
+      notes.push({
+        text: `30일째(${md(day30)})부터 「구글 자동 확인」에서 한 번 더 봐요`,
+        title: '마지막 확인이 자동 「아직」뿐인 글은 30일째부터 「구글 자동 확인」 계획에 한 번 더 들어가요 — 단추를 눌러야 검색해요.',
+      })
+    }
   }
   return notes
 }

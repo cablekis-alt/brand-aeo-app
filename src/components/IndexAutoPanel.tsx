@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   IndexAutoRequestError,
   loadIndexAuto,
@@ -20,7 +20,14 @@ import { kstStamp } from '../lib/runTrend'
  * 돈이 드는 때를 사람이 정한다: 패널을 펼치면 계획을 받고(검색 0 — 서버가 SerpAPI 계정만 무료로 읽는다), 계획에 보인 검색 수 · 이번 결제
  * 주기 몫 · 계정 바닥을 보고 「n편 확인하기(검색 n회)」를 눌러야 검색한다(그 계획 id로만). 펼치기 전에는 계정을 읽지 않는다. 도는 동안 2초마다
  * 진행을 묻고(계정 · 검색 없음), 끝나면 발행 현황 표를 다시 읽는다. 「발행 현황을 열 때 하루 한 번 자동으로」는 기본 꺼짐 — 켜 두면 화면을 연
- * 처음 한 번만 같은 계획 → 실행 길을 지난다(서버가 하루 한 번을 지킨다).
+ * 처음 한 번만 같은 계획 → 실행 길을 지난다(서버가 하루 한 번을 지킨다). 그날 건너뛰면(바닥 · 몫 · 시간 한도) 접힌 패널에도 까닭을 보인다.
+ *
+ * 실행을 눌렀는데 409이면 상태를 다시 읽는다 — 다른 탭에서 먼저 시작했으면 진행으로 넘어가고, 계획이 바뀌었으면 새로 받는다. 앱을 두 번 켠 다른
+ * 창에서 도는 중이면(서버가 busyElsewhere로 알린다) 그 안내를 보인다 — 계획이 409이거나, 그 안내가 보이는 채로 계획을 받으면 상태를 다시 읽어
+ * 안내가 남지 않게 한다. 받은 계획은 머리 단추(onPlan)와 나눠 써서 머리 단추의 편 수가 계획과 같다.
+ *
+ * 키보드: 읽는 동안 · 시작하는 동안 단추를 내리거나 disabled로 바꾸지 않고 aria-disabled로 둔다(포커스가 몸통으로 빠지지 않게). 누른 단추가 사라질
+ * 때(시작 · 409 · 다시 시도)는 포커스를 남는 곳(패널 머리 · 「계획 다시 받기」)으로 옮긴다.
  *
  * 키가 없으면 넣을 곳과 다시 켜기 안내만, 연결 설정이 틀리면 그 까닭만 보인다. 웹(라우트 404)에서는 아무것도 그리지 않는다. 상태 · 계획을
  * 읽지 못한 것은 패널 안에서만 알리고 표를 막지 않는다.
@@ -33,11 +40,15 @@ const POLL_MS = 2000
 const NO_KEY =
   '구글 자동 확인: 이 PC에 SerpAPI 키가 없어요 — %APPDATA%\\brand-aeo-app\\.env에 SERPAPI_API_KEY=… 한 줄을 넣고 앱을 다시 켜 주세요. 지금은 「구글에서 확인」으로 직접 확인만 할 수 있어요.'
 const EXPLAIN =
-  '구글 칸이 14일째 차례인 글을 SerpAPI로 대신 검색해요(3 · 7일째는 지금처럼 직접 확인해요). 같은 주소를 찾으면 「색인됨 · 자동」, 못 찾으면 「아직 · 자동」으로 적어요 — 못 찾았다고 색인이 안 됐다는 확정은 아니라서, 마지막 확인이 자동 「아직」뿐인 글은 30일째에 한 번 더 봐요. 검색이 안 되거나 가릴 수 없으면 아무것도 적지 않고 「자동으로 못 가림」으로 알려 드려요. 직접 누른 표시가 늘 먼저예요. 검색 한 번마다 SerpAPI 사용량이 들어요.'
-const STOPPED_ITEM = '실행이 멈춰 가리지 못했어요(위 까닭) — 직접 확인해 주세요.'
+  '구글 칸이 14일째 차례인 글을 SerpAPI로 대신 검색해요(3 · 7일째는 지금처럼 직접 확인해요). 같은 주소를 찾으면 「색인됨 · 자동」, 못 찾으면 「아직 · 자동」으로 적어요 — 못 찾았다고 색인이 안 됐다는 확정은 아니라서, 마지막 확인이 자동 「아직」뿐인 글은 30일째부터 한 번 더 봐요. 검색이 안 되거나 가릴 수 없으면 아무것도 적지 않고 「자동으로 못 가림」으로 알려 드려요. 직접 누른 표시가 늘 먼저예요. 검색 한 번마다 SerpAPI 사용량이 들어요.'
+const SUB_IDLE = '14일째 차례인 글의 구글 칸을 SerpAPI로 대신 검색해요 · 누르기 전에 검색 수와 남은 몫을 보여 드려요'
+const SUB_ELSEWHERE = '다른 앱 창에서 확인하는 중… 끝난 뒤 계획을 다시 받아 주세요'
+/** 실행을 멈춘 오류(키 · 한도 · 몫 등)로 못 본 글 — 그 차례 몫에 들지 않아 다음 계획에 다시 나온다. */
+const STOPPED_ITEM = '실행이 멈춰 못 봤어요 — 다음 실행에서 다시 찾아요.'
+const PLAN_RENEWED = '계획이 바뀌어 새로 받았어요 — 다시 눌러 주세요.'
 const SKIPPED_TEXT: Record<string, string> = {
   changed: '확인하는 사이에 직접 표시해서 자동 결과는 적지 않았어요.',
-  'already-shown': '같은 주소의 다른 줄이 이미 색인됨이라 자동 결과는 적지 않았어요.',
+  'already-shown': '앞서 색인됨으로 본 기록이 있어(다른 줄 · 내리기 전 올림) 자동 「아직」은 적지 않았어요 — 직접 확인해 주세요.',
   'row-gone': '확인하는 사이 줄이 빠져(뺐거나 옮김) 적지 않았어요.',
 }
 
@@ -46,7 +57,7 @@ const n = (v: number) => v.toLocaleString('ko-KR')
 /** 결제 주기 이름(갱신일 YYYY-MM-DD) → 「12월 8일」. */
 const renewalDay = (day: string) => (/^\d{4}-\d{2}-\d{2}$/.test(day) ? `${Number(day.slice(5, 7))}월 ${Number(day.slice(8, 10))}일` : day)
 
-/** 오늘 볼 글보다 적게 검색하는 까닭. */
+/** 오늘 볼 글보다 적게 검색하는 까닭(계정 · 장부를 못 읽은 까닭 blocked는 따로 보인다). */
 function limitText(plan: IndexAutoPlan): string | null {
   const rest = plan.candidates - plan.searches
   if (rest <= 0 || !plan.limitedBy) return null
@@ -56,13 +67,26 @@ function limitText(plan: IndexAutoPlan): string | null {
       return `한 번에 ${plan.settings.runCap}편까지라 ${rest}편은 다음에 확인해요.`
     case 'feature-cap':
       return `이번 결제 주기 색인 몫이 ${n(q?.featureLeft ?? 0)}회 남아 ${rest}편은 확인하지 않아요.`
-    case 'floor':
-      return `계정 남은 검색이 바닥(${n(q?.floor ?? 0)}회) 가까이라 ${rest}편은 확인하지 않아요.`
+    case 'floor': {
+      const left = q?.accountLeft ?? 0
+      const floor = q?.floor ?? 0
+      const above = q?.aboveFloor ?? 0
+      return above > 0
+        ? `계정 남은 검색 ${n(left)}회 가운데 바닥(${n(floor)}회) 위로는 ${n(above)}회뿐이라 ${rest}편은 확인하지 않아요.`
+        : `계정 남은 검색 ${n(left)}회 — 바닥(${n(floor)}회)${left < floor ? ' 아래라' : '에 닿아'} ${rest}편은 확인하지 않아요.`
+    }
     case 'hour':
       return `이번 시간 검색 한도가 ${n(q?.hourLeft ?? 0)}회 남아 ${rest}편은 한 시간쯤 뒤 확인해요.`
     case 'account':
       return 'SerpAPI 계정 상태로는 검색하지 않아요.'
   }
+}
+
+/** 계획의 큰 글자 — 볼 글이 있는데 검색하지 않으면 「0편 · 0회」 대신 그렇게 말한다. */
+function planHeadline(plan: IndexAutoPlan): string {
+  if (plan.candidates <= 0) return '오늘 자동으로 볼 글이 없어요.'
+  if (plan.searches <= 0) return `오늘 볼 글 ${plan.candidates}편 — 이번에는 검색하지 않아요`
+  return `이번에 확인할 글 ${plan.searches}편 · 검색 ${plan.searches}회`
 }
 
 /** 결과 줄의 까닭 — 줄마다 못 가린 까닭, 실행을 멈춘 오류로 못 본 글은 멈춘 까닭을 가리킨다. */
@@ -71,12 +95,14 @@ function itemReason(item: IndexAutoRunItem, run: IndexAutoRunRecord): string {
   return run.stoppedBy ? STOPPED_ITEM : autoReasonText(item.reason)
 }
 
-function RunResult({ run }: { run: IndexAutoRunRecord }) {
+function RunResult({ run, busyElsewhere }: { run: IndexAutoRunRecord; busyElsewhere: string | null }) {
   const items = Array.isArray(run.items) ? run.items : []
   const shown = items.filter((i) => i.outcome === 'found' && i.wrote === 'shown').length
   const notYet = items.filter((i) => i.outcome === 'not-found' && i.wrote === 'not-yet').length
   const unknown = items.filter((i) => i.outcome === 'unknown')
   const skipped = items.filter((i) => i.outcome !== 'unknown' && i.skipped)
+  const tally = `색인됨 ${shown} · 아직 ${notYet} · 자동으로 못 가림 ${unknown.length}${skipped.length > 0 ? ` · 적지 않음 ${skipped.length}` : ''}`
+  const unchecked = Math.max(0, (Number.isInteger(run.planned) ? run.planned : 0) - items.length)
   return (
     <div className="iap-result">
       <h3>
@@ -88,15 +114,24 @@ function RunResult({ run }: { run: IndexAutoRunRecord }) {
           멈춤 — {run.stoppedBy.message}
         </p>
       )}
-      {run.endedAt === null ? (
-        <p className="error">끝나지 않고 끊겼어요(앱이 꺼졌을 수 있어요) — 끝난 글은 적혀 있어요. 남은 글은 다음에 확인해요.</p>
+      {run.endedAt === null && busyElsewhere ? (
+        <p className="iap-fine">다른 앱 창에서 도는 중이에요 — 끝나면 그 결과가 여기에도 보여요(「다시 읽기」).</p>
+      ) : run.endedAt === null ? (
+        <>
+          <p className="iap-big">
+            끊기기 전에 {run.searched}편 확인 — {tally}
+          </p>
+          <p className="error">
+            끝나지 않고 끊겼어요(앱이 꺼졌을 수 있어요) — 끝난 글은 적혀 있어요. 확인하지 못한 글 {unchecked}편은 다음에 확인해요(끊길 때 확인 중이던 글은
+            한 번 더 찾아요).
+          </p>
+        </>
       ) : (
         <p className="iap-big">
-          {run.searched}편 확인 — 색인됨 {shown} · 아직 {notYet} · 자동으로 못 가림 {unknown.length}
-          {skipped.length > 0 ? ` · 적지 않음 ${skipped.length}` : ''}
+          {run.searched}편 확인 — {tally}
         </p>
       )}
-      {run.notRun > 0 && !run.stoppedBy && <p className="iap-fine">확인하지 않은 글 {run.notRun}편은 다음에 확인해요.</p>}
+      {run.notRun > 0 && !run.stoppedBy && run.endedAt !== null && <p className="iap-fine">확인하지 않은 글 {run.notRun}편은 다음에 확인해요.</p>}
       {unknown.length > 0 && (
         <>
           <p className="iap-label">자동으로 못 가림 — 직접 확인해 주세요</p>
@@ -119,7 +154,7 @@ function RunResult({ run }: { run: IndexAutoRunRecord }) {
       )}
       {skipped.length > 0 && (
         <>
-          <p className="iap-label">찾았지만 적지 않은 글</p>
+          <p className="iap-label">결과를 적지 않은 글</p>
           <ul className="iap-list">
             {skipped.map((i) => (
               <li key={`${i.key}|${i.postId}`}>
@@ -144,9 +179,11 @@ interface Props {
   onRunEnd: () => void
   /** 상태를 다시 읽는다(읽기 실패 뒤). */
   onRetry: () => void
+  /** 받은 계획(못 받았거나 시작했으면 null) — 머리 단추가 계획과 같은 편 수를 보인다. */
+  onPlan?: (plan: IndexAutoPlan | null) => void
 }
 
-export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onRunEnd, onRetry }: Props) {
+export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onRunEnd, onRetry, onPlan }: Props) {
   const status = load.kind === 'ready' ? load.status : null
   const usable = status !== null && status.configured && !status.configError
   const running = status?.running ?? null
@@ -159,6 +196,7 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
   const [starting, setStarting] = useState(false)
   const [runError, setRunError] = useState<string | null>(null)
   const [pollError, setPollError] = useState<string | null>(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
   const [openRunNote, setOpenRunNote] = useState<string | null>(null)
   const [capText, setCapText] = useState<string | null>(null)
   const [onOpenDraft, setOnOpenDraft] = useState<boolean | null>(null)
@@ -166,6 +204,14 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
   const [savingSettings, setSavingSettings] = useState(false)
   // 「열 때 하루 한 번」은 이 화면을 연 처음 상태로 한 번만 정한다(다시 읽기 · 설정을 바꾼 뒤에는 하지 않는다).
   const openDecided = useRef(false)
+  // 「다시 시도」로 상태가 읽히면 그 단추가 사라진다 — 포커스를 패널 머리로 옮길 차례.
+  const focusToggleNext = useRef(false)
+  const replanRef = useRef<HTMLButtonElement | null>(null)
+  // 지금 보이는 「다른 창에서 도는 중」 — 계획을 받으면 상태를 다시 읽어 그 안내가 남지 않게 한다(계획 요청 차례를 바꾸지 않게 ref로 둔다).
+  const busyElsewhereRef = useRef<string | null>(null)
+  useEffect(() => {
+    busyElsewhereRef.current = status?.busyElsewhere ?? null
+  }, [status])
 
   // 머리 단추로 펼쳐도 계획을 새로 받는다 — 펼침이 바뀐 그 렌더에서 한 번.
   if (open !== seenOpen) {
@@ -173,21 +219,44 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
     if (open) setPlanReq((r) => r + 1)
   }
 
+  // 상태를 다시 읽는다(계정 · 검색 없음) — 409 뒤 · 계획을 받은 뒤. 다른 탭이 시작한 실행 · 다른 창 안내가 화면에 맞게.
+  const refreshStatus = useCallback(
+    (): Promise<IndexAutoStatus | null> =>
+      loadIndexAuto().then(
+        (next) => {
+          setStatusError(null)
+          if (next) onStatus(next)
+          return next
+        },
+        (err: unknown) => {
+          setStatusError(`자동 확인 상태를 다시 읽지 못했어요 — ${message(err)}`)
+          return null
+        },
+      ),
+    [onStatus],
+  )
+
   useEffect(() => {
     if (!open || planReq === 0 || !usable || isRunning) return
     let alive = true
     planIndexAuto('button').then(
       (plan) => {
-        if (alive) setPlanRes({ req: planReq, plan, error: null })
+        if (!alive) return
+        setPlanRes({ req: planReq, plan, error: null })
+        onPlan?.(plan)
+        if (busyElsewhereRef.current) void refreshStatus()
       },
       (err: unknown) => {
-        if (alive) setPlanRes({ req: planReq, plan: null, error: message(err) })
+        if (!alive) return
+        setPlanRes({ req: planReq, plan: null, error: message(err) })
+        onPlan?.(null)
+        if (err instanceof IndexAutoRequestError && err.status === 409) void refreshStatus()
       },
     )
     return () => {
       alive = false
     }
-  }, [open, planReq, usable, isRunning])
+  }, [open, planReq, usable, isRunning, onPlan, refreshStatus])
 
   useEffect(() => {
     if (!runId) return
@@ -220,16 +289,25 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
     if (!usable || !status.settings.autoOnOpen || status.openRunToday || status.running) return
     planIndexAuto('open')
       .then(async (plan) => {
+        onPlan?.(plan)
         if (!plan.planId || plan.searches <= 0) {
-          if (plan.blocked) setOpenRunNote(`열 때 자동 확인을 하지 않았어요 — ${plan.blocked}`)
+          // 볼 글이 있는데 바닥 · 몫 · 시간 한도 · 계정 때문에 건너뛰었다 — 접힌 패널에도 까닭을 남긴다.
+          if (plan.candidates > 0) setOpenRunNote(`오늘 열 때 자동 확인을 하지 않았어요 — ${plan.blocked ?? limitText(plan) ?? '지금은 검색할 수 없어요.'}`)
           return
         }
         const started = await runIndexAuto(plan.planId)
+        onPlan?.(null)
         onStatus({ ...status, running: { runId: started.runId, trigger: 'open', startedAt: new Date().toISOString(), total: started.total, done: 0 } })
         onOpenChange(true)
       })
-      .catch((err: unknown) => setOpenRunNote(`열 때 자동 확인을 하지 못했어요 — ${message(err)}`))
-  }, [status, usable, onStatus, onOpenChange])
+      .catch((err: unknown) => setOpenRunNote(`오늘 열 때 자동 확인을 하지 못했어요 — ${message(err)}`))
+  }, [status, usable, onStatus, onOpenChange, onPlan])
+
+  useEffect(() => {
+    if (load.kind !== 'ready' || !focusToggleNext.current) return
+    focusToggleNext.current = false
+    document.getElementById('iap-toggle')?.focus()
+  }, [load])
 
   if (load.kind === 'loading' || load.kind === 'off') return null
   if (load.kind === 'error') {
@@ -237,7 +315,14 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
       <section className="iap-panel" aria-label="구글 색인 자동 확인">
         <p className="error" role="alert">
           구글 자동 확인 상태를 읽지 못했어요 — {load.error}{' '}
-          <button type="button" className="ghost" onClick={onRetry}>
+          <button
+            type="button"
+            className="ghost"
+            onClick={() => {
+              focusToggleNext.current = true
+              onRetry()
+            }}
+          >
             다시 시도
           </button>
         </p>
@@ -256,23 +341,39 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
   const loading = !isRunning && planRes?.req !== planReq
   const plan = loading ? null : (planRes?.plan ?? null)
   const planError = loading ? null : (planRes?.error ?? null)
+  const busyElsewhere = st.busyElsewhere ?? null
   const replan = () => {
+    if (loading || starting) return
     setRunError(null)
     setPlanReq((r) => r + 1)
   }
   const start = (planId: string) => {
+    if (starting) return
     setStarting(true)
     setRunError(null)
     runIndexAuto(planId)
       .then((started) => {
+        onPlan?.(null)
         onStatus({ ...st, running: { runId: started.runId, trigger: 'button', startedAt: new Date().toISOString(), total: started.total, done: 0 } })
         // 누른 단추가 진행 글자로 바뀌어 사라진다 — 키보드 포커스를 패널 머리(진행이 함께 보인다)로 옮긴다.
         document.getElementById('iap-toggle')?.focus()
       })
       .catch((err: unknown) => {
-        setRunError(message(err))
-        // 계획이 바뀌었다 · 그 사이 다른 실행이 돈다 — 지금 계획을 새로 받는다.
-        if (err instanceof IndexAutoRequestError && err.status === 409) setPlanReq((r) => r + 1)
+        if (!(err instanceof IndexAutoRequestError) || err.status !== 409) {
+          setRunError(message(err))
+          return
+        }
+        // 계획이 바뀌었거나, 그 사이 다른 탭 · 다른 창이 먼저 시작했다 — 상태를 다시 읽어 도는 중이면 진행으로 넘어가고, 아니면 계획을 새로 받는다.
+        // 누른 단추는 계획을 다시 받는 동안 사라지므로 포커스를 남는 단추로 먼저 옮긴다.
+        replanRef.current?.focus()
+        void refreshStatus().then((next) => {
+          if (next?.running) {
+            document.getElementById('iap-toggle')?.focus()
+            return
+          }
+          setRunError(err.code === 'plan-changed' ? PLAN_RENEWED : err.message)
+          setPlanReq((r) => r + 1)
+        })
       })
       .finally(() => setStarting(false))
   }
@@ -307,10 +408,10 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
   }
 
   const q = plan?.quota ?? null
-  const sub = running
-    ? `확인하는 중… ${running.done}/${running.total}`
-    : '14일째 차례인 글의 구글 칸을 SerpAPI로 대신 검색해요 · 누르기 전에 검색 수와 남은 몫을 보여 드려요'
+  const limit = plan && !plan.blocked ? limitText(plan) : null
+  const sub = running ? `확인하는 중… ${running.done}/${running.total}` : busyElsewhere ? SUB_ELSEWHERE : SUB_IDLE
   const lastRun = !isRunning ? st.lastRun : null
+  const canRun = Boolean(plan?.planId && plan.searches > 0)
 
   return (
     <section className="iap-panel" aria-labelledby="iap-toggle">
@@ -320,11 +421,15 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
           <span className="iap-sub">{sub}</span>
         </button>
       </h2>
+      {openRunNote && (
+        <p className="pi-note iap-open-note" role="status">
+          {openRunNote}
+        </p>
+      )}
       <div id="iap-body" className="iap-body" hidden={!open}>
         {open && (
           <>
             <p className="iap-lead">{EXPLAIN}</p>
-            {openRunNote && <p className="pi-note">{openRunNote}</p>}
             {running ? (
               <>
                 <p className="iap-progress" role="status">
@@ -346,8 +451,8 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
                 )}
                 {plan && (
                   <>
-                    <p className="iap-big">{plan.candidates > 0 ? `이번에 확인할 글 ${plan.searches}편 · 검색 ${plan.searches}회` : '오늘 자동으로 볼 글이 없어요.'}</p>
-                    {limitText(plan) && <p className="iap-fine">{limitText(plan)}</p>}
+                    <p className="iap-big">{planHeadline(plan)}</p>
+                    {limit && <p className="iap-fine">{limit}</p>}
                     {q && (
                       <p className="iap-quota">
                         이번 결제 주기({renewalDay(q.cycle)} 갱신까지) 이 PC 색인 몫 남은 검색 {n(q.featureLeft)}회 / {n(q.cap)}회 · 계정 남은 검색 {n(q.accountLeft)}회 — 계정
@@ -363,7 +468,6 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
                     <ul className="iap-facts">
                       {plan.manual > 0 && <li>3 · 7일째 차례 {plan.manual}편은 직접 확인해 주세요(「구글에서 확인」).</li>}
                       {plan.settled > 0 && <li>이번 차례에 자동으로 못 가린 글 {plan.settled}편 — 다시 찾지 않아요. 칸 아래 안내대로 직접 확인해 주세요.</li>}
-                      {plan.shownElsewhere > 0 && <li>다른 줄에서 이미 색인됨으로 본 주소 {plan.shownElsewhere}편은 자동이 건드리지 않아요.</li>}
                       {plan.unsupported.length > 0 && (
                         <li>
                           자동으로 안 찾는 주소 {plan.unsupported.length}편 — 직접 확인해 주세요.
@@ -385,32 +489,35 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
                     )}
                   </>
                 )}
-                {runError && (
+                {runError && runError !== planError && (
                   <p className="error" role="alert">
                     {runError}
                   </p>
                 )}
-                {!loading && (
-                  <div className="iap-actions">
-                    {plan?.planId && plan.searches > 0 && (
-                      <button type="button" className="btn primary" disabled={starting} onClick={() => start(plan.planId!)}>
-                        {plan.searches}편 확인하기(검색 {plan.searches}회)
-                      </button>
-                    )}
-                    <button type="button" className="btn" disabled={starting} onClick={replan}>
-                      계획 다시 받기
-                    </button>
-                  </div>
+                {statusError && (
+                  <p className="error" role="alert">
+                    {statusError}
+                  </p>
                 )}
-                {plan?.planId && plan.searches > 0 && <p className="iap-fine">하나씩 차례로 검색해요(한 편에 몇 초) — 앱을 끄면 멈춰요(끝난 글은 적혀 있어요).</p>}
+                <div className="iap-actions">
+                  {canRun && plan?.planId && (
+                    <button type="button" className="btn primary" aria-disabled={starting || undefined} onClick={() => start(plan.planId!)}>
+                      {plan.searches}편 확인하기(검색 {plan.searches}회)
+                    </button>
+                  )}
+                  <button ref={replanRef} type="button" className="btn" aria-disabled={loading || starting || undefined} onClick={replan}>
+                    계획 다시 받기
+                  </button>
+                </div>
+                {canRun && <p className="iap-fine">하나씩 차례로 검색해요(한 편에 몇 초) — 앱을 끄면 멈춰요(끝난 글은 적혀 있어요).</p>}
               </div>
             )}
-            {lastRun && <RunResult run={lastRun} />}
+            {lastRun && <RunResult run={lastRun} busyElsewhere={busyElsewhere} />}
             <details className="iap-settings">
               <summary>설정</summary>
               <div className="iap-settings-body">
                 <label className="iap-field" htmlFor="iap-run-cap">
-                  한 번에
+                  한 번에{' '}
                   <input
                     id="iap-run-cap"
                     className="iap-num"
@@ -419,9 +526,10 @@ export default function IndexAutoPanel({ load, open, onOpenChange, onStatus, onR
                     max={RUN_CAP_MAX}
                     step={1}
                     inputMode="numeric"
+                    aria-label="한 번에 확인할 글 수(편)"
                     value={capValue}
                     onChange={(e) => setCapText(e.target.value)}
-                  />
+                  />{' '}
                   편까지
                 </label>
                 <label className="ps-toggle" htmlFor="iap-on-open">

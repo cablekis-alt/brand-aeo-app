@@ -10,12 +10,14 @@
  * B. 화면 — 웹(404)이면 패널 · 단추 없음, 키 없음이면 넣을 곳 · 다시 켜기 안내만, 연결 설정 틀림, 펼치기 전에는 계정을 읽지 않음(계획 요청 0),
  *    계획(검색 수 · 이번 결제 주기 몫 · 계정 바닥 · 직접 볼 글 · 못 가린 글 · 안 찾는 주소) · 막힘(검색 0) · 계획 오류는 패널 안에서만, 실행(JSON ·
  *    planId) · 진행(role=status) · 결과(「자동으로 못 가림」 목록) · 끝나면 표 다시 읽기 · 멈춘 까닭(role=alert) · 계획이 바뀜(409) · 설정(기본 끔 ·
- *    JSON 저장) · 열 때 하루 한 번(켜졌을 때만 · 한 번만) · 칩 「· 자동」 · 칸 아래 안내 · CSV 확인 방법 열 · 키보드(단추 · 포커스).
+ *    JSON 저장) · 열 때 하루 한 번(켜졌을 때만 · 한 번만 · 건너뛰면 까닭) · 칩 「· 자동」 · 칸 아래 안내 · CSV 확인 방법 열 · 키보드(단추 · 포커스 —
+ *    계획 다시 받기 · 409 · 다시 시도에서 몸통으로 빠지지 않음) · 머리 단추는 계획을 받으면 그 수 · 다른 탭 · 다른 창(앱을 두 번 켬)에서 도는
+ *    실행(409) · 적지 않은 글 제목 · 끊긴 실행이 어디까지 했는지 · 접근성 이름.
  *
  *   npx tsx scripts/verify-index-auto-ui.ts
  */
 import { trackingKey } from '../src/lib/publishedUrl'
-import { autoAttemptsText, autoCellNotes, estimateAutoTargets, type AutoAttemptView } from '../src/lib/indexAuto'
+import { AUTO_SHOWN_BEFORE_TEXT, autoAttemptsText, autoCellNotes, estimateAutoTargets, type AutoAttemptView } from '../src/lib/indexAuto'
 import type { IndexCheck, PublishStatus, PublishStatusRow } from '../src/lib/publishStatus'
 
 const checks: [string, boolean][] = []
@@ -83,12 +85,18 @@ ok('칸 안내 — 같은 차례에 일시 오류가 두 번이면 그 차례 �
 ok('칸 안내 — 자동 시도 뒤에 사람이 표시했으면 안내하지 않는다', notes(7).length === 0, notes(7))
 ok(
   '칸 안내 — 14일 지남 · 마지막 확인이 자동 「아직」 → 직접 확인 권함 + 30일째 한 번 더(키가 없으면 30일째 안내는 뺀다)',
-  JSON.stringify(notes(2)) === JSON.stringify(['마지막 확인이 자동이에요 — 한 번 직접 확인해 보세요', '30일째(12/10)에 자동으로 한 번 더 봐요']) &&
+  JSON.stringify(notes(2)) === JSON.stringify(['마지막 확인이 자동이에요 — 한 번 직접 확인해 보세요', '30일째(12/10)부터 「구글 자동 확인」에서 한 번 더 봐요']) &&
     JSON.stringify(notes(2, false)) === JSON.stringify(['마지막 확인이 자동이에요 — 한 번 직접 확인해 보세요']),
   notes(2),
 )
 ok('칸 안내 — 자동 기록 파일 없이도(시도 없음) 「마지막 확인이 자동」은 확인 기록만으로', autoCellNotes(ROWS[1]!, T, undefined, true)[0]?.text === '마지막 확인이 자동이에요 — 한 번 직접 확인해 보세요')
 ok('칸 안내 — 키가 없으면 시도 안내는 없다 · 사람 표시 · 색인됨 · 뺀 줄은 없음', notes(3, false).length === 0 && notes(1).length === 0 && notes(6).length === 0 && autoCellNotes(row(3, '2026-11-16', { removed: { reason: 'mistake', at: T } }), T, ATTEMPTS[K(3)], true).length === 0)
+ok(
+  '칸 안내 — 못 찾았지만 앞선 「색인됨」 때문에 적지 않은 글(already-shown)은 그 차례 동안 직접 확인을 권한다, 사람이 그 뒤 누르면 없음',
+  autoCellNotes(row(8, '2026-11-16'), T, [{ ...att('d14:2026-11-30', 'not-found', undefined, '2026-11-30T01:00:00.000Z'), skipped: 'already-shown' }], true).map((x) => x.text).join('|') === AUTO_SHOWN_BEFORE_TEXT &&
+    autoCellNotes(row(8, '2026-11-16', { google: g('not-yet', '2026-11-30') }), T, [{ ...att('d14:2026-11-30', 'not-found', undefined, '2026-11-30T01:00:00.000Z'), skipped: 'already-shown' }], true).length === 0 &&
+    autoCellNotes(row(8, '2026-11-16'), T, [{ ...att('d14:2026-11-30', 'not-found', undefined, '2026-11-30T01:00:00.000Z'), skipped: 'already-shown' }], false).length === 0,
+)
 ok('자동 확인 기록 글 — 오래된 것부터 날짜 · 결과', autoAttemptsText(ATTEMPTS[K(2)]) === '자동 확인 기록: 11/24 못 가림 · 11/24 못 찾음' && autoAttemptsText(undefined) === '', autoAttemptsText(ATTEMPTS[K(2)]))
 ok('머리 단추 어림 — 오늘 자동으로 볼 글(끝난 차례 · 직접 볼 글 · 색인됨 빼고, 일시 오류 1회는 넣음)', estimateAutoTargets(ROWS, T, ATTEMPTS) === 2, estimateAutoTargets(ROWS, T, ATTEMPTS))
 
@@ -103,6 +111,7 @@ const status = (over: Record<string, unknown> = {}) => ({
   lastRun: null,
   attemptsByKey: ATTEMPTS,
   openRunToday: false,
+  busyElsewhere: null,
   ...over,
 })
 const QUOTA = { cycle: '2026-12-08', cap: 200, used: 42, featureLeft: 158, floor: 500, accountLeft: 958, aboveFloor: 457, hourLeft: 196, allowed: 158, planName: 'Starter', searchesPerMonth: 1000, rateLimitPerHour: 200 }
@@ -120,7 +129,6 @@ const plan = (over: Record<string, unknown> = {}) => ({
   manual: 1,
   unsupported: [{ key: 'youtube.com/watch?v=fakeVid', rowName: '가상하나 「가상 영상」 유튜브', reason: 'platform', text: '유튜브 · 인스타그램 글은 자동으로 찾지 않아요 — 직접 확인해 주세요.' }],
   settled: 1,
-  shownElsewhere: 0,
   quota: QUOTA,
   settings: SETTINGS,
   ...over,
@@ -298,7 +306,7 @@ const RUN_DONE = {
     ok(
       '칸 아래 — 결정적 「자동으로 못 가림 — 직접 확인해 주세요(까닭)」 · 오늘 일시 「오늘 자동으로 못 가림」 · 30일째 안내',
       (cellOf(3)?.textContent ?? '').includes('자동으로 못 가림 — 직접 확인해 주세요(비슷한 주소가 많음)') && (cellOf(4)?.textContent ?? '').includes('오늘 자동으로 못 가림 — SerpAPI 응답 시간 초과') &&
-        (cellOf(2)?.textContent ?? '').includes('30일째(12/10)에 자동으로 한 번 더 봐요'),
+        (cellOf(2)?.textContent ?? '').includes('30일째(12/10)부터 「구글 자동 확인」에서 한 번 더 봐요'),
     )
     const tiles = doc.querySelector('.ps-summary')?.textContent ?? ''
     ok('요약 타일 — 구글 색인은 「색인됨인 글(자동 확인 포함)」', tiles.includes('색인됨인 글(자동 확인 포함)'), tiles)
@@ -308,6 +316,12 @@ const RUN_DONE = {
     await waitFor(() => panelText().includes('이번에 확인할 글'))
     const planCalls = sent('POST', '/api/index-auto/plan')
     ok('펼치기 — 머리 단추가 패널을 펼치고 포커스를 패널 머리로 옮긴다', toggle()?.getAttribute('aria-expanded') === 'true' && doc.activeElement === toggle())
+    ok(
+      '접근성 — 머리 단추는 열기 · 포커스만 하므로 aria-expanded를 달지 않고(aria-controls만), 한 번 상한 칸 이름은 띄어 읽힌다',
+      headButton()?.hasAttribute('aria-expanded') === false && headButton()?.getAttribute('aria-controls') === 'iap-body' &&
+        (doc.getElementById('iap-run-cap')?.getAttribute('aria-label') ?? '') === '한 번에 확인할 글 수(편)',
+      [headButton()?.outerHTML, doc.getElementById('iap-run-cap')?.outerHTML],
+    )
     ok('펼치기 — 계획을 한 번 받는다(JSON 본문 { trigger: button })', planCalls.length === 1 && planCalls[0]?.type === 'application/json' && JSON.stringify(planCalls[0]?.body) === JSON.stringify({ trigger: 'button' }), planCalls)
     const pt = panelText()
     ok('계획 — 「이번에 확인할 글 2편 · 검색 2회」', pt.includes('이번에 확인할 글 2편 · 검색 2회'), pt)
@@ -337,10 +351,26 @@ const RUN_DONE = {
     ok('끝나면 — 진행 글자가 사라지고 머리 단추가 돌아온다', doc.querySelector('.iap-progress') === null && (headButton()?.textContent ?? '').startsWith('구글 자동 확인'))
 
     // 멈춘 실행 — 맨 위에 까닭(role=alert).
-    st = status({ lastRun: { ...RUN_DONE, stoppedBy: { kind: 'rate-hour', message: '이번 시간 검색 한도에 닿았어요 — 한 시간쯤 뒤 다시 눌러 주세요. 남은 1편은 확인하지 않았어요.' }, searched: 1, notRun: 1 } })
+    st = status({
+      lastRun: {
+        ...RUN_DONE,
+        stoppedBy: { kind: 'rate-hour', message: '이번 시간 검색 한도에 닿았어요 — 한 시간쯤 뒤 다시 눌러 주세요. 남은 1편은 확인하지 않았어요.' },
+        searched: 2,
+        notRun: 1,
+        items: [...RUN_DONE.items, { key: K(3), tenantId: 'via-a', postId: 'p-ia3', rowName: '가상하나 「가상 글 3」 티스토리', tier: 'day14', outcome: 'unknown', reason: 'rate-hour' }],
+      },
+    })
     await click(reloadButton())
     await waitFor(() => alerts().includes('시간 검색 한도'))
     ok('멈춤 — 멈춘 까닭을 role=alert로(남은 편 수까지)', alerts().includes('이번 시간 검색 한도에 닿았어요') && alerts().includes('남은 1편'), alerts())
+    ok(
+      '멈춤 — 멈춤 오류로 못 본 글은 「실행이 멈춰 못 봤어요 — 다음 실행에서 다시 찾아요」(차례 몫에 안 들어 다음 계획에 다시 나온다)',
+      (() => {
+        const li = [...(panel()?.querySelectorAll('.iap-result .iap-list li') ?? [])].find((x) => (x.textContent ?? '').includes('가상 글 3'))?.textContent ?? ''
+        return li.includes('실행이 멈춰 못 봤어요 — 다음 실행에서 다시 찾아요.') && !li.includes('직접 확인해 주세요')
+      })(),
+      panelText(),
+    )
 
     // 설정 — 바꾼 값만 JSON으로 저장한다.
     await typeInto(doc.getElementById('iap-run-cap'), '30')
@@ -357,11 +387,25 @@ const RUN_DONE = {
     // 계획이 바뀜(409) — 까닭을 보이고 계획을 다시 받는다.
     await click(buttonNamed('계획 다시 받기', panel() ?? doc))
     await waitFor(() => Boolean(buttonNamed('확인하기(검색 2회)', panel() ?? doc)))
-    runReply = { status: 409, body: { error: '계획이 바뀌었어요 — 계획을 다시 받아 주세요.' } }
+    // 계획 다시 받기(키보드) — 읽는 동안 단추를 내리지 않아 포커스가 몸통으로 빠지지 않는다.
+    const replanBtn = buttonNamed('계획 다시 받기', panel() ?? doc)
+    replanBtn?.focus()
+    const plansKey = sent('POST', '/api/index-auto/plan').length
+    await click(replanBtn)
+    await waitFor(() => sent('POST', '/api/index-auto/plan').length > plansKey && Boolean(buttonNamed('확인하기(검색 2회)', panel() ?? doc)))
+    ok('계획 다시 받기(키보드) — 받는 동안 · 받은 뒤에도 포커스는 그 단추에 남는다', doc.activeElement === replanBtn && doc.activeElement !== doc.body)
+    runReply = { status: 409, body: { error: '계획이 바뀌었어요 — 계획을 다시 받아 주세요.', code: 'plan-changed' } }
     const plans409 = sent('POST', '/api/index-auto/plan').length
-    await click(buttonNamed('확인하기(검색 2회)', panel() ?? doc))
-    await waitFor(() => sent('POST', '/api/index-auto/plan').length > plans409)
-    ok('실행 409 — 까닭을 패널 안에(role=alert) 보이고 계획을 새로 받는다', alerts().includes('계획이 바뀌었어요') && sent('POST', '/api/index-auto/plan').length > plans409, alerts())
+    const runBtn409 = buttonNamed('확인하기(검색 2회)', panel() ?? doc)
+    runBtn409?.focus()
+    await click(runBtn409)
+    await waitFor(() => sent('POST', '/api/index-auto/plan').length > plans409 && Boolean(buttonNamed('확인하기(검색 2회)', panel() ?? doc)))
+    ok(
+      '실행 409(계획이 바뀜) — 「계획이 바뀌어 새로 받았어요 — 다시 눌러 주세요」 한 번만(role=alert) · 계획을 새로 받는다 · 포커스는 「계획 다시 받기」로',
+      alerts().includes('계획이 바뀌어 새로 받았어요 — 다시 눌러 주세요.') && !alerts().includes('계획을 다시 받아 주세요') && sent('POST', '/api/index-auto/plan').length > plans409 &&
+        doc.activeElement === buttonNamed('계획 다시 받기', panel() ?? doc),
+      [alerts(), doc.activeElement?.textContent],
+    )
 
     // 막힘 — 계정을 못 읽으면 검색 0 · 단추 없음 · 까닭(패널 안에서만), 표는 그대로.
     planReply = { status: 200, body: plan({ planId: null, searches: 0, limitedBy: 'account', blocked: 'SerpAPI 계정 상태를 읽지 못해 시작하지 않았어요.', quota: null }) }
@@ -369,8 +413,18 @@ const RUN_DONE = {
     await waitFor(() => panelText().includes('계정 상태를 읽지 못해'))
     ok(
       '막힘 — 계정을 못 읽으면 검색하지 않는다(단추 없음 · 까닭 role=alert) · 표는 그대로',
-      alerts().includes('계정 상태를 읽지 못해') && !alerts().includes('계획이 바뀌었어요') && !buttonNamed('확인하기(검색', panel() ?? doc) && doc.querySelectorAll('.ps-table tbody tr').length === ROWS.length,
+      alerts().includes('계정 상태를 읽지 못해') && !alerts().includes('계획이 바뀌어') && !buttonNamed('확인하기(검색', panel() ?? doc) && doc.querySelectorAll('.ps-table tbody tr').length === ROWS.length,
       panelText(),
+    )
+    ok(
+      '막힘 — 까닭이 있으면 「계정 상태로는 검색하지 않아요」를 겹쳐 쓰지 않고, 큰 글자는 「오늘 볼 글 2편 — 이번에는 검색하지 않아요」',
+      !panelText().includes('SerpAPI 계정 상태로는 검색하지 않아요') && panelText().includes('오늘 볼 글 2편 — 이번에는 검색하지 않아요') && !panelText().includes('이번에 확인할 글 0편'),
+      panelText(),
+    )
+    ok(
+      '머리 단추 — 계획을 받으면 그 수를 쓴다(오늘 볼 글 2편이지만 지금은 검색 안 함 · 누를 수 없음)',
+      (headButton()?.textContent ?? '') === '구글 자동 확인(2편 · 지금은 검색 안 함)' && (headButton() as HTMLButtonElement | undefined)?.disabled === true,
+      headButton()?.textContent,
     )
     planReply = { status: 502, body: { error: 'SerpAPI 계정 상태를 읽지 못해 시작하지 않았어요 — 가상 502' } }
     await click(buttonNamed('계획 다시 받기', panel() ?? doc))
@@ -413,11 +467,126 @@ const RUN_DONE = {
     ok('열 때 하루 한 번(기본 끔) — 열기만 해서는 계획 · 실행 요청이 없다', sent('POST', '/api/index-auto/plan').length === 0 && sent('POST', '/api/index-auto/run').length === 0)
     await unmount()
 
+    // (사) 다른 탭에서 먼저 시작함(409 도는 중) — 상태를 다시 읽어 진행으로 넘어가고, 같은 오류를 두 번 보이지 않는다.
+    st = status()
+    planReply = { status: 200, body: plan() }
+    runReply = { status: 409, body: { error: '이미 구글 자동 확인이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.', code: 'busy' } }
+    await mount(live)
+    await click(toggle())
+    await waitFor(() => Boolean(buttonNamed('2편 확인하기(검색 2회)', panel() ?? doc)))
+    st = status({ running: { runId: 'r-other-tab', trigger: 'button', startedAt: '2026-11-30T05:00:00.000Z', total: 2, done: 1 } })
+    await click(buttonNamed('2편 확인하기(검색 2회)', panel() ?? doc))
+    await waitFor(() => (doc.querySelector('.iap-progress[role="status"]')?.textContent ?? '').includes('1/2'))
+    ok(
+      '다른 탭이 먼저 돎(409) — 상태를 다시 읽어 진행(role=status)으로 넘어가고 머리 단추도 진행, 오류는 보이지 않는다',
+      (doc.querySelector('.iap-progress[role="status"]')?.textContent ?? '').includes('확인하는 중… 1/2') && (headButton()?.textContent ?? '').includes('확인하는 중… 1/2') && alerts() === '',
+      [alerts(), panelText()],
+    )
+    st = status({ lastRun: { ...RUN_DONE, runId: 'r-other-tab' } })
+    await waitFor(() => panelText().includes('2편 확인 — 색인됨 1'))
+    ok('다른 탭이 먼저 돎 — 그 실행이 끝나면 결과가 보인다(다시 읽기 없이)', panelText().includes('2편 확인 — 색인됨 1') && doc.querySelector('.iap-progress') === null, panelText())
+    await unmount()
+
+    // (아) 다른 창(앱을 두 번 켬)에서 도는 중 — 실행 · 계획 모두 같은 409, 한 번만 알린다.
+    const ELSEWHERE = '이 PC에서 앱이 한 번 더 켜져 있고, 그쪽에서 SerpAPI 작업(구글 자동 확인 등)이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.'
+    st = status()
+    planReply = { status: 200, body: plan() }
+    runReply = { status: 409, body: { error: ELSEWHERE, code: 'busy-elsewhere' } }
+    await mount(live)
+    await click(toggle())
+    await waitFor(() => Boolean(buttonNamed('2편 확인하기(검색 2회)', panel() ?? doc)))
+    planReply = { status: 409, body: { error: ELSEWHERE, code: 'busy-elsewhere' } }
+    st = status({ busyElsewhere: ELSEWHERE })
+    const plansElse = sent('POST', '/api/index-auto/plan').length
+    await click(buttonNamed('2편 확인하기(검색 2회)', panel() ?? doc))
+    await waitFor(() => sent('POST', '/api/index-auto/plan').length > plansElse && alerts().includes('다른 SerpAPI') === false && alerts().includes('한 번 더 켜져'))
+    ok(
+      '다른 창에서 돎(409) — 실행 · 계획 오류가 같은 글이면 한 번만(role=alert) · 확인 단추 없음',
+      alerts().split('한 번 더 켜져').length - 1 === 1 && !buttonNamed('확인하기(검색', panel() ?? doc),
+      alerts(),
+    )
+    await unmount()
+    st = status({ busyElsewhere: ELSEWHERE, lastRun: { ...RUN_DONE, endedAt: null, searched: 1, found: 1, unknown: 0, items: [RUN_DONE.items[0]] } })
+    planReply = { status: 409, body: { error: ELSEWHERE, code: 'busy-elsewhere' } }
+    await mount(live)
+    await click(toggle())
+    await waitFor(() => panelText().includes('한 번 더 켜져'))
+    ok(
+      '다른 창에서 돎 — 끝나지 않은 마지막 실행을 「끊겼어요」로 보이지 않고 다른 창에서 도는 중이라고 알린다(패널 머리에도)',
+      !panelText().includes('끊겼어요') && panelText().includes('다른 앱 창에서 도는 중') && (toggle()?.textContent ?? '').includes('다른 앱 창에서 확인하는 중'),
+      panelText(),
+    )
+    await unmount()
+
+    // (자) 끊긴 실행 — 끊기기 전에 끝난 글 수 · 확인하지 못한 글 수를 보인다.
+    st = status({ lastRun: { ...RUN_DONE, endedAt: null, planned: 3, searched: 1, found: 1, unknown: 0, items: [RUN_DONE.items[0]] } })
+    planReply = { status: 200, body: plan() }
+    await mount(live)
+    await click(toggle())
+    await waitFor(() => panelText().includes('끊겼어요'))
+    ok(
+      '끊긴 실행 — 「끊기기 전에 1편 확인 — 색인됨 1 …」 · 「확인하지 못한 글 2편은 다음에」',
+      panelText().includes('끊기기 전에 1편 확인 — 색인됨 1 · 아직 0 · 자동으로 못 가림 0') && panelText().includes('확인하지 못한 글 2편은 다음에 확인해요'),
+      panelText(),
+    )
+    await unmount()
+
+    // (차) 결과를 적지 않은 글 — 못 찾음 · 찾음 모두 한 제목 아래, 「찾았지만」이라고 하지 않는다.
+    st = status({
+      lastRun: {
+        ...RUN_DONE,
+        found: 1,
+        notFound: 1,
+        unknown: 0,
+        skipped: 2,
+        items: [
+          { key: K(5), tenantId: 'via-a', postId: 'p-ia5', rowName: '가상하나 「가상 글 5」 티스토리', tier: 'day14', outcome: 'not-found', skipped: 'changed' },
+          { key: K(8), tenantId: 'via-a', postId: 'p-ia8', rowName: '가상하나 「가상 글 8」 티스토리', tier: 'day14', outcome: 'not-found', skipped: 'already-shown' },
+        ],
+      },
+    })
+    await mount(live)
+    await click(toggle())
+    await waitFor(() => panelText().includes('결과를 적지 않은 글'))
+    ok(
+      '적지 않은 글 — 제목 「결과를 적지 않은 글」(「찾았지만」 없음) · 줄마다 못 찾음/찾음 · 까닭(사이에 누름 · 앞선 색인됨)',
+      panelText().includes('결과를 적지 않은 글') && !panelText().includes('찾았지만') && panelText().includes('가상 글 5') && panelText().includes('못 찾음 · 확인하는 사이에 직접 표시해서') &&
+        panelText().includes('앞서 색인됨으로 본 기록이 있어'),
+      panelText(),
+    )
+    await unmount()
+
+    // (카) 열 때 하루 한 번(켬)이 바닥에 걸려 건너뜀 — 접힌 채로도 까닭이 보이고, 펼치면 바닥 문구가 사실대로.
+    const floorQuota = { ...QUOTA, accountLeft: 0, aboveFloor: 0, allowed: 0 }
+    st = status({ settings: { runCap: 40, autoOnOpen: true } })
+    planReply = { status: 200, body: plan({ planId: null, candidates: 1, searches: 0, limitedBy: 'floor', targets: [target(5)], quota: floorQuota }) }
+    runReply = { status: 202, body: { runId: 'r-ui-x', total: 1 } }
+    await mount(live)
+    await waitFor(() => (panel()?.textContent ?? '').includes('오늘 열 때 자동 확인을 하지 않았어요'))
+    ok(
+      '열 때 하루 한 번 — 바닥 · 몫 · 시간 한도로 건너뛰면 접힌 패널에도 까닭을 보인다(실행 요청 없음)',
+      toggle()?.getAttribute('aria-expanded') === 'false' && (panel()?.textContent ?? '').includes('오늘 열 때 자동 확인을 하지 않았어요 — 계정 남은 검색 0회 — 바닥(500회) 아래라 1편은 확인하지 않아요.') &&
+        sent('POST', '/api/index-auto/run').length === 0,
+      panel()?.textContent,
+    )
+    await click(toggle())
+    await waitFor(() => panelText().includes('오늘 볼 글 1편'))
+    ok('바닥 문구 — 남은 0회를 「가까이」라고 하지 않는다', panelText().includes('바닥(500회) 아래라') && !panelText().includes('가까이'), panelText())
+    await unmount()
+
     // (바) 자동 확인 상태를 못 읽음(500) — 패널 안에서만 알리고 표는 그대로.
     const broken = { status: 500, body: { error: '자동 확인 기록 파일(index-auto.json)이 깨져 있어 시작하지 않았어요.' } }
     await mount((a) => (a.path === '/api/index-auto' ? broken : base(() => status())(a)))
     await waitFor(() => panelText().includes('깨져 있어'))
     ok('상태 읽기 실패 — 패널 안에서만 알린다(머리 단추 없음 · 표 그대로)', panelText().includes('깨져 있어') && !headButton() && doc.querySelectorAll('.ps-table tbody tr').length === ROWS.length, panelText())
+    // 다시 시도(키보드) — 읽히면 단추가 사라지므로 포커스를 패널 머리로 옮긴다.
+    reply = base(() => status())
+    const retryBtn = buttonNamed('다시 시도', panel() ?? doc)
+    retryBtn?.focus()
+    await click(retryBtn)
+    await waitFor(() => Boolean(toggle()))
+    await settle(2)
+    ok('다시 시도(키보드) — 읽히면 포커스가 몸통으로 빠지지 않고 패널 머리로 간다', Boolean(toggle()) && doc.activeElement === toggle(), doc.activeElement?.tagName)
     await unmount()
 
     ok('가짜 fetch — /api/ 밖(진짜 SerpAPI 포함)으로 나가려 한 요청이 없다', outside.length === 0, outside)

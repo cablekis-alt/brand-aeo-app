@@ -839,6 +839,8 @@ export interface IndexAutoStatus {
   lastRun: IndexAutoRunRecord | null
   attemptsByKey: Record<string, AutoAttemptView[]>
   openRunToday: boolean
+  /** 앱을 두 번 켠 다른 서버가 SerpAPI 실행을 쥐고 있으면 그 안내(그동안 이 서버는 시작하지 않는다). */
+  busyElsewhere: string | null
 }
 /** 이번 결제 주기 색인 몫 · 계정 숫자(어림 — 계정 값 − 그 뒤 이 PC가 보낸 수). */
 export interface IndexAutoQuota {
@@ -870,30 +872,34 @@ export interface IndexAutoPlan {
   manual: number
   unsupported: { key: string; rowName: string; reason: string; text: string }[]
   settled: number
-  shownElsewhere: number
   quota: IndexAutoQuota | null
   settings: IndexAutoSettings
 }
 
-/** 색인 자동 확인 요청 실패 — status는 서버 HTTP 상태(닿지 못했으면 0). 409(계획이 바뀜 · 도는 중)면 화면이 계획을 다시 받는다. */
+/**
+ * 색인 자동 확인 요청 실패 — status는 서버 HTTP 상태(닿지 못했으면 0), code는 409의 까닭(plan-changed 계획이 바뀜 · busy 이 서버에서 도는 중 ·
+ * busy-elsewhere 앱을 두 번 켠 다른 서버에서 도는 중 · open-off · open-done · limit). 화면은 글자 대신 code로 할 일을 고른다.
+ */
 export class IndexAutoRequestError extends Error {
   readonly status: number
-  constructor(message: string, status: number) {
+  readonly code: string | null
+  constructor(message: string, status: number, code: string | null = null) {
     super(message)
     this.name = 'IndexAutoRequestError'
     this.status = status
+    this.code = code
   }
 }
 
-async function indexAutoRequest<T>(path: string, init: RequestInit | undefined, what: string): Promise<{ status: number; body: (T & { error?: string }) | null }> {
+async function indexAutoRequest<T>(path: string, init: RequestInit | undefined, what: string): Promise<{ status: number; body: (T & { error?: string; code?: string }) | null }> {
   let res: Response
   try {
     res = await fetch(path, init)
   } catch (err) {
     throw new IndexAutoRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`, 0)
   }
-  const body = (await res.json().catch(() => null)) as (T & { error?: string }) | null
-  if (!res.ok && res.status !== 404) throw new IndexAutoRequestError(body?.error || `${what} (HTTP ${res.status})`, res.status)
+  const body = (await res.json().catch(() => null)) as (T & { error?: string; code?: string }) | null
+  if (!res.ok && res.status !== 404) throw new IndexAutoRequestError(body?.error || `${what} (HTTP ${res.status})`, res.status, typeof body?.code === 'string' ? body.code : null)
   return { status: res.status, body }
 }
 

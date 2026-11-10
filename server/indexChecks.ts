@@ -153,7 +153,7 @@ export interface IndexCheckGuard {
   expectRawCheckedAt: string | null;
 }
 
-/** 자동 결과를 적지 않은 까닭 — changed 확인하는 사이 표시가 바뀜, already-shown 원본 최신 기록이 「색인됨」(사람 표시가 먼저). */
+/** 자동 결과를 적지 않은 까닭 — changed 확인하는 사이 표시가 바뀜, already-shown 이 줄이 「색인됨」이거나 원본 최신 기록이 「색인됨」인데 「아직」(사람 표시가 먼저). */
 export type IndexWriteSkip = 'changed' | 'already-shown';
 export type IndexWriteResult = { record: IndexCheckRecord } | { skipped: IndexWriteSkip };
 
@@ -165,7 +165,9 @@ export type IndexWriteResult = { record: IndexCheckRecord } | { skipped: IndexWr
  * checkedOn · checkedAt · source — 옛 판 v0.4.63 · v0.4.64도 source 'auto'를 읽는다).
  *
  * 자동은 사람 표시가 먼저다(D4 A): 조건(guard) 없이 · 지우기(null)로는 적지 않고(400), 원본 최신 기록의 그 엔진 확인 시각이 계획 때와 다르면
- * changed, 원본 최신 기록이 「색인됨」이면 already-shown으로 건너뛴다(파일은 그대로).
+ * changed로 건너뛴다. 이 줄에 지금 「색인됨」이 보이면(신선도 안 — R1) 무엇도, 원본 최신 기록이 「색인됨」이면(다른 줄 · 내리기 전 올림 — R4)
+ * 「아직」은 already-shown으로 건너뛴다(파일은 그대로). 그때 찾음(「색인됨」)은 적는다 — 다시 올린 글이 신선도 규칙으로 앞선 「색인됨」을 잃은
+ * 경우라, 적지 않으면 그 줄은 사람이 볼 때까지 자동 확인을 한 번도 받지 못한다.
  */
 export function writeIndexCheck(
   tenantId: string,
@@ -207,12 +209,12 @@ export function writeIndexCheck(
       const target = EXTERNAL_ID.test(postId) ? await externalTarget(tenantId, postId, posts) : ledgerTarget(posts, postId);
       const checks = await readIndexChecksInQueue(tenantId);
       const found = findIndexRecord({ tenantId, checks }, foreign, target.ids, target.post.key);
+      const base = found ? freshIndexRecord(found.record, target.publishedOn) : null;
       if (guard) {
         const raw = found?.record[engine];
         if ((raw?.checkedAt ?? null) !== guard.expectRawCheckedAt) return { skipped: 'changed' };
-        if (raw?.state === 'shown') return { skipped: 'already-shown' };
+        if (base?.[engine]?.state === 'shown' || (state === 'not-yet' && raw?.state === 'shown')) return { skipped: 'already-shown' };
       }
-      const base = found ? freshIndexRecord(found.record, target.publishedOn) : null;
       const record = applyIndexCheck(base, target.post, engine, state, now, source);
       const file: IndexChecksFile = { format: INDEX_CHECKS_FORMAT, checks: { ...checks, [postId]: record } };
       await writeJsonAtomic(filePathFor(tenantId), file);
