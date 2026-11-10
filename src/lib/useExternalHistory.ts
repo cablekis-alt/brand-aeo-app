@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import type { MovedPosting } from '../components/PublishedHistoryTable'
+import type { MovedPosting, RepostPosting } from '../components/PublishedHistoryTable'
 import { loadExternalHistory, type ExternalHistory, type PublishedPost } from './api'
+import { measuredBefore, repostBasis } from './externalPosts'
 import { ownedBrandsOf } from './postImport'
 import { kstDate } from './publishedUrl'
 
@@ -56,6 +57,22 @@ export function externalMovedOf(history: ExternalHistory): (post: PublishedPost)
     moved.set(post.id, { movedOn: external.movedOn, countsFrom: external.appCountsFrom })
   }
   return (post) => moved.get(post.id) ?? null
+}
+
+/**
+ * 행 → 다시 올린 행(성과 표 repostOf). 같은 브랜드에서 같은 주소를 앞서 「글을 내림」으로 뺀 줄이 있는 행에만, 그 내린 날과 그 주 측정이 이 행이
+ * 세기 시작하는 날보다 앞인지를 준다 — 서버가 칸을 비운 것과 같은 함수(src/lib/externalPosts.ts repostBasis · measuredBefore). 이력의 행에는
+ * 「잘못 적음」 줄만 빠지고 내린 줄은 모두 있어(그 함수는 내린 줄만 본다) 서버와 같은 날이 나온다.
+ */
+export function externalRepostOf(history: ExternalHistory): (post: PublishedPost) => RepostPosting | null {
+  const rows = history.posts.map((p) => p.external)
+  const reposts = new Map<string, RepostPosting>()
+  for (const { post, external } of history.posts) {
+    const basis = repostBasis(rows, external)
+    if (!basis) continue
+    reposts.set(post.id, { downOn: basis.downOn, beforeRepost: (week) => measuredBefore(basis.countsFrom, week.window, week.weekOf) })
+  }
+  return (post) => reposts.get(post.id) ?? null
 }
 
 /**

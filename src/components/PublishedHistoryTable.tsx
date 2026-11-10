@@ -39,6 +39,20 @@ export interface MovedPosting {
   countsFrom: string | null
 }
 
+/**
+ * 같은 주소를 앞서 「글을 내림」으로 뺀 뒤 다시 올린 행(앱 밖 글 — C9). 서버는 앞 행을 내린 날까지 한 측정을 이 행에서 비운다(「내린 뒤」 모양) — 그
+ * 칸에는 「내린 뒤」 대신 「다시 올리기 전」과 까닭을 단다.
+ */
+export interface RepostPosting {
+  /** 앞 행을 내린 날(가장 늦은 날). */
+  downOn: string
+  /** 그 주 측정이 이 행이 세기 시작하는 날보다 앞인가 — 서버가 칸을 비운 것과 같은 규칙(src/lib/externalPosts.ts repostBasis · measuredBefore). */
+  beforeRepost: (week: HistoryWeek) => boolean
+}
+
+/** 날짜 모름 칸의 도움말(앱 글 표) — 날짜 없는 원장 줄은 주소만 남은 옛 기록이다. */
+const UNDATED_NOTE = '올린 날을 모르는 옛 기록입니다 — 판단에는 넣지 않습니다'
+
 /** 옮긴 행에서 「내림 · 올린 뒤 판단할 측정 없음」 대신 쓰는 판단 칸. */
 const MOVED_TIER_LABEL = '앱 글로 옮김 · 옮기기 전 판단할 측정 없음'
 /** 옮긴 행의 「최근 측정한 주에는 인용 없음」 — 최근 측정은 앱 글 표가 센다(이 행의 마지막 칸은 옮기기 전 측정이다). */
@@ -69,8 +83,22 @@ const weekSerial = (weekOf: string) => {
  * 읽은 주는 질문 유형을 확인 불가로 둔다. 「인용 없음」은 그 주 AI 답변 인용에서 찾지 못했다는 뜻이다. 실증 질문의 인용은 이름 없는
  * 질문에 넣지 않고 「실증」으로 따로 적는다 — 실증을 측정한 주가 있는 브랜드에서만(withProbe).
  */
-function cellView(c: HistoryCell | null, withProbe: boolean, moved: MovedPosting | null): { main: string; sub: string[]; cls: string; title: string } {
+function cellView(
+  c: HistoryCell | null,
+  withProbe: boolean,
+  moved: MovedPosting | null,
+  repostDown: string | null,
+  undatedNote: string,
+): { main: string; sub: string[]; cls: string; title: string } {
   if (!c) return { main: '확인 불가', sub: [], cls: 'muted', title: '그 주 판정 기록이 없습니다' }
+  if (c.afterRemoval && repostDown) {
+    return {
+      main: '다시 올리기 전',
+      sub: [],
+      cls: 'muted',
+      title: `같은 주소를 ${shortDate(repostDown)}에 내렸습니다 — 그날까지 한 측정은 다시 올리기 전이라 이 행에서 세지 않습니다(내리기 전 측정은 내린 행이 셉니다)`,
+    }
+  }
   if (c.afterRemoval && moved) {
     return { main: '앱 글 표에서', sub: [], cls: 'muted', title: '앱 글로 옮긴 주소입니다 — 이 측정은 「올린 글 인용 추적」 표가 셉니다(두 표가 같은 측정을 두 번 세지 않게 여기서는 비웁니다)' }
   }
@@ -109,7 +137,7 @@ function cellView(c: HistoryCell | null, withProbe: boolean, moved: MovedPosting
       : c.timing === 'ambiguous'
         ? '같은 주에 올렸는데 측정 시각 기록이 없습니다'
         : c.timing === 'unknown'
-          ? '올린 날을 모르는 옛 기록입니다 — 판단에는 넣지 않습니다'
+          ? undatedNote
           : ''
   // 올린 뒤로 센 회차만 말한다 — 그 주 전체 회차 수는 주차 머리글(「·3회」)에 있다. 올린 날을 모르는 글은 붙이지 않는다.
   const runTitle =
@@ -126,7 +154,8 @@ function cellView(c: HistoryCell | null, withProbe: boolean, moved: MovedPosting
  * 한 주로 센다. 측정 조건이 바뀌었거나 확인할 수 없는 주는 ◆, 측정하지 않은 주는 「…」, 여러 번 잰 주는 머리글에 「·3회」.
  *
  * 앱 밖 글 표(퍼포먼스 「앱 밖 글 인용 추적」)도 이 표를 쓴다 — 첫 열 머리글(header) · 앱 글 전용 설명 문장 대신 넣을 설명(description) ·
- * 앱 글로 옮긴 행(movedOf — 「내림」 대신 「앱 글로 옮김(날짜)」, 옮긴 뒤 칸은 「앱 글 표에서」) · 줄마다 한 행(groupRows false — 앱 밖 글은
+ * 앱 글로 옮긴 행(movedOf — 「내림」 대신 「앱 글로 옮김(날짜)」, 옮긴 뒤 칸은 「앱 글 표에서」) · 다시 올린 행(repostOf — 앞 행을 내린 날까지의
+ * 비운 칸은 「다시 올리기 전」) · 날짜 모름 칸 도움말(undatedNote — 앱 밖 글은 옛 기록이 아니다) · 줄마다 한 행(groupRows false — 앱 밖 글은
  * 브랜드마다 주소 한 줄이 살아 있고, 내렸다 다시 올리면 새 줄이다. 원장의 「날짜 없는 옛 줄은 같은 주소의 날짜 있는 줄에 묻는다」 규칙을
  * 쓰면 날짜 모름으로 다시 올린 줄이 사라진다)을 넘긴다. 모두 주지 않으면 앱 글 표 그대로다.
  */
@@ -136,6 +165,8 @@ export default function PublishedHistoryTable({
   header: firstHeader = '올린 글',
   description,
   movedOf,
+  repostOf,
+  undatedNote = UNDATED_NOTE,
   groupRows = true,
 }: {
   history: PublishedHistory
@@ -146,6 +177,10 @@ export default function PublishedHistoryTable({
   description?: ReactNode
   /** 칸을 끊은 까닭이 앱 글로 옮긴 것인 행(앱 밖 글). 주지 않거나 null이면 원장의 「내림」 그대로. */
   movedOf?: (post: PublishedPost) => MovedPosting | null
+  /** 같은 주소를 앞서 내린 뒤 다시 올린 행(앱 밖 글). 주지 않거나 null이면 비운 칸은 「내린 뒤」 그대로. */
+  repostOf?: (post: PublishedPost) => RepostPosting | null
+  /** 날짜 모름 칸의 도움말. 주지 않으면 앱 글 표 문구(「올린 날을 모르는 옛 기록입니다」) 그대로. */
+  undatedNote?: string
   /** false면 이력의 줄마다 한 행(묶지 않는다 — 앱 밖 글). 기본은 같은 주소 · 같은 올린 날을 한 행으로 묶는다(distinctPostings). */
   groupRows?: boolean
 }) {
@@ -161,6 +196,7 @@ export default function PublishedHistoryTable({
   const row = ({ item: p, places }: Posting<PostHistory>) => {
     const removedOn = p.post.removedAt ? kstDate(p.post.removedAt) : null
     const moved = movedOf?.(p.post) ?? null
+    const repost = repostOf?.(p.post) ?? null
     const summary = summarizePost(p.cells, history.weeks, removedOn)
     // 고친 글 — 마지막으로 고친 뒤의 결과를 따로 적고, 칸마다 고친 뒤 · 고친 날 측정인지 밝힌다(옛 글 · 새 글을 가르려고).
     const sinceEdit = summarizeSinceEdit(p.post, p.cells, history.weeks)
@@ -214,7 +250,7 @@ export default function PublishedHistoryTable({
           {summary.citedBeforePublish && <div className="doc-meta">올리기 전 측정에서 이미 인용됨 — 올린 날을 확인하세요</div>}
         </td>
         {cells.flatMap((c, i) => {
-          const v = cellView(c, withProbe, moved)
+          const v = cellView(c, withProbe, moved, repost && c?.afterRemoval && repost.beforeRepost(weeks[i]!) ? repost.downOn : null, undatedNote)
           // 고친 글이면 이 칸이 고친 글을 본 측정인지 — 올린 뒤 · 내리기 전 칸에만 붙인다. 고치기 전 회차가 섞인 주는 고친 뒤 몫을 따로 적는다.
           const editNote = c && !c.afterRemoval && c.timing === 'after' ? weekEditNote(p.post, c, weeks[i]!) : null
           if (editNote) v.sub.push(editNote)

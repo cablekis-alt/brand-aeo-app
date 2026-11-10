@@ -960,6 +960,24 @@ export function bulkIgnorable(read: PostImportRead, choice: RowChoice): boolean 
 }
 
 /**
+ * 「무시한 글 보기 · 되돌리기」로 무시를 푼 주소(keys — 무시 목록 항목의 키들)가 이 표 줄이면 그 줄에 입힐 읽기 결과 · 고른 일. 줄을 가리키는 키는
+ * 붙여 넣은 주소 · 적을 주소 · 읽은 주소다. 읽기 결과의 무시한 때를 지운다 — 읽지 못한 줄도(무시를 마친 「읽지 못함」 줄에도 무시한 때를 단다,
+ * D14). 무시를 고른 줄은 지운 읽기 결과로 처음 고를 일(initialChoice)을 다시 정한다(reset — 화면은 체크 · 결과도 비운다). 그래야 다시 읽기
+ * 전에도 「무시함」 · 무시 고름이 남지 않고, 읽지 못한 줄은 다시 「다시 읽기」 대상이 된다. 이 줄이 아니거나 아직 읽지 않은 줄이면 null.
+ */
+export function unignoredRow(
+  row: { key: string; read: PostImportRead | null; choice: RowChoice },
+  keys: ReadonlySet<string>,
+): { read: PostImportRead; choice: RowChoice; reset: boolean } | null {
+  const read = row.read
+  if (!read) return null
+  const rowKeys = [row.key, read.ok ? read.recordKey : null, read.ok && read.readUrl ? trackingKey(read.readUrl) : null]
+  if (!rowKeys.some((k) => k !== null && keys.has(k))) return null
+  const cleared: PostImportRead = { ...read, ignoredAt: null }
+  return row.choice.mode === 'ignore' ? { read: cleared, choice: initialChoice(cleared), reset: true } : { read: cleared, choice: row.choice, reset: false }
+}
+
+/**
  * 고른 일에 따른 줄 상태 — 앱 글은 rowStateOf 그대로, 앱 밖 글은 「앱 밖 글로 추적」(새 브랜드 없이 이미 추적 중이면 — 살아 있는 줄만 —
  * 「앱 밖 글로 추적 중」), 무시는 「무시」 · 「무시함」(읽지 못한 줄도 무시한 때가 있으면 「무시함」).
  */

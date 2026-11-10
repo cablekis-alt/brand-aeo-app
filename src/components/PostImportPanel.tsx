@@ -26,6 +26,7 @@ import {
   ROW_STATE_LABEL,
   sameUrlAppBrands,
   scorePercent,
+  unignoredRow,
   type BlogListResult,
   type BlogSource,
   type CommitItem,
@@ -472,15 +473,16 @@ export default function PostImportPanel({
     setIgnored({ ...IGNORED_CLOSED, open: true })
     void loadIgnored()
   }
-  /** 되돌린 주소가 표에 있으면 그 줄의 무시를 푼다 — 무시로 고른 줄은 처음 고를 일로 되돌리고 체크를 비운다(다시 읽지 않아도 상태가 맞게). */
+  /**
+   * 되돌린 주소가 표에 있으면 그 줄의 무시를 푼다(읽지 못한 줄도) — 무시로 고른 줄은 처음 고를 일로 되돌리고 체크 · 결과를 비운다(다시 읽지 않아도
+   * 상태가 맞게 — src/lib/postImport.ts unignoredRow).
+   */
   const afterUnignore = (keys: ReadonlySet<string>) =>
     setRows((rs) =>
       rs.map((r) => {
-        const readKey = r.read?.ok && r.read.readUrl ? trackingKey(r.read.readUrl) : null
-        if (![r.key, recordKeyOf(r), readKey].some((k) => k !== null && keys.has(k))) return r
-        const read = r.read?.ok ? { ...r.read, ignoredAt: null } : r.read
-        if (r.choice.mode !== 'ignore') return { ...r, read }
-        return { ...r, read, choice: read ? initialChoice(read) : NO_CHOICE, checked: false, result: null }
+        const next = unignoredRow(r, keys)
+        if (!next) return r
+        return next.reset ? { ...r, read: next.read, choice: next.choice, checked: false, result: null } : { ...r, read: next.read }
       }),
     )
   const restoreIgnored = async (entry: IgnoredPost) => {

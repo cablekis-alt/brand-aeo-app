@@ -16,7 +16,7 @@
  * 같은 브랜드 안에서 살아 있는(빼지 않은) 줄은 주소 키마다 하나다. 「글을 내림」으로 뺀 주소를 다시 올리면 새 x- 줄을 적어 내린 기간을
  * 남긴다(원장과 같다). 되살리기는 「잘못 적음」으로 뺀 줄만 — 내린 줄을 되살리면 내린 동안의 측정도 「올라가 있음」으로 센다. 다시 올린
  * 줄의 올린 날은 내린 날 뒤여야 한다(repostDayProblem) — 비공개를 풀면 페이지 날짜가 처음 올린 날 그대로라, 그 날을 받으면 내린 동안의
- * 측정을 「올라가 있음」으로 센다.
+ * 측정을 「올라가 있음」으로 센다. 날짜 모름으로 다시 올린 줄도 내린 날까지 한 측정은 세지 않는다(repostBasis — 색인 표시와 같은 기준일).
  *
  * ── 원장이 이긴다 ─────────────────────────────────────────────────────────
  * 같은 브랜드 원장에 같은 주소 키의 앱 글 줄 — 살아 있거나 「글을 내렸어요」로 뺀 줄, 옛 기록 포함(성과 표 shownPosts와 같은 기준) — 이
@@ -34,7 +34,7 @@
  * 런타임 import는 './publishedUrl.js'뿐이다 — 서버가 '../src/lib/externalPosts.js'로 불러 쓴다. 측정 · 집계 · 원장 · 보고서 · 실행 계획
  * 모듈은 이 파일을 불러오지 않는다(scripts/verify-external-posts.ts 정적 검사).
  */
-import { ARTICLE_URL_REASON, isArticleUrl, KEY_RULE, kstDate, todayKst, trackingKey } from './publishedUrl.js'
+import { ARTICLE_URL_REASON, isArticleUrl, KEY_RULE, kstDate, timingOf, todayKst, trackingKey, type MeasureWindow } from './publishedUrl.js'
 
 /** 브랜드마다 살아 있는(빼지 않은) 줄 상한 — 넘으면 조용히 자르지 않고 알린다. */
 export const MAX_EXTERNAL_POSTS = 500
@@ -228,12 +228,33 @@ const nextDay = (day: string) => new Date(Date.parse(`${day}T00:00:00Z`) + 86_40
 /**
  * 색인 표시의 신선도 기준일(src/lib/publishStatus.ts freshIndexRecord) — 이 날보다 앞선 확인은 이 줄의 확인이 아니다. 올린 날, 그리고 다시
  * 올린 줄이면 내린 날 다음 날(다시 올린 글은 그 전에 올라갈 수 없다 — repostDayProblem) 가운데 늦은 날. 올린 날을 모르는 다시 올린 줄이
- * 내리기 전 「노출됨 · 색인됨」을 이어받아 곧바로 「확인 끝」이 되지 않게. 둘 다 없으면 null(그대로).
+ * 내리기 전 「노출됨 · 색인됨」을 이어받아 곧바로 「확인 끝」이 되지 않게. 둘 다 없으면 null(그대로). 다시 올린 줄의 인용 칸도 이 날을 쓴다(repostBasis).
  */
 export function externalIndexBasis(rows: readonly TakedownRowLike[], post: TakedownRowLike & { publishedOn: string | null }): string | null {
   const down = takenDownBefore(rows, post)
   const floor = down ? nextDay(down) : null
   return post.publishedOn && floor ? (post.publishedOn > floor ? post.publishedOn : floor) : (post.publishedOn ?? floor)
+}
+
+/**
+ * 다시 올린 줄(C9)이 인용을 세기 시작하는 날 — 같은 브랜드 같은 주소에서 이 줄보다 먼저 「글을 내림」으로 뺀 줄이 있을 때만, 그 내린 날(downOn)과
+ * 색인 표시와 같은 기준일(countsFrom — externalIndexBasis: 내린 날 다음 날 · 올린 날 가운데 늦은 날). 그보다 앞서 한 측정(measuredBefore)은 이
+ * 줄이 세지 않는다 — 그 측정은 내린 줄이 세고(내린 날 측정은 어느 줄도 세지 않는다), 날짜 모름(D3)으로 다시 올린 줄의 칸에도 숫자가 보여 같은 측정이
+ * 두 행에 함께 보이지 않게. 서버(server/externalPosts.ts — 칸을 비운다)와 성과 표(src/lib/useExternalHistory.ts — 비운 칸에 까닭을 단다)가 이 함수를
+ * 같이 쓴다. 날짜를 적은 다시 올린 줄은 올린 날이 내린 날 뒤라(repostDayProblem) 그 앞 측정 칸이 이미 「올리기 전」이다. 다시 올린 줄이 아니면 null.
+ */
+export function repostBasis(rows: readonly TakedownRowLike[], post: TakedownRowLike & { publishedOn: string | null }): { downOn: string; countsFrom: string } | null {
+  const downOn = takenDownBefore(rows, post)
+  const countsFrom = externalIndexBasis(rows, post)
+  return downOn && countsFrom ? { downOn, countsFrom } : null
+}
+
+/**
+ * 측정(회차 · 주)이 기준일보다 앞인가 — 칸의 전후와 같은 규칙(publishedUrl.ts timingOf에 기준일을 올린 날로 넣어 「올리기 전」): 측정한 마지막 날이
+ * 기준일 앞이면, 측정 시각이 없는 옛 기록은 그 주가 기준일의 주 앞이면.
+ */
+export function measuredBefore(basis: string, window: MeasureWindow | null, weekOf: string): boolean {
+  return timingOf(basis, window, weekOf) === 'before'
 }
 
 /**

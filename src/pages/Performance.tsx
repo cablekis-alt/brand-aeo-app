@@ -7,7 +7,7 @@ import { ENGINE_LABEL, formatPct, formatRank, judgeLabel, weekLabel } from '../l
 import { factFlagSummary } from '../lib/alerts'
 import { executionMarks, executionsPerSlot, postingLegend } from '../lib/publishTracking'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
-import { externalMovedOf, ownedExternalHosts, useExternalHistory } from '../lib/useExternalHistory'
+import { externalMovedOf, externalRepostOf, ownedExternalHosts, useExternalHistory } from '../lib/useExternalHistory'
 import { useRunHistory } from '../lib/useRunHistory'
 import RunTrendPanel from '../components/RunTrendPanel'
 import { kstStamp } from '../lib/runTrend'
@@ -43,8 +43,12 @@ function maxScore(history: WeeklyScorecard[]): number {
 const EXTERNAL_TABLE_NOTE =
   '앱 밖 글은 올린 시각을 모릅니다 — 올린 날에 한 측정은 「전후 불명」으로 두고, 올린 날을 모르는 글은 올리기 전 · 뒤를 가리지 않습니다' +
   '(「올린 날 모름」). 늦게 추적을 시작해도 지난 측정까지 거슬러 셉니다. 같은 글도 주소가 다르면(티스토리 숫자 주소와 제목 주소, 원본과 네이버 ' +
-  '사본) 따로 셉니다. 내렸다 다시 올린 주소는 다시 적을 때마다 한 행입니다(날짜를 모르는 행도). 같은 브랜드에서 앱 글로 옮긴 주소는 앱 글 ' +
+  '사본) 따로 셉니다. 내렸다 다시 올린 주소는 다시 적을 때마다 한 행입니다(날짜를 모르는 행도). 다시 올린 행은 앞 행을 내린 날까지 한 측정을 ' +
+  '세지 않습니다(「다시 올리기 전」 — 내리기 전 측정은 내린 행이 셉니다). 같은 브랜드에서 앱 글로 옮긴 주소는 앱 글 ' +
   '표가 세는 측정만 이 표에서 비웁니다(「앱 글 표에서」) — 옮긴 날 옮기기 전에 끝난 측정은 이 표가 셉니다. 두 표가 같은 측정을 두 번 세지도, 빠뜨리지도 않습니다.'
+
+/** 앱 밖 글 표의 날짜 모름 칸 도움말 — 앱 글 표의 「옛 기록」과 달리 날짜를 적을 수 있는 글이다(발행 현황 「관리」). */
+const EXTERNAL_UNDATED_NOTE = '올린 날을 모르는 앱 밖 글입니다 — 발행 현황 「관리」에서 날짜를 적으면 올리기 전 · 뒤를 가립니다'
 
 /**
  * 앱 밖 글 인용 추적(2026-11-10 설계 · C1 · C19 · D12) — 앱에서 만들지 않은 글(발행 현황 「주소 한꺼번에 등록」에서 앱 밖 글로 추적한 주소).
@@ -58,6 +62,7 @@ function ExternalHistorySection({ tenant }: { tenant: TenantSummary }) {
   const external = useExternalHistory(tenant.tenantId)
   const h = external.history
   const movedOf = useMemo(() => (h ? externalMovedOf(h) : undefined), [h])
+  const repostOf = useMemo(() => (h ? externalRepostOf(h) : undefined), [h])
   const ownedDomains = tenant.ownedDomains
   const owned = useMemo(
     () => (h ? ownedExternalHosts(h.posts, { tenantId: tenant.tenantId, brandName: tenant.brandName, ownedDomains }) : []),
@@ -87,7 +92,15 @@ function ExternalHistorySection({ tenant }: { tenant: TenantSummary }) {
           자사 인용률에도 들어갈 수 있습니다. 이 표는 그것과 따로 글 주소가 인용된 응답 수를 셉니다. 둘을 더하지 않습니다.
         </p>
       )}
-      <PublishedHistoryTable history={h} header="앱 밖 글" description={EXTERNAL_TABLE_NOTE} movedOf={movedOf} groupRows={false} />
+      <PublishedHistoryTable
+        history={h}
+        header="앱 밖 글"
+        description={EXTERNAL_TABLE_NOTE}
+        movedOf={movedOf}
+        repostOf={repostOf}
+        undatedNote={EXTERNAL_UNDATED_NOTE}
+        groupRows={false}
+      />
     </section>
   )
 }

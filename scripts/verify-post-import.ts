@@ -685,6 +685,32 @@ try {
       pi.choiceBlockReason(rFailIgnored, { mode: 'ignore' }) === '이미 무시한 주소입니다.' && !pi.checkedByDefault(rFailIgnored) &&
       !pi.ignoreOptionAllowed(rFailTracked) && pi.choiceBlockReason(rFailTracked, { mode: 'ignore' }) !== null && pi.ignoreOptionAllowed(rFail),
   )
+  // 최종 점검 — 「무시한 글 보기 · 되돌리기」로 푼 주소의 표 줄(unignoredRow). 무시할 때 「읽지 못함」 줄에도 무시한 때를 달므로(D14) 풀 때도 읽지
+  // 못한 줄의 무시한 때를 지워야 한다 — 남기면 서버 목록은 비었는데 표에는 「무시함」 · 무시 고름이 남고 다시 읽기에서도 빠진다.
+  const unignoreRow = typeof pi.unignoredRow === 'function' ? pi.unignoredRow : null
+  const keySet = (...keys: string[]) => new Set(keys)
+  const failUn = unignoreRow?.({ key: 'fake.tistory.com/2', read: rFailIgnored, choice: { mode: 'ignore' } }, keySet('fake.tistory.com/2')) ?? null
+  ok(
+    '최종 점검 — 무시를 푼 「읽지 못함」 줄은 무시한 때를 지우고 처음 고를 일(고르지 않음)로 돌아간다 · 상태 「읽지 못함」(「무시함」이 남지 않는다) · 다시 무시할 수 있다',
+    failUn !== null && failUn.read.ignoredAt === null && failUn.reset && failUn.choice.mode === 'app' && failUn.choice.pick === null &&
+      pi.choiceStateOf(failUn.read, failUn.choice).state === 'unreadable' && pi.choiceBlockReason(failUn.read, { mode: 'ignore' }) === null,
+    failUn,
+  )
+  const rIgnoredOk = withState(rMatch, { ignoredAt: '2026-11-08T00:00:00.000Z', readUrl: 'https://fake.tistory.com/1' })
+  const okUn = unignoreRow?.({ key: 'fake.tistory.com/1', read: rIgnoredOk, choice: { mode: 'ignore' } }, keySet('fake.tistory.com/1')) ?? null
+  const byReadUrl = unignoreRow?.({ key: 'fake.tistory.com/1-pasted', read: withState(rIgnoredOk, { recordKey: 'fake.tistory.com/1-canonical' }), choice: { mode: 'ignore' } }, keySet('fake.tistory.com/1')) ?? null
+  const keptChoice = unignoreRow?.({ key: 'fake.tistory.com/1', read: rIgnoredOk, choice: { mode: 'app', pick: null } }, keySet('fake.tistory.com/1')) ?? null
+  ok(
+    '최종 점검 — 읽은 줄도 같다: 무시를 고른 줄은 지운 읽기 결과로 처음 고를 일(맞음 — 첫 후보) · 읽은 주소 키로도 찾는다 · 무시를 고르지 않은 줄은 고른 일을 그대로 둔다',
+    okUn !== null && okUn.read.ignoredAt === null && okUn.reset && okUn.choice.mode === 'app' && okUn.choice.pick?.articleId === 'a' &&
+      pi.choiceStateOf(okUn.read, okUn.choice).state === 'match' && byReadUrl !== null && byReadUrl.read.ignoredAt === null &&
+      keptChoice !== null && !keptChoice.reset && keptChoice.choice.mode === 'app' && keptChoice.choice.pick === null && keptChoice.read.ignoredAt === null,
+  )
+  ok(
+    '최종 점검 — 다른 주소 · 아직 읽지 않은 줄은 건드리지 않는다(null)',
+    unignoreRow !== null && unignoreRow({ key: 'fake.tistory.com/2', read: rFailIgnored, choice: { mode: 'ignore' } }, keySet('fake.tistory.com/9')) === null &&
+      unignoreRow({ key: 'fake.tistory.com/2', read: null, choice: { mode: 'app', pick: null } }, keySet('fake.tistory.com/2')) === null,
+  )
   // 검토 반영 — C9: 이 브랜드에서 「글을 내림」으로 뺀 주소를 다시 적으면 올린 날은 그 내린 날 뒤여야 한다(서버와 같은 repostDayProblem).
   const rDownBefore = withState(rNone, { takenDown: [{ tenantId: 't1', brand: '가상스테이', on: '2026-10-10' }] })
   ok(

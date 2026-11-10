@@ -233,6 +233,8 @@ const xRow = (id: string, url: string, key: string, over: Record<string, unknown
 const xFile = (posts: unknown[], keyRule = 3) => JSON.stringify({ version: 1, keyRule, posts }, null, 2)
 /** 3) 인용 이력 검사가 만든 실제 응답(선을 넘는 모양 그대로) — 5) 퍼포먼스 절 검사가 화면에 넘긴다. */
 let uiFixture: { history: ClientExternalHistory; ids: Record<string, string> } | null = null
+/** 최종 점검 — 날짜 모름으로 다시 올린 줄 · 날짜를 적은 다시 올린 줄이 든 실제 응답(5)이 성과 표에 넘긴다). */
+let repostFixture: ClientExternalHistory | null = null
 
 try {
   const ext = await import('../server/externalPosts')
@@ -619,6 +621,109 @@ try {
   )
   const repostCells = (w: string) => repostHist.posts.map((p) => p.cells[repostHist.weeks.findIndex((x) => x.weekOf === w)] ?? null)
   ok('C9 검토 반영 — 받은 날짜로는 같은 측정을 두 줄이 함께 세지 않는다(내리기 전은 내린 줄, 다시 올린 뒤는 새 줄)', ['2026-W41', '2026-W42'].every((w) => repostCells(w).filter((c) => counted(c)).length === 1))
+
+  // ── 최종 점검 — 날짜 모름(D3)으로 다시 올린 줄도 내린 날까지의 측정을 세지 않는다(C9 · 색인 표시와 같은 기준일) ─────────────────────
+  // 날짜를 모르는 칸(unknown)도 숫자가 보인다 — 기준일을 두지 않으면 내린 줄이 센 측정이 다시 올린 줄에도 「인용」으로 함께 보였다. 기준일은 색인 표시와
+  // 같은 externalIndexBasis(내린 날 다음 날)이고, 서버(칸 비우기)와 화면(까닭)이 같은 함수(repostBasis · measuredBefore)를 쓴다.
+  const RU = 'vx-repost-undated'
+  const RA = 'https://fake.tistory.com/ru/1'
+  const RB = 'https://fake.tistory.com/ru/2'
+  const ru = { downA: 'x-555555555501', liveA: 'x-555555555502', downB: 'x-555555555503', liveB: 'x-555555555504' }
+  // W41 10-08 · W42 10-14 · W44 10-28 · W45 두 회차 11-03 · 11-05(내린 날 11-04 다음 날)
+  const ruCards = ['2026-W41', '2026-W42', '2026-W44', '2026-W45'].map((w) => card(RU, w))
+  const ruRun1 = [answer('c1-001', '2026-11-03T01:00:00Z', [RA, RB])]
+  const ruRun2 = [answer('c1-001', '2026-11-05T01:00:00Z', [RA, RB])]
+  const ruWeeks: Record<string, QuestionRepeatAnalysis[]> = {
+    '2026-W41': [answer('c1-001', '2026-10-08T01:00:00Z', [RA, RB])],
+    '2026-W42': [answer('c1-001', '2026-10-14T01:00:00Z', [RA, RB])],
+    '2026-W44': [answer('c1-001', '2026-10-28T01:00:00Z', [RA, RB])],
+    '2026-W45': ruRun2,
+  }
+  const ruStore = {
+    getScorecardHistory: async (_t: string, n: number) => ruCards.slice(-n),
+    getQuestionAnalyses: async (_t: string, week: string) => ruWeeks[week] ?? [],
+    getQuestionBank: async (_t: string, v: string) => (v === 'v1' ? bankV1 : null),
+    listRunSnapshots: async (_t: string, week: string) =>
+      week === '2026-W45'
+        ? {
+            runs: [
+              { meta: runMeta(RU, week, 'q1', '2026-11-03T00:30:00Z', '2026-11-03T02:00:00Z'), scorecard: card(RU, week), analyses: ruRun1 },
+              { meta: runMeta(RU, week, 'q2', '2026-11-05T00:30:00Z', '2026-11-05T02:00:00Z'), scorecard: card(RU, week), analyses: ruRun2 },
+            ],
+            issues: [],
+          }
+        : { runs: [], issues: [] },
+  }
+  writeData(
+    RU,
+    'external-posts.json',
+    xFile([
+      // A — 10-01에 올려 11-04 오전 10시(한국)에 내림 → 11-06에 날짜 모름으로 다시 적음
+      xRow(ru.downA, RA, 'fake.tistory.com/ru/1', { removedAt: '2026-11-04T01:00:00.000Z', removedReason: 'taken-down' }),
+      xRow(ru.liveA, RA, 'fake.tistory.com/ru/1', { publishedOn: null, publishedOnSource: 'unknown', trackedAt: '2026-11-06T01:00:00.000Z' }),
+      // B(대조) — 10-01에 올려 10-20에 내림 → 10-25에 다시 올렸다고 날짜를 적음(C9 — 내린 날 뒤)
+      xRow(ru.downB, RB, 'fake.tistory.com/ru/2', { removedAt: '2026-10-20T01:00:00.000Z', removedReason: 'taken-down' }),
+      xRow(ru.liveB, RB, 'fake.tistory.com/ru/2', { publishedOn: '2026-10-25', publishedOnSource: 'user', trackedAt: '2026-10-26T01:00:00.000Z' }),
+    ]),
+  )
+  const tenantRU = { tenantId: RU, questionBankVersion: 'v1' }
+  const ruHist = await ext.getExternalHistory(ruStore, tenantRU, 12)
+  repostFixture = JSON.parse(JSON.stringify(ruHist)) as ClientExternalHistory
+  const ruCell = (id: string, w: string) => ruHist.posts.find((p) => p.post.id === id)?.cells[ruHist.weeks.findIndex((x) => x.weekOf === w)] ?? null
+  /** 숫자가 보이는 칸 — 내린 뒤 · 올리기 전이 아닌 칸(날짜 모름 칸도 숫자가 보인다). */
+  const shows = (c: { afterRemoval: boolean; timing: string } | null) => Boolean(c && !c.afterRemoval && c.timing !== 'before')
+  const ruSingle = ['2026-W41', '2026-W42', '2026-W44']
+  ok(
+    '최종 점검 — 날짜 모름으로 다시 올린 줄: 앞 줄을 내린 날(11-04)까지의 측정(W41 · W42 · W44)은 비운다(내린 뒤 모양 — 날짜 모름은 그대로)',
+    ruSingle.every((w) => ruCell(ru.liveA, w)?.afterRemoval === true && ruCell(ru.liveA, w)?.tally === null && ruCell(ru.liveA, w)?.timing === 'unknown') &&
+      ruSingle.every((w) => shows(ruCell(ru.downA, w))),
+  )
+  ok(
+    '최종 점검 — 회차가 둘인 주(W45, 내린 날이 두 회차 사이) — 앞 회차(11-03)는 내린 줄, 뒤 회차(11-05 · 기준일)는 다시 올린 줄이 센다',
+    ruCell(ru.downA, '2026-W45')?.runs?.measured === 1 && ruCell(ru.downA, '2026-W45')?.runs?.cited === 1 &&
+      shows(ruCell(ru.liveA, '2026-W45')) && ruCell(ru.liveA, '2026-W45')?.timing === 'unknown' && ruCell(ru.liveA, '2026-W45')?.tally?.all.cited === 1,
+  )
+  ok(
+    '최종 점검 — 어느 측정이든 내린 줄 · 날짜 모름으로 다시 올린 줄 가운데 많아야 하나에만 숫자가 보인다',
+    ruSingle.every((w) => [ru.downA, ru.liveA].filter((id) => shows(ruCell(id, w))).length === 1),
+  )
+  const { summarizePost } = await import('../src/lib/publishTracking')
+  const liveARow = ruHist.posts.find((p) => p.post.id === ru.liveA)
+  ok(
+    '최종 점검 — 다시 올린 줄의 판단은 「올린 날 모름」 그대로(비운 칸 때문에 「내림」이 되지 않는다) · 살아 있는 줄',
+    liveARow?.external.state === 'live' && summarizePost(liveARow.cells as Parameters<typeof summarizePost>[0], ruHist.weeks, null).tier === 'undated',
+  )
+  // 대조 — 같은 줄을 기준일 없이(옮김도 없이) 그대로 계산한 칸.
+  const ruParsed = lib.parseExternalPostsFile(JSON.parse(readData(RU, 'external-posts.json')))
+  const ruPosts = ruParsed.ok ? ruParsed.posts : []
+  const plain = await getPublishedHistory(ruStore, tenantRU, lib.externalViews(ruPosts, []).map(lib.externalAsLedgerPost) as Parameters<typeof getPublishedHistory>[2], 12)
+  const plainCells = (id: string) => JSON.stringify(plain.posts.find((p) => p.post.id === id)?.cells ?? null)
+  const ruCells = (id: string) => JSON.stringify(ruHist.posts.find((p) => p.post.id === id)?.cells ?? null)
+  ok(
+    '최종 점검 — 날짜를 적은 다시 올린 줄(C9 — 내린 날 뒤)과 내린 줄들은 칸이 기준일을 두기 전과 한 글자도 다르지 않다(올리기 전 칸은 이미 「올리기 전」)',
+    plainCells(ru.liveB) !== 'null' && plainCells(ru.liveB) === ruCells(ru.liveB) && plainCells(ru.downB) === ruCells(ru.downB) && plainCells(ru.downA) === ruCells(ru.downA) &&
+      ruCell(ru.liveB, '2026-W41')?.timing === 'before' && ruCell(ru.liveB, '2026-W42')?.timing === 'before' && ruCell(ru.liveB, '2026-W44')?.timing === 'after',
+  )
+  // 서버(칸 비우기)와 화면(까닭)이 같은 함수 — 기준일은 색인 표시와 같은 externalIndexBasis.
+  const sharedBasis = typeof lib.repostBasis === 'function' && typeof lib.measuredBefore === 'function'
+  const ruViews = ruHist.posts.map((p) => p.external)
+  const basisA = sharedBasis ? lib.repostBasis(ruViews, ruViews.find((v) => v.id === ru.liveA)!) : null
+  ok(
+    '최종 점검 — 다시 올린 줄의 기준일은 색인 표시와 같은 externalIndexBasis(내린 날 다음 날) · 다시 올린 줄이 아니면 없음',
+    sharedBasis && basisA?.downOn === '2026-11-04' && basisA.countsFrom === '2026-11-05' &&
+      basisA.countsFrom === lib.externalIndexBasis(ruViews, ruViews.find((v) => v.id === ru.liveA)!) &&
+      lib.repostBasis(ruViews, ruViews.find((v) => v.id === ru.downA)!) === null && lib.repostBasis(ruViews, ruViews.find((v) => v.id === ru.liveB)!)?.countsFrom === '2026-10-25',
+  )
+  ok(
+    '최종 점검 — 비운 칸은 정확히 기준일 앞 측정이다(measuredBefore — 칸의 전후와 같은 규칙: 측정한 마지막 날이 기준일 앞 · 시각 없는 옛 기록은 주차)',
+    sharedBasis && basisA !== null &&
+      ruHist.weeks.every((w, i) => {
+        const c = ruHist.posts.find((p) => p.post.id === ru.liveA)?.cells[i] ?? null
+        return w.runs ? true : (c?.afterRemoval === true) === lib.measuredBefore(basisA.countsFrom, w.window, w.weekOf)
+      }) &&
+      lib.measuredBefore('2026-11-05', { first: '2026-11-04', last: '2026-11-04' }, '2026-W45') && !lib.measuredBefore('2026-11-05', { first: '2026-11-05', last: '2026-11-05' }, '2026-W45') &&
+      lib.measuredBefore('2026-11-05', null, '2026-W44') && !lib.measuredBefore('2026-11-05', null, '2026-W45'),
+  )
 } catch (err) {
   ok(`모듈 검사가 예외 없이 끝난다: ${err instanceof Error ? err.stack : String(err)}`, false)
 } finally {
@@ -821,6 +926,16 @@ try {
   const xh = await call('GET', '/api/external-history/vext-a')
   const xhBody = xh.json as { weeks?: unknown[]; posts?: { external: { state: string }; cells: unknown[] }[] }
   ok('GET 앱 밖 글 인용 이력 — 주차 3 · 행 3(내린 줄 포함)', xh.status === 200 && xhBody.weeks?.length === 3 && xhBody.posts?.length === 3)
+  // 최종 점검 — 오늘 내리고 날짜 모름으로 다시 적은 주소: 지난 측정은 모두 내린 줄의 몫이다(다시 올린 줄에는 숫자가 보이지 않는다).
+  type ApiCell = { afterRemoval: boolean; timing: string; tally: unknown } | null
+  const handRows = ((xh.json.posts ?? []) as { external: { key: string; state: string }; cells: ApiCell[] }[]).filter((p) => p.external.key === 'fake.tistory.com/70')
+  const apiShows = (c: ApiCell) => Boolean(c && !c.afterRemoval && c.timing !== 'before')
+  ok(
+    '최종 점검(API) — 날짜 모름으로 다시 올린 줄은 앞 줄을 내린 날까지의 측정을 비우고, 어느 주든 두 줄 가운데 하나에만 숫자가 보인다',
+    handRows.length === 2 &&
+      handRows.find((r) => r.external.state === 'live')?.cells.every((c) => c !== null && c.afterRemoval && c.tally === null && c.timing === 'unknown') === true &&
+      (xhBody.weeks ?? []).every((_, i) => handRows.filter((r) => apiShows(r.cells[i] ?? null)).length === 1),
+  )
   ok('GET 지운 · 없는 브랜드의 이력은 404', (await call('GET', '/api/external-history/vext-gone')).status === 404)
 
   // 2단계 — 주소 한꺼번에 등록(POST /api/post-import/commit)의 앱 밖 글 · 무시도 같은 저장소로만 간다(원장 · 앱 글 응답은 그대로).
@@ -916,7 +1031,7 @@ try {
     const { default: Performance } = await import('../src/pages/Performance')
     const { default: PublishedHistoryTable } = await import('../src/components/PublishedHistoryTable')
     const { loadExternalHistory } = await import('../src/lib/api')
-    const { externalMovedOf, ownedExternalHosts, useExternalHistory } = await import('../src/lib/useExternalHistory')
+    const { externalMovedOf, externalRepostOf, ownedExternalHosts, useExternalHistory } = await import('../src/lib/useExternalHistory')
     type TenantSummary = import('../src/lib/api').TenantSummary
 
     // 가짜 fetch — 길(경로)마다 정한 응답. 정하지 않은 길은 Express · Vercel처럼 JSON이 아닌 404다.
@@ -1070,6 +1185,38 @@ try {
     const plainLapsed = renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: { ...XH, posts: [{ ...movedRow, cells: lapsedCells }] } }))
     ok('(대조) 옮김을 넘기지 않으면(앱 글 표) 「최근 측정한 주에는 인용 없음」 그대로', plainLapsed.includes('최근 측정한 주에는 인용 없음'))
 
+    // 최종 점검 — 날짜 모름으로 다시 올린 행의 비운 칸(앞 행을 내린 날까지의 측정)은 「다시 올리기 전」과 그 까닭을 단다(「내린 뒤」가 아니다). 날짜를
+    // 적은 다시 올린 행 · 내린 행은 그대로다. 어느 칸에 까닭을 달지는 서버가 칸을 비운 것과 같은 함수로 정한다(externalRepostOf).
+    if (!repostFixture) throw new Error('3) 다시 올린 줄 이력 검사가 끝나지 않아 화면 검사를 하지 못했다')
+    const RF = repostFixture
+    const repostOf = typeof externalRepostOf === 'function' ? externalRepostOf(RF) : undefined
+    const rfTable = (props: Record<string, unknown> = {}) =>
+      renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: RF, header: '앱 밖 글', description: '', groupRows: false, ...props }))
+    const rfHtml = rfTable({ repostOf })
+    const rfRows = (html: string, url: string) => rowsWith(html, url)
+    const liveATr = rfRows(rfHtml, 'https://fake.tistory.com/ru/1').find((s) => s.includes('올린 날 모름')) ?? ''
+    const downATr = rfRows(rfHtml, 'https://fake.tistory.com/ru/1').find((s) => s.includes('11/4 내림')) ?? ''
+    const liveBTr = rfRows(rfHtml, 'https://fake.tistory.com/ru/2').find((s) => !s.includes('내림')) ?? ''
+    ok(
+      '최종 점검 — 날짜 모름으로 다시 올린 행: 비운 칸 셋(W41 · W42 · W44)은 「다시 올리기 전」 · 까닭(앞 행을 11/4에 내림) · 「내린 뒤」가 아니다',
+      (liveATr.match(/<div>다시 올리기 전<\/div>/g)?.length ?? 0) === 3 && liveATr.includes('같은 주소를 11/4에 내렸습니다') && !liveATr.includes('내린 뒤'),
+    )
+    ok(
+      '최종 점검 — 내린 행 · 날짜를 적은 다시 올린 행에는 「다시 올리기 전」이 없다(날짜를 적은 행의 앞 칸은 「—」 올리기 전 그대로)',
+      downATr !== '' && !downATr.includes('다시 올리기 전') && liveBTr !== '' && !liveBTr.includes('다시 올리기 전') && liveBTr.includes('올리기 전에 한 측정이라 세지 않습니다'),
+    )
+    const plainLiveATr = rfRows(rfTable(), 'https://fake.tistory.com/ru/1').find((s) => s.includes('올린 날 모름')) ?? ''
+    ok('(대조) 다시 올린 행을 넘기지 않으면 같은 칸이 「내린 뒤」 — 위 검사는 repostOf가 바꾼 것이다', plainLiveATr.includes('내린 뒤') && !plainLiveATr.includes('다시 올리기 전'))
+    // 최종 점검 — 날짜 모름 칸 도움말: 앱 글 표는 「올린 날을 모르는 옛 기록」 그대로, 앱 밖 글 표는 넘긴 문구(옛 기록이 아니다).
+    const titlesOf = (html: string) => [...html.matchAll(/<td class="history-cell[^"]*" title="([^"]*)"/g)].map((m) => m[1]!)
+    const UNDATED_APP = '올린 날을 모르는 옛 기록입니다 — 판단에는 넣지 않습니다'
+    const extUndated = renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: XH, header: '앱 밖 글', description: '', groupRows: false, undatedNote: '가상 날짜 모름 도움말' }))
+    ok('최종 점검 — 앱 글 표(기본)의 날짜 모름 칸 도움말은 그대로 「옛 기록」', titlesOf(appHtml).some((t) => t.startsWith(UNDATED_APP)))
+    ok(
+      '최종 점검 — 앱 밖 글 표는 날짜 모름 칸 도움말을 넘긴 문구로 쓴다(「옛 기록」이 아니다)',
+      titlesOf(extUndated).some((t) => t.startsWith('가상 날짜 모름 도움말')) && !titlesOf(extUndated).some((t) => t.includes('옛 기록')),
+    )
+
     // (마) 퍼포먼스 화면 — 절을 숨기는 때 · 문구 · 나머지 화면은 그대로
     const uiCard = (tenantId: string, weekOf: string, score: number) => ({
       tenantId,
@@ -1153,6 +1300,16 @@ try {
     const rest = host.cloneNode(true) as HTMLElement
     rest.querySelector('#external')?.remove()
     ok('3단계 퍼포먼스 — 절을 빼면 나머지 화면(집행 핀 · 「집행」 칸 · 올린 글 표 · 스코어카드)이 웹과 한 글자도 다르지 않다', rest.innerHTML === web)
+    const sectionTitles = () => [...(dom.window.document.getElementById('external')?.querySelectorAll('td.history-cell[title]') ?? [])].map((td) => td.getAttribute('title') ?? '')
+    ok(
+      '최종 점검 — 퍼포먼스 앱 밖 글 표의 날짜 모름 칸 도움말은 「올린 날을 모르는 앱 밖 글」(「옛 기록」이 아니다)',
+      sectionTitles().some((t) => t.startsWith('올린 날을 모르는 앱 밖 글입니다')) && !sectionTitles().some((t) => t.includes('옛 기록')),
+    )
+    if (repostFixture) await show({ status: 200, body: repostFixture })
+    ok(
+      '최종 점검 — 퍼포먼스 앱 밖 글 표는 날짜 모름으로 다시 올린 행의 비운 칸에 「다시 올리기 전」 · 까닭을 단다',
+      sectionTitles().filter((t) => t.startsWith('같은 주소를 11/4에 내렸습니다')).length === 3 && sectionText().includes('다시 올리기 전'),
+    )
     const broken = await show({ status: 500, body: { error: '앱 밖 글 파일(external-posts.json)이 깨져 있어 읽지도 쓰지도 않았습니다: 가상' } })
     ok('3단계 퍼포먼스 — 앱 밖 글 파일이 깨졌으면 절에 이유를 보인다(조용히 숨기지 않는다)', broken.includes(HEAD) && sectionText().includes('앱 밖 글 기록: 앱 밖 글 파일(external-posts.json)이 깨져'))
     await show({ status: 200, body: XH }, { ...uiTenant, ownedDomains: ['other.example'] })
@@ -1653,6 +1810,21 @@ try {
       '검토 반영(키보드) — 되돌린 뒤 포커스는 결과 문구(role=status)로 간다(BODY로 사라지지 않는다) · 단추는 disabled를 쓰지 않는다',
       focusedBefore && active !== doc.body && active?.getAttribute('role') === 'status' && (active?.textContent ?? '').includes('무시를 풀었습니다') &&
         [...doc.querySelectorAll('.pi-ignored-list button')].every((b) => !(b as HTMLButtonElement).disabled),
+    )
+    // (아) 최종 점검 — (다)에서 무시한 「읽지 못함」 줄을 「되돌리기」로 풀면 표의 그 줄도 풀린다(다시 읽기 전에도 「무시함」 · 무시 고름이 남지 않는다).
+    // 서버가 (다)의 무시를 목록에 적은 것처럼 둔다(이 가짜 등록은 목록을 바꾸지 않는다).
+    ignoredRows = [{ url: U(2), urls: [U(2)], keys: [K(2)], ignoredAt: '2026-11-10T03:00:00.000Z' }, ...ignoredRows]
+    await click(buttonNamed('무시한 글 보기 · 되돌리기'))
+    await click(buttonNamed('무시한 글 보기 · 되돌리기'))
+    const restoreFail = [...doc.querySelectorAll('.pi-ignored-list li')].find((li) => li.querySelector(`a[href="${U(2)}"]`))?.querySelector('button')
+    ok('(준비) 무시한 「읽지 못함」 주소가 무시한 글 목록에 있고, 표의 그 줄은 「무시함」', restoreFail !== undefined && (rowOf(2)?.textContent ?? '').includes('무시함') && selectOf(2)?.value === 'ignore')
+    await click(restoreFail)
+    await settle()
+    const row2Text = rowOf(2)?.textContent ?? ''
+    ok(
+      '최종 점검 — 무시한 「읽지 못함」 줄을 되돌리면 표의 그 줄도 풀린다(「무시함」 · 「…에 무시한 주소」 없음 · 고르기 「—」 · 「읽지 못함」 · 다시 읽기 대상)',
+      ignoredRows.every((e) => e.url !== U(2)) && !row2Text.includes('무시함') && !row2Text.includes('무시한 주소') && row2Text.includes('읽지 못함') &&
+        selectOf(2)?.value === '' && (buttonNamed('다시 읽기 —')?.textContent ?? '').includes('(1)'),
     )
     await React.act(async () => root.unmount())
 
