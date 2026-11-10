@@ -17,6 +17,11 @@
  * 웹(라우트 없음 404) · 앱 밖 글 0편이면 절을 숨기고(C19), 절이 있어도 나머지 화면(집행 핀 · 「집행」 칸 · 올린 글 표)은 한 글자도 바뀌지
  * 않아야 한다. 머리말은 자사 인용률과 더해 보이는 말을 쓰지 않는다(C1). 앱 글로 옮긴 행은 「내림」이 아니라 「앱 글로 옮김(날짜)」이다(D12).
  *
+ * 4단계 — 앱 전체 무시 목록(server/postImportIgnored.ts)은 측정 · 원장 · 보고서 · 실행 계획이 불러오지 않고, 보기 · 되돌리기도 앱 글 응답을
+ * 바꾸지 않으며, 브랜드 쓰기와 한꺼번에 들어와도 멈추지 않는다(C18). 화면은 jsdom으로 본다: 「앱 글 아님 줄 모두 무시」는 「앱 글 아님」 줄만
+ * 무시로 바꿔 체크하고(읽지 못함 줄은 빼고 — D10 · D14) 저장은 「이대로 등록」 때 하며(D6), 「무시한 글 보기 · 되돌리기」는 그 줄의 주소로 푼다.
+ * 발행 현황 「관리」의 「빼기 + 새 글 찾기에서도 숨김」은 빼기를 먼저 하고, 무시가 걸려도 뺀 것을 알린다(C17).
+ *
  *   npx tsx scripts/verify-external-posts.ts
  */
 import { spawn } from 'node:child_process'
@@ -131,6 +136,16 @@ ok('정적 검사 — (대조) 퍼포먼스 화면의 닫힘에는 hook이 있�
     start >= 0 && end > start && calls.length === 1 && calls.every((i) => i > start && i < end),
   )
 }
+// 4단계 — 앱 전체 무시 목록(server/postImportIgnored.ts)도 측정 · 원장 · 이력 · 보고서 · 실행 계획이 불러오지 않는다(새 글 찾기 숨김일 뿐이다).
+const ignoredAbs = path.resolve(repo, 'server/postImportIgnored.ts')
+const ignoredLeaks = [
+  ...CLOSED_ROOTS.filter((r) => existsSync(path.resolve(repo, r)) && closureOf(r).has(ignoredAbs)),
+  ...DIRECT_ROOTS.filter((r) => existsSync(path.resolve(repo, r)) && importsOf(path.resolve(repo, r)).includes(ignoredAbs)),
+]
+ok(
+  `정적 검사 — 4단계 무시 목록 모듈은 측정 · 원장 · 이력 · 보고서 · 실행 계획 · 앱 글 화면이 불러오지 않는다${ignoredLeaks.length ? `: ${ignoredLeaks.join(', ')}` : ''}`,
+  existsSync(ignoredAbs) && ignoredLeaks.length === 0 && closureOf('server/index.ts').has(ignoredAbs),
+)
 
 // ── 공용 가짜 데이터 ─────────────────────────────────────────────────────────────
 const answer = (questionId: string, startedAt: string, cites: string[] = [], extra: Partial<QuestionRepeatAnalysis> = {}) =>
@@ -695,6 +710,14 @@ try {
   )
   const statusText = (await call('GET', '/api/publish-status')).text
   ok('2단계 — 발행 현황에 앱 밖 줄이 보인다(읽기만 — 파일을 바꾸지 않는다)', statusText.includes('"origin":"external"') && statusText.includes('fake.tistory.com/71'))
+  // 4단계 — 무시한 글 보기 · 되돌리기도 앱 전체 무시 목록만 바꾼다(아래 격리 비교에 함께 든다).
+  const viewIgnored = await call('GET', '/api/post-import/ignored')
+  const undoIgnored = await call('POST', '/api/post-import/unignore', { urls: ['https://fake.tistory.com/72'] })
+  ok(
+    '4단계 — 무시한 글 보기 · 되돌리기(무시 목록만 바뀐다)',
+    viewIgnored.status === 200 && (viewIgnored.json.ignored as { url: string }[] | undefined)?.some((e) => e.url === 'https://fake.tistory.com/72') === true &&
+      undoIgnored.status === 200 && undoIgnored.json.removed === 1,
+  )
 
   const afterA = await snapshot('vext-a')
   const afterB = await snapshot('vext-b')
@@ -729,10 +752,13 @@ try {
       ...Array.from({ length: 3 }, () => call('GET', '/api/publish-status')),
       ...Array.from({ length: 3 }, (_, i) => call('PUT', `/api/index-checks/vext-a/${liveX?.id}`, { engine: i % 2 === 0 ? 'naver' : 'google', state: 'shown' })),
       ...Array.from({ length: 3 }, () => call('GET', '/api/external-posts/vext-a')),
+      // 4단계 — 무시한 글 보기 · 되돌리기(무시 목록 줄)가 브랜드 쓰기 · 등록과 엇갈려도 멈추지 않는다.
+      ...Array.from({ length: 2 }, () => call('GET', '/api/post-import/ignored')),
+      ...Array.from({ length: 2 }, (_, i) => call('POST', '/api/post-import/unignore', { urls: [`https://fake.tistory.com/burst-ignore/${i}`] })),
     ]),
     30_000,
   )
-  ok('C18 — 등록 패널 · 발행 현황 · 색인 표시 · 앱 글 쓰기가 한꺼번에 들어와도 멈추지 않는다(30초 안에 모두 끝남)', burst !== 'timeout' && burst.every((r) => r.status === 200))
+  ok('C18 — 등록 패널 · 발행 현황 · 색인 표시 · 앱 글 쓰기 · 무시 보기 · 되돌리기가 한꺼번에 들어와도 멈추지 않는다(30초 안에 모두 끝남)', burst !== 'timeout' && burst.every((r) => r.status === 200))
   const afterBurst = ((await call('GET', '/api/external-posts/vext-a')).json.posts ?? []) as { key: string }[]
   ok('C18 — 한꺼번에 들어온 앱 밖 글이 하나도 사라지지 않는다', Array.from({ length: 6 }, (_, i) => `fake.tistory.com/burst/${i}`).every((k) => afterBurst.some((p) => p.key === k)))
 } catch (err) {
@@ -975,6 +1001,294 @@ try {
     await React.act(async () => root.unmount())
   } catch (err) {
     ok(`퍼포먼스 절 검사가 예외 없이 끝난다: ${err instanceof Error ? err.stack : String(err)}`, false)
+  } finally {
+    globalThis.fetch = realFetch
+  }
+}
+
+// ── 6) 4단계 화면 — 「앱 글 아님 줄 모두 무시」(D10 · D14 · D6) · 「무시한 글 보기 · 되돌리기」 · 앱 밖 글 「빼기 + 새 글 찾기에서도 숨김」(C17) ─────
+// jsdom과 가짜 fetch(경로 · 방법 · 본문을 적어 둔다). 서버 규칙(거절 · 상한 · 깨진 파일)은 verify-post-import가 본다 — 여기는 화면이 무엇을 언제
+// 보내고 결과를 어떻게 보이는지만 본다.
+{
+  const realFetch = globalThis.fetch
+  try {
+    const React = await import('react')
+    const { JSDOM } = await import('jsdom')
+    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://127.0.0.1/' })
+    Object.assign(globalThis, { React, window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true })
+    const { createRoot } = await import('react-dom/client')
+    const { MemoryRouter } = await import('react-router-dom')
+    const { default: PostImportPanel } = await import('../src/components/PostImportPanel')
+    const { default: PublishStatusPage } = await import('../src/pages/PublishStatus')
+    type StatusRow = import('../src/lib/publishStatus').PublishStatusRow
+    const doc = dom.window.document
+
+    type Asked = { method: string; path: string; body: unknown }
+    type Reply = { status: number; body: unknown } | 'network'
+    const asked: Asked[] = []
+    let reply: (a: Asked) => Reply = () => ({ status: 404, body: 'Not Found' })
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      const a: Asked = { method: (init?.method ?? 'GET').toUpperCase(), path: url.split('?')[0]!, body: typeof init?.body === 'string' ? (JSON.parse(init.body) as unknown) : null }
+      asked.push(a)
+      const r = reply(a)
+      if (r === 'network') throw new TypeError('fetch failed')
+      const json = typeof r.body !== 'string'
+      return new Response(json ? JSON.stringify(r.body) : String(r.body), { status: r.status, headers: { 'Content-Type': json ? 'application/json' : 'text/html' } })
+    }) as typeof fetch
+    const sentTo = (p: string) => asked.filter((a) => a.path === p)
+
+    const host = doc.getElementById('root')!
+    let root = createRoot(host)
+    const settle = async (n = 3) => {
+      for (let i = 0; i < n; i += 1) await React.act(async () => new Promise((r) => setTimeout(r, 30)))
+    }
+    const click = async (el: Element | null | undefined) => {
+      if (!el) throw new Error('누를 것을 찾지 못했다')
+      await React.act(async () => (el as HTMLElement).click())
+      await settle()
+    }
+    const buttonNamed = (text: string, within: ParentNode = doc) => [...within.querySelectorAll('button')].find((b) => (b.textContent ?? '').includes(text))
+
+    // (가) 주소 한꺼번에 등록 — 새 글 찾기로 여섯 줄을 읽는다: 1 · 5 앱 글 아님, 2 맞음, 3 읽지 못함, 4 앱 글 아님이지만 무시 여부를 모름, 6 추적 중.
+    const U = (n: number) => `https://fake-ui.tistory.com/${n}`
+    const K = (n: number) => `fake-ui.tistory.com/${n}`
+    const cand = (articleId: string, body: number) => ({ tenantId: 'vui-a', brand: '가상스테이', articleId, title: `가상 앱 글 ${articleId}`, body, titleScore: 0.3, writer: null, bankUnknown: false, writerUnknown: false, otherUrls: 0 })
+    const readOk = (n: number, candidates: ReturnType<typeof cand>[], over: Record<string, unknown> = {}) => ({
+      ok: true,
+      url: U(n),
+      key: K(n),
+      readUrl: U(n),
+      recordUrl: U(n),
+      recordKey: K(n),
+      urlNote: null,
+      platform: { key: 'tistory', label: '티스토리' },
+      post: { title: `가상 손글 ${n}`, publishedOn: '2026-11-01', dateText: null, dateProblem: null, bodyChars: 800 },
+      candidates,
+      known: [],
+      tracked: [],
+      ignoredAt: null,
+      ownedBrands: [],
+      appLedgers: [],
+      stateUnknown: [],
+      ...over,
+    })
+    const READS: Record<string, unknown> = {
+      [U(1)]: readOk(1, [cand('content:a', 0.1)]),
+      [U(2)]: readOk(2, [cand('content:b', 0.6), cand('content:a', 0.1)]),
+      [U(3)]: { ok: false, url: U(3), key: K(3), error: '없는 글입니다(HTTP 404) — 가상' },
+      [U(4)]: readOk(4, [cand('content:a', 0.1)], { stateUnknown: ['무시 목록'] }),
+      [U(5)]: readOk(5, [cand('content:a', 0.12)]),
+      [U(6)]: readOk(6, [cand('content:a', 0.1)], { tracked: [{ tenantId: 'vui-a', brand: '가상스테이', postId: 'x-uiuiuiuiui06', key: K(6), state: 'live', publishedOn: null, trackedAt: '2026-11-02T00:00:00.000Z' }] }),
+    }
+    const entry = (url: string, ignoredAt: string) => ({ url, urls: [url], keys: [url.replace(/^https:\/\//, '')], ignoredAt })
+    let ignoredRows = [entry(U(9), '2026-11-08T01:00:00.000Z')]
+    const panelReply = (a: Asked): Reply => {
+      if (a.path === '/api/blog-sources') return { status: 200, body: { sources: [{ url: 'https://fake-ui.tistory.com', platform: 'tistory', addedAt: '2026-11-01T00:00:00.000Z' }] } }
+      if (a.path === '/api/post-import/list') {
+        return { status: 200, body: { source: 'https://fake-ui.tistory.com', platform: 'tistory', found: 9, newUrls: [1, 2, 3, 4, 5, 6].map(U), older: 0, hiddenExternal: 1, hiddenIgnored: 2, errors: [] } }
+      }
+      if (a.path === '/api/post-import/read') return { status: 200, body: READS[(a.body as { url: string }).url] }
+      if (a.path === '/api/post-import/commit') {
+        const items = (a.body as { items: { kind?: string; url: string; tenantId?: string; articleId?: string }[] }).items
+        const results = items.map((it) => {
+          if (it.kind === 'ignore') {
+            ignoredRows = [entry(it.url, '2026-11-10T03:00:00.000Z'), ...ignoredRows]
+            return { kind: 'ignore', url: it.url, status: 'added' }
+          }
+          return { kind: 'app', tenantId: it.tenantId, articleId: it.articleId, url: it.url, status: 'added', postId: 'p-uiuiuiuiui02' }
+        })
+        return { status: 200, body: { results, warnings: [] } }
+      }
+      if (a.path === '/api/post-import/ignored') return { status: 200, body: { ignored: ignoredRows, max: 5000 } }
+      if (a.path === '/api/post-import/unignore') {
+        const urls = (a.body as { urls: string[] }).urls
+        const before = ignoredRows.length
+        ignoredRows = ignoredRows.filter((e) => !e.urls.some((u) => urls.includes(u)))
+        return { status: 200, body: { removed: before - ignoredRows.length, ignored: ignoredRows } }
+      }
+      return { status: 404, body: 'Not Found' }
+    }
+    reply = panelReply
+    const rowOf = (n: number) => [...doc.querySelectorAll('.pi-table tbody tr')].find((tr) => tr.querySelector(`a[href="${U(n)}"]`))
+    const selectOf = (n: number) => rowOf(n)?.querySelector('select') as HTMLSelectElement | null | undefined
+    const checkOf = (n: number) => rowOf(n)?.querySelector('input[type="checkbox"]') as HTMLInputElement | null | undefined
+    const BULK = '앱 글 아님 줄 모두 무시'
+    await React.act(async () => root.render(React.createElement(PostImportPanel, { today: '2026-11-10', brands: [{ tenantId: 'vui-a', brand: '가상스테이' }], onRegistered: () => {} })))
+    await settle()
+    await click(buttonNamed('새 글 찾기'))
+    await settle(6)
+    const listText = [...doc.querySelectorAll('.pi-list-notes li')].map((li) => li.textContent ?? '').join(' ')
+    ok('4단계 새 글 찾기 — 뺀 앱 밖 글 · 무시한 글 수를 목록 위에 보인다', listText.includes('앱 밖 글 1편 · 무시한 글 2편 뺌') && doc.querySelectorAll('.pi-table tbody tr').length === 6)
+    ok(
+      'D10 · D14 — 일괄 단추는 「앱 글 아님」 줄 수만 센다(읽지 못함 · 무시 여부를 모름 · 추적 중 · 맞음 줄은 빼고)',
+      buttonNamed(BULK)?.textContent === `${BULK} (2)`,
+    )
+    const commitsBefore = sentTo('/api/post-import/commit').length
+    await click(buttonNamed(BULK))
+    ok(
+      'D6 — 일괄 단추는 「앱 글 아님」 줄을 무시로 바꾸고 체크만 한다(아직 저장하지 않는다)',
+      selectOf(1)?.value === 'ignore' && checkOf(1)?.checked === true && selectOf(5)?.value === 'ignore' && checkOf(5)?.checked === true &&
+        sentTo('/api/post-import/commit').length === commitsBefore && buttonNamed(BULK) === undefined,
+    )
+    ok(
+      'D14 — 일괄 무시는 「읽지 못함」 · 무시 여부를 모르는 줄 · 추적 중인 줄 · 맞음 줄을 건드리지 않는다(읽지 못함 줄은 하나씩 무시를 고를 수 있다)',
+      selectOf(3)?.value === '' && [...(selectOf(3)?.options ?? [])].some((o) => o.value === 'ignore') && checkOf(3)?.checked === false &&
+        selectOf(4)?.value === '' && checkOf(4)?.checked === false && selectOf(6)?.value === 'external' && selectOf(2)?.value === 'vui-a\ncontent:b' && checkOf(2)?.checked === true,
+    )
+    const registerBtn = buttonNamed('이대로 등록')
+    ok('D6 — 등록 단추가 고른 일을 센다(앱 글 1 · 무시 2)', registerBtn?.textContent === '이대로 등록 (앱 글 1 · 무시 2)')
+    await click(registerBtn)
+    await settle()
+    const sent = sentTo('/api/post-import/commit').at(-1)?.body as { items: { kind?: string; url: string }[] } | undefined
+    ok(
+      'D6 — 「이대로 등록」을 누를 때 무시를 함께 보낸다(줄 순서 그대로 · 앱 글 줄은 예전 모양)',
+      sent?.items.map((i) => `${i.kind ?? 'app'}:${i.url}`).join() === [`ignore:${U(1)}`, `app:${U(2)}`, `ignore:${U(5)}`].join() &&
+        (rowOf(1)?.textContent ?? '').includes('무시함') && (rowOf(5)?.textContent ?? '').includes('무시함'),
+    )
+
+    // (나) 무시한 글 보기 · 되돌리기 — 열 때 읽고(최근 것부터), 되돌리면 그 줄의 주소로 풀고 남은 목록을 다시 그린다.
+    const listItems = () => [...doc.querySelectorAll('.pi-ignored-list li')]
+    const hrefs = () => listItems().map((li) => li.querySelector('a')?.getAttribute('href'))
+    const VIEW = '무시한 글 보기 · 되돌리기'
+    await click(buttonNamed(VIEW))
+    ok('4단계 무시한 글 보기 — 열면 목록을 읽어 최근 것부터 보인다(방금 무시한 두 글 · 전에 무시한 글)', hrefs().join() === [U(5), U(1), U(9)].join() && buttonNamed(VIEW)?.getAttribute('aria-expanded') === 'true')
+    await click(listItems().find((li) => li.querySelector(`a[href="${U(1)}"]`))?.querySelector('button'))
+    ok(
+      '4단계 되돌리기 — 그 줄의 주소로 풀고 남은 목록을 다시 그린다 · 다음 새 글 찾기에 다시 나온다고 알린다',
+      JSON.stringify(sentTo('/api/post-import/unignore').at(-1)?.body) === JSON.stringify({ urls: [U(1)] }) && hrefs().join() === [U(5), U(9)].join() &&
+        (doc.querySelector('.pi-ignored-box')?.textContent ?? '').includes('다음 「새 글 찾기」에'),
+    )
+    ok(
+      '4단계 되돌리기 — 표에 있는 그 주소 줄은 무시가 풀린 상태로 돌아간다(「앱 글 아님」 · 체크 없음 · 다시 일괄 무시 대상)',
+      selectOf(1)?.value === '' && checkOf(1)?.checked === false && !(rowOf(1)?.textContent ?? '').includes('무시함') && selectOf(5)?.value === 'ignore' &&
+        buttonNamed(BULK)?.textContent === `${BULK} (1)`,
+    )
+    await click(buttonNamed(VIEW))
+    ok('4단계 무시한 글 보기 — 다시 누르면 닫는다', listItems().length === 0 && buttonNamed(VIEW)?.getAttribute('aria-expanded') === 'false')
+    reply = (a) => (a.path === '/api/post-import/ignored' ? { status: 500, body: { error: '무시 목록(post-import-ignored.json)이 깨져 있어 읽지도 쓰지도 않았습니다: 가상' } } : panelReply(a))
+    await click(buttonNamed(VIEW))
+    ok('4단계 무시한 글 보기 — 목록을 읽지 못하면 이유를 보인다(빈 목록으로 보이지 않는다)', (doc.querySelector('.pi-ignored-box [role="alert"]')?.textContent ?? '').includes('깨져 있어') && listItems().length === 0)
+    ignoredRows = []
+    reply = panelReply
+    await click(buttonNamed(VIEW))
+    await click(buttonNamed(VIEW))
+    ok('4단계 무시한 글 보기 — 빈 목록이면 「무시한 글이 없습니다」', (doc.querySelector('.pi-ignored-box')?.textContent ?? '').includes('무시한 글이 없습니다'))
+    await React.act(async () => root.unmount())
+
+    // (다) 발행 현황 「관리」 — 빼기 + 새 글 찾기에서도 숨김(C17): 빼기를 먼저 하고 무시 목록에 적는다. 무시가 걸리면 뺀 것은 그대로 두고 알린다.
+    const xRow = (n: number, over: Partial<StatusRow> = {}): StatusRow => ({
+      rowKey: `vui-a|x-uiuiuiuiui${n}`,
+      tenantId: 'vui-a',
+      brand: '가상스테이',
+      kind: 'posted',
+      origin: 'external',
+      postId: `x-uiuiuiuiui${n}`,
+      key: K(n),
+      articleId: `external:x-uiuiuiuiui${n}`,
+      title: `가상 손글 ${n}`,
+      writer: null,
+      writerUnknown: null,
+      postedUnknown: false,
+      platform: { key: 'tistory', label: '티스토리' },
+      url: U(n),
+      publishedOn: '2026-11-01',
+      recheckFrom: '2026-11-05',
+      trackedOn: '2026-11-05',
+      removed: null,
+      naver: null,
+      google: null,
+      checkFrom: null,
+      ...over,
+    })
+    // 11번 주소는 다른 브랜드(vui-b)의 앱 글이기도 하다 — 새 글 찾기에서 이미 빠지므로 숨김을 고르지 않는다.
+    const status = {
+      today: '2026-11-10',
+      brands: [
+        { tenantId: 'vui-a', brand: '가상스테이' },
+        { tenantId: 'vui-b', brand: '가상여관' },
+      ],
+      rows: [
+        xRow(10),
+        xRow(11),
+        xRow(11, { rowKey: 'vui-b|p-uiuiuiuiui11', tenantId: 'vui-b', brand: '가상여관', origin: 'app', postId: 'p-uiuiuiuiui11', articleId: 'content:z', title: '가상 앱 글 z', trackedOn: null, recheckFrom: '2026-11-01' }),
+      ],
+      writers: [],
+      issues: [],
+    }
+    let commitReply: Reply = { status: 200, body: { results: [{ kind: 'ignore', url: U(10), status: 'added' }], warnings: [] } }
+    let patchReply: Reply = { status: 200, body: { post: {}, posts: [] } }
+    reply = (a) => {
+      if (a.path === '/api/publish-status') return { status: 200, body: status }
+      if (a.path === '/api/blog-sources') return { status: 200, body: { sources: [] } }
+      if (a.path.startsWith('/api/external-posts/')) return patchReply
+      if (a.path === '/api/post-import/commit') return commitReply
+      return { status: 404, body: 'Not Found' }
+    }
+    root = createRoot(host)
+    await React.act(async () => root.render(React.createElement(MemoryRouter, { initialEntries: ['/publish-status'] }, React.createElement(PublishStatusPage))))
+    await settle()
+    const manageOf = (n: number) => doc.querySelector(`summary[aria-label="가상스테이 「가상 손글 ${n}」 티스토리 앱 밖 글 관리"]`)?.parentElement ?? null
+    const hideBox = (n: number) =>
+      ([...(manageOf(n)?.querySelectorAll('label') ?? [])].find((l) => (l.textContent ?? '').includes('새 글 찾기에서도 숨김'))?.querySelector('input') ?? null) as HTMLInputElement | null
+    const removeBtn = (n: number) => [...(manageOf(n)?.querySelectorAll('button') ?? [])].find((b) => b.textContent === '빼기')
+    const noteText = () => [...doc.querySelectorAll('p.pi-note[role="status"]')].map((p) => p.textContent ?? '').join(' ')
+    const sinceMark = () => {
+      const from = asked.length
+      return () => asked.slice(from).filter((a) => a.method !== 'GET').map((a) => `${a.method} ${a.path}`)
+    }
+    ok('C17 (준비) 앱 밖 줄마다 「관리」가 있다', manageOf(10) !== null && manageOf(11) !== null && hideBox(10)?.disabled === false)
+    await click(hideBox(10))
+    let writes = sinceMark()
+    await click(removeBtn(10))
+    await settle()
+    const sentIgnore = sentTo('/api/post-import/commit').at(-1)?.body
+    ok(
+      'C17 — 빼기를 먼저 하고(PATCH) 그다음 무시 목록에 적는다 · 「새 글 찾기에서도 숨깁니다」',
+      writes().join() === ['PATCH /api/external-posts/vui-a/x-uiuiuiuiui10', 'POST /api/post-import/commit'].join() &&
+        JSON.stringify(sentIgnore) === JSON.stringify({ items: [{ kind: 'ignore', url: U(10) }] }) &&
+        noteText().includes('가상스테이에서 뺐습니다(잘못 적음)') && noteText().includes('새 글 찾기에서도 숨깁니다'),
+    )
+    commitReply = { status: 200, body: { results: [{ kind: 'ignore', url: U(10), status: 'error', error: '가상 — 무시 목록이 5000개를 넘어 더 적지 않았습니다' }], warnings: [] } }
+    if (!hideBox(10)?.checked) await click(hideBox(10))
+    writes = sinceMark()
+    await click(removeBtn(10))
+    await settle()
+    ok(
+      'C17 — 무시가 걸려도 뺀 것은 그대로 두고 까닭과 함께 알린다(반만 된 것을 숨기지 않는다)',
+      writes().join() === ['PATCH /api/external-posts/vui-a/x-uiuiuiuiui10', 'POST /api/post-import/commit'].join() &&
+        noteText().includes('뺐습니다') && noteText().includes('다만 새 글 찾기에서 숨기지 못했습니다 — 가상 — 무시 목록이 5000개를'),
+    )
+    commitReply = 'network'
+    if (!hideBox(10)?.checked) await click(hideBox(10))
+    await click(removeBtn(10))
+    await settle()
+    ok('C17 — 무시 요청이 서버에 닿지 못해도 뺀 것은 알리고 숨기지 못한 까닭을 붙인다', noteText().includes('뺐습니다') && noteText().includes('숨기지 못했습니다') && noteText().includes('닿지 못했습니다'))
+    patchReply = { status: 500, body: { error: '앱 밖 글 파일(external-posts.json)이 깨져 있어 읽지도 쓰지도 않았습니다: 가상' } }
+    commitReply = { status: 200, body: { results: [{ kind: 'ignore', url: U(10), status: 'added' }], warnings: [] } }
+    if (!hideBox(10)?.checked) await click(hideBox(10))
+    writes = sinceMark()
+    await click(removeBtn(10))
+    await settle()
+    ok(
+      'C17 — 빼기가 걸리면 무시 목록에 적지 않는다(숨기기만 되는 일이 없다) · 까닭을 그 「관리」에 보인다',
+      writes().join() === 'PATCH /api/external-posts/vui-a/x-uiuiuiuiui10' && (manageOf(10)?.querySelector('[role="alert"]')?.textContent ?? '').includes('깨져 있어'),
+    )
+    patchReply = { status: 200, body: { post: {}, posts: [] } }
+    ok(
+      'C17 — 같은 주소가 다른 브랜드에 남아 있으면 숨김을 고를 수 없고 그 까닭(이미 새 글 찾기에 나오지 않음)을 보인다',
+      hideBox(11)?.disabled === true && (manageOf(11)?.textContent ?? '').includes('가상여관의 앱 글에 남아 있어 새 글 찾기에는 이미 나오지 않습니다'),
+    )
+    writes = sinceMark()
+    await click(removeBtn(11))
+    await settle()
+    ok(
+      'C17 — 그 줄을 빼면 빼기만 한다(무시 목록에 적지 않는다)',
+      writes().join() === 'PATCH /api/external-posts/vui-a/x-uiuiuiuiui11' && noteText().includes('「가상 손글 11」을(를) 가상스테이에서 뺐습니다(잘못 적음).') && !noteText().includes('숨기'),
+    )
+    await React.act(async () => root.unmount())
+  } catch (err) {
+    ok(`4단계 화면 검사가 예외 없이 끝난다: ${err instanceof Error ? err.stack : String(err)}`, false)
   } finally {
     globalThis.fetch = realFetch
   }

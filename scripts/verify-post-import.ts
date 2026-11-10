@@ -10,6 +10,8 @@
  * - 바깥 주소를 서버가 읽는다 — 내부 주소(루프백 · 사설 · 링크 로컬 · 메타데이터)로 가는 요청을 DNS 뒤에서 막아야 한다. 이 확인만
  *   시험 깃발(POST_IMPORT_TEST_LOOPBACK=1)로 루프백을 연다.
  * - 페이지 날짜를 모르면 오늘로 채우지 않는다(확인 불가 원칙) — 사람이 고른 날만 적는다.
+ * - 무시 목록(4단계)은 앱 전체에 하나다 — 「앱 글 아님 줄 모두 무시」는 「앱 글 아님」 줄만(읽지 못함 줄은 빼고), 되돌리면 다음 새 글 찾기에
+ *   다시 나오고, 앱 글 · 앱 밖 글로 등록하면 풀리며, 5000개가 차면 조용히 자르지 않고 거절한다. 깨진 목록은 읽지도 덮어쓰지도 않는다.
  *
  *   npx tsx scripts/verify-post-import.ts
  */
@@ -771,6 +773,45 @@ try {
       pi.COMMIT_MAX_BYTES < 100 * 1024 && chunks.every((c) => parse(c).ok),
   )
 
+  // ── 5c. 무시 목록(4단계 — 결정 D6 · D10 · D14 · 검토 C10 · C11) ─────────────────────────────────────
+  // 「앱 글 아님 줄 모두 무시」는 줄을 무시로 바꾸고 체크만 한다(저장은 「이대로 등록」 — D6). 「읽지 못함」 줄은 넣지 않는다(하나씩은 무시할 수
+  // 있다 — D14). 이미 앱 글 · 앱 밖 글 · 무시한 주소와, 그 여부를 다 보지 못한 주소(파일을 읽지 못함)는 넣지 않는다(짐작하지 않는다).
+  const appNone = { mode: 'app' as const, pick: null }
+  ok(
+    'D10 — 일괄 무시는 「앱 글 아님」 줄(자동 판정 · 사람이 「앱 글 아님」을 고른 줄)만 · 앱 글을 고른 줄(맞음 · 확인 필요)은 넣지 않는다',
+    pi.bulkIgnorable(rNone, appNone) && pi.bulkIgnorable(rMatch, appNone) && pi.bulkIgnorable(rReview, appNone) &&
+      !pi.bulkIgnorable(rMatch, { mode: 'app', pick: pi.autoPick(rMatch) }) && !pi.bulkIgnorable(rReview, { mode: 'app', pick: pi.autoPick(rReview) }),
+  )
+  ok(
+    'D14 — 일괄 무시는 「읽지 못함」 줄을 넣지 않는다(그 줄은 하나씩 무시할 수 있다)',
+    !pi.bulkIgnorable(rFail, appNone) && !pi.bulkIgnorable(rFail, { mode: 'ignore' }) && pi.choiceBlockReason(rFail, { mode: 'ignore' }) === null,
+  )
+  ok(
+    '일괄 무시 — 이미 앱 글 · 다른 글 · 앱 밖 글 · 무시한 주소, 앱 밖 글 · 무시 여부를 다 보지 못한 주소, 다른 일(앱 밖 글 · 무시)을 고른 줄은 넣지 않는다',
+    !pi.bulkIgnorable(rAlready, appNone) &&
+      !pi.bulkIgnorable(rOther, appNone) &&
+      !pi.bulkIgnorable(withState(rNone, { tracked: [trackedRec('t2')] }), appNone) &&
+      !pi.bulkIgnorable(withState(rNone, { tracked: [trackedRec('t2', { state: 'moved' })] }), appNone) &&
+      !pi.bulkIgnorable(withState(rNone, { ignoredAt: '2026-11-08T00:00:00.000Z' }), appNone) &&
+      !pi.bulkIgnorable(withState(rNone, { stateUnknown: ['무시 목록'] }), appNone) &&
+      !pi.bulkIgnorable(rNone, ext(['t1'])) &&
+      !pi.bulkIgnorable(rNone, { mode: 'ignore' }),
+  )
+  ok('일괄 무시로 바꾼 줄은 그대로 무시로 등록할 수 있다(막힘 없음 · 상태 「무시」)', [rNone, rMatch, rReview].every((r) => pi.choiceBlockReason(r, { mode: 'ignore' }) === null && pi.choiceStateOf(r, { mode: 'ignore' }).state === 'ignore'))
+  // 「무시한 글 보기 · 되돌리기」 요청 — 무시 줄의 주소(어느 모양이든)로 푼다. 글 주소 규칙은 다시 보지 않는다(규칙이 바뀌어도 옛 무시를 풀 수 있게).
+  const unig = (body: unknown) => pi.parseUnignoreBody(body)
+  const unigOk = unig({ urls: [' https://fake.tistory.com/8 ', 'https://fake.tistory.com/'] })
+  ok(
+    '되돌리기 요청 — { urls: [주소] } · 앞뒤 공백을 뗀다 · 글 주소 규칙은 다시 보지 않는다(블로그 첫 화면 모양도 받는다)',
+    unigOk.ok && unigOk.urls.join() === 'https://fake.tistory.com/8,https://fake.tistory.com/',
+  )
+  ok(
+    `되돌리기 요청 — 주소 없음 · 빈 목록 · 글자 아님 · http(s) 주소 아님 · ${pi.UNIGNORE_MAX}개 넘음은 400`,
+    !unig({}).ok && !unig(null).ok && !unig({ urls: [] }).ok && !unig({ urls: 'https://fake.tistory.com/8' }).ok && !unig({ urls: [8] }).ok &&
+      !unig({ urls: ['fake 주소'] }).ok && !unig({ urls: Array.from({ length: pi.UNIGNORE_MAX + 1 }, (_, i) => `https://fake.tistory.com/${i + 1}`) }).ok &&
+      unig({ urls: Array.from({ length: pi.UNIGNORE_MAX }, (_, i) => `https://fake.tistory.com/${i + 1}`) }).ok,
+  )
+
   // ── 6. 저장한 블로그 · 목록 읽기 ───────────────────────────────────────────
   const ns = (raw: string) => pi.normalizeBlogSource(raw)
   ok(
@@ -1394,6 +1435,70 @@ try {
       cDown.body.results?.[1]?.status === 'added',
     { rDown: rDown.ok && rDown.appLedgers, results: cDown.body.results },
   )
+  // (자) 4단계 — 무시한 글 보기 · 되돌리기(GET /api/post-import/ignored · POST /api/post-import/unignore). 되돌리면 다음 새 글 찾기에 다시
+  // 나온다. 앱 글로 등록해도 무시가 풀린다. 5000개가 차면 더 적지 않는다(조용히 자르지 않는다).
+  type IgnoredListBody = import('../src/lib/postImport').IgnoredList
+  type UnignoreBody = { removed: number; ignored: IgnoredListBody['ignored'] }
+  const getIgnored = async () => {
+    const r = await fetch(`${API}/api/post-import/ignored`)
+    return { status: r.status, body: (await r.json().catch(() => ({}))) as IgnoredListBody & { error?: string } }
+  }
+  const unignoreReq = (urls: unknown) => post<UnignoreBody>('/api/post-import/unignore', { urls })
+  const ig0 = await getIgnored()
+  ok(
+    '4단계 무시한 글 보기 — 최근 것부터 · 줄마다 주소 · 읽을 때 나온 주소 모양 · 키 · 무시한 때 · 상한(5000)',
+    ig0.status === 200 && ig0.body.max === 5000 && ig0.body.ignored?.map((e) => e.url).join() === [`${FIX}/post/q5-copy`, `${FIX}/missing`].join() &&
+      ig0.body.ignored.every((e) => e.keys.length > 0 && e.urls.includes(e.url) && !Number.isNaN(Date.parse(e.ignoredAt))),
+    ig0.body,
+  )
+  const ignore7 = await commit([{ kind: 'ignore', url: MANY[6], alsoUrls: [`${MANY[6]}?from=rss`] }])
+  const many6 = await post<List>('/api/post-import/list', { source: FIX2 })
+  const back7 = await unignoreReq([MANY[6]])
+  const many7 = await post<List>('/api/post-import/list', { source: FIX2 })
+  ok(
+    '4단계 되돌리기 — 무시를 풀면 다음 새 글 찾기에 다시 나온다 · 푼 줄 수와 남은 목록을 돌려준다',
+    ignore7.body.results?.[0]?.status === 'added' && many6.body.hiddenIgnored === 1 && !many6.body.newUrls.includes(MANY[6]!) &&
+      back7.status === 200 && back7.body.removed === 1 && back7.body.ignored.map((e) => e.url).join() === ig0.body.ignored.map((e) => e.url).join() &&
+      many7.body.hiddenIgnored === 0 && many7.body.newUrls.includes(MANY[6]!),
+    { ignore7: ignore7.body, many6: many6.body, back7: back7.body, many7: many7.body },
+  )
+  await commit([{ kind: 'ignore', url: MANY[6], alsoUrls: [`${MANY[6]}?from=rss`] }])
+  const backAlso = await unignoreReq([`${MANY[6]}?from=rss`])
+  ok('4단계 되돌리기 — 읽을 때 나온 다른 주소 모양으로도 그 줄이 풀린다(C11)', backAlso.status === 200 && backAlso.body.removed === 1 && !ignoredKeys().some((k) => k.startsWith('127.0.0.1/many/7')), backAlso.body)
+  const ignoredText = readFileSync(ignoredFile, 'utf8')
+  const backNone = await unignoreReq([`${FIX}/post/never-ignored`])
+  ok('4단계 되돌리기 — 목록에 없는 주소는 0줄 · 파일을 다시 쓰지 않는다', backNone.status === 200 && backNone.body.removed === 0 && readFileSync(ignoredFile, 'utf8') === ignoredText, backNone.body)
+  const badUnignore = await Promise.all([post('/api/post-import/unignore', {}), unignoreReq([]), unignoreReq(['fake 주소']), unignoreReq('https://fake.tistory.com/8')])
+  ok('4단계 되돌리기 — 본문 모양이 틀리면 400 · 파일 그대로', badUnignore.every((r) => r.status === 400) && readFileSync(ignoredFile, 'utf8') === ignoredText, badUnignore.map((r) => r.status))
+  const ignoreApp = await commit([{ kind: 'ignore', url: `${FIX}/post/c2-again`, alsoUrls: [] }])
+  const keyedBefore = ignoredKeys().includes('127.0.0.1/post/c2-again')
+  const regApp = await commit([{ tenantId: 'vpi-a', articleId: C2_ID, url: `${FIX}/post/c2-again`, publishedOn: '2026-11-03' }])
+  ok(
+    '무시한 주소를 앱 글로 등록해도 무시가 풀린다(브랜드 쓰기가 끝난 뒤)',
+    ignoreApp.body.results?.[0]?.status === 'added' && keyedBefore && regApp.body.results?.[0]?.status === 'added' && !ignoredKeys().includes('127.0.0.1/post/c2-again'),
+    { ignoreApp: ignoreApp.body, regApp: regApp.body, keys: ignoredKeys() },
+  )
+  const { KEY_RULE } = await import('../src/lib/publishedUrl')
+  const savedIgnored = readFileSync(ignoredFile, 'utf8')
+  const capUrl = (i: number) => `https://fake-cap.tistory.com/${i + 1}`
+  put(ignoredFile, {
+    format: 'post-import-ignored/1',
+    keyRule: KEY_RULE,
+    ignored: Array.from({ length: 5000 }, (_, i) => ({ url: capUrl(i), urls: [capUrl(i)], keys: [`fake-cap.tistory.com/${i + 1}`], ignoredAt: '2026-11-01T00:00:00.000Z' })),
+  })
+  const fullText = readFileSync(ignoredFile, 'utf8')
+  const overCap = await commit([{ kind: 'ignore', url: MANY[7], alsoUrls: [] }])
+  const fullList = await getIgnored()
+  ok(
+    '4단계 상한 — 5000개가 차면 더 적지 않고 그 줄에 이유(파일 그대로) · 보기는 5000개를 모두 돌려준다',
+    overCap.body.results?.[0]?.status === 'error' && (overCap.body.results?.[0]?.error ?? '').includes('5000') && readFileSync(ignoredFile, 'utf8') === fullText &&
+      fullList.status === 200 && fullList.body.ignored.length === 5000,
+    overCap.body,
+  )
+  const freed = await unignoreReq([capUrl(0)])
+  const underCap = await commit([{ kind: 'ignore', url: MANY[7], alsoUrls: [] }])
+  ok('4단계 상한 — 하나를 되돌려 자리가 나면 다시 적는다', freed.body.removed === 1 && underCap.body.results?.[0]?.status === 'added', { freed: freed.body.removed, underCap: underCap.body })
+  put(ignoredFile, savedIgnored)
   // (아) 무시 목록의 키 규칙(C11) · 깨진 무시 목록.
   put(ignoredFile, { format: 'post-import-ignored/1', keyRule: 0, ignored: [{ url: `${MANY[4]}?fbclid=fake`, urls: [`${MANY[4]}?fbclid=fake`], keys: ['stale-key'], ignoredAt: '2026-11-01T00:00:00.000Z' }] })
   const many4 = await post<List>('/api/post-import/list', { source: FIX2 })
@@ -1409,6 +1514,13 @@ try {
       brokenIgnore.body.results?.[0]?.status === 'error' && readFileSync(ignoredFile, 'utf8') === BROKEN_IGNORED &&
       rUnknown.ok && (rUnknown.stateUnknown ?? []).some((s) => s.includes('무시 목록')),
     { list: many5.body, ignore: brokenIgnore.body, read: rUnknown },
+  )
+  const brokenView = await getIgnored()
+  const brokenBack = await unignoreReq([MANY[5]])
+  ok(
+    '깨진 무시 목록 — 보기 · 되돌리기 모두 500(이유) · 파일 그대로(빈 목록으로 덮어 숨긴 주소가 통째로 다시 나오지 않게)',
+    brokenView.status === 500 && (brokenView.body.error ?? '').includes('무시 목록') && brokenBack.status === 500 && readFileSync(ignoredFile, 'utf8') === BROKEN_IGNORED,
+    { view: brokenView, back: brokenBack },
   )
 } catch (err) {
   ok('예외 없이 끝남', false, err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err))

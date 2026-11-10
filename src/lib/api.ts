@@ -8,7 +8,7 @@ import type { PublishSettings } from './publishSettings'
 import { normalizeExtraArticles, topicArticleId, type ExtraArticle } from './extraArticles'
 import { parseWriterPlan, type WriterPlan } from './probePlan'
 import type { IndexCheckRecord, IndexEngine, IndexState, PublishStatus } from './publishStatus'
-import type { BlogListResult, BlogSource, CommitItem, CommitResult, PostImportRead } from './postImport'
+import type { BlogListResult, BlogSource, CommitItem, CommitResult, IgnoredList, PostImportRead, UnignoreResult } from './postImport'
 // 앱 밖 글 모듈은 타입으로만 불러온다 — 정기진단 보고서가 이 파일을 불러오므로 런타임 import가 생기면 보고서가 앱 밖 글 모듈을 끌어온다
 // (scripts/verify-external-posts.ts 정적 검사).
 import type { ExternalPostView, ExternalRemovedReason } from './externalPosts'
@@ -845,6 +845,20 @@ export async function commitPostImport(items: CommitItem[]): Promise<{ results: 
     body: JSON.stringify({ items }),
   })
   return { results: body.results, warnings: body.warnings ?? [] }
+}
+
+/** 「무시한 글 보기」 — 앱 전체 무시 목록(최근 것부터)과 상한. 목록이 깨졌으면 서버가 준 이유와 함께 throw한다(빈 목록으로 보이지 않게). */
+export function loadIgnoredPosts(): Promise<IgnoredList> {
+  return postsRequest<IgnoredList>('/api/post-import/ignored')
+}
+
+/** 「되돌리기」 — 이 주소들의 무시를 푼다(다음 새 글 찾기에 다시 나온다). 푼 줄 수와 남은 목록. 실패하면 이유와 함께 throw한다. */
+export function unignorePosts(urls: string[]): Promise<UnignoreResult> {
+  return postsRequest<UnignoreResult>('/api/post-import/unignore', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ urls }),
+  })
 }
 
 /**

@@ -176,6 +176,8 @@ import { getPublishedHistory } from './publishedHistory.js';
 import { IndexChecksError, setIndexCheck } from './indexChecks.js';
 import { readPublishStatus } from './publishStatus.js';
 import { commitPostImport, listBlogPosts, PostImportError, readBlogSources, readPostForImport, saveBlogSources } from './postImport.js';
+import { IGNORED_MAX, IgnoredListError, listIgnored, unignoreUrls } from './postImportIgnored.js';
+import { parseUnignoreBody } from '../src/lib/postImport.js';
 import { getRunHistory, MAX_RUN_WEEKS } from './runHistory.js';
 import { addExternalPost, ExternalPostsError, getExternalHistory, listExternalPosts, readOtherLedgers, updateExternalPost } from './externalPosts.js';
 import {
@@ -2810,7 +2812,7 @@ app.get('/api/external-history/:tenantId', async (req, res) => {
 // 앱에서만」으로 읽는다). 바깥 페이지는 내부 주소를 막은 읽기로만 받는다. 오류: 400 요청 모양 · 글 주소 아님 · 저장하지 않은 블로그, 500 파일이
 // 깨짐.
 function sendImportError(res: import('express').Response, err: unknown) {
-  const status = err instanceof PostImportError ? err.status : 500;
+  const status = err instanceof PostImportError || err instanceof IgnoredListError ? err.status : 500;
   res.status(status).json({ error: err instanceof Error ? err.message : String(err) });
 }
 
@@ -2861,6 +2863,29 @@ app.post('/api/post-import/read', async (req, res) => {
 app.post('/api/post-import/commit', async (req, res) => {
   try {
     res.json(await commitPostImport(req.body, await loadRuntimeTenants(), shownQuestionBank));
+  } catch (err) {
+    sendImportError(res, err);
+  }
+});
+
+// 무시한 글 보기 · 되돌리기 — 앱 전체 무시 목록(server/postImportIgnored.ts)만 읽고 쓴다(원장 · 앱 밖 글 파일과 상관없다). 되돌리면 다음 「새 글
+// 찾기」에 다시 나온다. 깨진 목록은 500(덮어쓰지 않는다).
+app.get('/api/post-import/ignored', async (_req, res) => {
+  try {
+    res.json({ ignored: await listIgnored(), max: IGNORED_MAX });
+  } catch (err) {
+    sendImportError(res, err);
+  }
+});
+
+app.post('/api/post-import/unignore', async (req, res) => {
+  const parsed = parseUnignoreBody(req.body);
+  if (!parsed.ok) {
+    res.status(400).json({ error: parsed.error });
+    return;
+  }
+  try {
+    res.json(await unignoreUrls(parsed.urls));
   } catch (err) {
     sendImportError(res, err);
   }

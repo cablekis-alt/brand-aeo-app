@@ -25,7 +25,8 @@
  * 고른 브랜드에 적어도 되는지는 그 브랜드의 원장만 본다(externalRegistrationCheck — 서버와 같은 함수, D13). 다른 브랜드의 앱 글이면 막지
  * 않고 「같은 주소: ○○의 앱 글」로 알린다. 붙일 브랜드는 글 주소가 정확히 한 고객 브랜드의 자사 주소일 때만 미리 고른다(C2 · D2 — 알려진
  * 플랫폼 호스트도 자사 주소 칸으로 직접 맞추고, 여럿이 함께 쓰는 플랫폼은 빼고). 무시는 이미 앱 글 · 앱 밖 글로 적힌 주소에는 하지 않고,
- * 「읽지 못함」 줄에는 할 수 있다(D14 — 사이트맵에 남은 지운 글).
+ * 「읽지 못함」 줄에는 할 수 있다(D14 — 사이트맵에 남은 지운 글). 「앱 글 아님 줄 모두 무시」는 「앱 글 아님」 줄만 무시로 바꿔 체크하고(읽지
+ * 못함 줄은 빼고 — D10 · D14), 저장은 「이대로 등록」 때 한다(D6). 무시한 글은 「무시한 글 보기 · 되돌리기」로 푼다.
  *
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다. 받은 HTML은 글자로만 다룬다(실행 · 그리기 없음).
  */
@@ -931,6 +932,18 @@ export function ignoreOptionAllowed(read: PostImportRead): boolean {
   return !read.ok || (read.known.length === 0 && (read.tracked?.length ?? 0) === 0)
 }
 
+/**
+ * 「앱 글 아님 줄 모두 무시」(D10)가 무시로 바꿀 줄 — 앱 글을 고르지 않은 줄(자동 판정 「앱 글 아님」 · 사람이 고른 「앱 글 아님(직접)」)만. 「읽지
+ * 못함」 줄은 넣지 않는다(하나씩 고른다 — D14). 이미 앱 글 · 앱 밖 글 · 무시한 주소와, 그 여부를 다 보지 못한 주소(파일을 읽지 못함)는 넣지 않는다
+ * (짐작하지 않는다). 단추는 체크만 하고, 저장은 「이대로 등록」 때 한다(D6).
+ */
+export function bulkIgnorable(read: PostImportRead, choice: RowChoice): boolean {
+  if (!read.ok || choice.mode !== 'app' || choice.pick !== null) return false
+  if (read.ignoredAt || (read.stateUnknown?.length ?? 0) > 0 || !ignoreOptionAllowed(read)) return false
+  const { state } = rowStateOf(read, null)
+  return state === 'none' || state === 'dismissed'
+}
+
 /** 고른 일에 따른 줄 상태 — 앱 글은 rowStateOf 그대로, 앱 밖 글은 「앱 밖 글로 추적」(새 브랜드 없이 이미 추적 중이면 「앱 밖 글로 추적 중」), 무시는 「무시」 · 「무시함」. */
 export function choiceStateOf(read: PostImportRead, choice: RowChoice): { state: RowState; verdict: UrlVerdict | null } {
   if (choice.mode === 'ignore') return { state: read.ok && read.ignoredAt ? 'ignored' : 'ignore', verdict: null }
@@ -1196,6 +1209,48 @@ export interface BlogListResult {
 
 /** 한 블로그에서 한 번에 돌려주는 새 글 — 글이 천 편 넘는 블로그도 최근 글만 읽게. */
 export const NEW_URLS_MAX = 50
+
+// ── 무시한 글 보기 · 되돌리기 ───────────────────────────────────────────────
+
+/** 무시 목록 한 줄(server/postImportIgnored.ts가 저장하는 모양 그대로). */
+export interface IgnoredPost {
+  /** 무시를 고른 줄의 주소(적을 주소, 읽지 못한 줄이면 붙여 넣은 주소). */
+  url: string
+  /** 읽을 때 나온 주소 모양 모두(url 포함 — C11). */
+  urls: string[]
+  /** urls의 추적 키(지금 키 규칙으로). */
+  keys: string[]
+  ignoredAt: string
+}
+/** GET /api/post-import/ignored — 최근에 무시한 것부터, max는 저장 상한. */
+export interface IgnoredList {
+  ignored: IgnoredPost[]
+  max: number
+}
+/** POST /api/post-import/unignore — 푼 줄 수와 남은 목록(최근 것부터). */
+export interface UnignoreResult {
+  removed: number
+  ignored: IgnoredPost[]
+}
+
+/** 한 번에 되돌리는 주소 상한. */
+export const UNIGNORE_MAX = 200
+
+/**
+ * 되돌리기 요청 본문 검사 — { urls: [주소] }(1~UNIGNORE_MAX개, http(s) 주소). 무시 줄의 주소 모양 가운데 하나로 그 줄을 푼다. 글 주소 규칙
+ * (isArticleUrl)은 다시 보지 않는다 — 규칙이 바뀌어도 예전에 무시한 주소를 풀 수 있게.
+ */
+export function parseUnignoreBody(body: unknown): { ok: true; urls: string[] } | { ok: false; error: string } {
+  const urls = (body as { urls?: unknown } | null)?.urls
+  if (!Array.isArray(urls) || urls.length === 0) return { ok: false, error: '되돌릴 주소(urls)가 없습니다.' }
+  if (urls.length > UNIGNORE_MAX) return { ok: false, error: `한 번에 ${UNIGNORE_MAX}개까지 되돌립니다.` }
+  const out: string[] = []
+  for (const u of urls) {
+    if (!isText(u) || trackingKey(u.trim()) === null) return { ok: false, error: `되돌릴 주소가 http(s) 주소가 아닙니다: ${String(u).slice(0, 200)}` }
+    out.push(u.trim())
+  }
+  return { ok: true, urls: out }
+}
 
 // ── 등록 요청 ───────────────────────────────────────────────────────────────
 

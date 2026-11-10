@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { commitPostImport, listImportBlogPosts, loadBlogSources, readImportPost, saveBlogSources } from '../lib/api'
+import { commitPostImport, listImportBlogPosts, loadBlogSources, loadIgnoredPosts, readImportPost, saveBlogSources, unignorePosts } from '../lib/api'
 import { BANK_UNKNOWN_NOTE } from '../lib/contentLibraryOrder'
 import { externalTitle } from '../lib/externalPosts'
 import {
   autoPick,
+  bulkIgnorable,
   checkedByDefault,
   choiceBlockReason,
   choiceStateOf,
@@ -29,6 +30,7 @@ import {
   type CommitItem,
   type CommitResult,
   type ExtractedUrls,
+  type IgnoredPost,
   type ImportCandidate,
   type PostImportRead,
   type RegisteredRow,
@@ -71,6 +73,21 @@ interface QueueCount {
   requeued: number
   inTable: number
 }
+
+/** 「무시한 글 보기 · 되돌리기」 — 열 때마다 다시 읽는다. list가 null이면 아직 읽지 않았거나 읽지 못했다(error). busy는 되돌리는 중인 주소. */
+interface IgnoredView {
+  open: boolean
+  loading: boolean
+  list: IgnoredPost[] | null
+  max: number
+  shown: number
+  busy: string | null
+  error: string | null
+  note: string | null
+}
+/** 무시한 글을 한 번에 보이는 수(「더 보기」로 늘린다 — 목록은 5000편까지). */
+const IGNORED_PAGE = 100
+const IGNORED_CLOSED: IgnoredView = { open: false, loading: false, list: null, max: 0, shown: IGNORED_PAGE, busy: null, error: null, note: null }
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err))
 
@@ -172,6 +189,8 @@ function rowView(row: ImportRow, dupOf: ImportRow | undefined) {
  *
  * 앱에서 만들지 않은 글은 「앱 밖 글로 추적…」(브랜드 여러 곳 · 날짜 모름 — 원장과 따로, 점수 · 집행에 넣지 않는다)이나 「무시 — 새 글
  * 찾기에서 숨김」을 고른다. 이미 추적 중 · 무시한 주소는 그 상태로 다시 보이고 미리 체크하지 않는다(앱 글을 자동으로 고르지 않는다 — C6).
+ * 오래된 글이 많은 블로그는 「앱 글 아님 줄 모두 무시」로 「앱 글 아님」 줄을 한꺼번에 무시로 바꿔 체크한다(읽지 못함 줄은 빼고 — D10 · D14,
+ * 저장은 「이대로 등록」 때 — D6). 무시한 글은 「무시한 글 보기 · 되돌리기」로 보고 푼다(다음 새 글 찾기에 다시 나온다).
  * brands는 고객 브랜드 목록(발행 현황 응답).
  */
 export default function PostImportPanel({
@@ -196,6 +215,7 @@ export default function PostImportPanel({
   const [findNote, setFindNote] = useState<string | null>(null)
   const [committing, setCommitting] = useState(false)
   const [commitNote, setCommitNote] = useState<string | null>(null)
+  const [ignored, setIgnored] = useState<IgnoredView>(IGNORED_CLOSED)
   const abortRef = useRef<AbortController | null>(null)
   // 비동기 흐름(새 글 찾기 뒤 더하기 · 읽기를 마친 줄의 미리 체크)이 지금 표를 보게 한다.
   const rowsRef = useRef<ImportRow[]>(rows)
@@ -414,6 +434,54 @@ export default function PostImportPanel({
     void readAll(targets)
   }
 
+  const patchIgnored = (patch: Partial<IgnoredView>) => setIgnored((s) => ({ ...s, ...patch }))
+  /** 무시 목록을 읽는다 — 읽지 못하면 목록을 비우고 까닭을 보인다(빈 목록으로 보이지 않게). */
+  const loadIgnored = async () => {
+    patchIgnored({ loading: true, error: null })
+    try {
+      const res = await loadIgnoredPosts()
+      patchIgnored({ loading: false, list: res.ignored, max: res.max })
+    } catch (err) {
+      patchIgnored({ loading: false, list: null, error: `무시한 글을 읽지 못했습니다 — ${message(err)}` })
+    }
+  }
+  const toggleIgnored = () => {
+    if (ignored.open) {
+      setIgnored(IGNORED_CLOSED)
+      return
+    }
+    setIgnored({ ...IGNORED_CLOSED, open: true })
+    void loadIgnored()
+  }
+  /** 되돌린 주소가 표에 있으면 그 줄의 무시를 푼다 — 무시로 고른 줄은 처음 고를 일로 되돌리고 체크를 비운다(다시 읽지 않아도 상태가 맞게). */
+  const afterUnignore = (keys: ReadonlySet<string>) =>
+    setRows((rs) =>
+      rs.map((r) => {
+        const readKey = r.read?.ok && r.read.readUrl ? trackingKey(r.read.readUrl) : null
+        if (![r.key, recordKeyOf(r), readKey].some((k) => k !== null && keys.has(k))) return r
+        const read = r.read?.ok ? { ...r.read, ignoredAt: null } : r.read
+        if (r.choice.mode !== 'ignore') return { ...r, read }
+        return { ...r, read, choice: read ? initialChoice(read) : NO_CHOICE, checked: false, result: null }
+      }),
+    )
+  const restoreIgnored = async (entry: IgnoredPost) => {
+    patchIgnored({ busy: entry.url, error: null, note: null })
+    try {
+      const res = await unignorePosts([entry.url])
+      patchIgnored({
+        busy: null,
+        list: res.ignored,
+        note:
+          res.removed > 0
+            ? `${shortUrl(entry.url)} — 무시를 풀었습니다. 다음 「새 글 찾기」에 다시 나옵니다.`
+            : `${shortUrl(entry.url)} — 이미 풀린 주소입니다(목록을 다시 읽었습니다).`,
+      })
+      afterUnignore(new Set(entry.keys))
+    } catch (err) {
+      patchIgnored({ busy: null, error: `되돌리지 못했습니다 — ${message(err)}` })
+    }
+  }
+
   // 같은 글 주소(적을 주소가 같음) — 위에 먼저 나온 줄로 등록하고 나머지 줄은 막는다.
   const firstByRecord = new Map<string, ImportRow>()
   for (const r of rows) if (r.status === 'done' && r.read?.ok && !firstByRecord.has(recordKeyOf(r))) firstByRecord.set(recordKeyOf(r), r)
@@ -543,6 +611,8 @@ export default function PostImportPanel({
     if (uncertain > 0) parts.push(`적혔는지 모름 ${uncertain}편(다시 읽어 확인하세요)`)
     setCommitNote([parts.join(' · '), ...warnings].join(' — '))
     if (count.app > 0 || count.external > 0 || count.partial > 0 || uncertain > 0) onRegistered()
+    // 무시한 글 목록을 열어 두었으면 다시 읽는다(방금 무시한 글 · 등록해서 풀린 글).
+    if (ignored.open) void loadIgnored()
   }
 
   const clear = () => {
@@ -570,6 +640,16 @@ export default function PostImportPanel({
     ...(readyCount.ignore > 0 ? [`무시 ${readyCount.ignore}`] : []),
   ].join(' · ')
   const retryable = rows.filter(needsReread).length
+  // 「앱 글 아님 줄 모두 무시」 대상 — 읽은 줄 가운데 앱 글을 고르지 않은 줄(읽지 못함 · 이미 적은 주소 · 같은 글 주소 아래 줄 · 등록을 마친 줄은 빼고).
+  const bulkTargets = views.filter(
+    (v) => v.row.status === 'done' && v.row.read !== null && !v.dupOf && v.row.result?.kind !== 'added' && v.row.result?.kind !== 'existing' && bulkIgnorable(v.row.read, v.row.choice),
+  )
+  /** 그 줄들을 무시로 바꾸고 체크만 한다 — 저장은 「이대로 등록」 때(D6). 줄마다 다시 고를 수 있다. */
+  const ignoreAllNone = () => {
+    const keys = new Set(bulkTargets.map((v) => v.row.key))
+    setRows((rs) => rs.map((r) => (keys.has(r.key) ? { ...r, choice: { mode: 'ignore' as const }, checked: true, result: null } : r)))
+    setCommitNote(`앱 글 아님 줄 ${keys.size}편을 「무시」로 바꿔 체크했습니다 — 「이대로 등록」을 눌러야 저장합니다. 읽지 못한 줄은 하나씩 고르세요.`)
+  }
   // 같은 앱 글을 둘 이상의 체크한 줄이 고르면 알린다 — 두 주소 모두 그 글의 기록이 된다.
   const pickCount = new Map<string, number>()
   for (const v of ready) {
@@ -699,6 +779,60 @@ export default function PostImportPanel({
                 <p className="pi-note" role="status">
                   {findNote}
                 </p>
+              )}
+              <div className="pi-row">
+                <button type="button" className="btn" aria-expanded={ignored.open} aria-controls="pi-ignored-box" onClick={toggleIgnored}>
+                  무시한 글 보기 · 되돌리기
+                </button>
+              </div>
+              {ignored.open && (
+                <div id="pi-ignored-box" className="pi-ignored-box">
+                  {ignored.loading && <p className="muted pi-empty">무시한 글을 불러오는 중…</p>}
+                  {ignored.error && (
+                    <p className="error pi-note" role="alert">
+                      {ignored.error}
+                    </p>
+                  )}
+                  {!ignored.loading && ignored.list?.length === 0 && <p className="muted pi-empty">무시한 글이 없습니다.</p>}
+                  {ignored.list && ignored.list.length > 0 && (
+                    <>
+                      <p className="pi-label">
+                        무시한 글 {ignored.list.length}편(최근 것부터 · {ignored.max}편까지 둡니다). 되돌리면 다음 「새 글 찾기」에 다시 나옵니다.
+                      </p>
+                      <ul className="pi-ignored-list">
+                        {ignored.list.slice(0, ignored.shown).map((e) => (
+                          <li key={`${e.url}|${e.ignoredAt}`}>
+                            <a href={e.url} target="_blank" rel="noreferrer" title={e.url}>
+                              {shortUrl(e.url)}
+                            </a>
+                            <span className="pi-platform">{kstDate(e.ignoredAt) ?? e.ignoredAt.slice(0, 10)} 무시</span>
+                            <button
+                              type="button"
+                              className="ps-mark"
+                              onClick={() => void restoreIgnored(e)}
+                              disabled={ignored.busy !== null}
+                              aria-label={`${shortUrl(e.url)} 무시 되돌리기`}
+                            >
+                              되돌리기
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      {ignored.list.length > ignored.shown && (
+                        <div className="pi-row">
+                          <button type="button" className="btn" onClick={() => patchIgnored({ shown: ignored.shown + IGNORED_PAGE })}>
+                            더 보기 ({ignored.list.length - ignored.shown}편 남음)
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {ignored.note && (
+                    <p className="pi-note" role="status">
+                      {ignored.note}
+                    </p>
+                  )}
+                </div>
               )}
             </section>
           </div>
@@ -1004,6 +1138,17 @@ export default function PostImportPanel({
                 <button type="button" className="btn primary" onClick={() => void register()} disabled={busy || ready.length === 0}>
                   이대로 등록{readyText ? ` (${readyText})` : ''}
                 </button>
+                {bulkTargets.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={ignoreAllNone}
+                    disabled={busy}
+                    title="표의 「앱 글 아님」 줄을 모두 「무시」로 바꾸고 체크합니다 — 저장은 「이대로 등록」을 누를 때 합니다. 읽지 못한 줄은 넣지 않습니다."
+                  >
+                    앱 글 아님 줄 모두 무시 ({bulkTargets.length})
+                  </button>
+                )}
                 {retryable > 0 && (
                   <button type="button" className="btn" onClick={retry} disabled={busy}>
                     다시 읽기 — 읽지 못함 · 멈춤 · 적혔는지 모름 ({retryable})

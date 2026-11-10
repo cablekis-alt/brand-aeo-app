@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import type { IgnoredPost } from '../src/lib/postImport.js';
 import { KEY_RULE, trackingKey } from '../src/lib/publishedUrl.js';
 import { stateFilePath } from './appPaths.js';
 import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
@@ -14,7 +15,8 @@ import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
  *
  * 쓰기 줄은 브랜드 쓰기 줄과 겹치지 않는 이름(LOCK — 브랜드 id에는 /가 없다)이다. 이 줄 안에서는 이 파일만 읽고 쓴다 — 브랜드 파일을 읽지
  * 않는다(브랜드 줄 안에서 이 줄을 기다리는 곳도 없다). 그래서 등록과 무시가 엇갈려 멈추지 않는다(C18). 「등록하면 무시를 푼다」는 브랜드
- * 쓰기가 끝난 뒤 줄 밖에서 부른다(server/postImport.ts).
+ * 쓰기가 끝난 뒤 줄 밖에서 부른다(server/postImport.ts). 「무시한 글 보기 · 되돌리기」(GET /api/post-import/ignored · POST
+ * /api/post-import/unignore)도 이 줄만 쓴다.
  */
 export const IGNORED_FILE = 'post-import-ignored.json';
 const IGNORED_FORMAT = 'post-import-ignored/1';
@@ -22,15 +24,8 @@ const IGNORED_FORMAT = 'post-import-ignored/1';
 export const IGNORED_MAX = 5000;
 const LOCK = 'post-import-ignored/*';
 
-export interface IgnoredEntry {
-  /** 무시를 고른 줄의 주소(적을 주소, 읽지 못한 줄이면 붙여 넣은 주소). */
-  url: string;
-  /** 읽을 때 나온 주소 모양 모두(url 포함). */
-  urls: string[];
-  /** urls의 추적 키(겹치는 것은 한 번). */
-  keys: string[];
-  ignoredAt: string;
-}
+/** 무시 줄 — 화면과 같은 모양(src/lib/postImport.ts IgnoredPost: 주소 · 읽을 때 나온 주소 모양 · 그 추적 키 · 무시한 때). */
+export type IgnoredEntry = IgnoredPost;
 
 /** 라우트 · 등록이 그대로 상태 코드로 쓰는 오류. */
 export class IgnoredListError extends Error {
@@ -119,14 +114,39 @@ export function addIgnored(items: readonly { urls: readonly string[] }[], now = 
   });
 }
 
-/** 이 키들 가운데 하나라도 가진 무시 줄을 뺀다(등록한 주소 — 무시가 풀린다). 뺀 줄 수. 없으면 파일을 쓰지 않는다. */
-export function unignoreKeys(keys: readonly string[]): Promise<number> {
+/** 최근에 무시한 것부터(같은 때면 나중에 적은 것부터 — 파일은 적은 순서다). */
+const newestFirst = (entries: readonly IgnoredEntry[]) =>
+  entries
+    .map((e, i) => ({ e, i }))
+    .sort((a, b) => (a.e.ignoredAt < b.e.ignoredAt ? 1 : a.e.ignoredAt > b.e.ignoredAt ? -1 : b.i - a.i))
+    .map(({ e }) => e);
+
+/** 「무시한 글 보기」 — 최근 것부터. 없으면 빈 목록, 깨졌으면 IgnoredListError(500). */
+export async function listIgnored(): Promise<IgnoredEntry[]> {
+  return newestFirst(await readIgnored());
+}
+
+/** 이 키들 가운데 하나라도 가진 무시 줄을 뺀다 — 뺀 줄 수와 남은 줄. 뺄 줄이 없으면 파일을 쓰지 않는다. */
+function removeKeys(keys: readonly string[]): Promise<{ removed: number; kept: IgnoredEntry[] }> {
   const wanted = new Set(keys);
   return queueTenantWrite(LOCK, async () => {
     const entries = await readInLock();
     const kept = entries.filter((e) => !e.keys.some((k) => wanted.has(k)));
-    if (kept.length === entries.length) return 0;
-    await writeInLock(kept);
-    return entries.length - kept.length;
+    if (kept.length !== entries.length) await writeInLock(kept);
+    return { removed: entries.length - kept.length, kept };
   });
+}
+
+/** 이 키들 가운데 하나라도 가진 무시 줄을 뺀다(등록한 주소 — 무시가 풀린다). 뺀 줄 수. 없으면 파일을 쓰지 않는다. */
+export async function unignoreKeys(keys: readonly string[]): Promise<number> {
+  return (await removeKeys(keys)).removed;
+}
+
+/**
+ * 「되돌리기」 — 이 주소들(무시 줄의 주소 모양 가운데 어느 것이든)의 무시를 푼다. 키는 지금 규칙으로 계산한다(읽을 때 파일의 키도 같은 규칙으로
+ * 다시 계산된다 — C11). 푼 줄 수와 남은 목록(최근 것부터).
+ */
+export async function unignoreUrls(urls: readonly string[]): Promise<{ removed: number; ignored: IgnoredEntry[] }> {
+  const { removed, kept } = await removeKeys(keysOf(urls));
+  return { removed, ignored: newestFirst(kept) };
 }
