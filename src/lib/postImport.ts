@@ -32,7 +32,7 @@
  */
 import type { StoredDraft } from './api.js'
 import { effectiveDraft } from './draftGaps.js'
-import { externalRegistrationCheck, ledgerWinners, ledgerWinsMessage, type ExternalDateSource, type LedgerRowLike } from './externalPosts.js'
+import { externalRegistrationCheck, ledgerWinners, ledgerWinsMessage, repostDayProblem, type ExternalDateSource, type LedgerRowLike } from './externalPosts.js'
 import { ownedUrl } from './publishStatus.js'
 import { ARTICLE_URL_REASON, isArticleUrl, kstDate, todayKst, trackingKey } from './publishedUrl.js'
 import { isSharedPlatformHost } from './sharedHosts.js'
@@ -735,12 +735,20 @@ export interface PostImportReadOk {
   appLedgers?: AppLedger[]
   /** 앱 밖 글 · 무시 여부를 다 보지 못한 까닭(읽지 못한 파일). 있으면 미리 체크하지 않는다. */
   stateUnknown?: string[]
+  /**
+   * 이 주소를 앱 밖 글로 적었다가 「글을 내림」으로 뺀 고객 브랜드와 그 가장 늦은 내린 날(한국 날짜) — 그 브랜드에 다시 적으면 올린 날은 그
+   * 뒤여야 한다(repostDayProblem — 서버가 다시 본다, C9).
+   */
+  takenDown?: { tenantId: string; brand: string; on: string }[]
 }
 export interface PostImportReadFail {
   ok: false
   url: string
   key: string | null
   error: string
+  /** 읽지 못한 주소도 앱 밖 기록 · 무시한 때를 싣는다(무시한 「읽지 못함」 줄을 다시 읽어도 「무시함」 — D14). 옛 서버면 없다. */
+  tracked?: TrackedRecord[]
+  ignoredAt?: string | null
 }
 export type PostImportRead = PostImportReadOk | PostImportReadFail
 
@@ -855,13 +863,17 @@ export function otherUrlsNow(candidate: ImportCandidate, recordKey: string, read
 /** 줄에서 고른 일 — 앱 글(pick이 null이면 「앱 글 아님」) · 앱 밖 글로 추적(새로 적을 브랜드 · 날짜 모름) · 무시(새 글 찾기에서 숨김). */
 export type RowChoice = { mode: 'app'; pick: RowPick | null } | { mode: 'external'; tenantIds: string[]; dateUnknown: boolean } | { mode: 'ignore' }
 
+/** 이 주소를 지금 앱 밖 글로 추적하는(살아 있는 줄이 있는) 고객 브랜드 줄 — 앱 글로 옮겨 쉬는 줄은 넣지 않는다(그 주소는 앱 글이다). */
+export const liveTracked = (read: PostImportRead): TrackedRecord[] => (read.tracked ?? []).filter((t) => t.state === 'live')
+
 /**
- * 처음 고를 일 — 이미 앱 밖 글로 추적 중인 주소면 앱 밖 글(새로 고른 브랜드 없음), 무시한 주소면 무시, 아니면 앱 글(autoPick). 추적 · 무시를
- * 자동 선택보다 먼저 본다(C6 — 본문이 겹치는 앱 글을 고르면 손글이 앱 글로 적힌다).
+ * 처음 고를 일 — 이미 앱 밖 글로 추적 중인(살아 있는 줄) 주소면 앱 밖 글(새로 고른 브랜드 없음), 무시한 주소면 무시(읽지 못한 줄도 — D14),
+ * 아니면 앱 글(autoPick). 추적 · 무시를 자동 선택보다 먼저 본다(C6 — 본문이 겹치는 앱 글을 고르면 손글이 앱 글로 적힌다). 앱 글로 옮겨 쉬는
+ * 줄만 있으면 앱 글로 본다(「이미 등록됨」과 그 앱 글이 보이게).
  */
 export function initialChoice(read: PostImportRead): RowChoice {
-  if (read.ok && (read.tracked?.length ?? 0) > 0) return { mode: 'external', tenantIds: [], dateUnknown: false }
-  if (read.ok && read.ignoredAt) return { mode: 'ignore' }
+  if (read.ok && liveTracked(read).length > 0) return { mode: 'external', tenantIds: [], dateUnknown: false }
+  if (read.ignoredAt) return { mode: 'ignore' }
   return { mode: 'app', pick: autoPick(read) }
 }
 
@@ -927,9 +939,12 @@ export function externalDefaultBrands(read: PostImportRead): string[] {
   return externalBrandState(read, only) === 'open' ? [only] : []
 }
 
-/** 「무시」를 고를 수 있는 줄 — 읽지 못한 줄(D14)이나, 원장(살아 있는 줄) · 앱 밖 글에 적히지 않은 주소. 이미 앱 글 · 앱 밖 글이면 새 글 찾기에서 이미 빠진다. */
+/**
+ * 「무시」를 고를 수 있는 줄 — 원장(살아 있는 줄) · 앱 밖 글에 적히지 않은 주소(읽지 못한 줄도 — D14). 이미 앱 글 · 앱 밖 글이면 새 글 찾기에서
+ * 이미 빠진다(서버도 거절한다).
+ */
 export function ignoreOptionAllowed(read: PostImportRead): boolean {
-  return !read.ok || (read.known.length === 0 && (read.tracked?.length ?? 0) === 0)
+  return (read.tracked?.length ?? 0) === 0 && (!read.ok || read.known.length === 0)
 }
 
 /**
@@ -944,12 +959,29 @@ export function bulkIgnorable(read: PostImportRead, choice: RowChoice): boolean 
   return state === 'none' || state === 'dismissed'
 }
 
-/** 고른 일에 따른 줄 상태 — 앱 글은 rowStateOf 그대로, 앱 밖 글은 「앱 밖 글로 추적」(새 브랜드 없이 이미 추적 중이면 「앱 밖 글로 추적 중」), 무시는 「무시」 · 「무시함」. */
+/**
+ * 고른 일에 따른 줄 상태 — 앱 글은 rowStateOf 그대로, 앱 밖 글은 「앱 밖 글로 추적」(새 브랜드 없이 이미 추적 중이면 — 살아 있는 줄만 —
+ * 「앱 밖 글로 추적 중」), 무시는 「무시」 · 「무시함」(읽지 못한 줄도 무시한 때가 있으면 「무시함」).
+ */
 export function choiceStateOf(read: PostImportRead, choice: RowChoice): { state: RowState; verdict: UrlVerdict | null } {
-  if (choice.mode === 'ignore') return { state: read.ok && read.ignoredAt ? 'ignored' : 'ignore', verdict: null }
+  if (choice.mode === 'ignore') return { state: read.ignoredAt ? 'ignored' : 'ignore', verdict: null }
   if (choice.mode === 'app') return rowStateOf(read, choice.pick)
   if (!read.ok) return { state: 'unreadable', verdict: null }
-  return { state: choice.tenantIds.length === 0 && (read.tracked?.length ?? 0) > 0 ? 'tracked' : 'external', verdict: null }
+  return { state: choice.tenantIds.length === 0 && liveTracked(read).length > 0 ? 'tracked' : 'external', verdict: null }
+}
+
+/**
+ * 앱 밖 글로 적을 브랜드에 이 주소를 「글을 내림」으로 뺀 기록이 있으면, 다시 올린 글의 올린 날은 그 내린 날 뒤여야 한다(C9 — 서버
+ * addExternalPost와 같은 repostDayProblem). 날짜를 모르면(null) 괜찮다. 걸리면 「브랜드: 까닭」, 괜찮으면 null.
+ */
+export function externalRepostProblem(read: PostImportRead, tenantIds: readonly string[], publishedOn: string | null): string | null {
+  if (!read.ok) return null
+  for (const t of read.takenDown ?? []) {
+    if (!tenantIds.includes(t.tenantId)) continue
+    const problem = repostDayProblem(publishedOn, t.on)
+    if (problem) return `${t.brand}: ${problem}`
+  }
+  return null
 }
 
 /**
@@ -959,7 +991,6 @@ export function choiceStateOf(read: PostImportRead, choice: RowChoice): { state:
  */
 export function choiceBlockReason(read: PostImportRead, choice: RowChoice): string | null {
   if (choice.mode === 'ignore') {
-    if (!read.ok) return null
     if (read.ignoredAt) return '이미 무시한 주소입니다.'
     return ignoreOptionAllowed(read) ? null : '이미 앱 글 · 앱 밖 글로 적힌 주소는 무시하지 않습니다(새 글 찾기에서 이미 빠집니다).'
   }

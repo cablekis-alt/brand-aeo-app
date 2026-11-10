@@ -14,13 +14,17 @@
  *
  * ── 한 주소 한 줄 · 다시 올리면 새 줄 ─────────────────────────────────────────
  * 같은 브랜드 안에서 살아 있는(빼지 않은) 줄은 주소 키마다 하나다. 「글을 내림」으로 뺀 주소를 다시 올리면 새 x- 줄을 적어 내린 기간을
- * 남긴다(원장과 같다). 되살리기는 「잘못 적음」으로 뺀 줄만 — 내린 줄을 되살리면 내린 동안의 측정도 「올라가 있음」으로 센다.
+ * 남긴다(원장과 같다). 되살리기는 「잘못 적음」으로 뺀 줄만 — 내린 줄을 되살리면 내린 동안의 측정도 「올라가 있음」으로 센다. 다시 올린
+ * 줄의 올린 날은 내린 날 뒤여야 한다(repostDayProblem) — 비공개를 풀면 페이지 날짜가 처음 올린 날 그대로라, 그 날을 받으면 내린 동안의
+ * 측정을 「올라가 있음」으로 센다.
  *
  * ── 원장이 이긴다 ─────────────────────────────────────────────────────────
  * 같은 브랜드 원장에 같은 주소 키의 앱 글 줄 — 살아 있거나 「글을 내렸어요」로 뺀 줄, 옛 기록 포함(성과 표 shownPosts와 같은 기준) — 이
  * 있으면 앱 밖 줄은 쉰다(「앱 글로 옮김」). 등록 · 되살리기 거절도 같은 기준이다(ledgerWinners). 옮긴 날은 그 원장 줄을 적은 때의 한국
- * 날짜이고, 앱 글 표가 그 주소를 세기 시작하는 날(옮긴 날과 앱 글의 올린 날 가운데 이른 날)부터 앱 밖 표는 칸을 비운다 — 두 표가 같은
- * 측정을 두 번 세지 않게. 다른 브랜드의 원장은 막지 않는다(「같은 주소: ○○의 앱 글」로만 알린다 — externalRegistrationCheck).
+ * 날짜다. 앱 밖 표는 앱 글 표가 실제로 세는 측정(회차)만 비운다 — 서버가 회차마다 그 앱 글 줄의 칸을 함께 계산해, 앱 글 칸이 「올리기 전」이
+ * 아니면 앱 밖 칸을 비운다(server/externalPosts.ts getExternalHistory). 날짜로 끊으면 옮긴 날 옮기기 전에 끝난 측정이나, 앱 글의 올린 날을
+ * 기록일보다 뒤로 고친 사이의 측정을 어느 표도 세지 않는다. 다른 브랜드의 원장은 막지 않는다(「같은 주소: ○○의 앱 글」로만 알린다 —
+ * externalRegistrationCheck).
  *
  * ── 격리의 범위 ───────────────────────────────────────────────────────────
  * 원장 · 집행 상태 · 앱 글 응답(올린 글 목록 · 인용 이력 · 회차 보기)은 앱 밖 글과 섞이지 않는다. 색인 표시(index-checks.json)는 예외다 —
@@ -79,7 +83,10 @@ export interface ExternalPostView extends ExternalPost {
   state: ExternalState
   /** 같은 브랜드 원장에 같은 주소의 앱 글 줄이 있으면 그 줄을 적은 한국 날짜(가장 이른 줄). 없으면 null. 뺀 줄에도 싣는다. */
   movedOn: string | null
-  /** 앱 글 표가 이 주소를 세기 시작하는 날 — 옮긴 날과 앱 글의 올린 날 가운데 이른 날. 이 날부터 앱 밖 표는 칸을 비운다. 없으면 null. */
+  /**
+   * 앱 글 표가 이 주소를 세기 시작하는 날 — 이긴 앱 글 줄의 올린 날 가운데 가장 이른 날(그 날의 회차는 앱 글의 올린 시각으로 가린다). 앱 글
+   * 줄에 올린 날이 없으면(옛 기록) null. 화면 표시용이다 — 칸을 비우는 것은 서버가 회차마다 정한다.
+   */
   appCountsFrom: string | null
 }
 
@@ -183,6 +190,52 @@ export function trackedDayProblem(publishedOn: string | null, trackedAt: string)
   return publishedOn && tracked && publishedOn > tracked ? `올린 날(${publishedOn})이 추적을 시작한 날(${tracked})보다 뒤입니다.` : null
 }
 
+/** 내린 표시만 본 줄 — 파일의 줄 · 화면 줄 · 발행 현황 줄에서 이 모양을 만든다. */
+export interface TakedownRowLike {
+  id: string
+  key: string
+  removedAt?: string
+  removedReason?: string
+}
+
+/**
+ * 같은 브랜드 같은 주소에서 이 줄보다 먼저 「글을 내림」으로 뺀 다른 줄의 가장 늦은 내린 날(한국 날짜) — 이 줄은 다시 올린 글이다(C9).
+ * 「먼저」는 이 줄을 빼기 전(살아 있는 줄 · 새로 적을 줄이면 모든 내린 줄)이다. 없으면 null.
+ */
+export function takenDownBefore(rows: readonly TakedownRowLike[], post: { id?: string; key: string; removedAt?: string }): string | null {
+  const until = post.removedAt ? Date.parse(post.removedAt) : Number.POSITIVE_INFINITY
+  const days = rows
+    .filter((r) => r.id !== post.id && r.key === post.key && r.removedReason === 'taken-down' && r.removedAt && Date.parse(r.removedAt) < until)
+    .map((r) => kstDate(r.removedAt!))
+    .filter((d): d is string => d !== null)
+    .sort()
+  return days.at(-1) ?? null
+}
+
+/**
+ * 다시 올린 줄의 올린 날 검사(C9) — 내린 날보다 뒤여야 한다. 비공개를 풀어 다시 올린 글은 페이지 날짜가 처음 올린 날 그대로라, 그 날을
+ * 받으면 내린 동안의 측정을 「올라가 있음」으로 센다. 같은 날도 받지 않는다(처음 올린 날과 내린 날이 같은 글을 막으려고 — 같은 날 다시
+ * 올렸으면 「날짜 모름」). 올린 날을 모르면(null) 받는다(D3). 괜찮으면 null.
+ */
+export function repostDayProblem(publishedOn: string | null, downOn: string | null): string | null {
+  return publishedOn && downOn && publishedOn <= downOn
+    ? `이 브랜드에서 이 주소의 글을 ${downOn}에 내렸다고 적었습니다 — 다시 올린 글의 올린 날(${publishedOn})은 그 뒤여야 합니다. 페이지 날짜가 처음 올린 날이면 다시 올린 날을 고르거나 「날짜 모름」으로 적어 주세요.`
+    : null
+}
+
+const nextDay = (day: string) => new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10)
+
+/**
+ * 색인 표시의 신선도 기준일(src/lib/publishStatus.ts freshIndexRecord) — 이 날보다 앞선 확인은 이 줄의 확인이 아니다. 올린 날, 그리고 다시
+ * 올린 줄이면 내린 날 다음 날(다시 올린 글은 그 전에 올라갈 수 없다 — repostDayProblem) 가운데 늦은 날. 올린 날을 모르는 다시 올린 줄이
+ * 내리기 전 「노출됨 · 색인됨」을 이어받아 곧바로 「확인 끝」이 되지 않게. 둘 다 없으면 null(그대로).
+ */
+export function externalIndexBasis(rows: readonly TakedownRowLike[], post: TakedownRowLike & { publishedOn: string | null }): string | null {
+  const down = takenDownBefore(rows, post)
+  const floor = down ? nextDay(down) : null
+  return post.publishedOn && floor ? (post.publishedOn > floor ? post.publishedOn : floor) : (post.publishedOn ?? floor)
+}
+
 /**
  * 파일 검사 — 모양이 하나라도 틀리면 받지 않는다(서버는 읽지도 쓰지도 않는다 — 빈 목록으로 읽고 덮으면 기록이 통째로 사라진다).
  * 키 규칙이 지금과 다르면 url로 키를 다시 계산한다.
@@ -227,13 +280,16 @@ export function ledgerWinners<T extends LedgerRowLike>(ledger: readonly T[], key
   return ledger.filter((p) => p.key === key && (!p.removedAt || p.removedReason === 'taken-down'))
 }
 
-/** 원장이 이긴 주소의 옮긴 날(가장 이른 줄을 적은 한국 날짜)과 앱 글 표가 세기 시작하는 날. 이긴 줄이 없으면 null. */
+/**
+ * 원장이 이긴 주소의 옮긴 날(가장 이른 줄을 적은 한국 날짜)과 앱 글 표가 세기 시작하는 날(이긴 줄의 가장 이른 올린 날 — 기록일과 섞지
+ * 않는다: 앱 글 표는 올린 날로 센다). 이긴 줄이 없으면 null.
+ */
 export function appTakeover(ledger: readonly LedgerRowLike[], key: string): { movedOn: string | null; appCountsFrom: string | null } | null {
   const winners = ledgerWinners(ledger, key)
   if (winners.length === 0) return null
   const recorded = winners.map((p) => kstDate(p.recordedAt)).filter((d): d is string => d !== null)
   const movedOn = recorded.sort()[0] ?? null
-  const starts = [...recorded, ...winners.map((p) => p.publishedOn).filter((d): d is string => typeof d === 'string' && realDay(d))].sort()
+  const starts = winners.map((p) => p.publishedOn).filter((d): d is string => typeof d === 'string' && realDay(d)).sort()
   return { movedOn, appCountsFrom: starts[0] ?? null }
 }
 
@@ -283,16 +339,12 @@ export interface LedgerShapedPost {
   removedReason?: ExternalRemovedReason
 }
 
-/** 한국 날짜의 0시(ISO) — 그 날의 한국 날짜로 읽힌다(kstDate). */
-const kstMidnight = (day: string) => new Date(Date.parse(`${day}T00:00:00+09:00`)).toISOString()
-
 /**
- * 앱 밖 줄 → 인용 계산용 원장 모양(C7 · D12).
+ * 앱 밖 줄 → 인용 계산용 원장 모양(C7).
  *   - 올린 시각을 싣지 않는다: publishedOnSource 'legacy'라 같은 날 측정은 전후 불명(during)이다. 추적 시작 시각은 recordedAt에만 둔다
- *     (다시 올린 줄을 가르는 데 쓴다 — publishTracking.ts distinctPostings · publishedUrl.ts postedAtIndex).
- *   - 앱 글로 옮긴 줄(appCountsFrom)은 그 날 0시에 「내린」 것으로 넘긴다 — 그 날부터의 측정은 「내린 뒤」(칸 비움)라 앱 글 표와 겹치지
- *     않는다. 사람이 「글을 내림」으로 뺀 줄이면 둘 가운데 이른 쪽이다.
- *   - 「잘못 적음」 줄은 그대로 넘긴다(인용 계산이 이력에서 뺀다).
+ *     (다시 올린 줄을 가르는 데 쓴다 — publishedUrl.ts postedAtIndex).
+ *   - 사람이 「글을 내림」 · 「잘못 적음」으로 뺀 표시는 그대로 넘긴다(인용 계산이 내린 뒤 칸을 비우고, 잘못 적은 줄은 이력에서 뺀다).
+ *   - 앱 글로 옮긴 것은 여기서 끊지 않는다 — 앱 글 표가 세는 회차만 서버가 비운다(D12, server/externalPosts.ts getExternalHistory).
  */
 export function externalAsLedgerPost(post: ExternalPostView): LedgerShapedPost {
   const base: LedgerShapedPost = {
@@ -307,9 +359,5 @@ export function externalAsLedgerPost(post: ExternalPostView): LedgerShapedPost {
     via: 'direct',
     articleTitle: externalTitle(post),
   }
-  if (post.removedReason === 'mistake') return { ...base, removedAt: post.removedAt, removedReason: 'mistake' }
-  const cuts = [post.removedReason === 'taken-down' ? post.removedAt : undefined, post.appCountsFrom ? kstMidnight(post.appCountsFrom) : undefined]
-    .filter((t): t is string => typeof t === 'string')
-    .sort((a, b) => Date.parse(a) - Date.parse(b))
-  return cuts[0] ? { ...base, removedAt: cuts[0], removedReason: 'taken-down' } : base
+  return post.removedAt && post.removedReason ? { ...base, removedAt: post.removedAt, removedReason: post.removedReason } : base
 }

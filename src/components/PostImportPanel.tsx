@@ -13,6 +13,7 @@ import {
   externalBlockMessage,
   externalBrandState,
   externalDefaultBrands,
+  externalRepostProblem,
   externalResultText,
   extractPostUrls,
   ignoreOptionAllowed,
@@ -61,6 +62,8 @@ interface ImportRow {
   checked: boolean
   /** 올린 날(YYYY-MM-DD) — 페이지 날짜로 채우고 사람이 고친다. 모르면 빈 글자(사람이 골라야 등록된다 — 앱 밖 글은 「날짜 모름」도). */
   date: string
+  /** 앱 글로 옮김을 골라 올린 날을 오늘로 바꿔 두었다 — 옮김이 아닌 일을 고르면 페이지 날짜로 되돌린다(D12 · D3: 앱 밖 글을 오늘로 채우지 않는다). */
+  movedDate?: boolean
   /**
    * 등록 결과. seq는 등록한 차례, recheck는 등록 요청 자체가 실패해 적혔는지 모르는 줄(다시 읽어 확인한다). partial은 앱 밖 글을 몇
    * 브랜드에만 적었다(걸린 브랜드는 그대로 골라 둔다).
@@ -111,8 +114,11 @@ const recordUrlOf = (r: ImportRow) => (r.read?.ok ? r.read.recordUrl : r.url)
 const recordKeyOf = (r: ImportRow) => (r.read?.ok ? r.read.recordKey : r.key)
 /** 적을 주소 말고 이 줄을 읽을 때 나온 주소 모양(붙여 넣은 · 읽은 주소) — 무시 목록에 함께 적고, 등록하면 함께 푼다. */
 const otherUrlsOf = (r: ImportRow) => [...new Set([r.url, ...(r.read?.ok && r.read.readUrl ? [r.read.readUrl] : [])])].filter((u) => u !== recordUrlOf(r))
-/** 다시 읽을 줄 — 멈춤 · 읽지 못함 · 등록 요청이 실패해 적혔는지 모르는 줄. */
-const needsReread = (r: ImportRow) => r.status === 'stopped' || (r.status === 'done' && r.read !== null && !r.read.ok) || r.result?.recheck === true
+/** 이 줄에서 고른 일을 마쳤다(등록함 · 이미 있던 기록 · 무시함). */
+const finishedRow = (r: ImportRow) => r.result?.kind === 'added' || r.result?.kind === 'existing'
+/** 다시 읽을 줄 — 멈춤 · 읽지 못함(무시를 마친 줄은 빼고) · 등록 요청이 실패해 적혔는지 모르는 줄. */
+const needsReread = (r: ImportRow) =>
+  r.status === 'stopped' || (r.status === 'done' && r.read !== null && !r.read.ok && !(r.choice.mode === 'ignore' && finishedRow(r))) || r.result?.recheck === true
 const NO_CHOICE: RowChoice = { mode: 'app', pick: null }
 
 /** 표의 다른 줄이 이미 고른 앱 글(체크했거나 등록한 줄) — 같은 글 무리에서 한 줄만 미리 체크한다. */
@@ -220,10 +226,19 @@ export default function PostImportPanel({
   // 비동기 흐름(새 글 찾기 뒤 더하기 · 읽기를 마친 줄의 미리 체크)이 지금 표를 보게 한다.
   const rowsRef = useRef<ImportRow[]>(rows)
   const seqRef = useRef(0)
+  // 「되돌리기」를 마치면 결과 문구(또는 오류)로 포커스를 옮긴다.
+  const ignoredMsgRef = useRef<HTMLParagraphElement | null>(null)
+  const focusIgnoredMsg = useRef(false)
 
   useEffect(() => {
     rowsRef.current = rows
   }, [rows])
+
+  useEffect(() => {
+    if (!focusIgnoredMsg.current || ignored.busy !== null) return
+    focusIgnoredMsg.current = false
+    ignoredMsgRef.current?.focus()
+  }, [ignored])
 
   useEffect(() => {
     let alive = true
@@ -281,6 +296,7 @@ export default function PostImportPanel({
                     choice: initialChoice(read),
                     checked: checkedByDefault(read, claimedPicks(rs, t.key)),
                     date: read.ok ? (read.post.publishedOn ?? '') : '',
+                    movedDate: false,
                   }
                 : r,
             ),
@@ -394,17 +410,20 @@ export default function PostImportPanel({
 
   /**
    * 짝을 고른다 — 앱 글은 처음 고른 글로 되돌린 맞음 줄만 다시 체크해 두고, 다른 글 · 「앱 글 아님」을 고르면 체크를 비운다. 「앱 밖 글로
-   * 추적…」은 자사 주소인 브랜드가 정확히 하나면 그 브랜드를 미리 고르고(D2), 「무시」와 함께 체크는 사람이 한다.
+   * 추적…」은 자사 주소인 브랜드가 정확히 하나면 그 브랜드를 미리 고르고(D2), 「무시」와 함께 체크는 사람이 한다. 앱 글로 옮김을 골라 올린 날을
+   * 오늘로 바꿨다가 다른 일을 고르면 페이지 날짜(없으면 빈 칸)로 되돌린다 — 앱 밖 글을 오늘로 채우지 않는다(D3).
    */
   const choose = (row: ImportRow, value: string) => {
     if (!row.read) return
+    const pageDate = row.read.ok ? (row.read.post.publishedOn ?? '') : ''
+    const undoMove: Partial<ImportRow> = row.movedDate ? { date: pageDate, movedDate: false } : {}
     if (value === EXTERNAL) {
       const choice: RowChoice = row.choice.mode === 'external' ? row.choice : { mode: 'external', tenantIds: externalDefaultBrands(row.read), dateUnknown: false }
-      patchRow(row.key, { choice, checked: false, result: null })
+      patchRow(row.key, { choice, checked: false, result: null, ...undoMove })
       return
     }
     if (value === IGNORE) {
-      patchRow(row.key, { choice: { mode: 'ignore' }, checked: false, result: null })
+      patchRow(row.key, { choice: { mode: 'ignore' }, checked: false, result: null, ...undoMove })
       return
     }
     const [tenantId, articleId] = value.split('\n')
@@ -416,7 +435,7 @@ export default function PostImportPanel({
       choice: { mode: 'app', pick },
       checked: back && checkedByDefault(row.read, claimedPicks(rowsRef.current, row.key)),
       result: null,
-      ...(moving ? { date: dayLimit() } : {}),
+      ...(moving ? { date: dayLimit(), movedDate: true } : undoMove),
     })
   }
 
@@ -465,6 +484,8 @@ export default function PostImportPanel({
       }),
     )
   const restoreIgnored = async (entry: IgnoredPost) => {
+    // 되돌린 항목은 목록에서 사라진다 — 끝나면 결과 문구로 포커스를 옮긴다(키보드로 누른 사람이 맨 위로 돌아가지 않게).
+    focusIgnoredMsg.current = true
     patchIgnored({ busy: entry.url, error: null, note: null })
     try {
       const res = await unignorePosts([entry.url])
@@ -516,6 +537,14 @@ export default function PostImportPanel({
     return { read: nextRead, choice, checked: false, result: { kind, text: externalResultText(r), ...(kind === 'added' ? { seq: nextSeq() } : {}) } }
   }
 
+  /** 앱 글로 옮겨 등록한 줄 — 그 브랜드의 앱 밖 줄을 「앱 글로 옮겨 쉼」으로 고친다(서버와 같은 상태 — 다시 읽지 않아도 맞게). */
+  const afterAppMove = (row: ImportRow): PostImportRead | null => {
+    const read = row.read
+    const moved = read ? movesExternal(read, appPick(row.choice)) : null
+    if (!read?.ok || !moved) return read
+    return { ...read, tracked: (read.tracked ?? []).map((t) => (t.tenantId === moved.tenantId ? { ...t, state: 'moved' as const } : t)) }
+  }
+
   const register = async () => {
     const limit = dayLimit()
     const chosen = views.filter((v) => v.row.checked && v.registrable).map((v) => v.row)
@@ -535,6 +564,12 @@ export default function PostImportPanel({
       if (!dateOk || !r.read?.ok) {
         failed += 1
         patchRow(r.key, { result: { kind: 'error', text: `올린 날을 골라 주세요(2020-01-01 ~ 오늘 ${limit})${c.mode === 'external' ? ' — 모르면 「날짜 모름」' : ''}.` } })
+        continue
+      }
+      const repost = c.mode === 'external' ? externalRepostProblem(r.read, c.tenantIds, c.dateUnknown ? null : r.date) : null
+      if (repost) {
+        failed += 1
+        patchRow(r.key, { result: { kind: 'error', text: repost } })
         continue
       }
       if (c.mode === 'app' && c.pick) {
@@ -580,10 +615,11 @@ export default function PostImportPanel({
           if (result.status === 'added') {
             if (result.kind === 'ignore') {
               count.ignored += 1
-              patchRow(r.key, { checked: false, read: r.read?.ok ? { ...r.read, ignoredAt: new Date().toISOString() } : r.read, result: { kind: 'added', text: '무시함 — 새 글 찾기에서 숨깁니다', seq: nextSeq() } })
+              // 읽지 못한 줄도 무시한 때를 단다 — 줄 상태 · 진행 줄이 「무시함」이 되고 「다시 읽기」에서 빠진다(D14).
+              patchRow(r.key, { checked: false, read: r.read ? { ...r.read, ignoredAt: new Date().toISOString() } : r.read, result: { kind: 'added', text: '무시함 — 새 글 찾기에서 숨깁니다', seq: nextSeq() } })
             } else {
               count.app += 1
-              patchRow(r.key, { checked: false, result: { kind: 'added', text: '등록함', seq: nextSeq() } })
+              patchRow(r.key, { checked: false, read: afterAppMove(r), result: { kind: 'added', text: '등록함', seq: nextSeq() } })
             }
           } else if (result.status === 'existing') {
             count.existing += 1
@@ -789,7 +825,7 @@ export default function PostImportPanel({
                 <div id="pi-ignored-box" className="pi-ignored-box">
                   {ignored.loading && <p className="muted pi-empty">무시한 글을 불러오는 중…</p>}
                   {ignored.error && (
-                    <p className="error pi-note" role="alert">
+                    <p className="error pi-note" role="alert" tabIndex={-1} ref={ignoredMsgRef}>
                       {ignored.error}
                     </p>
                   )}
@@ -809,8 +845,11 @@ export default function PostImportPanel({
                             <button
                               type="button"
                               className="ps-mark"
-                              onClick={() => void restoreIgnored(e)}
-                              disabled={ignored.busy !== null}
+                              // 처리하는 동안 disabled로 바꾸면 누른 단추에서 포커스가 빠진다 — aria-disabled로 막는다.
+                              onClick={() => {
+                                if (ignored.busy === null) void restoreIgnored(e)
+                              }}
+                              aria-disabled={ignored.busy !== null || undefined}
                               aria-label={`${shortUrl(e.url)} 무시 되돌리기`}
                             >
                               되돌리기
@@ -828,7 +867,7 @@ export default function PostImportPanel({
                     </>
                   )}
                   {ignored.note && (
-                    <p className="pi-note" role="status">
+                    <p className="pi-note" role="status" tabIndex={-1} ref={ignoredMsgRef}>
                       {ignored.note}
                     </p>
                   )}
@@ -909,11 +948,13 @@ export default function PostImportPanel({
                       const dated = choice.mode !== 'ignore' && !(external?.dateUnknown ?? false)
                       const dateBad = registrable && dated && row.date !== '' && !validDay(row.date, limit)
                       const pageDate = ok?.post.dateText ? (ok.post.dateText.length > 40 ? `${ok.post.dateText.slice(0, 40)}…` : ok.post.dateText) : null
-                      const tracked = ok?.tracked ?? []
+                      const tracked = read?.tracked ?? []
                       const appIn = ok && external ? sameUrlAppBrands(ok, external.tenantIds) : []
                       const chosenBrands = external ? brands.filter((b) => external.tenantIds.includes(b.tenantId)).map((b) => b.brand) : []
                       const owned = ok?.ownedBrands ?? []
                       const canIgnore = read !== null && (ignoreOptionAllowed(read) || choice.mode === 'ignore')
+                      // 이 브랜드에서 내렸던 주소를 다시 적는다 — 페이지 날짜가 처음 올린 날이면 내린 동안을 「올라가 있음」으로 센다(C9).
+                      const repost = ok && external ? externalRepostProblem(ok, external.tenantIds, external.dateUnknown ? null : row.date || null) : null
                       return (
                         <tr key={row.key} className={(state && BLOCKED.includes(state)) || dupOf ? 'pi-blocked' : undefined}>
                           <td>
@@ -962,7 +1003,7 @@ export default function PostImportPanel({
                                 {candidate && <span className="pi-sub-line">앱 글: {candidate.title}</span>}
                                 <span className="pi-sub-line">블로그 제목: {ok.post.title || externalTitle({ title: null })}</span>
                                 {external && (
-                                  <fieldset className="pi-brands" disabled={committing || finished}>
+                                  <fieldset className="pi-brands" disabled={committing || finished} aria-label={`「${label}」 추적할 브랜드`}>
                                     <legend>추적할 브랜드(하나 이상)</legend>
                                     {brands.length === 0 && <span className="pi-sub-line warn">고객 브랜드 목록을 불러오지 못했습니다 — 발행 현황을 다시 읽어 주세요.</span>}
                                     <ul>
@@ -1000,7 +1041,7 @@ export default function PostImportPanel({
                               // 읽지 못한 줄은 무시만 할 수 있다(사이트맵에 남은 지운 글 · 비공개 글 — D14).
                               <select value={choiceValue(choice)} onChange={(e) => choose(row, e.target.value)} disabled={committing || row.result?.kind === 'added'} aria-label={`「${label}」 처리`}>
                                 <option value="">—</option>
-                                <option value={IGNORE}>무시 — 새 글 찾기에서 숨김</option>
+                                {canIgnore && <option value={IGNORE}>무시 — 새 글 찾기에서 숨김</option>}
                               </select>
                             ) : (
                               <span className="muted">—</span>
@@ -1026,7 +1067,7 @@ export default function PostImportPanel({
                                   value={row.date}
                                   min="2020-01-01"
                                   max={limit}
-                                  onChange={(e) => patchRow(row.key, { date: e.target.value, result: null })}
+                                  onChange={(e) => patchRow(row.key, { date: e.target.value, movedDate: false, result: null })}
                                   disabled={committing || !registrable || !dated}
                                   aria-label={`「${label}」 올린 날`}
                                   aria-invalid={dateBad || undefined}
@@ -1034,7 +1075,13 @@ export default function PostImportPanel({
                                 />
                                 {external && (
                                   <label className="pi-sub-line pi-check">
-                                    <input type="checkbox" checked={external.dateUnknown} onChange={(e) => patchExternal(row, { dateUnknown: e.target.checked })} disabled={committing || finished} />
+                                    <input
+                                      type="checkbox"
+                                      checked={external.dateUnknown}
+                                      onChange={(e) => patchExternal(row, { dateUnknown: e.target.checked })}
+                                      disabled={committing || finished}
+                                      aria-label={`「${label}」 날짜 모름`}
+                                    />
                                     날짜 모름
                                   </label>
                                 )}
@@ -1052,6 +1099,7 @@ export default function PostImportPanel({
                                   ))}
                                 {dated && ok.post.publishedOn && row.date !== ok.post.publishedOn && <span className="pi-sub-line">페이지: {ok.post.publishedOn}</span>}
                                 {external?.dateUnknown && <span className="pi-sub-line">올린 날 모름 — 올리기 전 · 뒤를 가리지 않고 셉니다.</span>}
+                                {repost && !finished && <span className="pi-sub-line warn">{repost}</span>}
                                 {dateBad && (
                                   <span className="pi-sub-line error" role="alert">
                                     2020-01-01부터 오늘({limit})까지의 날을 골라 주세요.
@@ -1097,7 +1145,7 @@ export default function PostImportPanel({
                                 옮김」으로 쉽니다.
                               </span>
                             )}
-                            {ok?.ignoredAt && <span className="pi-sub-line">{monthDay(kstDate(ok.ignoredAt) ?? ok.ignoredAt.slice(0, 10))}에 무시한 주소입니다(앱 글 · 앱 밖 글로 적으면 풀립니다).</span>}
+                            {read?.ignoredAt && <span className="pi-sub-line">{monthDay(kstDate(read.ignoredAt) ?? read.ignoredAt.slice(0, 10))}에 무시한 주소입니다(앱 글 · 앱 밖 글로 적으면 풀립니다).</span>}
                             {(ok?.stateUnknown ?? []).length > 0 && (
                               <span className="pi-sub-line warn">{ok!.stateUnknown!.join(' · ')}을(를) 읽지 못해 앱 밖 글 · 무시 여부를 다 보지 못했습니다 — 미리 체크하지 않았습니다.</span>
                             )}

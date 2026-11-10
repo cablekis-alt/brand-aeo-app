@@ -13,6 +13,8 @@ import {
   parseExternalAddInput,
   parseExternalPatch,
   parseExternalPostsFile,
+  repostDayProblem,
+  takenDownBefore,
   trackedDayProblem,
   type ExternalPost,
   type ExternalPostsFile,
@@ -20,7 +22,7 @@ import {
 } from '../src/lib/externalPosts.js';
 import { KEY_RULE } from '../src/lib/publishedUrl.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
-import { getPublishedHistory, type HistoryCell, type HistoryWeek } from './publishedHistory.js';
+import { getPublishedHistory, viewOfSample, type HistoryCell, type HistoryWeek, type SampleAdjust } from './publishedHistory.js';
 import { readPublishedPosts, readPublishedPostsInQueue, type PublishedPost } from './publishedPosts.js';
 import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
 import type { ResultStore } from './store.js';
@@ -154,8 +156,8 @@ export interface AddExternalResult {
 
 /**
  * 앱 밖 글 한 편을 그 브랜드에 적는다. 같은 주소의 살아 있는 줄이 있으면 그 줄을 돌려준다(올린 날도 고치지 않는다 — 고치기는
- * updateExternalPost). 뺀 줄만 있으면 새 줄을 적는다(다시 올림). 같은 브랜드 원장이 이기면 409. others는 줄에 들어가기 전에 읽은 다른
- * 브랜드 원장이다(readOtherLedgers).
+ * updateExternalPost). 뺀 줄만 있으면 새 줄을 적는다(다시 올림 — 올린 날은 내린 날 뒤여야 한다, 아니면 400 · C9). 같은 브랜드 원장이
+ * 이기면 409. others는 줄에 들어가기 전에 읽은 다른 브랜드 원장이다(readOtherLedgers).
  */
 export function addExternalPost(tenantId: string, body: unknown, others: readonly TenantLedger[] = []): Promise<AddExternalResult> {
   const input = parseExternalAddInput(body);
@@ -171,6 +173,8 @@ export function addExternalPost(tenantId: string, body: unknown, others: readonl
     if (live) {
       post = live;
     } else {
+      const reposted = repostDayProblem(input.value.publishedOn, takenDownBefore(posts, { key }));
+      if (reposted) throw new ExternalPostsError(reposted, 400);
       assertRoom(posts);
       post = {
         id: `x-${randomUUID().replace(/-/g, '').slice(0, 12)}`,
@@ -191,7 +195,8 @@ export function addExternalPost(tenantId: string, body: unknown, others: readonl
 
 /**
  * 앱 밖 줄 하나를 고친다 — 올린 날(null이면 모름) · 빼기(mistake · taken-down) · 되살리기. 되살리기는 「잘못 적음」으로 뺀 줄만(내린 글을
- * 다시 올렸으면 새로 적는다 — 내린 기간이 남는다), 같은 주소의 살아 있는 줄이 있거나 원장이 이기면 409. 추적 시작 시각은 바꾸지 않는다.
+ * 다시 올렸으면 새로 적는다 — 내린 기간이 남는다), 같은 주소의 살아 있는 줄이 있거나 원장이 이기면 409. 올린 날을 고치거나 되살릴 때 그
+ * 줄보다 먼저 내린 같은 주소 줄이 있으면 올린 날은 그 내린 날 뒤여야 한다(400 — C9). 추적 시작 시각은 바꾸지 않는다.
  */
 export function updateExternalPost(tenantId: string, postId: string, body: unknown): Promise<{ post: ExternalPostView; posts: ExternalPostView[] }> {
   if (!EXTERNAL_ID.test(postId)) return Promise.reject(new ExternalPostsError('앱 밖 글 id가 올바르지 않습니다.', 400));
@@ -229,6 +234,9 @@ export function updateExternalPost(tenantId: string, postId: string, body: unkno
         ...base,
         ...(change.publishedOn !== undefined ? { publishedOn: change.publishedOn, publishedOnSource: change.publishedOn === null ? ('unknown' as const) : ('user' as const) } : {}),
       };
+      // 다시 올린 줄이면 올린 날이 그 앞에 내린 날보다 뒤여야 한다(C9 — 적을 때와 같은 규칙).
+      const reposted = repostDayProblem(next.publishedOn, takenDownBefore(posts, next));
+      if (reposted && (change.publishedOn !== undefined || change.kind === 'restore')) throw new ExternalPostsError(reposted, 400);
     }
     const changed = JSON.stringify(next) !== JSON.stringify(found);
     const nextPosts = changed ? posts.map((p) => (p.id === found.id ? next : p)) : posts;
@@ -252,10 +260,39 @@ export interface ExternalHistory {
 
 type HistoryStore = Pick<ResultStore, 'getScorecardHistory' | 'getQuestionAnalyses' | 'getQuestionBank' | 'listRunSnapshots'>;
 
+/** 앱 글 표가 세는 칸인가 — 올리기 전 측정만 세지 않는다(올린 뒤 · 전후 불명 · 올린 날 모름은 그 표에 숫자가 보이고, 앱 글을 내린 뒤 칸도 그 표의 몫이다). */
+const appCounts = (cell: HistoryCell) => cell.afterRemoval || cell.timing !== 'before';
+
+/**
+ * D12 — 같은 브랜드에서 앱 글로 옮긴 주소(원장이 이김)의 앱 밖 칸은 앱 글 표가 그 회차를 셀 때만 비운다. 회차마다 이긴 앱 글 줄의 칸을 앱 글
+ * 표와 같은 계산(같은 표본 · 그 주소의 이긴 원장 줄 모두 — 올린 시각으로 같은 날 회차를 가른다)으로 내고, 그 가운데 하나라도 세면 앱 밖
+ * 칸을 「내린 뒤」 모양으로 비운다. 그래서 옮긴 날 옮기기 전에 끝난 회차는 앱 밖 표가, 옮긴 뒤 회차는 앱 글 표가 센다. 앱 글 줄의 올린 날을
+ * 기록일보다 뒤로 고쳤으면 그 사이 회차도 앱 밖 표가 센다 — 어느 회차든 두 표 가운데 하나만 센다. 옮긴 줄이 없으면 undefined(계산 그대로).
+ */
+function appCountedMask(
+  store: HistoryStore,
+  tenant: { tenantId: string; questionBankVersion?: string },
+  views: readonly ExternalPostView[],
+  ledger: readonly PublishedPost[],
+): SampleAdjust | undefined {
+  const keys = new Set(views.filter((v) => v.movedOn !== null).map((v) => v.key));
+  if (keys.size === 0) return undefined;
+  const app = [...keys].flatMap((k) => ledgerWinners(ledger, k));
+  return async (card, sample, view, shown) => {
+    const appView = await viewOfSample(store, tenant, app, card, sample);
+    return view.cells.map((cell, i) => {
+      const key = shown[i]!.key;
+      if (cell.afterRemoval || !keys.has(key)) return cell;
+      const counted = app.some((p, j) => p.key === key && appCounts(appView.cells[j]!));
+      return counted ? { ...cell, afterRemoval: true, tally: null, variantCited: 0 } : cell;
+    });
+  };
+}
+
 /**
  * 앱 밖 글 인용 이력 — 앱 글 이력과 같은 계산(getPublishedHistory)을 그대로 쓴다: 그 브랜드의 측정 답변에서 주소가 정확히 같을 때만,
- * 늦게 적어도 지난 측정까지 거슬러, 판정이 없는 주는 null. 넘기는 줄은 변환기(externalAsLedgerPost)를 지난다 — 올린 시각 없음, 앱 글로
- * 옮긴 날부터 칸 비움. 「잘못 적음」 줄은 뺀다. 저장하지 않고 요청마다 계산한다.
+ * 늦게 적어도 지난 측정까지 거슬러, 판정이 없는 주는 null. 넘기는 줄은 변환기(externalAsLedgerPost)를 지난다 — 올린 시각 없음. 앱 글로
+ * 옮긴 주소는 앱 글 표가 세는 회차만 비운다(appCountedMask). 「잘못 적음」 줄은 뺀다. 저장하지 않고 요청마다 계산한다.
  */
 export async function getExternalHistory(
   store: HistoryStore,
@@ -265,7 +302,7 @@ export async function getExternalHistory(
   const { posts, ledger } = await queueTenantWrite(tenant.tenantId, () => readBothInQueue(tenant.tenantId));
   const views = externalViews(posts, ledger).filter((v) => v.removedReason !== 'mistake');
   const byId = new Map(views.map((v) => [v.id, v]));
-  const history = await getPublishedHistory(store, tenant, views.map(externalAsLedgerPost), weeksBack);
+  const history = await getPublishedHistory(store, tenant, views.map(externalAsLedgerPost), weeksBack, appCountedMask(store, tenant, views, ledger));
   return {
     weeks: history.weeks,
     posts: history.posts.map((p) => ({ post: p.post, external: byId.get(p.post.id)!, cells: p.cells })),

@@ -24,6 +24,7 @@ import { parseWriterPlan } from '../src/lib/probePlan'
 import { todayKst, trackingKey } from '../src/lib/publishedUrl'
 import {
   addDays,
+  appHolderBrands,
   applyIndexCheck,
   buildTenantStatus,
   csvCell,
@@ -684,6 +685,46 @@ ok(
   'C15 — 색인 표시는 같은 주소 키로 앱 글 줄 · 앱 밖 줄이 서로 이어받는다(다른 고객 브랜드 포함)',
   sharedX.rows[0]?.naver?.state === 'shown' && sharedX.rows[0]?.checkFrom === '가상스테이전국' && sharedApp.rows[0]?.google?.state === 'shown' && sharedApp.rows[0]?.checkFrom === '가상스테이',
 )
+// 검토 반영(2026-11-10) — C9 + D3: 내렸다가 「날짜 모름」으로 다시 적은 앱 밖 줄은 내리기 전 색인 표시를 이어받지 않는다(올린 날이 없어도
+// 그 앞에 내린 날 다음 날보다 앞선 확인은 뺀다 — src/lib/externalPosts.ts externalIndexBasis). 다른 브랜드 앱 글의 그 뒤 표시는 그대로 이어받는다(C14).
+const HAND_REPOST = 'https://hand.tistory.com/77'
+const repostIn = [
+  xview('x-ffffffffff01', HAND_REPOST, { publishedOn: null, publishedOnSource: 'unknown', trackedAt: '2026-10-01T01:00:00.000Z', state: 'removed', removedAt: '2026-10-28T01:00:00.000Z', removedReason: 'taken-down' }),
+  xview('x-ffffffffff02', HAND_REPOST, { publishedOn: null, publishedOnSource: 'unknown', trackedAt: '2026-11-09T01:00:00.000Z' }),
+]
+const oldMarks = { 'x-ffffffffff01': rec('x-ffffffffff01', HAND_REPOST, { naver: shown('2026-10-10'), google: shown('2026-10-10') }) }
+const repostedX = buildTenantStatus({ ...tenantInput([]), checks: oldMarks, external: repostIn }).rows.find((r) => r.postId === 'x-ffffffffff02')!
+ok(
+  'C9 + D3 — 날짜 모름으로 다시 올린 앱 밖 줄은 내리기 전 「노출됨 · 색인됨」을 이어받지 않는다(미확인 · 다시 볼 날 그대로)',
+  repostedX.naver === null && repostedX.google === null && rowRecheck(repostedX, '2026-11-10').label !== '확인 끝' && recheckCell(repostedX, '2026-11-10') !== '확인 끝',
+)
+const datedRepost = buildTenantStatus({ ...tenantInput([]), checks: oldMarks, external: [repostIn[0]!, { ...repostIn[1]!, publishedOn: '2026-11-08', publishedOnSource: 'page' }] }).rows.find((r) => r.postId === 'x-ffffffffff02')!
+ok('(대조) 날짜가 있는 다시 올린 줄도 같다(올린 날보다 앞선 확인은 뺀다)', datedRepost.naver === null && datedRepost.google === null)
+const laterOther = buildTenantStatus({
+  ...tenantInput([]),
+  checks: oldMarks,
+  external: repostIn,
+  others: [{ tenantId: 'vpub-g', brand: '가상스테이전국', checks: { 'p-gg2': rec('p-gg2', HAND_REPOST, { naver: shown('2026-11-09'), updatedAt: '2026-11-09T02:00:00.000Z' }) } }],
+}).rows.find((r) => r.postId === 'x-ffffffffff02')!
+ok('C14 — 내린 날 뒤에 다른 브랜드 앱 글 줄에서 누른 표시는 그대로 이어받는다', laterOther.naver?.state === 'shown' && laterOther.checkFrom === '가상스테이전국')
+const repostRows = buildTenantStatus({ ...tenantInput([]), checks: {}, external: repostIn }).rows
+const afterMark = withIndexRecord(repostRows, repostRows.find((r) => r.postId === 'x-ffffffffff02')!, rec('x-ffffffffff02', HAND_REPOST, { naver: shown('2026-10-10'), google: shown('2026-11-10') }))
+ok(
+  'C9 + D3 — 화면이 표시를 저장한 뒤 고친 줄도 같은 기준일(내린 날 다음 날 앞선 확인은 뺀다 · 그 뒤 확인은 둔다)',
+  afterMark.find((r) => r.postId === 'x-ffffffffff02')?.naver === null && afterMark.find((r) => r.postId === 'x-ffffffffff02')?.google?.state === 'shown',
+)
+// D13 · C4 — 「관리 → 다른 브랜드에도 추적」이 막을 브랜드: 그 주소를 앱 글로 가진 브랜드(살아 있는 편 · 내린 편 — 잘못 적은 편은 아니다).
+const holderRows = [
+  ...buildTenantStatus({ ...tenantInput([post('p-h1', HAND_OLD)]), tenantId: 'vpub-h1', brand: '가상하나' }).rows,
+  ...buildTenantStatus({ ...tenantInput([post('p-h2', HAND_OLD, { removedAt: '2026-11-01T00:00:00.000Z', removedReason: 'taken-down' })]), tenantId: 'vpub-h2', brand: '가상둘' }).rows,
+  ...buildTenantStatus({ ...tenantInput([post('p-h3', HAND_OLD, { removedAt: '2026-11-01T00:00:00.000Z', removedReason: 'mistake' })]), tenantId: 'vpub-h3', brand: '가상셋' }).rows,
+  ...buildTenantStatus({ ...tenantInput([]), tenantId: 'vpub-h4', brand: '가상넷', external: [xview('x-hhhhhhhhhh04', HAND_OLD)] }).rows,
+]
+ok(
+  'D13 — 발행 현황 줄로 본 「앱 글로 가진 브랜드」는 살아 있는 편 · 내린 편만(잘못 적은 편 · 앱 밖 줄은 아니다) — 서버 등록 거절과 같은 함수',
+  appHolderBrands(holderRows, trackingKey(HAND_OLD)!).sort().join() === 'vpub-h1,vpub-h2' && appHolderBrands(holderRows, 'nothing.example/1').length === 0,
+)
+
 // C2 — 자사 주소인지는 알려진 플랫폼보다 먼저(플랫폼 이름 판정 platformOf와 다르다).
 ok(
   'C2 — 자사 주소 판정(ownedUrl)은 알려진 플랫폼(티스토리) 호스트도 자사 주소 칸으로 직접 맞춘다 · 하위 도메인 · www · 주소 모양 칸',
@@ -1022,6 +1063,29 @@ try {
     '앱 밖 글 줄 · 색인 표시가 원장 · 앱 밖 글 파일을 바꾸지 않는다',
     readFileSync(path.join(dir, 'data', 'vpub-x', 'published-posts.json'), 'utf-8') === LEDGER_X && readFileSync(path.join(dir, 'data', 'vpub-y', 'published-posts.json'), 'utf-8') === LEDGER_Y &&
       readFileSync(path.join(dir, 'data', 'vpub-x', 'external-posts.json'), 'utf-8') === EXTERNAL_X,
+  )
+  // 검토 반영(2026-11-10) — C9 + D3: 날짜 모름으로 다시 올린 앱 밖 줄에 표시를 적어도 내리기 전 표시를 이어받지 않는다(서버도 화면과 같은 기준일).
+  const X_REPOST = 'https://hand.tistory.com/14'
+  writeFileSync(
+    path.join(dir, 'data', 'vpub-x', 'external-posts.json'),
+    JSON.stringify({
+      version: 1,
+      keyRule: 3,
+      posts: [
+        xRow('x-dddddddddd05', X_REPOST, { publishedOn: null, publishedOnSource: 'unknown', trackedAt: '2026-10-01T01:00:00.000Z', removedAt: '2026-10-28T01:00:00.000Z', removedReason: 'taken-down' }),
+        xRow('x-dddddddddd06', X_REPOST, { publishedOn: null, publishedOnSource: 'unknown' }),
+      ],
+    }),
+  )
+  const checksNow = JSON.parse(checksFile('vpub-x')) as { format: string; checks: Record<string, IndexCheckRecord> }
+  checksNow.checks['x-dddddddddd05'] = { ...rec('x-dddddddddd05', X_REPOST, { naver: shown('2026-10-10'), google: shown('2026-10-10') }), updatedAt: '2026-10-10T01:00:00.000Z' }
+  writeFileSync(path.join(dir, 'data', 'vpub-x', 'index-checks.json'), JSON.stringify(checksNow))
+  const repostMark = await put('vpub-x', 'x-dddddddddd06', { engine: 'google', state: 'not-yet' })
+  const repostRow = (await getStatus()).body.rows.find((r) => r.tenantId === 'vpub-x' && r.postId === 'x-dddddddddd06')
+  ok(
+    'C9 + D3 — 서버: 날짜 모름으로 다시 올린 줄에 표시를 적으면 내리기 전 「노출됨」을 이어받지 않는다(적은 엔진만) · 발행 현황도 같다',
+    repostMark.status === 200 && repostMark.body.record?.google?.state === 'not-yet' && repostMark.body.record?.naver === undefined &&
+      repostRow?.naver === null && repostRow.google?.state === 'not-yet',
   )
 } finally {
   server.kill()

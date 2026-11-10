@@ -33,7 +33,7 @@
  *
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다.
  */
-import type { ExternalPostView } from './externalPosts.js'
+import { externalIndexBasis, externalRegistrationCheck, type ExternalPostView, type TakedownRowLike } from './externalPosts.js'
 import { kstDate, todayKst } from './publishedUrl.js'
 import { planWriters, writerArticle, type PlanWriter, type WriterPlan, type WriterPlanArticle } from './probePlan.js'
 
@@ -423,7 +423,10 @@ export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStat
     }
   })
   // 앱 밖 글 — 작성자는 늘 「앱 밖 글」(배정 파일과 상관없다), 다시 볼 날은 올린 날 · 추적 시작일 가운데 늦은 날부터, 앱 글로 옮긴 줄은 쉰다.
-  const externalRows = (input.external ?? []).map((x): PublishStatusRow => {
+  // 색인 표시는 올린 날(다시 올린 줄이면 그 앞에 내린 날 다음 날까지)보다 앞선 확인을 뺀다(externalIndexBasis — 날짜 모르는 다시 올린 줄이
+  // 내리기 전 표시를 이어받지 않게).
+  const external = input.external ?? []
+  const externalRows = external.map((x): PublishStatusRow => {
     const trackedOn = kstDate(x.trackedAt)
     const removed: PublishStatusRow['removed'] =
       x.state === 'removed' && x.removedReason ? { reason: x.removedReason, at: x.removedAt ?? '' } : x.state === 'moved' ? { reason: 'moved', at: x.movedOn ?? '' } : null
@@ -446,7 +449,7 @@ export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStat
       recheckFrom: laterDay(x.publishedOn, trackedOn),
       trackedOn,
       removed,
-      ...indexOf([x.id], x.key, x.publishedOn, removed !== null),
+      ...indexOf([x.id], x.key, externalIndexBasis(external, x), removed !== null),
     }
   })
   const posted = [...appRows, ...externalRows].sort((a, b) => (b.publishedOn ?? '').localeCompare(a.publishedOn ?? ''))
@@ -507,14 +510,43 @@ export function orderRows(rows: PublishStatusRow[]): PublishStatusRow[] {
   return [...posted, ...rows.filter((r) => r.kind === 'unposted')]
 }
 
+/** 그 브랜드 앱 밖 줄의 내린 표시(발행 현황 줄에서) — 다시 올린 줄의 기준일(src/lib/externalPosts.ts takenDownBefore)을 화면에서 정한다. */
+export function externalTakedowns(rows: readonly PublishStatusRow[], tenantId: string): TakedownRowLike[] {
+  return rows.flatMap((r) =>
+    r.origin === 'external' && r.tenantId === tenantId && r.postId && r.key
+      ? [{ id: r.postId, key: r.key, ...(r.removed && r.removed.reason !== 'moved' ? { removedAt: r.removed.at, removedReason: r.removed.reason } : {}) }]
+      : [],
+  )
+}
+
+/** 줄의 색인 표시 기준일 — 앱 글 줄은 올린 날, 앱 밖 줄은 서버와 같은 규칙(externalIndexBasis — 다시 올린 줄이면 내린 날 다음 날까지). */
+export function indexBasisOfRow(rows: readonly PublishStatusRow[], r: PublishStatusRow): string | null {
+  if (r.origin !== 'external' || !r.postId || !r.key) return r.publishedOn
+  return externalIndexBasis(externalTakedowns(rows, r.tenantId), { id: r.postId, key: r.key, publishedOn: r.publishedOn, ...(r.removed?.at ? { removedAt: r.removed.at } : {}) })
+}
+
+/**
+ * 이 주소를 앱 글로 가진(원장이 이기는) 고객 브랜드 — 표의 앱 글 줄로 본다(살아 있는 편 · 내린 편, 잘못 적은 주소만 남은 편은 빼고). 서버
+ * 등록 거절 · 등록 패널과 같은 함수(externalRegistrationCheck — D13)로 가린다. 앱 밖 글 「다른 브랜드에도 추적」이 이 브랜드를 막는다.
+ */
+export function appHolderBrands(rows: readonly PublishStatusRow[], key: string): string[] {
+  const byTenant = new Map<string, { key: string; recordedAt: string; removedAt?: string; removedReason?: string }[]>()
+  for (const r of rows) {
+    if (r.origin === 'external' || r.kind !== 'posted' || r.key !== key) continue
+    const removed = r.removed ? { removedAt: r.removed.at || 'removed', removedReason: r.removed.reason } : {}
+    byTenant.set(r.tenantId, [...(byTenant.get(r.tenantId) ?? []), { key, recordedAt: '', ...removed }])
+  }
+  return externalRegistrationCheck('', key, [...byTenant].map(([tenantId, posts]) => ({ tenantId, posts }))).appIn
+}
+
 /**
  * 표시를 저장한 뒤 화면 줄을 고친다 — 같은 주소의 살아 있는 줄 모두(다른 고객 브랜드 포함, 다시 읽은 것과 같은 값). 줄마다 올린 날보다
- * 앞선 확인은 뺀다. from은 표시를 누른 줄.
+ * 앞선 확인은 뺀다(앱 밖 줄은 다시 올린 줄의 내린 날까지 — indexBasisOfRow). from은 표시를 누른 줄.
  */
 export function withIndexRecord(rows: PublishStatusRow[], from: Pick<PublishStatusRow, 'tenantId' | 'brand' | 'key'>, record: IndexCheckRecord): PublishStatusRow[] {
   return rows.map((r) => {
     if (r.kind !== 'posted' || r.removed || r.key === null || r.key !== from.key) return r
-    const fresh = freshIndexRecord(record, r.publishedOn)
+    const fresh = freshIndexRecord(record, indexBasisOfRow(rows, r))
     const naver = fresh.naver ?? null
     const google = fresh.google ?? null
     return { ...r, naver, google, checkFrom: r.tenantId !== from.tenantId && (naver || google) ? from.brand : null }

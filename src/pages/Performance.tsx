@@ -43,8 +43,8 @@ function maxScore(history: WeeklyScorecard[]): number {
 const EXTERNAL_TABLE_NOTE =
   '앱 밖 글은 올린 시각을 모릅니다 — 올린 날에 한 측정은 「전후 불명」으로 두고, 올린 날을 모르는 글은 올리기 전 · 뒤를 가리지 않습니다' +
   '(「올린 날 모름」). 늦게 추적을 시작해도 지난 측정까지 거슬러 셉니다. 같은 글도 주소가 다르면(티스토리 숫자 주소와 제목 주소, 원본과 네이버 ' +
-  '사본) 따로 셉니다. 내렸다 다시 올린 주소는 올린 날마다 한 행입니다. 같은 브랜드에서 앱 글로 옮긴 주소는 앱 글 표가 세기 시작한 측정부터 ' +
-  '이 표에서 비웁니다(「앱 글 표에서」) — 두 표가 같은 측정을 두 번 세지 않습니다.'
+  '사본) 따로 셉니다. 내렸다 다시 올린 주소는 다시 적을 때마다 한 행입니다(날짜를 모르는 행도). 같은 브랜드에서 앱 글로 옮긴 주소는 앱 글 ' +
+  '표가 세는 측정만 이 표에서 비웁니다(「앱 글 표에서」) — 옮긴 날 옮기기 전에 끝난 측정은 이 표가 셉니다. 두 표가 같은 측정을 두 번 세지도, 빠뜨리지도 않습니다.'
 
 /**
  * 앱 밖 글 인용 추적(2026-11-10 설계 · C1 · C19 · D12) — 앱에서 만들지 않은 글(발행 현황 「주소 한꺼번에 등록」에서 앱 밖 글로 추적한 주소).
@@ -87,7 +87,7 @@ function ExternalHistorySection({ tenant }: { tenant: TenantSummary }) {
           자사 인용률에도 들어갈 수 있습니다. 이 표는 그것과 따로 글 주소가 인용된 응답 수를 셉니다. 둘을 더하지 않습니다.
         </p>
       )}
-      <PublishedHistoryTable history={h} header="앱 밖 글" description={EXTERNAL_TABLE_NOTE} movedOf={movedOf} />
+      <PublishedHistoryTable history={h} header="앱 밖 글" description={EXTERNAL_TABLE_NOTE} movedOf={movedOf} groupRows={false} />
     </section>
   )
 }

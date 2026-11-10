@@ -295,11 +295,12 @@ try {
   const repost = await add(T, page('https://fake.tistory.com/95', { publishedOn: '2026-10-01' }))
   const taken = await ext.updateExternalPost(T, repost.post.id, { remove: 'taken-down' })
   ok('빼기는 표시만 한다(뺀 시각 · 까닭)', taken.post.state === 'removed' && taken.post.removedReason === 'taken-down' && Boolean(taken.post.removedAt))
-  const again = await add(T, page('https://fake.tistory.com/95', { publishedOn: '2026-10-20' }))
+  // 내린 날이 오늘이라 다시 올린 날은 「모름」으로 적는다(내린 날 뒤여야 한다 — C9, 아래 (차)).
+  const again = await add(T, page('https://fake.tistory.com/95', { publishedOn: null }))
   ok('내린 주소를 다시 적으면 새 x- 줄(내린 기간이 남는다)', !again.existing && again.post.id !== repost.post.id && again.posts.filter((p) => p.key === 'fake.tistory.com/95').length === 2)
   ok('「글을 내림」으로 뺀 줄은 되살리지 않는다(400 — 다시 올렸으면 새로 적는다)', (await fails(ext.updateExternalPost(T, repost.post.id, { restore: true }))) === 400)
   await ext.updateExternalPost(T, again.post.id, { remove: 'mistake' })
-  const third = await add(T, page('https://fake.tistory.com/95', { publishedOn: '2026-10-21' }))
+  const third = await add(T, page('https://fake.tistory.com/95', { publishedOn: null }))
   ok('같은 주소에 살아 있는 줄이 있으면 「잘못 적음」 줄도 되살리지 않는다(409)', (await fails(ext.updateExternalPost(T, again.post.id, { restore: true }))) === 409)
   await ext.updateExternalPost(T, third.post.id, { remove: 'mistake' })
   const restored = await ext.updateExternalPost(T, again.post.id, { restore: true })
@@ -492,6 +493,132 @@ try {
   )
   ok('앱 글 올린 날이 옮긴 날보다 앞이면 그 날부터 앱 밖 표를 비운다(옮긴 날은 기록 시각 그대로)', rowOf(ids.early)?.external.movedOn === '2026-11-04' && rowOf(ids.early)?.external.appCountsFrom === '2026-10-12' && cellOf(ids.early, '2026-W42')?.afterRemoval === true && cellOf(ids.early, '2026-W41')?.timing === 'after')
   ok('이력 계산은 원장 · 앱 밖 파일을 바꾸지 않는다', readData(H, 'published-posts.json') === JSON.stringify({ version: 1, keyRule: 3, posts: HLEDGER }, null, 2))
+
+  // ── 검토 반영(2026-11-10) — D12: 앱 글 표가 실제로 세는 회차만 비운다 ─────────────────────────────────────────
+  // 날짜(0시)로 끊으면 옮긴 날 옮기기 전에 끝난 측정 · 앱 글의 올린 날을 기록일보다 뒤로 고친 사이의 측정을 어느 표도 세지 않았다. 회차마다 두 표
+  // 가운데 정확히 하나가 세야 한다(앱 밖 줄을 올린 뒤 회차).
+  const H2 = 'vx-hist-d12'
+  const U2 = { morning: 'https://fake.tistory.com/d/1', runs: 'https://fake.tistory.com/d/2', later: 'https://fake.tistory.com/d/3' }
+  const u2All = Object.values(U2)
+  // W44 10-28 한 회차 · W45 11-04 오전 10시(한국) 한 회차 · W46 11-10 오전 10시 · 오후 5시 두 회차(회차 기록에 측정 시작 시각)
+  const cards2 = ['2026-W44', '2026-W45', '2026-W46'].map((w) => card(H2, w))
+  const m1 = [answer('c1-001', '2026-11-10T01:00:00Z', u2All)]
+  const m2 = [answer('c1-001', '2026-11-10T08:00:00Z', u2All)]
+  const byWeek2: Record<string, QuestionRepeatAnalysis[]> = {
+    '2026-W44': [answer('c1-001', '2026-10-28T01:00:00Z', u2All)],
+    '2026-W45': [answer('c1-001', '2026-11-04T01:00:00Z', u2All)],
+    '2026-W46': m2,
+  }
+  const store2 = {
+    getScorecardHistory: async (_t: string, n: number) => cards2.slice(-n),
+    getQuestionAnalyses: async (_t: string, week: string) => byWeek2[week] ?? [],
+    getQuestionBank: async (_t: string, v: string) => (v === 'v1' ? bankV1 : null),
+    listRunSnapshots: async (_t: string, week: string) =>
+      week === '2026-W46'
+        ? {
+            runs: [
+              { meta: runMeta(H2, week, 'm1', '2026-11-10T00:50:00Z', '2026-11-10T01:30:00Z'), scorecard: card(H2, week), analyses: m1 },
+              { meta: runMeta(H2, week, 'm2', '2026-11-10T07:50:00Z', '2026-11-10T08:30:00Z'), scorecard: card(H2, week), analyses: m2 },
+            ],
+            issues: [],
+          }
+        : { runs: [], issues: [] },
+  }
+  const tenantH2 = { tenantId: H2, questionBankVersion: 'v1' }
+  const d12 = { morning: 'x-222222222201', runs: 'x-222222222202', later: 'x-222222222203' }
+  writeData(
+    H2,
+    'external-posts.json',
+    xFile([
+      xRow(d12.morning, U2.morning, 'fake.tistory.com/d/1', { publishedOn: '2026-10-20', trackedAt: '2026-11-01T01:00:00.000Z' }),
+      xRow(d12.runs, U2.runs, 'fake.tistory.com/d/2', { publishedOn: '2026-10-20', trackedAt: '2026-11-01T01:00:00.000Z' }),
+      xRow(d12.later, U2.later, 'fake.tistory.com/d/3', { publishedOn: '2026-10-20', trackedAt: '2026-11-01T01:00:00.000Z' }),
+    ]),
+  )
+  const H2LEDGER = [
+    // 11-04 낮 12시(한국)에 패널 「옮김」으로 적음 — 올린 날 = 그날(누른 시각이 올린 시각). 그날 오전 10시 측정은 옮기기 전이다.
+    ledgerRow('p-d12d12d12d01', U2.morning, 'fake.tistory.com/d/1', '2026-11-04', '2026-11-04T03:00:00.000Z'),
+    // 11-10 오후 2시(한국)에 옮김 — 그날 오전 회차는 옮기기 전, 오후 회차는 옮긴 뒤.
+    ledgerRow('p-d12d12d12d02', U2.runs, 'fake.tistory.com/d/2', '2026-11-10', '2026-11-10T05:00:00.000Z'),
+    // 11-03에 적고 올린 날을 11-05로 뒤로 고쳤다 — 앱 글 표는 11-05부터 센다(11-04 측정은 앱 밖 표의 몫).
+    ledgerRow('p-d12d12d12d03', U2.later, 'fake.tistory.com/d/3', '2026-11-05', '2026-11-03T03:00:00.000Z'),
+  ]
+  writeData(H2, 'published-posts.json', JSON.stringify({ version: 1, keyRule: 3, posts: H2LEDGER }, null, 2))
+  const hist2 = await ext.getExternalHistory(store2, tenantH2, 12)
+  const app2 = await getPublishedHistory(store2, tenantH2, H2LEDGER as Parameters<typeof getPublishedHistory>[2], 12)
+  const xCell2 = (id: string, w: string) => hist2.posts.find((p) => p.post.id === id)?.cells[hist2.weeks.findIndex((x) => x.weekOf === w)] ?? null
+  const aCell2 = (id: string, w: string) => app2.posts.find((p) => p.post.id === id)?.cells[app2.weeks.findIndex((x) => x.weekOf === w)] ?? null
+  const pairs2: [string, string][] = [
+    [d12.morning, 'p-d12d12d12d01'],
+    [d12.runs, 'p-d12d12d12d02'],
+    [d12.later, 'p-d12d12d12d03'],
+  ]
+  ok(
+    'D12 검토 반영 — 옮긴 날 오전 측정(옮기기 전에 끝남)은 앱 밖 표가 센다(앱 글 표는 「올리기 전」) · 「앱 글 표에서」로 비우지 않는다',
+    counted(xCell2(d12.morning, '2026-W45')) && (xCell2(d12.morning, '2026-W45')?.tally?.all.cited ?? 0) === 1 && aCell2('p-d12d12d12d01', '2026-W45')?.timing === 'before',
+  )
+  ok(
+    'D12 검토 반영 — 앱 글의 올린 날을 기록일보다 뒤로 고쳤으면 그 사이 측정(11-04)은 앱 밖 표가 센다',
+    counted(xCell2(d12.later, '2026-W45')) && aCell2('p-d12d12d12d03', '2026-W45')?.timing === 'before' && xCell2(d12.later, '2026-W46')?.afterRemoval === true && counted(aCell2('p-d12d12d12d03', '2026-W46')),
+  )
+  ok(
+    'D12 검토 반영 — 회차가 하나인 주는 어느 측정이든 두 표 가운데 정확히 하나가 센다(옮기기 전 W44 · 옮긴 날 · 고친 올린 날)',
+    pairs2.every(([x, p]) => ['2026-W44', '2026-W45'].every((w) => counted(xCell2(x, w)) !== counted(aCell2(p, w)))),
+  )
+  ok(
+    'D12 검토 반영 — 옮긴 날 두 회차(오전 · 오후, 옮김은 그 사이) — 오전 회차는 앱 밖 표, 오후 회차는 앱 글 표가 센다',
+    runsSeen(xCell2(d12.runs, '2026-W46')) === 1 && runsSeen(aCell2('p-d12d12d12d02', '2026-W46')) === 1 && xCell2(d12.runs, '2026-W46')?.runs?.cited === 1 &&
+      aCell2('p-d12d12d12d02', '2026-W46')?.runs?.cited === 1,
+  )
+  ok(
+    'D12 검토 반영 — 옮긴 뒤 측정만 있는 주(두 회차 모두 옮긴 뒤)는 앱 밖 칸을 비우고 앱 글 표가 두 회차를 센다',
+    xCell2(d12.morning, '2026-W46')?.afterRemoval === true && runsSeen(aCell2('p-d12d12d12d01', '2026-W46')) === 2,
+  )
+  ok(
+    'D12 검토 반영 — 옮긴 날은 기록 시각(한국 날짜) · 앱 글 표가 세기 시작하는 날은 앱 글의 올린 날(기록일과 섞지 않는다)',
+    hist2.posts.find((p) => p.post.id === d12.later)?.external.movedOn === '2026-11-03' && hist2.posts.find((p) => p.post.id === d12.later)?.external.appCountsFrom === '2026-11-05' &&
+      hist2.posts.every((p) => p.external.state === 'moved' && !p.post.removedAt),
+  )
+
+  // ── 검토 반영 — C9: 다시 올린 줄의 올린 날은 내린 날 뒤여야 한다(비공개를 풀면 페이지 날짜가 처음 올린 날 그대로) ──────────────
+  const R = 'vx-repost-date'
+  const RURL = 'https://fake.tistory.com/r/1'
+  writeData(R, 'external-posts.json', xFile([xRow('x-333333333301', RURL, 'fake.tistory.com/r/1', { publishedOn: '2026-10-01', removedAt: '2026-10-10T01:00:00.000Z', removedReason: 'taken-down' })]))
+  const earlyErr = await errorOf(add(R, page(RURL, { publishedOn: '2026-10-01' })))
+  ok('C9 검토 반영 — 내린 주소를 처음 올린 날(내린 날 이전)로 다시 적으면 400 · 까닭(내린 날 뒤 · 날짜 모름)', earlyErr?.status === 400 && earlyErr.message.includes('2026-10-10') && earlyErr.message.includes('날짜 모름'))
+  ok('C9 검토 반영 — 내린 날과 같은 날도 400(처음 올린 날과 내린 날이 같은 글을 막는다)', (await fails(add(R, page(RURL, { publishedOn: '2026-10-10' })))) === 400)
+  const lateOk = await add(R, page(RURL, { publishedOn: '2026-10-11' }))
+  ok('C9 검토 반영 — 내린 날 뒤 날짜는 새 줄로 받는다', !lateOk.existing && lateOk.post.publishedOn === '2026-10-11' && lateOk.posts.length === 2)
+  ok('C9 검토 반영 — 다시 올린 줄의 올린 날을 내린 날 이전으로 고치면 400 · 뒤 날짜 · 모름은 받는다', (await fails(ext.updateExternalPost(R, lateOk.post.id, { publishedOn: '2026-10-05' }))) === 400 &&
+    (await fails(ext.updateExternalPost(R, lateOk.post.id, { publishedOn: null }))) === null && (await fails(ext.updateExternalPost(R, lateOk.post.id, { publishedOn: '2026-10-12' }))) === null)
+  ok('C9 검토 반영 — 내린 줄 자기 올린 날은 그대로 고친다(그 앞에 내린 줄이 없다)', (await fails(ext.updateExternalPost(R, 'x-333333333301', { publishedOn: '2026-10-02' }))) === null)
+  const R2 = 'vx-repost-restore'
+  const R2URL = 'https://fake.tistory.com/r/2'
+  writeData(
+    R2,
+    'external-posts.json',
+    xFile([
+      xRow('x-444444444401', R2URL, 'fake.tistory.com/r/2', { publishedOn: '2026-10-01', removedAt: '2026-10-10T01:00:00.000Z', removedReason: 'taken-down' }),
+      xRow('x-444444444402', R2URL, 'fake.tistory.com/r/2', { publishedOn: '2026-10-02', trackedAt: '2026-10-21T01:00:00.000Z', removedAt: '2026-10-22T01:00:00.000Z', removedReason: 'mistake' }),
+    ]),
+  )
+  ok(
+    'C9 검토 반영 — 「잘못 적음」 줄을 되살릴 때도 같은 주소에 내린 줄이 있으면 올린 날은 그 뒤여야 한다(400) · 날짜를 함께 고치면 받는다',
+    (await fails(ext.updateExternalPost(R2, 'x-444444444402', { restore: true }))) === 400 &&
+      (await ext.updateExternalPost(R2, 'x-444444444402', { restore: true, publishedOn: '2026-10-15' })).post.state === 'live',
+  )
+  const repostHist = await ext.getExternalHistory(
+    {
+      getScorecardHistory: async (_t: string, n: number) => ['2026-W41', '2026-W42'].map((w) => card(R, w)).slice(-n),
+      getQuestionAnalyses: async (_t: string, week: string) => (week === '2026-W41' ? [answer('c1-001', '2026-10-08T01:00:00Z', [RURL])] : [answer('c1-001', '2026-10-14T01:00:00Z', [RURL])]),
+      getQuestionBank: async (_t: string, v: string) => (v === 'v1' ? bankV1 : null),
+      listRunSnapshots: async () => ({ runs: [], issues: [] }),
+    },
+    { tenantId: R, questionBankVersion: 'v1' },
+    12,
+  )
+  const repostCells = (w: string) => repostHist.posts.map((p) => p.cells[repostHist.weeks.findIndex((x) => x.weekOf === w)] ?? null)
+  ok('C9 검토 반영 — 받은 날짜로는 같은 측정을 두 줄이 함께 세지 않는다(내리기 전은 내린 줄, 다시 올린 뒤는 새 줄)', ['2026-W41', '2026-W42'].every((w) => repostCells(w).filter((c) => counted(c)).length === 1))
 } catch (err) {
   ok(`모듈 검사가 예외 없이 끝난다: ${err instanceof Error ? err.stack : String(err)}`, false)
 } finally {
@@ -677,7 +804,8 @@ try {
   const wid = (w.json.post as { id?: string } | undefined)?.id
   ok('PATCH 올린 날 고치기 — 200', (await call('PATCH', `/api/external-posts/vext-a/${wid}`, { publishedOn: '2026-10-11' })).status === 200)
   ok('PATCH 빼기(글을 내림) — 200', (await call('PATCH', `/api/external-posts/vext-a/${h1post?.id}`, { remove: 'taken-down' })).status === 200)
-  ok('POST 내린 주소를 다시 적으면 새 줄 — 200', (await call('POST', '/api/external-posts/vext-a', page(L.hand, { publishedOn: '2026-10-25' }))).json.existing === false)
+  ok('POST 내린 주소를 내린 날 이전 날짜(페이지의 처음 올린 날)로 다시 적으면 400(C9)', (await call('POST', '/api/external-posts/vext-a', page(L.hand, { publishedOn: '2026-10-25' }))).status === 400)
+  ok('POST 내린 주소를 다시 적으면 새 줄 — 200(내린 날이 오늘이라 날짜 모름)', (await call('POST', '/api/external-posts/vext-a', page(L.hand, { publishedOn: null }))).json.existing === false)
   ok('PATCH 「글을 내림」 줄 되살리기는 400', (await call('PATCH', `/api/external-posts/vext-a/${h1post?.id}`, { restore: true })).status === 400)
   ok('PATCH 빼기(잘못 적음) → 되살리기 — 200', (await call('PATCH', `/api/external-posts/vext-a/${wid}`, { remove: 'mistake' })).status === 200 && (await call('PATCH', `/api/external-posts/vext-a/${wid}`, { restore: true })).status === 200)
   ok('PATCH 없는 줄 404', (await call('PATCH', '/api/external-posts/vext-a/x-000000000000', { publishedOn: null })).status === 404)
@@ -899,7 +1027,9 @@ try {
     const rowsWith = (html: string, url: string) => html.split('<tr>').filter((s) => s.includes(`href="${url}"`))
     const movedTr = rowsWith(extHtml, 'https://fake.tistory.com/h/4')[0] ?? ''
     ok('3단계 옮긴 행 — 「앱 글로 옮김(10/27)」, 「내림」 · 「내린 뒤」 대신 옮긴 뒤 칸은 「앱 글 표에서」', movedTr.includes('앱 글로 옮김(10/27)') && !movedTr.includes('내림') && !movedTr.includes('내린 뒤') && movedTr.includes('앱 글 표에서'))
-    ok('3단계 (대조) 옮김을 넘기지 않으면 같은 행이 「10/27 내림」 — 위 검사는 movedOf가 바꾼 것이다', (rowsWith(appHtml, 'https://fake.tistory.com/h/4')[0] ?? '').includes('10/27 내림'))
+    // 옮긴 줄은 원장 모양에 내린 표시를 싣지 않는다(서버가 앱 글 표가 세는 회차만 비운다 — D12 검토 반영). 옮김을 넘기지 않으면 비운 칸이 「내린 뒤」로 보인다.
+    const plainMovedTr = rowsWith(appHtml, 'https://fake.tistory.com/h/4')[0] ?? ''
+    ok('3단계 (대조) 옮김을 넘기지 않으면 같은 행의 비운 칸이 「내린 뒤」 · 「앱 글로 옮김」이 없다 — 위 검사는 movedOf가 바꾼 것이다', plainMovedTr.includes('내린 뒤') && !plainMovedTr.includes('앱 글로 옮김') && !plainMovedTr.includes('앱 글 표에서'))
     const earlyTr = rowsWith(extHtml, 'https://fake.tistory.com/h/6')[0] ?? ''
     ok('3단계 앱 글 올린 날이 앞선 행 — 옮긴 날과 앱 글 표가 세기 시작한 날을 함께 적는다', earlyTr.includes('앱 글로 옮김(11/4)') && earlyTr.includes('10/12부터 앱 글 표에서 셈'))
     const repostTrs = rowsWith(extHtml, 'https://fake.tistory.com/h/3')
@@ -907,6 +1037,38 @@ try {
     const noAfter = { ...XH, posts: [{ ...movedRow, cells: movedRow.cells.map((c) => (c ? { ...c, afterRemoval: true } : c)) }] }
     const noAfterHtml = renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: noAfter, header: '앱 밖 글', description: '', movedOf }))
     ok('3단계 옮기기 전 측정이 없는 행 — 판단 칸은 「내림」이 아니라 「앱 글로 옮김」', noAfterHtml.includes('앱 글로 옮김 · 옮기기 전 판단할 측정 없음') && !noAfterHtml.includes('내림 · 올린 뒤'))
+    // 검토 반영(2026-11-10) — C9 + D3: 앱 밖 글 표는 줄마다 한 행(groupRows false). 원장 규칙(같은 주소에 날짜 있는 줄이 있으면 날짜 없는 줄을 뺀다 ·
+    // 같은 날짜 줄은 한 행)으로 묶으면 날짜 모름으로 다시 올린 살아 있는 줄이나 내리기 전 줄이 사라진다.
+    const oldRow = rowOf(xid.repostOld!)
+    const newRow = rowOf(xid.repostNew!)
+    const undated = (r: typeof oldRow, id: string, title: string, over: Partial<typeof oldRow.post> = {}) => ({
+      ...r,
+      post: { ...r.post, id, articleTitle: title, publishedOn: null, ...over },
+      external: { ...r.external, id, title, publishedOn: null, publishedOnSource: 'unknown' as const },
+    })
+    const tableOf = (posts: (typeof oldRow)[], groupRows?: boolean) =>
+      renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: { ...XH, posts }, header: '앱 밖 글', description: '', movedOf, ...(groupRows === undefined ? {} : { groupRows }) }))
+    const datedDownUndatedLive = [{ ...oldRow, post: { ...oldRow.post, articleTitle: '가상 먼저 올린 글' } }, undated(newRow, 'x-111111111191', '가상 다시 올린 글')]
+    const undatedDownDatedLive = [undated(oldRow, 'x-111111111192', '가상 먼저 올린 글', { removedAt: oldRow.post.removedAt }), { ...newRow, post: { ...newRow.post, articleTitle: '가상 다시 올린 글' } }]
+    const bothUndated = [undated(oldRow, 'x-111111111193', '가상 먼저 올린 글', { removedAt: oldRow.post.removedAt }), undated(newRow, 'x-111111111194', '가상 다시 올린 글')]
+    const both = (html: string) => html.includes('가상 먼저 올린 글') && html.includes('가상 다시 올린 글') && html.split('<tr>').length - 2 === 2
+    ok(
+      'C9 + D3 검토 반영 — 앱 밖 글 표는 줄마다 한 행: 날짜 있는 내린 줄 + 날짜 모름 다시 올린 줄 · 그 반대 · 둘 다 날짜 모름 모두 두 행',
+      both(tableOf(datedDownUndatedLive, false)) && both(tableOf(undatedDownDatedLive, false)) && both(tableOf(bothUndated, false)),
+    )
+    ok(
+      '(대조) 묶는 표(기본 — 앱 글 표)는 예전 그대로 날짜 없는 줄을 날짜 있는 줄에 묻는다 — 위 검사는 groupRows가 바꾼 것이다',
+      !tableOf(datedDownUndatedLive).includes('가상 다시 올린 글') && !both(tableOf(bothUndated)),
+    )
+    // 검토 반영 — 옮긴 행의 「최근 측정한 주에는 인용 없음」은 옮기기 전 마지막 측정 주의 말이다(최근 측정은 앱 글 표가 센다).
+    const cited = movedRow.cells.find((c) => c && !c.afterRemoval && c.tally)!
+    const lapsedCells = XH.weeks.map((_, i) => (i === 0 ? cited : i === 1 ? { ...cited, tally: null } : { ...cited, afterRemoval: true, tally: null }))
+    const lapsedHtml = renderToStaticMarkup(
+      React.createElement(PublishedHistoryTable, { history: { ...XH, posts: [{ ...movedRow, cells: lapsedCells }] }, header: '앱 밖 글', description: '', movedOf, groupRows: false }),
+    )
+    ok('검토 반영 — 옮긴 행은 「옮기기 전 마지막 측정 주에는 인용 없음」(「최근 측정한 주에는 인용 없음」이 아니다)', lapsedHtml.includes('옮기기 전 마지막 측정 주에는 인용 없음') && !lapsedHtml.includes('최근 측정한 주에는 인용 없음'))
+    const plainLapsed = renderToStaticMarkup(React.createElement(PublishedHistoryTable, { history: { ...XH, posts: [{ ...movedRow, cells: lapsedCells }] } }))
+    ok('(대조) 옮김을 넘기지 않으면(앱 글 표) 「최근 측정한 주에는 인용 없음」 그대로', plainLapsed.includes('최근 측정한 주에는 인용 없음'))
 
     // (마) 퍼포먼스 화면 — 절을 숨기는 때 · 문구 · 나머지 화면은 그대로
     const uiCard = (tenantId: string, weekOf: string, score: number) => ({
@@ -1289,6 +1451,312 @@ try {
     await React.act(async () => root.unmount())
   } catch (err) {
     ok(`4단계 화면 검사가 예외 없이 끝난다: ${err instanceof Error ? err.stack : String(err)}`, false)
+  } finally {
+    globalThis.fetch = realFetch
+  }
+}
+
+// ── 7) 검토 반영(2026-11-10) 화면 — 등록 패널(옮김 날짜 · 옮긴 뒤 줄 · 읽지 못함 무시 · 다시 올린 날 · 이름 · 되돌리기 포커스) · 발행 현황 「관리」
+// (앱 글로 가진 브랜드 막기 · 올린 날 범위 · 내린 줄 날짜 · 결과 문구 · 포커스). jsdom과 가짜 fetch.
+{
+  const realFetch = globalThis.fetch
+  try {
+    const React = await import('react')
+    const { JSDOM } = await import('jsdom')
+    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: 'http://127.0.0.1/' })
+    Object.assign(globalThis, { React, window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true })
+    const { createRoot } = await import('react-dom/client')
+    const { MemoryRouter } = await import('react-router-dom')
+    const { default: PostImportPanel } = await import('../src/components/PostImportPanel')
+    const { default: PublishStatusPage } = await import('../src/pages/PublishStatus')
+    const { todayKst } = await import('../src/lib/publishedUrl')
+    type StatusRow = import('../src/lib/publishStatus').PublishStatusRow
+    const doc = dom.window.document
+
+    type Asked = { method: string; path: string; body: unknown }
+    type Reply = { status: number; body: unknown }
+    const asked: Asked[] = []
+    let reply: (a: Asked) => Reply = () => ({ status: 404, body: 'Not Found' })
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      const a: Asked = { method: (init?.method ?? 'GET').toUpperCase(), path: url.split('?')[0]!, body: typeof init?.body === 'string' ? (JSON.parse(init.body) as unknown) : null }
+      asked.push(a)
+      const r = reply(a)
+      const json = typeof r.body !== 'string'
+      return new Response(json ? JSON.stringify(r.body) : String(r.body), { status: r.status, headers: { 'Content-Type': json ? 'application/json' : 'text/html' } })
+    }) as typeof fetch
+    const sentTo = (p: string) => asked.filter((a) => a.path === p)
+    const host = doc.getElementById('root')!
+    let root = createRoot(host)
+    const settle = async (n = 3) => {
+      for (let i = 0; i < n; i += 1) await React.act(async () => new Promise((r) => setTimeout(r, 30)))
+    }
+    const click = async (el: Element | null | undefined) => {
+      if (!el) throw new Error('누를 것을 찾지 못했다')
+      await React.act(async () => (el as HTMLElement).click())
+      await settle()
+    }
+    const pick = async (el: HTMLSelectElement | null | undefined, value: string) => {
+      if (!el) throw new Error('고를 칸을 찾지 못했다')
+      await React.act(async () => {
+        el.value = value
+        el.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
+      })
+      await settle()
+    }
+    const typeInto = async (el: Element | null | undefined, value: string) => {
+      if (!el) throw new Error('적을 칸을 찾지 못했다')
+      const proto = el instanceof dom.window.HTMLTextAreaElement ? dom.window.HTMLTextAreaElement.prototype : dom.window.HTMLInputElement.prototype
+      await React.act(async () => {
+        Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(el, value)
+        el.dispatchEvent(new dom.window.Event('input', { bubbles: true }))
+      })
+      await settle()
+    }
+    const buttonNamed = (text: string, within: ParentNode = doc) => [...within.querySelectorAll('button')].find((b) => (b.textContent ?? '').includes(text))
+    const BRANDS = [
+      { tenantId: 'vrv-a', brand: '가상스테이' },
+      { tenantId: 'vrv-b', brand: '가상여관' },
+      { tenantId: 'vrv-c', brand: '가상민박' },
+    ]
+    const U = (n: number) => `https://fake-rv.tistory.com/${n}`
+    const K = (n: number) => `fake-rv.tistory.com/${n}`
+    const cand = (tenantId: string, brand: string, articleId: string, body: number) => ({ tenantId, brand, articleId, title: `가상 앱 글 ${articleId}`, body, titleScore: 0.3, writer: null, bankUnknown: false, writerUnknown: false, otherUrls: 0 })
+    const readOk = (n: number, over: Record<string, unknown> = {}) => ({
+      ok: true,
+      url: U(n),
+      key: K(n),
+      readUrl: U(n),
+      recordUrl: U(n),
+      recordKey: K(n),
+      urlNote: null,
+      platform: { key: 'tistory', label: '티스토리' },
+      post: { title: `가상 손글 ${n}`, publishedOn: '2026-10-20', dateText: null, dateProblem: null, bodyChars: 800 },
+      candidates: [],
+      known: [],
+      tracked: [],
+      ignoredAt: null,
+      ownedBrands: [],
+      appLedgers: [],
+      stateUnknown: [],
+      ...over,
+    })
+    const tracked = (tenantId: string, brand: string, n: number) => ({ tenantId, brand, postId: 'x-abababababab', key: K(n), state: 'live', publishedOn: '2026-10-20', trackedAt: '2026-11-01T00:00:00.000Z' })
+    const READS: Record<string, unknown> = {
+      // 가상스테이 · 가상여관이 앱 밖 글로 추적 중 — 가상스테이의 앱 글로 옮길 수 있다(후보 1번).
+      [U(1)]: readOk(1, {
+        candidates: [cand('vrv-a', '가상스테이', 'content:m', 0.6), cand('vrv-c', '가상민박', 'content:n', 0.5)],
+        tracked: [tracked('vrv-a', '가상스테이', 1), tracked('vrv-b', '가상여관', 1)],
+      }),
+      // 읽지 못한 주소(404) — 하나씩 무시한다(D14).
+      [U(2)]: { ok: false, url: U(2), key: K(2), error: '없는 글입니다(HTTP 404) — 가상', tracked: [], ignoredAt: null },
+      // 가상스테이에서 10-25에 「글을 내림」으로 뺀 주소 — 페이지 날짜(10-20 — 처음 올린 날)로 다시 적으면 걸린다(C9).
+      [U(3)]: readOk(3, { candidates: [cand('vrv-a', '가상스테이', 'content:z', 0.05)], ownedBrands: [{ tenantId: 'vrv-a', brand: '가상스테이' }], takenDown: [{ tenantId: 'vrv-a', brand: '가상스테이', on: '2026-10-25' }] }),
+      // 발행 현황 안의 패널에서 등록할 맞음 줄.
+      [U(21)]: readOk(21, { candidates: [cand('vrv-a', '가상스테이', 'content:q', 0.8)] }),
+    }
+    let ignoredRows = [{ url: U(19), urls: [U(19)], keys: [K(19)], ignoredAt: '2026-11-08T01:00:00.000Z' }, { url: U(18), urls: [U(18)], keys: [K(18)], ignoredAt: '2026-11-07T01:00:00.000Z' }]
+    const panelReply = (a: Asked): Reply => {
+      if (a.path === '/api/blog-sources') return { status: 200, body: { sources: [] } }
+      if (a.path === '/api/post-import/read') return { status: 200, body: READS[(a.body as { url: string }).url] }
+      if (a.path === '/api/post-import/commit') {
+        const items = (a.body as { items: { kind?: string; url: string; tenantId?: string; articleId?: string }[] }).items
+        return {
+          status: 200,
+          body: {
+            results: items.map((it) =>
+              it.kind === 'ignore' ? { kind: 'ignore', url: it.url, status: 'added' } : { kind: 'app', tenantId: it.tenantId, articleId: it.articleId, url: it.url, status: 'added', postId: 'p-rvrvrvrvrv01' },
+            ),
+            warnings: [],
+          },
+        }
+      }
+      if (a.path === '/api/post-import/ignored') return { status: 200, body: { ignored: ignoredRows, max: 5000 } }
+      if (a.path === '/api/post-import/unignore') {
+        const urls = (a.body as { urls: string[] }).urls
+        const before = ignoredRows.length
+        ignoredRows = ignoredRows.filter((e) => !e.urls.some((u) => urls.includes(u)))
+        return { status: 200, body: { removed: before - ignoredRows.length, ignored: ignoredRows } }
+      }
+      return { status: 404, body: 'Not Found' }
+    }
+    reply = panelReply
+    await React.act(async () => root.render(React.createElement(PostImportPanel, { today: '2026-11-10', brands: BRANDS, onRegistered: () => {} })))
+    await settle()
+    await typeInto(doc.getElementById('pi-paste'), [U(1), U(2), U(3)].join('\n'))
+    await click(buttonNamed('주소 읽기'))
+    await settle(6)
+    const rowOf = (n: number) => [...doc.querySelectorAll('.pi-table tbody tr')].find((tr) => tr.querySelector(`a[href="${U(n)}"]`))
+    const selectOf = (n: number) => rowOf(n)?.querySelector('select') as HTMLSelectElement | null | undefined
+    const dateOf = (n: number) => (rowOf(n)?.querySelector('input[type="date"]') as HTMLInputElement | null | undefined)?.value
+    const checkOf = (n: number) => rowOf(n)?.querySelector('input[type="checkbox"]') as HTMLInputElement | null | undefined
+    const limitDay = todayKst() > '2026-11-10' ? todayKst() : '2026-11-10'
+    ok('검토 (준비) 세 줄을 읽었다 — 추적 중 줄은 앱 밖 글(추적 중) · 페이지 날짜', doc.querySelectorAll('.pi-table tbody tr').length === 3 && selectOf(1)?.value === 'external' && dateOf(1) === '2026-10-20')
+
+    // (가) D12 옮김 날짜 — 옮김을 골라 오늘로 바꾼 날은 옮김이 아닌 일을 고르면 페이지 날짜로 되돌린다(D3: 앱 밖 글을 오늘로 채우지 않는다).
+    await pick(selectOf(1), 'vrv-a\ncontent:m')
+    const movedDay = dateOf(1)
+    await pick(selectOf(1), 'external')
+    const backToExternal = dateOf(1)
+    await pick(selectOf(1), 'vrv-a\ncontent:m')
+    await pick(selectOf(1), 'vrv-c\ncontent:n')
+    const backToOtherApp = dateOf(1)
+    await pick(selectOf(1), 'vrv-a\ncontent:m')
+    await pick(selectOf(1), '')
+    const backToNone = dateOf(1)
+    ok(
+      'D12 검토 반영 — 앱 글로 옮김을 고르면 올린 날은 오늘, 앱 밖 글 · 다른 앱 글 · 앱 글 아님으로 바꾸면 페이지 날짜(10-20)로 되돌린다',
+      movedDay === limitDay && backToExternal === '2026-10-20' && backToOtherApp === '2026-10-20' && backToNone === '2026-10-20',
+    )
+    // (나) 옮겨 등록하면 그 줄의 추적 표시가 「앱 글로 옮겨 쉼」이 된다(다시 읽지 않아도 서버와 같은 상태).
+    await pick(selectOf(1), 'vrv-a\ncontent:m')
+    if (!checkOf(1)?.checked) await click(checkOf(1))
+    await click(buttonNamed('이대로 등록'))
+    await settle()
+    ok(
+      '검토 반영 — 앱 글로 옮겨 등록한 줄은 「앱 밖 글로 추적 중: 가상스테이(앱 글로 옮겨 쉼), 가상여관」(옮긴 브랜드만 쉼)',
+      (rowOf(1)?.textContent ?? '').includes('앱 밖 글로 추적 중: 가상스테이(앱 글로 옮겨 쉼), 가상여관') && (rowOf(1)?.textContent ?? '').includes('등록함'),
+    )
+    // (다) 「읽지 못함」 줄을 무시로 등록하면 그 줄은 「무시함」 — 진행 줄에 「무시」(고르기만 함)로 남지 않고 「다시 읽기」 대상에서 빠진다.
+    await pick(selectOf(2), 'ignore')
+    if (!checkOf(2)?.checked) await click(checkOf(2))
+    const progressText = () => doc.querySelector('.pi-progress')?.textContent ?? ''
+    ok('(준비) 읽지 못함 줄은 다시 읽기 대상', (buttonNamed('다시 읽기 —')?.textContent ?? '').includes('(1)'))
+    await click(buttonNamed('이대로 등록'))
+    await settle()
+    ok(
+      'D14 검토 반영 — 무시를 마친 「읽지 못함」 줄은 「무시함」(진행 줄에 「무시 1」이 남지 않는다) · 「다시 읽기」 단추가 사라진다',
+      (rowOf(2)?.textContent ?? '').includes('무시함') && progressText().includes('무시함 1') && !progressText().includes('무시 1') && buttonNamed('다시 읽기 —') === undefined,
+    )
+    // (라) C9 — 내린 기록이 있는 브랜드에 페이지 날짜(처음 올린 날)로 다시 적으려 하면 그 줄에 알리고, 등록을 눌러도 보내지 않는다.
+    await pick(selectOf(3), 'external')
+    ok('C9 검토 반영 — 다시 적을 브랜드에서 그 날 이전에 내린 주소면 줄에 알린다(브랜드 · 내린 날)', (rowOf(3)?.textContent ?? '').includes('가상스테이: 이 브랜드에서 이 주소의 글을 2026-10-25에 내렸다고'))
+    const commitsBefore = sentTo('/api/post-import/commit').length
+    if (!checkOf(3)?.checked) await click(checkOf(3))
+    await click(buttonNamed('이대로 등록'))
+    await settle()
+    ok('C9 검토 반영 — 그 줄은 등록 요청에 넣지 않고 걸림으로 둔다', sentTo('/api/post-import/commit').length === commitsBefore && (rowOf(3)?.querySelector('[role="alert"]')?.textContent ?? '').includes('내렸다고'))
+    // (마) 이름 — 「날짜 모름」 · 추적할 브랜드 무리에 어느 글의 칸인지가 들어 있다.
+    ok(
+      '검토 반영(접근성) — 「날짜 모름」 체크 · 추적할 브랜드 무리의 이름에 글 제목',
+      doc.querySelector('input[aria-label="「가상 손글 3」 날짜 모름"]') !== null && doc.querySelector('fieldset[aria-label="「가상 손글 3」 추적할 브랜드"]') !== null,
+    )
+    // (바) 되돌리기 — 끝나면 결과 문구로 포커스(키보드 사용자가 맨 위로 돌아가지 않게) · 처리 중에도 단추를 disabled로 바꾸지 않는다.
+    await click(buttonNamed('무시한 글 보기 · 되돌리기'))
+    const restoreBtn = [...doc.querySelectorAll('.pi-ignored-list li')].find((li) => li.querySelector(`a[href="${U(19)}"]`))?.querySelector('button') as HTMLButtonElement | undefined
+    restoreBtn?.focus()
+    const focusedBefore = doc.activeElement === restoreBtn
+    await click(restoreBtn)
+    await settle()
+    const active = doc.activeElement
+    ok(
+      '검토 반영(키보드) — 되돌린 뒤 포커스는 결과 문구(role=status)로 간다(BODY로 사라지지 않는다) · 단추는 disabled를 쓰지 않는다',
+      focusedBefore && active !== doc.body && active?.getAttribute('role') === 'status' && (active?.textContent ?? '').includes('무시를 풀었습니다') &&
+        [...doc.querySelectorAll('.pi-ignored-list button')].every((b) => !(b as HTMLButtonElement).disabled),
+    )
+    await React.act(async () => root.unmount())
+
+    // (사) 발행 현황 「관리」
+    const xRow = (n: number, over: Partial<StatusRow> = {}): StatusRow => ({
+      rowKey: `vrv-a|x-rvrvrvrvrv${n}`,
+      tenantId: 'vrv-a',
+      brand: '가상스테이',
+      kind: 'posted',
+      origin: 'external',
+      postId: `x-rvrvrvrvrv${n}`,
+      key: K(n),
+      articleId: `external:x-rvrvrvrvrv${n}`,
+      title: `가상 손글 ${n}`,
+      writer: null,
+      writerUnknown: null,
+      postedUnknown: false,
+      platform: { key: 'tistory', label: '티스토리' },
+      url: U(n),
+      publishedOn: '2026-11-01',
+      recheckFrom: '2026-11-05',
+      trackedOn: '2026-11-05',
+      removed: null,
+      naver: null,
+      google: null,
+      checkFrom: null,
+      ...over,
+    })
+    const appRowOf = (n: number, tenantId: string, brand: string, over: Partial<StatusRow> = {}) =>
+      xRow(n, { rowKey: `${tenantId}|p-rvrvrvrvrv${n}`, tenantId, brand, origin: 'app', postId: `p-rvrvrvrvrv${n}`, articleId: 'content:z', title: '가상 앱 글 z', trackedOn: null, recheckFrom: '2026-11-01', ...over })
+    const status = {
+      today: '2026-11-10',
+      brands: BRANDS,
+      rows: [
+        xRow(20),
+        // 20번 주소는 가상여관의 앱 글 · 가상민박의 잘못 적은 앱 글 — 가상여관만 막는다.
+        appRowOf(20, 'vrv-b', '가상여관'),
+        appRowOf(20, 'vrv-c', '가상민박', { removed: { reason: 'mistake', at: '2026-11-02T00:00:00.000Z' } }),
+        // 22번은 「글을 내림」으로 뺀 날짜 모름 줄.
+        xRow(22, { publishedOn: null, removed: { reason: 'taken-down', at: '2026-11-08T00:00:00.000Z' } }),
+      ],
+      writers: [],
+      issues: [],
+    }
+    let commitBody: unknown = { results: [{ kind: 'external', url: U(20), status: 'error', tenants: [{ tenantId: 'vrv-c', brand: '가상민박', status: 'error', error: '가상 — 적지 못했습니다' }] }], warnings: [] }
+    reply = (a) => {
+      if (a.path === '/api/publish-status') return { status: 200, body: status }
+      if (a.path.startsWith('/api/external-posts/')) return { status: 200, body: { post: {}, posts: [] } }
+      if (a.path === '/api/post-import/commit') return { status: 200, body: commitBody }
+      return panelReply(a)
+    }
+    root = createRoot(host)
+    await React.act(async () => root.render(React.createElement(MemoryRouter, { initialEntries: ['/publish-status'] }, React.createElement(PublishStatusPage))))
+    await settle()
+    const NAME20 = '가상스테이 「가상 손글 20」 티스토리'
+    const summaryOf = (name: string) => doc.querySelector(`summary[aria-label="${name} 앱 밖 글 관리"]`) as HTMLElement | null
+    const manage20 = () => summaryOf(NAME20)?.parentElement ?? null
+    const brandBox = (brand: string) =>
+      ([...(manage20()?.querySelectorAll('.ps-manage-brands label') ?? [])].find((l) => (l.textContent ?? '').startsWith(brand))?.querySelector('input') ?? null) as HTMLInputElement | null
+    ok(
+      'D13 검토 반영 — 「다른 브랜드에도 추적」은 그 주소를 앱 글로 가진 브랜드를 고를 수 없게 한다(등록 패널과 같은 함수 — 잘못 적은 앱 글 브랜드는 고를 수 있다)',
+      brandBox('가상여관')?.disabled === true && (manage20()?.textContent ?? '').includes('가상여관 · 그 브랜드의 앱 글') && brandBox('가상민박')?.disabled === false,
+    )
+    await click(brandBox('가상민박'))
+    await click(buttonNamed('추적 시작', manage20() ?? doc))
+    await settle()
+    ok('검토 반영 — 추적 결과에 걸린 브랜드가 있으면 오류 모양(role=alert)으로 보인다', (doc.querySelector('p.error[role="alert"]')?.textContent ?? '').includes('걸림 — 가상민박'))
+    const dateInput20 = () => manage20()?.querySelector(`input[aria-label="${NAME20} 올린 날"]`) as HTMLInputElement | null
+    ok(
+      '검토 반영 — 올린 날은 추적을 시작한 날까지(max) · 「모름」 체크에 글 이름',
+      dateInput20()?.max === '2026-11-05' && manage20()?.querySelector(`input[aria-label="${NAME20} 올린 날 모름"]`) !== null,
+    )
+    const patches = () => asked.filter((a) => a.method === 'PATCH').length
+    const patchesBefore = patches()
+    await typeInto(dateInput20(), '2026-11-07')
+    await click(buttonNamed('저장', manage20() ?? doc))
+    ok(
+      '검토 반영 — 추적을 시작한 날 뒤 날짜는 화면이 막는다(서버 400을 기다리지 않는다 · 안내는 「추적을 시작한 날(…)까지」)',
+      patches() === patchesBefore && (manage20()?.querySelector('[role="alert"]')?.textContent ?? '').includes('추적을 시작한 날(2026-11-05)까지'),
+    )
+    await typeInto(dateInput20(), '2026-11-03')
+    await click(buttonNamed('저장', manage20() ?? doc))
+    await settle()
+    ok(
+      '검토 반영(키보드) — 「저장」 뒤 표를 다시 읽어도 포커스는 같은 줄의 「관리」로 돌아온다 · 앞 결과 문구(오류)는 새 결과로 바뀐다',
+      patches() === patchesBefore + 1 && doc.activeElement === summaryOf(NAME20) &&
+        (doc.querySelector('p.pi-note[role="status"]')?.textContent ?? '').includes('올린 날을 2026-11-03로 고쳤습니다') && doc.querySelector('p.error[role="alert"]') === null,
+    )
+    // 「주소 한꺼번에 등록」으로 표가 바뀌면 앞선 「관리」 결과 문구는 지운다(지금 상태와 반대로 읽히지 않게).
+    commitBody = { results: [{ kind: 'app', tenantId: 'vrv-a', articleId: 'content:q', url: U(21), status: 'added', postId: 'p-rvrvrvrvrv21' }], warnings: [] }
+    await typeInto(doc.getElementById('pi-paste'), U(21))
+    await click(buttonNamed('주소 읽기'))
+    await settle(6)
+    await click(buttonNamed('이대로 등록'))
+    await settle()
+    ok('검토 반영 — 주소를 등록해 표를 다시 읽으면 앞선 「관리」 결과 문구를 지운다', sentTo('/api/post-import/commit').length > 0 && !(doc.body.textContent ?? '').includes('올린 날을 2026-11-03로 고쳤습니다'))
+    // 「글을 내림」으로 뺀 날짜 모름 줄도 올린 날을 적을 수 있다(판단 칸 「날짜를 적으면 판단」대로).
+    const removedToggle = [...doc.querySelectorAll('label.ps-toggle')].find((l) => (l.textContent ?? '').includes('내린 · 뺀 글'))?.querySelector('input')
+    await click(removedToggle)
+    const NAME22 = '가상스테이 「가상 손글 22」 티스토리'
+    ok('검토 반영 — 「글을 내림」으로 뺀 줄의 「관리」에도 올린 날 칸이 있다', summaryOf(NAME22)?.parentElement?.querySelector(`input[aria-label="${NAME22} 올린 날"]`) !== null)
+    await React.act(async () => root.unmount())
+  } catch (err) {
+    ok(`검토 반영 화면 검사가 예외 없이 끝난다: ${err instanceof Error ? err.stack : String(err)}`, false)
   } finally {
     globalThis.fetch = realFetch
   }

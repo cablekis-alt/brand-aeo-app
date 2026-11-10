@@ -664,9 +664,34 @@ try {
     pi.checkedByDefault(rMatch) && pi.initialChoice(rTracked).mode === 'external' && !pi.checkedByDefault(rTracked) &&
       pi.choiceStateOf(rTracked, pi.initialChoice(rTracked)).state === 'tracked' && pi.ROW_STATE_LABEL.tracked === '앱 밖 글로 추적 중',
   )
+  // 검토 반영(2026-11-10, C6 보완) — 앱 글로 옮겨 쉬는 줄만 있으면 그 주소는 앱 글이다: 「앱 밖 글로 추적 중」이 아니라 앱 글로 보고(원장에 그 앱 글이
+  // 있으면 「이미 등록됨」과 그 글), 미리 체크하지는 않는다. 살아 있는 앱 밖 줄이 하나라도 있으면 예전처럼 앱 밖 글(추적 중)이다.
+  const movedOnly = withState(rMatch, { tracked: [trackedRec('t1', { state: 'moved' })] })
+  const movedKnown = withState(movedOnly, { known: [known('t1', 'a')] })
+  const movedAndLive = withState(rMatch, { tracked: [trackedRec('t1', { state: 'moved' }), trackedRec('t2')] })
   ok(
-    'C6 — 앱 글로 옮겨 쉬는 앱 밖 줄도 추적 기록이다(앱 글을 자동으로 고르지 않는다)',
-    pi.initialChoice(withState(rMatch, { tracked: [trackedRec('t1', { state: 'moved' })] })).mode === 'external' && !pi.checkedByDefault(withState(rMatch, { tracked: [trackedRec('t1', { state: 'moved' })] })),
+    'C6 보완 — 앱 글로 옮겨 쉬는 줄만 있으면 앱 글(그 앱 글이 원장에 있으면 「이미 등록됨」) · 미리 체크하지 않는다 · 살아 있는 줄이 있으면 「앱 밖 글로 추적 중」',
+    pi.initialChoice(movedOnly).mode === 'app' && !pi.checkedByDefault(movedOnly) &&
+      pi.choiceStateOf(movedKnown, pi.initialChoice(movedKnown)).state === 'already' && !pi.checkedByDefault(movedKnown) &&
+      pi.choiceStateOf(movedOnly, { mode: 'external', tenantIds: [], dateUnknown: false }).state === 'external' &&
+      pi.initialChoice(movedAndLive).mode === 'external' && pi.choiceStateOf(movedAndLive, pi.initialChoice(movedAndLive)).state === 'tracked',
+  )
+  // 검토 반영 — 「읽지 못함」 줄도 무시한 때 · 앱 밖 기록을 싣는다(D14): 무시한 줄은 「무시함」, 추적 중인 주소는 무시를 고를 수 없다(서버도 거절).
+  const rFailIgnored = { ...(rFail as object), ignoredAt: '2026-11-09T01:00:00.000Z' } as import('../src/lib/postImport').PostImportRead
+  const rFailTracked = { ...(rFail as object), tracked: [trackedRec('t2')] } as import('../src/lib/postImport').PostImportRead
+  ok(
+    'D14 보완 — 무시한 「읽지 못함」 줄은 처음부터 「무시함」(이미 무시함 — 다시 적지 않는다) · 추적 중인 「읽지 못함」 줄은 무시를 고를 수 없다',
+    pi.initialChoice(rFailIgnored).mode === 'ignore' && pi.choiceStateOf(rFailIgnored, { mode: 'ignore' }).state === 'ignored' &&
+      pi.choiceBlockReason(rFailIgnored, { mode: 'ignore' }) === '이미 무시한 주소입니다.' && !pi.checkedByDefault(rFailIgnored) &&
+      !pi.ignoreOptionAllowed(rFailTracked) && pi.choiceBlockReason(rFailTracked, { mode: 'ignore' }) !== null && pi.ignoreOptionAllowed(rFail),
+  )
+  // 검토 반영 — C9: 이 브랜드에서 「글을 내림」으로 뺀 주소를 다시 적으면 올린 날은 그 내린 날 뒤여야 한다(서버와 같은 repostDayProblem).
+  const rDownBefore = withState(rNone, { takenDown: [{ tenantId: 't1', brand: '가상스테이', on: '2026-10-10' }] })
+  ok(
+    'C9 — 다시 적는 브랜드에 내린 기록이 있으면 페이지의 처음 올린 날(내린 날 이전 · 같은 날)은 걸리고(브랜드 이름) · 뒤 날짜 · 날짜 모름 · 다른 브랜드는 괜찮다',
+    (pi.externalRepostProblem(rDownBefore, ['t1'], '2026-10-01') ?? '').startsWith('가상스테이: ') && pi.externalRepostProblem(rDownBefore, ['t1'], '2026-10-10') !== null &&
+      pi.externalRepostProblem(rDownBefore, ['t1'], '2026-10-11') === null && pi.externalRepostProblem(rDownBefore, ['t1'], null) === null &&
+      pi.externalRepostProblem(rDownBefore, ['t2'], '2026-10-01') === null && pi.externalRepostProblem(rNone, ['t1'], '2026-10-01') === null,
   )
   ok(
     'D12 — 같은 브랜드에서 앱 밖 글로 추적 중인 주소를 그 브랜드의 앱 글로 고르면 「앱 글로 옮김」(다른 브랜드의 앱 글 · 앱 글 아님은 옮김이 아니다)',
@@ -1415,6 +1440,37 @@ try {
     rQ5,
   )
   ok('무시 — 같은 주소를 다시 무시하면 그대로(이미 무시함)', (await commit([{ kind: 'ignore', url: `${FIX}/post/q5-copy`, alsoUrls: [] }])).body.results?.[0]?.status === 'existing')
+  // 검토 반영(2026-11-10) — 「읽지 못함」 줄도 무시한 때를 싣는다(D14): 무시한 404 주소를 다시 읽으면 「무시함」으로 보인다.
+  const rMissing = (await read(`${FIX}/missing`)).body
+  ok(
+    'D14 보완 — 서버: 무시한 「읽지 못함」 주소를 다시 읽으면 ignoredAt을 싣는다(「무시함」 · 다시 무시하지 않는다)',
+    !rMissing.ok && typeof rMissing.ignoredAt === 'string' && pi.initialChoice(rMissing).mode === 'ignore' && pi.choiceStateOf(rMissing, pi.initialChoice(rMissing)).state === 'ignored',
+    rMissing,
+  )
+  // 검토 반영 — C9: 한 브랜드에서 「글을 내림」으로 뺀 주소는 읽기 결과에 그 내린 날을 싣고(takenDown), 다시 적을 때 올린 날이 그 날 이전이면 그 브랜드만 걸린다.
+  const extNow = (id: string) => (existsSync(extFile(id)) ? (JSON.parse(readFileSync(extFile(id), 'utf8')) as { posts: unknown[] }).posts : [])
+  put(
+    extFile('vpi-a'),
+    JSON.stringify({
+      version: 1,
+      keyRule: 3,
+      posts: [
+        ...extNow('vpi-a'),
+        { id: 'x-aaaaaaaaaa77', url: `${FIX}/post/hand-c2`, key: '127.0.0.1/post/hand-c2', title: '가상 손글', publishedOn: '2026-10-01', publishedOnSource: 'page', trackedAt: '2026-10-02T01:00:00.000Z', removedAt: '2026-10-10T01:00:00.000Z', removedReason: 'taken-down' },
+      ],
+    }),
+  )
+  const rDownAgain = (await read(`${FIX}/post/hand-c2`)).body
+  const repostEarly = await commit([{ kind: 'external', tenantIds: ['vpi-a'], url: `${FIX}/post/hand-c2`, title: '가상 손글', publishedOn: '2026-10-01', publishedOnSource: 'page' }])
+  const repostLate = await commit([{ kind: 'external', tenantIds: ['vpi-a'], url: `${FIX}/post/hand-c2`, title: '가상 손글', publishedOn: '2026-10-12', publishedOnSource: 'user' }])
+  ok(
+    'C9 — 서버: 내린 기록이 있는 브랜드를 읽기 결과에 싣고(내린 날), 그 날 이전 날짜로 다시 적으면 그 브랜드만 걸린다(이유) · 뒤 날짜는 새 줄',
+    rDownAgain.ok && JSON.stringify(rDownAgain.takenDown) === JSON.stringify([{ tenantId: 'vpi-a', brand: '가상스테이', on: '2026-10-10' }]) &&
+      pi.externalRepostProblem(rDownAgain, ['vpi-a'], '2026-10-01') !== null &&
+      xTenants(repostEarly.body.results?.[0]).map((t) => t.status).join() === 'error' && (xTenants(repostEarly.body.results?.[0])[0]?.error ?? '').includes('내렸다고') &&
+      xTenants(repostLate.body.results?.[0]).map((t) => t.status).join() === 'added' && extOf('vpi-a').filter((p) => p.key === '127.0.0.1/post/hand-c2').length === 2,
+    { read: rDownAgain.ok ? rDownAgain.takenDown : rDownAgain, early: repostEarly.body, late: repostLate.body },
+  )
   // (사) C5 — 같은 브랜드 원장에 「글을 내렸어요」로 뺀 앱 글 주소는 앱 밖 글로 적지 않는다(쉼과 같은 기준), 「잘못 적음」은 적는다.
   const addApp = async (url: string, articleId: string) =>
     post<{ post: { id: string } }>('/api/published-posts/vpi-a', { articleId, targetActionId: articleId, via: 'own', url, publishedOn: '2026-11-01', publishedOnChosen: true })

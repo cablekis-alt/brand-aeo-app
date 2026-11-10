@@ -32,12 +32,17 @@ const shortDate = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 1
 /** 칸을 끊은 까닭이 「내림」이 아니라 같은 브랜드에서 앱 글로 옮긴 것인 행(앱 밖 글 — D12). 옮긴 날을 모르면 movedOn null. */
 export interface MovedPosting {
   movedOn: string | null
-  /** 앱 글 표가 이 주소를 세기 시작한 날 — 이 날부터 이 표는 칸을 비운다(옮긴 날보다 앞설 수 있다 — 앱 글의 올린 날). */
-  countsFrom: string
+  /**
+   * 앱 글 표가 이 주소를 세기 시작한 날(앱 글의 올린 날 — 옮긴 날보다 앞서거나 뒤일 수 있다). 이 표는 앱 글 표가 세는 회차만 비운다. 앱 글의
+   * 올린 날을 모르면 null.
+   */
+  countsFrom: string | null
 }
 
 /** 옮긴 행에서 「내림 · 올린 뒤 판단할 측정 없음」 대신 쓰는 판단 칸. */
 const MOVED_TIER_LABEL = '앱 글로 옮김 · 옮기기 전 판단할 측정 없음'
+/** 옮긴 행의 「최근 측정한 주에는 인용 없음」 — 최근 측정은 앱 글 표가 센다(이 행의 마지막 칸은 옮기기 전 측정이다). */
+const MOVED_LAPSED = '옮기기 전 마지막 측정 주에는 인용 없음'
 
 /*
  * 표 아래 설명 — 공통 문장과 앱 글에만 맞는 문장(실증 처치 · 올린 곳 묶기 · 고친 글)을 나눠 둔다. 앱 밖 글 표는 앱 글 문장 대신 자기 설명을
@@ -121,7 +126,9 @@ function cellView(c: HistoryCell | null, withProbe: boolean, moved: MovedPosting
  * 한 주로 센다. 측정 조건이 바뀌었거나 확인할 수 없는 주는 ◆, 측정하지 않은 주는 「…」, 여러 번 잰 주는 머리글에 「·3회」.
  *
  * 앱 밖 글 표(퍼포먼스 「앱 밖 글 인용 추적」)도 이 표를 쓴다 — 첫 열 머리글(header) · 앱 글 전용 설명 문장 대신 넣을 설명(description) ·
- * 앱 글로 옮긴 행(movedOf — 「내림」 대신 「앱 글로 옮김(날짜)」, 옮긴 뒤 칸은 「앱 글 표에서」)을 넘긴다. 셋 다 주지 않으면 앱 글 표 그대로다.
+ * 앱 글로 옮긴 행(movedOf — 「내림」 대신 「앱 글로 옮김(날짜)」, 옮긴 뒤 칸은 「앱 글 표에서」) · 줄마다 한 행(groupRows false — 앱 밖 글은
+ * 브랜드마다 주소 한 줄이 살아 있고, 내렸다 다시 올리면 새 줄이다. 원장의 「날짜 없는 옛 줄은 같은 주소의 날짜 있는 줄에 묻는다」 규칙을
+ * 쓰면 날짜 모름으로 다시 올린 줄이 사라진다)을 넘긴다. 모두 주지 않으면 앱 글 표 그대로다.
  */
 export default function PublishedHistoryTable({
   history,
@@ -129,6 +136,7 @@ export default function PublishedHistoryTable({
   header: firstHeader = '올린 글',
   description,
   movedOf,
+  groupRows = true,
 }: {
   history: PublishedHistory
   maxWeeks?: number
@@ -138,12 +146,14 @@ export default function PublishedHistoryTable({
   description?: ReactNode
   /** 칸을 끊은 까닭이 앱 글로 옮긴 것인 행(앱 밖 글). 주지 않거나 null이면 원장의 「내림」 그대로. */
   movedOf?: (post: PublishedPost) => MovedPosting | null
+  /** false면 이력의 줄마다 한 행(묶지 않는다 — 앱 밖 글). 기본은 같은 주소 · 같은 올린 날을 한 행으로 묶는다(distinctPostings). */
+  groupRows?: boolean
 }) {
   const start = Math.max(0, history.weeks.length - maxWeeks)
   const weeks = history.weeks.slice(start)
   // 측정 사이 빈 주 — 주차 열 사이에 틈을 둔다.
   const gapBefore = weeks.map((w, i) => (i > 0 ? weekSerial(w.weekOf) - weekSerial(weeks[i - 1]!.weekOf) - 1 : 0))
-  const postings = distinctPostings(history.posts, (p) => p.post)
+  const postings: Posting<PostHistory>[] = groupRows ? distinctPostings(history.posts, (p) => p.post) : history.posts.map((p) => ({ item: p, post: p.post, places: [] }))
   const runIssues = history.weeks.reduce((n, w) => n + (w.runIssues?.length ?? 0), 0)
   // 실증 질문을 측정한 주가 있을 때만 칸에 「실증」을 적고 안내를 붙인다 — 실증이 없는 브랜드의 표는 그대로다.
   const withProbe = history.weeks.some((w) => (w.responses.probe ?? 0) > 0)
@@ -167,7 +177,7 @@ export default function PublishedHistoryTable({
             {p.post.edits && p.post.edits.length > 0 && ` · ${p.post.edits.map((e) => shortDate(e.editedOn)).join(' · ')} 고침`}
             {moved
               ? ` · 앱 글로 옮김(${moved.movedOn ? shortDate(moved.movedOn) : '날짜 모름'})` +
-                (moved.movedOn && moved.countsFrom < moved.movedOn ? ` · ${shortDate(moved.countsFrom)}부터 앱 글 표에서 셈` : '')
+                (moved.countsFrom && moved.countsFrom !== moved.movedOn ? ` · ${shortDate(moved.countsFrom)}부터 앱 글 표에서 셈` : '')
               : removedOn && ` · ${shortDate(removedOn)} 내림`}
           </div>
           {places.length > 1 && (
@@ -199,7 +209,7 @@ export default function PublishedHistoryTable({
                   (sinceEdit.firstCitedDays !== null ? ` · 고친 뒤 첫 인용 D+${sinceEdit.firstCitedDays}` : '')}
             </div>
           )}
-          {summary.lapsed && <div className="doc-meta">최근 측정한 주에는 인용 없음</div>}
+          {summary.lapsed && <div className="doc-meta">{moved ? MOVED_LAPSED : '최근 측정한 주에는 인용 없음'}</div>}
           {summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀌었거나 확인할 수 없음</div>}
           {summary.citedBeforePublish && <div className="doc-meta">올리기 전 측정에서 이미 인용됨 — 올린 날을 확인하세요</div>}
         </td>

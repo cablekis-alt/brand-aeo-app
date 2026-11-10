@@ -12,7 +12,7 @@ import type { ExtraArticle } from '../src/lib/extraArticles.js';
 import { assignedArticle } from '../src/lib/contentLibraryOrder.js';
 import { draftTitle } from '../src/lib/markdownFile.js';
 import { effectiveDraft } from '../src/lib/draftGaps.js';
-import { externalViews, parseExternalAddInput } from '../src/lib/externalPosts.js';
+import { externalViews, parseExternalAddInput, takenDownBefore } from '../src/lib/externalPosts.js';
 import {
   BLOG_SOURCES_MAX,
   CANDIDATE_LIMIT,
@@ -565,29 +565,37 @@ ${p.articleId}`;
 /**
  * 이 주소(추적 키들)의 앱 밖 기록과 무시 여부(C6 — 원장 기록 known과 따로 싣는다). 앱 밖 글은 고객 브랜드마다 그 쓰기 줄에서 읽고(뺀 줄은
  * 빼고, 같은 브랜드 원장이 이겨 쉬는 줄은 moved), 무시 목록은 앱 전체에 하나다. 읽지 못한 파일은 stateUnknown으로 알린다 — 그 줄은 미리
- * 체크하지 않는다(짐작하지 않는다).
+ * 체크하지 않는다(짐작하지 않는다). 「글을 내림」으로 뺀 줄은 브랜드마다 가장 늦은 내린 날만 싣는다(takenDown — 다시 적을 때 올린 날 검사).
  */
 async function trackState(
   customers: TenantConfig[],
   keys: readonly string[],
   ledgers: ReadonlyMap<string, PublishedPost[]>,
-): Promise<{ tracked: TrackedRecord[]; ignoredAt: string | null; stateUnknown: string[] }> {
+): Promise<{ tracked: TrackedRecord[]; takenDown: { tenantId: string; brand: string; on: string }[]; ignoredAt: string | null; stateUnknown: string[] }> {
   const wanted = new Set(keys);
   const stateUnknown: string[] = [];
   const parts = await Promise.all(
-    customers.map(async (t): Promise<TrackedRecord[]> => {
+    customers.map(async (t): Promise<{ tracked: TrackedRecord[]; downOn: string | null }> => {
       const brand = brandLabel(t, customers);
       try {
-        return externalViews(await readExternalPosts(t.tenantId), ledgers.get(t.tenantId) ?? [])
-          .filter((v) => wanted.has(v.key) && v.state !== 'removed')
-          .map((v) => ({ tenantId: t.tenantId, brand, postId: v.id, key: v.key, state: v.state === 'moved' ? 'moved' : 'live', publishedOn: v.publishedOn, trackedAt: v.trackedAt }));
+        const views = externalViews(await readExternalPosts(t.tenantId), ledgers.get(t.tenantId) ?? []).filter((v) => wanted.has(v.key));
+        const tracked = views
+          .filter((v) => v.state !== 'removed')
+          .map((v): TrackedRecord => ({ tenantId: t.tenantId, brand, postId: v.id, key: v.key, state: v.state === 'moved' ? 'moved' : 'live', publishedOn: v.publishedOn, trackedAt: v.trackedAt }));
+        // 이 주소(세 키)를 「글을 내림」으로 뺀 가장 늦은 날 — 다시 적으면 올린 날은 그 뒤여야 한다(C9).
+        const downOn = [...wanted].map((k) => takenDownBefore(views, { key: k })).filter((d): d is string => d !== null).sort().at(-1) ?? null;
+        return { tracked, downOn };
       } catch (err) {
         console.warn(`[postImport] ${t.tenantId} 앱 밖 글 파일을 읽지 못해 이 브랜드의 앱 밖 기록은 보지 않았습니다:`, err);
         stateUnknown.push(`${brand}의 앱 밖 글 파일`);
-        return [];
+        return { tracked: [], downOn: null };
       }
     }),
   );
+  const takenDown = customers.flatMap((t, i) => {
+    const on = parts[i]!.downOn;
+    return on ? [{ tenantId: t.tenantId, brand: brandLabel(t, customers), on }] : [];
+  });
   let ignoredAt: string | null = null;
   try {
     const at = ignoredAtByKey(await readIgnored());
@@ -596,7 +604,7 @@ async function trackState(
     console.warn('[postImport] 무시 목록을 읽지 못해 무시 여부를 보지 않았습니다:', err);
     stateUnknown.push('무시 목록');
   }
-  return { tracked: parts.flat(), ignoredAt, stateUnknown };
+  return { tracked: parts.flatMap((p) => p.tracked), takenDown, ignoredAt, stateUnknown };
 }
 
 // ── 읽기 ────────────────────────────────────────────────────────────────────
@@ -625,7 +633,13 @@ export async function readPostForImport(rawUrl: unknown, tenants: TenantConfig[]
   const check = isArticleUrl(url);
   if (!check.ok) throw new PostImportError(ARTICLE_URL_REASON[check.reason], 400);
   const key = trackingKey(url)!;
-  const fail = (error: string): PostImportRead => ({ ok: false, url, key, error });
+  const customers = customersOf(tenants);
+  // 읽지 못한 주소도 앱 밖 기록 · 무시한 때를 싣는다 — 무시한 「읽지 못함」 줄을 다시 읽어도 「무시함」으로 보이고, 추적 중인 주소는 무시를
+  // 고르지 못하게(서버도 거절한다 — D14). 붙여 넣은 주소의 키로 본다(읽지 못해 다른 주소 모양을 모른다).
+  const fail = async (error: string): Promise<PostImportRead> => {
+    const state = await trackState(customers, [key], (await ledgerView(customers, [key])).byTenant);
+    return { ok: false, url, key, error, tracked: state.tracked, ignoredAt: state.ignoredAt };
+  };
   let readUrl: string;
   let page: FetchedText;
   try {
@@ -659,7 +673,6 @@ export async function readPostForImport(rawUrl: unknown, tenants: TenantConfig[]
   const notes: string[] = [];
   if (readUrl !== url) notes.push(`주소 끝에 붙은 「${url.slice(readUrl.length)}」를 떼고 읽었습니다`);
   if (recordKey !== readKey) notes.push(recordUrl === declared ? '페이지가 밝힌 정식 주소로 적습니다' : '이 주소로 넘어가 넘어간 주소로 적습니다');
-  const customers = customersOf(tenants);
   let corpus: CorpusEntry[];
   try {
     corpus = (await Promise.all(customers.map((t) => tenantCorpus(t, brandLabel(t, customers))))).flat();
@@ -705,6 +718,7 @@ ${d.articleId}`) ?? 0,
     known: ledger.known,
     tracked: state.tracked,
     ignoredAt: state.ignoredAt,
+    takenDown: state.takenDown,
     ownedBrands: ownedBrandsOf(
       recordUrl,
       customers.map((t) => ({ tenantId: t.tenantId, brand: brandLabel(t, customers), ownedDomains: t.ownedDomains ?? [] })),

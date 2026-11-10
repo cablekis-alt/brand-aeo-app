@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PostImportPanel from '../components/PostImportPanel'
 import { commitPostImport, loadPublishStatus, patchExternalPost, saveIndexCheck } from '../lib/api'
 import { downloadCsv } from '../lib/fileDownload'
 import { safeFileName } from '../lib/markdownFile'
+import { repostDayProblem, takenDownBefore } from '../lib/externalPosts'
 import { externalResultText } from '../lib/postImport'
 import { todayKst } from '../lib/publishedUrl'
 import { monthDay } from '../lib/publishTracking'
 import {
+  addDays,
+  appHolderBrands,
   emptyStateOf,
   ENGINE_NAME,
+  externalTakedowns,
   filterRows,
   googleSearchUrl,
   indexStateLabel,
@@ -130,24 +134,34 @@ function RecheckView({ row, today }: { row: PublishStatusRow; today: string }) {
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err))
 const validDay = (day: string, limit: string) => /^\d{4}-\d{2}-\d{2}$/.test(day) && day <= limit && day >= '2020-01-01'
 
+/** 「관리」 동작의 결과 문구 — alert면 걸린 것이 있어 오류 모양(role=alert)으로 보인다. */
+interface ManageNote {
+  text: string
+  alert: boolean
+}
+
 /**
- * 앱 밖 글 줄의 「관리」(server/externalPosts.ts) — 올린 날 고치기(「모름」 포함), 다른 브랜드에도 추적, 빼기(잘못 적음 · 글을 내림 — 이 브랜드
- * 줄에만), 되살리기(잘못 적음으로 뺀 줄만 — 내린 글을 다시 올렸으면 새로 적어 내린 기간을 남긴다). 빼면서 「새 글 찾기에서도 숨김」을 고르면
- * 빼기를 먼저 하고 무시 목록에 적는다 — 무시가 걸리면 뺀 것은 그대로 두고 알린다(C17). 같은 주소를 다른 브랜드가 아직 추적하거나 앱 글로
- * 가졌으면 새 글 찾기에는 이미 나오지 않으므로 그렇게 알린다. 다른 브랜드에 적어도 되는지는 서버가 그 브랜드 원장으로 가린다(D13).
+ * 앱 밖 글 줄의 「관리」(server/externalPosts.ts) — 올린 날 고치기(「모름」 포함 — 살아 있는 줄 · 「글을 내림」으로 뺀 줄), 다른 브랜드에도 추적,
+ * 빼기(잘못 적음 · 글을 내림 — 이 브랜드 줄에만), 되살리기(잘못 적음으로 뺀 줄만 — 내린 글을 다시 올렸으면 새로 적어 내린 기간을 남긴다).
+ * 빼면서 「새 글 찾기에서도 숨김」을 고르면 빼기를 먼저 하고 무시 목록에 적는다 — 무시가 걸리면 뺀 것은 그대로 두고 알린다(C17). 같은 주소를
+ * 다른 브랜드가 아직 추적하거나 앱 글로 가졌으면 새 글 찾기에는 이미 나오지 않으므로 그렇게 알린다. 다른 브랜드에 적어도 되는지는 등록
+ * 패널 · 서버와 같은 함수로 가린다 — 그 브랜드의 앱 글이면 고를 수 없다(D13 — appHolderBrands). 올린 날은 추적을 시작한 날까지, 다시 올린
+ * 줄이면 그 앞에 내린 날 뒤로(서버와 같은 trackedDayProblem · repostDayProblem 기준).
  */
 function ExternalManage({
   row,
   rows,
   brands,
   today,
+  onStart,
   onChanged,
 }: {
   row: PublishStatusRow
   rows: readonly PublishStatusRow[]
   brands: readonly { tenantId: string; brand: string }[]
   today: string
-  onChanged: (note: string) => void
+  onStart: () => void
+  onChanged: (note: ManageNote) => void
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -156,10 +170,12 @@ function ExternalManage({
   const [more, setMore] = useState<string[]>([])
   const [reason, setReason] = useState<'mistake' | 'taken-down'>('mistake')
   const [hide, setHide] = useState(false)
-  if (!row.postId || !row.url) return null
+  if (!row.postId || !row.url || !row.key) return null
   const postId = row.postId
   const url = row.url
+  const key = row.key
   const live = !row.removed
+  const takenDown = row.removed?.reason === 'taken-down'
   // 같은 주소를 아직 다른 브랜드가 앱 밖 글로 추적하거나 어느 브랜드든 앱 글로 가졌다 — 새 글 찾기에서 이미 빠진다.
   const stillHidden = [
     ...new Set(
@@ -169,10 +185,16 @@ function ExternalManage({
     ),
   ]
   const trackingIn = new Set(rows.filter((r) => r.key === row.key && r.origin === 'external' && !r.removed).map((r) => r.tenantId))
-  const addable = brands.filter((b) => b.tenantId !== row.tenantId && !trackingIn.has(b.tenantId))
-  const run = async (work: () => Promise<string>) => {
+  const holders = new Set(appHolderBrands(rows, key))
+  const others = brands.filter((b) => b.tenantId !== row.tenantId && !trackingIn.has(b.tenantId))
+  // 올린 날 — 추적을 시작한 날까지(서버 trackedDayProblem), 다시 올린 줄이면 그 앞에 내린 날 뒤부터(repostDayProblem).
+  const dateMax = row.trackedOn && row.trackedOn < today ? row.trackedOn : today
+  const downOn = takenDownBefore(externalTakedowns(rows, row.tenantId), { id: postId, key, ...(takenDown && row.removed ? { removedAt: row.removed.at } : {}) })
+  const dateMin = downOn ? addDays(downOn, 1) : '2020-01-01'
+  const run = async (work: () => Promise<ManageNote>) => {
     setBusy(true)
     setError(null)
+    onStart()
     try {
       onChanged(await work())
     } catch (err) {
@@ -182,13 +204,18 @@ function ExternalManage({
     }
   }
   const saveDate = () => {
-    if (!dateUnknown && !validDay(date, today)) {
-      setError(`올린 날을 2020-01-01부터 오늘(${today})까지에서 고르거나 「모름」을 체크해 주세요.`)
+    if (!dateUnknown && !validDay(date, dateMax)) {
+      setError(`올린 날을 2020-01-01부터 ${dateMax === today ? `오늘(${today})` : `추적을 시작한 날(${dateMax})`}까지에서 고르거나 「모름」을 체크해 주세요.`)
+      return
+    }
+    const reposted = repostDayProblem(dateUnknown ? null : date, downOn)
+    if (reposted) {
+      setError(reposted)
       return
     }
     void run(async () => {
       await patchExternalPost(row.tenantId, postId, { publishedOn: dateUnknown ? null : date })
-      return `「${row.title ?? '제목 미확인'}」(${row.brand}) 올린 날을 ${dateUnknown ? '모름으로' : `${date}로`} 고쳤습니다.`
+      return { text: `「${row.title ?? '제목 미확인'}」(${row.brand}) 올린 날을 ${dateUnknown ? '모름으로' : `${date}로`} 고쳤습니다.`, alert: false }
     })
   }
   const track = () =>
@@ -199,66 +226,88 @@ function ExternalManage({
       const r = results[0]
       if (!r || r.kind !== 'external') throw new Error('서버 응답을 읽지 못했습니다.')
       setMore([])
-      return `「${row.title ?? '제목 미확인'}」 — ${externalResultText(r)}`
+      return { text: `「${row.title ?? '제목 미확인'}」 — ${externalResultText(r)}`, alert: r.status === 'error' || r.status === 'partial' }
     })
   const remove = () =>
     void run(async () => {
       await patchExternalPost(row.tenantId, postId, { remove: reason })
       const done = `「${row.title ?? '제목 미확인'}」을(를) ${row.brand}에서 뺐습니다(${reason === 'mistake' ? '잘못 적음' : '글을 내림'}).`
-      if (!hide) return done
-      if (stillHidden.length > 0) return `${done} ${stillHidden.join(', ')}에 남아 있어 새 글 찾기에는 이미 나오지 않습니다.`
+      const note = (text: string) => ({ text, alert: false })
+      if (!hide) return note(done)
+      if (stillHidden.length > 0) return note(`${done} ${stillHidden.join(', ')}에 남아 있어 새 글 찾기에는 이미 나오지 않습니다.`)
       try {
         const { results } = await commitPostImport([{ kind: 'ignore', url }])
         const r = results[0]
-        if (r && r.status !== 'error') return `${done} 새 글 찾기에서도 숨깁니다.`
-        return `${done} 다만 새 글 찾기에서 숨기지 못했습니다 — ${r?.error ?? '서버 응답을 읽지 못했습니다.'}`
+        if (r && r.status !== 'error') return note(`${done} 새 글 찾기에서도 숨깁니다.`)
+        return note(`${done} 다만 새 글 찾기에서 숨기지 못했습니다 — ${r?.error ?? '서버 응답을 읽지 못했습니다.'}`)
       } catch (err) {
-        return `${done} 다만 새 글 찾기에서 숨기지 못했습니다 — ${message(err)}`
+        return note(`${done} 다만 새 글 찾기에서 숨기지 못했습니다 — ${message(err)}`)
       }
     })
   const restore = () =>
     void run(async () => {
       await patchExternalPost(row.tenantId, postId, { restore: true })
-      return `「${row.title ?? '제목 미확인'}」을(를) ${row.brand}에서 다시 추적합니다.`
+      return { text: `「${row.title ?? '제목 미확인'}」을(를) ${row.brand}에서 다시 추적합니다.`, alert: false }
     })
   const name = rowName(row)
   return (
     <details className="ps-manage">
-      <summary aria-label={`${name} 앱 밖 글 관리`}>관리</summary>
+      <summary aria-label={`${name} 앱 밖 글 관리`} data-row-key={row.rowKey}>
+        관리
+      </summary>
       <div className="ps-manage-body">
+        {(live || takenDown) && (
+          <fieldset disabled={busy}>
+            <legend>올린 날</legend>
+            <div className="ps-manage-row">
+              <input
+                type="date"
+                className="pi-date"
+                value={date}
+                min={dateMin}
+                max={dateMax}
+                disabled={dateUnknown}
+                onChange={(e) => setDate(e.target.value)}
+                aria-label={`${name} 올린 날`}
+              />
+              <label className="ps-toggle">
+                <input type="checkbox" checked={dateUnknown} onChange={(e) => setDateUnknown(e.target.checked)} aria-label={`${name} 올린 날 모름`} />
+                모름
+              </label>
+              <button type="button" className="ps-mark" onClick={saveDate}>
+                저장
+              </button>
+            </div>
+            <p className="ps-date">
+              {dateMax === today ? '오늘' : `추적을 시작한 날(${dateMax})`}까지{downOn ? ` · ${downOn}에 내린 뒤 다시 올린 글이라 그 뒤 날짜만` : ''}
+            </p>
+          </fieldset>
+        )}
         {live && (
           <>
             <fieldset disabled={busy}>
-              <legend>올린 날</legend>
-              <div className="ps-manage-row">
-                <input type="date" className="pi-date" value={date} min="2020-01-01" max={today} disabled={dateUnknown} onChange={(e) => setDate(e.target.value)} aria-label={`${name} 올린 날`} />
-                <label className="ps-toggle">
-                  <input type="checkbox" checked={dateUnknown} onChange={(e) => setDateUnknown(e.target.checked)} />
-                  모름
-                </label>
-                <button type="button" className="ps-mark" onClick={saveDate}>
-                  저장
-                </button>
-              </div>
-            </fieldset>
-            <fieldset disabled={busy}>
               <legend>다른 브랜드에도 추적</legend>
-              {addable.length === 0 ? (
+              {others.length === 0 ? (
                 <p className="ps-date">더 고를 고객 브랜드가 없습니다.</p>
               ) : (
                 <ul className="ps-manage-brands">
-                  {addable.map((b) => (
-                    <li key={b.tenantId}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={more.includes(b.tenantId)}
-                          onChange={(e) => setMore((m) => (e.target.checked ? [...m, b.tenantId] : m.filter((t) => t !== b.tenantId)))}
-                        />
-                        {b.brand}
-                      </label>
-                    </li>
-                  ))}
+                  {others.map((b) => {
+                    const blocked = holders.has(b.tenantId)
+                    return (
+                      <li key={b.tenantId}>
+                        <label title={blocked ? '그 브랜드에 앱 글로 적힌 주소라 앱 밖 글로 적지 않습니다' : undefined}>
+                          <input
+                            type="checkbox"
+                            checked={!blocked && more.includes(b.tenantId)}
+                            disabled={blocked}
+                            onChange={(e) => setMore((m) => (e.target.checked ? [...m, b.tenantId] : m.filter((t) => t !== b.tenantId)))}
+                          />
+                          {b.brand}
+                          {blocked && <span className="pi-brand-note"> · 그 브랜드의 앱 글</span>}
+                        </label>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
               <button type="button" className="ps-mark" onClick={track} disabled={more.length === 0}>
@@ -294,7 +343,7 @@ function ExternalManage({
             되살리기
           </button>
         )}
-        {row.removed?.reason === 'taken-down' && <p className="ps-date">다시 올렸으면 「주소 한꺼번에 등록」에서 새로 적어 주세요(내린 기간이 남습니다).</p>}
+        {takenDown && <p className="ps-date">다시 올렸으면 「주소 한꺼번에 등록」에서 새로 적어 주세요(내린 기간이 남습니다).</p>}
         {row.removed?.reason === 'moved' && (
           <p className="ps-date">같은 브랜드에 앱 글로 적혀 쉬고 있습니다 — 그 앱 글 기록을 콘텐츠 보관함에서 「잘못 적음」으로 빼면 다시 추적합니다.</p>
         )}
@@ -323,8 +372,19 @@ export default function PublishStatus() {
   const [chipBefore, setChipBefore] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [markError, setMarkError] = useState<string | null>(null)
-  // 앱 밖 글 「관리」에서 바꾼 결과 — 표를 다시 읽은 뒤에도 남긴다(무시를 못 했으면 그 까닭까지).
-  const [manageNote, setManageNote] = useState<string | null>(null)
+  // 앱 밖 글 「관리」에서 바꾼 결과 — 표를 다시 읽은 뒤에도 남긴다(무시를 못 했으면 그 까닭까지). 새 관리 동작 · 주소 등록을 시작하면 지운다.
+  const [manageNote, setManageNote] = useState<ManageNote | null>(null)
+  // 「관리」 동작 뒤 표를 다시 읽으면 메뉴가 닫히며 다시 그려진다 — 같은 줄의 「관리」로(줄이 숨었으면 결과 문구로) 포커스를 돌려준다.
+  const focusAfterReload = useRef<string | null>(null)
+  const manageNoteRef = useRef<HTMLParagraphElement | null>(null)
+
+  useEffect(() => {
+    const rowKey = focusAfterReload.current
+    if (rowKey === null || !state.loaded || !state.value) return
+    focusAfterReload.current = null
+    const summary = [...document.querySelectorAll<HTMLElement>('summary[data-row-key]')].find((el) => el.dataset.rowKey === rowKey)
+    ;(summary ?? manageNoteRef.current)?.focus()
+  }, [state])
 
   useEffect(() => {
     let alive = true
@@ -413,7 +473,15 @@ export default function PublishStatus() {
         앱에서 만들지 않은 글입니다 — 작성자 진행 · 점수 · 보고서에는 넣지 않고, 다시 볼 날은 추적을 시작한 날부터 셉니다.
       </p>
       {/* 작성자들이 보낸 주소를 한꺼번에 적는다 — 적으면 이 표를 다시 읽는다. 오늘은 서버가 센 날(읽기 전이면 이 PC의 한국 날짜). */}
-      <PostImportPanel today={today || todayKst()} brands={data?.brands ?? []} onRegistered={() => setReloadKey((k) => k + 1)} />
+      <PostImportPanel
+        today={today || todayKst()}
+        brands={data?.brands ?? []}
+        onRegistered={() => {
+          // 등록으로 표가 바뀌었다 — 앞선 「관리」 결과 문구는 지금 상태와 어긋날 수 있어 지운다.
+          setManageNote(null)
+          setReloadKey((k) => k + 1)
+        }}
+      />
 
       {!state.loaded && <p className="muted">발행 현황을 불러오는 중…</p>}
       {state.error && (
@@ -445,11 +513,16 @@ export default function PublishStatus() {
               {markError}
             </p>
           )}
-          {manageNote && (
-            <p className="pi-note" role="status">
-              {manageNote}
-            </p>
-          )}
+          {manageNote &&
+            (manageNote.alert ? (
+              <p className="error" role="alert" tabIndex={-1} ref={manageNoteRef}>
+                {manageNote.text}
+              </p>
+            ) : (
+              <p className="pi-note" role="status" tabIndex={-1} ref={manageNoteRef}>
+                {manageNote.text}
+              </p>
+            ))}
 
           {empty === 'issues' ? (
             <p className="muted">파일을 읽지 못한 브랜드가 있어 보일 줄이 없습니다. 위 오류의 파일을 고친 뒤 「다시 읽기」를 누르세요.</p>
@@ -604,8 +677,10 @@ export default function PublishStatus() {
                                 rows={rows}
                                 brands={data.brands ?? []}
                                 today={today}
+                                onStart={() => setManageNote(null)}
                                 onChanged={(note) => {
                                   setManageNote(note)
+                                  focusAfterReload.current = r.rowKey
                                   setReloadKey((k) => k + 1)
                                 }}
                               />

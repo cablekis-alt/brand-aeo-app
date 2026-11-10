@@ -169,11 +169,18 @@ export async function historyCards(
   return { all, start };
 }
 
+/**
+ * 표본(회차) 하나의 칸을 접기(foldCell) 전에 고친다 — shown과 같은 순서의 칸(view.cells)을 받아 같은 길이로 돌려준다. 앱 밖 글 이력이 앱 글
+ * 표가 세는 회차를 비우는 데 쓴다(server/externalPosts.ts — D12). 앱 글 이력은 쓰지 않는다(주지 않으면 계산이 그대로다).
+ */
+export type SampleAdjust = (card: WeeklyScorecard, sample: WeekSample, view: SampleView, shown: PublishedPost[]) => Promise<HistoryCell[]>;
+
 export async function getPublishedHistory(
   store: HistoryStore,
   tenant: { tenantId: string; questionBankVersion?: string },
   posts: PublishedPost[],
   weeksBack: number,
+  adjust?: SampleAdjust,
 ): Promise<PublishedHistory> {
   const shown = shownPosts(posts);
   if (shown.length === 0) return { weeks: [], posts: [] };
@@ -204,6 +211,7 @@ export async function getPublishedHistory(
       continue;
     }
     const { samples, views } = week;
+    if (adjust) for (const [k, v] of views.entries()) v.cells = await adjust(card, samples[k]!, v, shown);
     // 그 주 화면의 기준(응답 수 · 엔진 · 은행)은 그 주 카드 회차 — 그 주 파일과 짝이 없으면 마지막 표본.
     const base = views[samples.findIndex((s) => s.isWeekFile)] ?? views.at(-1)!;
     const many = samples.length > 1;
@@ -249,14 +257,25 @@ export async function weekViews(
   const analyses = await store.getQuestionAnalyses(tenant.tenantId, card.weekOf);
   const { samples, issues } = await weekSamples(store, tenant.tenantId, card, analyses);
   const views: SampleView[] = [];
-  // 그 주 파일 표본은 그 주 카드로 센다 — 회차 기록이 없던 때와 같은 결과가 나오게.
-  // 회차 기록의 측정 시작 시각은 답을 모으기 시작한 때다 — 같은 날 올린 글의 「올린 뒤」를 가르는 하한. 옮겨 둔 회차(preserved)의 시작은
-  // 판정 시각에서 짐작한 값이라 쓰지 않는다.
-  for (const s of samples) {
-    const startAt = s.meta && !s.meta.preserved ? s.meta.startedAt : undefined;
-    views.push(await sampleView(store, tenant, shown, { weekOf: card.weekOf, scorecard: s.isWeekFile ? card : s.scorecard, analyses: s.analyses, startAt }, opts));
-  }
+  for (const s of samples) views.push(await viewOfSample(store, tenant, shown, card, s, opts));
   return { samples, views, issues: issues.map((i) => `${i.runId}: ${i.reason}`) };
+}
+
+/**
+ * 그 주 표본 하나를 센다. 그 주 파일 표본은 그 주 카드로 센다 — 회차 기록이 없던 때와 같은 결과가 나오게. 회차 기록의 측정 시작 시각은
+ * 답을 모으기 시작한 때다 — 같은 날 올린 글의 「올린 뒤」를 가르는 하한. 옮겨 둔 회차(preserved)의 시작은 판정 시각에서 짐작한 값이라 쓰지
+ * 않는다.
+ */
+export function viewOfSample(
+  store: Pick<ResultStore, 'getQuestionBank'>,
+  tenant: { tenantId: string; questionBankVersion?: string },
+  shown: PublishedPost[],
+  card: WeeklyScorecard,
+  s: WeekSample,
+  opts?: { byEngine?: boolean },
+): Promise<SampleView> {
+  const startAt = s.meta && !s.meta.preserved ? s.meta.startedAt : undefined;
+  return sampleView(store, tenant, shown, { weekOf: card.weekOf, scorecard: s.isWeekFile ? card : s.scorecard, analyses: s.analyses, startAt }, opts);
 }
 
 /** 표본 하나(한 측정의 판정)를 센다 — 회차 기록이 생기기 전의 주 칸 계산 그대로다. */

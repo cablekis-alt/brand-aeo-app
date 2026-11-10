@@ -9232,6 +9232,28 @@ tr.ms-run-child td:nth-child(2) {
   overflow: auto;
   list-style: none;
 }
+/* 메뉴가 길면 표 상자 안에서 통째로 밀지 않고 메뉴 안에서 민다. */
+.ps-manage-body {
+  max-height: min(70vh, 520px);
+  overflow: auto;
+}
+/*
+ * 좁은 화면 — 표 상자(.ps-table-wrap, overflow auto) 안에 떠 있으면 상자 밖으로 잘린다(390px 실측: 메뉴 오른쪽 230px이 가려짐). 화면 아래에
+ * 붙는 판으로 띄운다(position: fixed는 표 상자의 넘침 자르기를 받지 않는다).
+ */
+@media (max-width: 760px) {
+  .ps-manage-body {
+    position: fixed;
+    z-index: 30;
+    top: auto;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    width: auto;
+    max-width: none;
+    max-height: 70vh;
+  }
+}
 /*
  * ── 주소 한꺼번에 등록(src/components/PostImportPanel.tsx) ─────────────────
  * 발행 현황 위에 접힌 상자. 붙여 넣기 · 저장한 블로그를 나란히(좁으면 위아래로), 읽은 주소는 한 표 — 열이 아홉이라 좁은 창에서는 표 상자

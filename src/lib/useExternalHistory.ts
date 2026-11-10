@@ -42,17 +42,18 @@ export function useExternalHistory(tenantId: string, weeks = 12) {
 }
 
 /**
- * 행 → 옮김(성과 표 movedOf). 칸을 끊은 까닭이 같은 브랜드에서 앱 글로 옮긴 것일 때만 준다 — 사람이 그보다 먼저 「글을 내림」으로 뺀 행은
- * 내린 날부터 칸이 이미 비었으므로 「내림」 그대로다(server: src/lib/externalPosts.ts externalAsLedgerPost가 둘 가운데 이른 날로 끊는다).
+ * 행 → 옮김(성과 표 movedOf). 칸을 끊은 까닭이 같은 브랜드에서 앱 글로 옮긴 것일 때만 준다 — 사람이 앱 글 표가 세기 시작하기 전에 「글을
+ * 내림」으로 뺀 행은 내린 날부터 칸이 이미 비었으므로 「내림」 그대로다(서버는 앱 글 표가 세는 회차만 비운다 — server/externalPosts.ts).
+ * 앱 글의 올린 날을 모르면(옛 기록) 옮긴 날로 견준다.
  */
 export function externalMovedOf(history: ExternalHistory): (post: PublishedPost) => MovedPosting | null {
   const moved = new Map<string, MovedPosting>()
   for (const { post, external } of history.posts) {
-    const from = external.appCountsFrom
-    if (!from) continue
+    if (external.movedOn === null && external.appCountsFrom === null) continue
+    const from = external.appCountsFrom ?? external.movedOn
     const removedOn = external.removedAt ? kstDate(external.removedAt) : null
-    if (removedOn && removedOn < from) continue
-    moved.set(post.id, { movedOn: external.movedOn, countsFrom: from })
+    if (removedOn && from && removedOn < from) continue
+    moved.set(post.id, { movedOn: external.movedOn, countsFrom: external.appCountsFrom })
   }
   return (post) => moved.get(post.id) ?? null
 }

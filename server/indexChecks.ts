@@ -12,7 +12,7 @@ import {
   type IndexChecksFile,
   type TenantChecks,
 } from '../src/lib/publishStatus.js';
-import { EXTERNAL_ID, externalViews } from '../src/lib/externalPosts.js';
+import { EXTERNAL_ID, externalIndexBasis, externalViews } from '../src/lib/externalPosts.js';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { readExternalPostsInQueue } from './externalPosts.js';
 import { readPublishedPostsInQueue, type PublishedPost } from './publishedPosts.js';
@@ -92,7 +92,7 @@ async function readOthersChecks(tenantIds: readonly string[]): Promise<TenantChe
   return out;
 }
 
-/** 표시를 적을 줄 — 기록 id로 쓸 줄(post), 같은 편으로 묶인 줄 id(ids), 올린 날(앞선 확인을 뺄 기준). */
+/** 표시를 적을 줄 — 기록 id로 쓸 줄(post), 같은 편으로 묶인 줄 id(ids), 앞선 확인을 뺄 기준일(올린 날 — 앱 밖 줄은 externalIndexBasis). */
 interface MarkTarget {
   post: { id: string; key: string; url: string };
   ids: string[];
@@ -112,14 +112,16 @@ function ledgerTarget(posts: readonly PublishedPost[], postId: string): MarkTarg
 
 /**
  * 앱 밖 글 줄(x- id — server/externalPosts.ts) — 쓰기 줄 안이므로 …InQueue로 읽는다. 살아 있는 줄이어야 한다: 뺀 줄 · 같은 브랜드에 앱 글로
- * 옮겨 쉬는 줄은 409(옮긴 주소는 앱 글 줄에서 표시한다 — 같은 주소 키라 표시가 이어진다, C15). 앱 밖 글 파일이 깨졌으면 500.
+ * 옮겨 쉬는 줄은 409(옮긴 주소는 앱 글 줄에서 표시한다 — 같은 주소 키라 표시가 이어진다, C15). 앱 밖 글 파일이 깨졌으면 500. 다시 올린
+ * 줄은 그 앞에 내린 날 다음 날보다 앞선 확인을 이어받지 않는다(올린 날을 몰라도 — 화면 src/lib/publishStatus.ts와 같은 기준일).
  */
 async function externalTarget(tenantId: string, postId: string, posts: readonly PublishedPost[]): Promise<MarkTarget> {
-  const view = externalViews(await readExternalPostsInQueue(tenantId), posts).find((v) => v.id === postId);
+  const views = externalViews(await readExternalPostsInQueue(tenantId), posts);
+  const view = views.find((v) => v.id === postId);
   if (!view) throw new IndexChecksError(`앱 밖 글을 찾지 못했습니다: ${postId}`, 404);
   if (view.state === 'moved') throw new IndexChecksError('같은 브랜드에 앱 글로 옮긴 주소입니다 — 앱 글 줄에서 표시해 주세요(표시는 이어집니다).', 409);
   if (view.state === 'removed') throw new IndexChecksError('뺀 앱 밖 글에는 색인 확인을 표시하지 않습니다.', 409);
-  return { post: { id: view.id, key: view.key, url: view.url }, ids: [view.id], publishedOn: view.publishedOn };
+  return { post: { id: view.id, key: view.key, url: view.url }, ids: [view.id], publishedOn: externalIndexBasis(views, view) };
 }
 
 /**
