@@ -489,6 +489,8 @@ ipcMain.handle('update:quitAndInstall', () => {
 // env가 자동 공유되지 않으므로 같은 변경을 서버 프로세스에도 postMessage로 보낸다
 // (그래서 재시작 없이 다음 측정부터 적용된다). dev는 서버가 자식 프로세스라 재시작 필요.
 const API_KEY_NAMES = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PERPLEXITY_API_KEY']
+// 상태만 보이는 키 — 측정 엔진 키가 아니라 앱에서 넣는 길(settings:setApiKey)이 없다. 서버 프로세스는 시작할 때 env로 받는다.
+const STATUS_ONLY_KEY_NAMES = ['SERPAPI_API_KEY']
 
 function userEnvPath() {
   return path.join(app.getPath('userData'), '.env')
@@ -514,7 +516,7 @@ function resolveWriterEngine() {
 
 ipcMain.handle('settings:apiKeyStatus', () => {
   const status = {}
-  for (const n of API_KEY_NAMES) status[n] = Boolean(process.env[n])
+  for (const n of [...API_KEY_NAMES, ...STATUS_ONLY_KEY_NAMES]) status[n] = Boolean(process.env[n])
   const collect = (process.env.COLLECT_ENGINES || '')
     .split(',')
     .map((s) => s.trim().toLowerCase())

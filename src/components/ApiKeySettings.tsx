@@ -20,6 +20,8 @@ const KEY_LABEL: Record<string, string> = {
   ANTHROPIC_API_KEY: 'ANTHROPIC (Claude)',
   PERPLEXITY_API_KEY: 'PERPLEXITY',
 }
+// 측정 엔진이 아닌 키 — 상태 배지만 보인다(수집 엔진 고르기와 상관없다).
+const OTHER_KEYS = [{ key: 'SERPAPI_API_KEY', label: 'SERPAPI (검색 결과)' }] as const
 const JUDGE_LABEL: Record<string, string> = { gemini: 'Gemini', claude: 'Claude', openai: 'ChatGPT' }
 const ENGINE_LABEL: Record<string, string> = Object.fromEntries(ENGINES.map((e) => [e.id, e.label]))
 
@@ -54,6 +56,8 @@ export default function ApiKeySettings() {
   const isSet = (name: string) => Boolean(status?.[name])
   const availableIds = ENGINES.filter((e) => isSet(e.key)).map((e) => e.id as string)
   const setKeys = ENGINES.filter((e) => isSet(e.key))
+  // 머리 배지 — 측정 엔진 키 다음에 엔진이 아닌 키를 붙인다.
+  const setPills = [...setKeys.map((e) => ({ key: e.key, label: KEY_LABEL[e.key] })), ...OTHER_KEYS.filter((k) => isSet(k.key))]
   const geminiSet = isSet('GEMINI_API_KEY')
 
   const toggle = (id: string) => {
@@ -98,10 +102,10 @@ export default function ApiKeySettings() {
     <section className="panel apikey-panel">
       <h3>
         API 키{' '}
-        {setKeys.length > 0 ? (
-          setKeys.map((e) => (
-            <span key={e.key} className="status-pill st-good" style={{ marginLeft: 6 }}>
-              {KEY_LABEL[e.key]} 설정됨
+        {setPills.length > 0 ? (
+          setPills.map((p) => (
+            <span key={p.key} className="status-pill st-good" style={{ marginLeft: 6 }}>
+              {p.label} 설정됨
             </span>
           ))
         ) : (
