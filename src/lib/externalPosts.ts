@@ -240,8 +240,8 @@ export function externalIndexBasis(rows: readonly TakedownRowLike[], post: Taked
  * 다시 올린 줄(C9)이 인용을 세기 시작하는 날 — 같은 브랜드 같은 주소에서 이 줄보다 먼저 「글을 내림」으로 뺀 줄이 있을 때만, 그 내린 날(downOn)과
  * 색인 표시와 같은 기준일(countsFrom — externalIndexBasis: 내린 날 다음 날 · 올린 날 가운데 늦은 날). 그보다 앞서 한 측정(measuredBefore)은 이
  * 줄이 세지 않는다 — 그 측정은 내린 줄이 세고(내린 날 측정은 어느 줄도 세지 않는다), 날짜 모름(D3)으로 다시 올린 줄의 칸에도 숫자가 보여 같은 측정이
- * 두 행에 함께 보이지 않게. 서버(server/externalPosts.ts — 칸을 비운다)와 성과 표(src/lib/useExternalHistory.ts — 비운 칸에 까닭을 단다)가 이 함수를
- * 같이 쓴다. 날짜를 적은 다시 올린 줄은 올린 날이 내린 날 뒤라(repostDayProblem) 그 앞 측정 칸이 이미 「올리기 전」이다. 다시 올린 줄이 아니면 null.
+ * 두 행에 함께 보이지 않게. 서버(server/externalPosts.ts — 회차마다 칸을 비우고 그 까닭을 싣는다)와 성과 표(src/lib/useExternalHistory.ts — 까닭에 적을
+ * 내린 날 · 날짜 모름 도움말)가 이 함수를 같이 쓴다. 날짜를 적은 다시 올린 줄은 올린 날이 내린 날 뒤라(repostDayProblem) 그 앞 측정 칸이 이미 「올리기 전」이다. 다시 올린 줄이 아니면 null.
  */
 export function repostBasis(rows: readonly TakedownRowLike[], post: TakedownRowLike & { publishedOn: string | null }): { downOn: string; countsFrom: string } | null {
   const downOn = takenDownBefore(rows, post)

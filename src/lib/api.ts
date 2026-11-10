@@ -639,6 +639,13 @@ export async function loadPublishedHistory(tenantId: string, weeks = 12): Promis
  */
 export interface ExternalHistoryRow extends PostHistory {
   external: ExternalPostView
+  /** weeks와 같은 순서 — 그 주에 서버가 이 행에서 비운 회차 수(까닭별, server/externalPosts.ts ExternalBlankedRuns). 없으면 null. */
+  blanked: (ExternalBlankedRuns | null)[]
+}
+/** 서버가 앱 밖 행에서 비운 회차 수 — repost 다시 올리기 전(C9), moved 앱 글 표가 셈(D12). */
+export interface ExternalBlankedRuns {
+  repost: number
+  moved: number
 }
 export interface ExternalHistory {
   weeks: HistoryWeek[]

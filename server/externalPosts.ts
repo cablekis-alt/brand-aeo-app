@@ -248,11 +248,22 @@ export function updateExternalPost(tenantId: string, postId: string, body: unkno
   });
 }
 
+/** 서버가 앱 밖 행에서 회차를 비운 까닭 — repost 다시 올리기 전(C9 · repostMask), moved 앱 글 표가 셈(D12 · appCountedMask). */
+export type ExternalBlankReason = 'repost' | 'moved';
+
+/** 그 주 회차 가운데 서버가 이 행에서 비운 회차 수(까닭별). */
+export type ExternalBlankedRuns = Record<ExternalBlankReason, number>;
+
 /** 앱 밖 글 인용 이력의 한 행 — 계산에 넘긴 원장 모양(post)과 앱 밖 줄(external)을 함께 싣는다. */
 export interface ExternalHistoryRow {
   post: PublishedPost;
   external: ExternalPostView;
   cells: (HistoryCell | null)[];
+  /**
+   * weeks와 같은 순서 — 그 주에 서버가 이 행에서 비운 회차 수(까닭별). 비운 회차가 없거나 판정 기록이 없는 주는 null. 성과 표는 비운 칸의
+   * 이름 · 까닭을 이 값으로 고른다 — 주 카드 회차의 측정 기간 같은 것으로 짐작하지 않는다(회차가 여럿인 주는 회차마다 까닭이 다를 수 있다).
+   */
+  blanked: (ExternalBlankedRuns | null)[];
 }
 
 export interface ExternalHistory {
@@ -293,7 +304,8 @@ function appCountedMask(
 
 /**
  * C9 · D3 — 다시 올린 줄은 앞 줄을 내린 날까지 한 측정(회차)을 세지 않는다. 기준일은 색인 표시와 같은 날(repostBasis — externalIndexBasis)이고
- * 회차가 그보다 앞인지는 칸의 전후와 같은 규칙(measuredBefore)으로 본다 — 성과 표가 비운 칸에 까닭을 달 때도 같은 함수를 쓴다. 비우는 것은 이 줄이
+ * 회차가 그보다 앞인지는 칸의 전후와 같은 규칙(measuredBefore)으로 본다 — 회차마다 그 회차의 측정 기간으로 보고, 비운 회차는 까닭(repost)과 함께
+ * 행에 싣는다(blanked — 성과 표는 그 값으로 「다시 올리기 전」을 단다). 비우는 것은 이 줄이
  * 세는 칸(「올리기 전」이 아닌 칸)뿐이고 모양은 「내린 뒤」(앱 글로 옮긴 칸과 같다)다 — 전후(날짜 모름)는 그대로 둬 판단 칸이 바뀌지 않는다. 날짜를
  * 적은 다시 올린 줄은 올린 날이 내린 날 뒤라(C9) 그 앞 회차 칸이 이미 「올리기 전」이어서 바뀌지 않는다. 다시 올린 줄이 없으면 undefined.
  */
@@ -313,13 +325,25 @@ function repostMask(views: readonly ExternalPostView[]): SampleAdjust | undefine
     });
 }
 
-/** 회차 칸 고치기를 차례로 잇는다(앞 것이 비운 칸은 뒤 것이 건너뛴다). 하나도 없으면 undefined(계산 그대로). */
-function chainAdjust(steps: readonly (SampleAdjust | undefined)[]): SampleAdjust | undefined {
-  const list = steps.filter((s): s is SampleAdjust => s !== undefined);
+/**
+ * 회차 칸 고치기를 차례로 잇는다(앞 것이 비운 칸은 뒤 것이 건너뛴다). 단계가 새로 비운 칸은 그 단계의 까닭으로 알린다(note — 주 · 줄 id마다
+ * 센다). 하나도 없으면 undefined(계산 그대로).
+ */
+function chainAdjust(
+  steps: readonly [ExternalBlankReason, SampleAdjust | undefined][],
+  note: (weekOf: string, postId: string, reason: ExternalBlankReason) => void,
+): SampleAdjust | undefined {
+  const list = steps.filter((s): s is [ExternalBlankReason, SampleAdjust] => s[1] !== undefined);
   if (list.length === 0) return undefined;
   return async (card, sample, view, shown) => {
     let cells = view.cells;
-    for (const step of list) cells = await step(card, sample, { ...view, cells }, shown);
+    for (const [reason, step] of list) {
+      const next = await step(card, sample, { ...view, cells }, shown);
+      next.forEach((cell, i) => {
+        if (cell.afterRemoval && !cells[i]!.afterRemoval) note(card.weekOf, shown[i]!.id, reason);
+      });
+      cells = next;
+    }
     return cells;
   };
 }
@@ -328,7 +352,7 @@ function chainAdjust(steps: readonly (SampleAdjust | undefined)[]): SampleAdjust
  * 앱 밖 글 인용 이력 — 앱 글 이력과 같은 계산(getPublishedHistory)을 그대로 쓴다: 그 브랜드의 측정 답변에서 주소가 정확히 같을 때만,
  * 늦게 적어도 지난 측정까지 거슬러, 판정이 없는 주는 null. 넘기는 줄은 변환기(externalAsLedgerPost)를 지난다 — 올린 시각 없음. 다시 올린
  * 줄은 앞 줄을 내린 날까지의 회차를(repostMask), 앱 글로 옮긴 주소는 앱 글 표가 세는 회차를(appCountedMask) 비운다 — 어느 회차든 많아야 한 행이
- * 센다. 「잘못 적음」 줄은 뺀다. 저장하지 않고 요청마다 계산한다.
+ * 센다. 비운 회차는 주마다 까닭별로 센다(blanked — 성과 표가 비운 칸의 이름을 고른다). 「잘못 적음」 줄은 뺀다. 저장하지 않고 요청마다 계산한다.
  */
 export async function getExternalHistory(
   store: HistoryStore,
@@ -338,10 +362,28 @@ export async function getExternalHistory(
   const { posts, ledger } = await queueTenantWrite(tenant.tenantId, () => readBothInQueue(tenant.tenantId));
   const views = externalViews(posts, ledger).filter((v) => v.removedReason !== 'mistake');
   const byId = new Map(views.map((v) => [v.id, v]));
-  const adjust = chainAdjust([repostMask(views), appCountedMask(store, tenant, views, ledger)]);
+  const blanked = new Map<string, ExternalBlankedRuns>();
+  const note = (weekOf: string, postId: string, reason: ExternalBlankReason) => {
+    const k = `${weekOf}|${postId}`;
+    const runs = blanked.get(k) ?? { repost: 0, moved: 0 };
+    runs[reason] += 1;
+    blanked.set(k, runs);
+  };
+  const adjust = chainAdjust(
+    [
+      ['repost', repostMask(views)],
+      ['moved', appCountedMask(store, tenant, views, ledger)],
+    ],
+    note,
+  );
   const history = await getPublishedHistory(store, tenant, views.map(externalAsLedgerPost), weeksBack, adjust);
   return {
     weeks: history.weeks,
-    posts: history.posts.map((p) => ({ post: p.post, external: byId.get(p.post.id)!, cells: p.cells })),
+    posts: history.posts.map((p) => ({
+      post: p.post,
+      external: byId.get(p.post.id)!,
+      cells: p.cells,
+      blanked: history.weeks.map((w) => blanked.get(`${w.weekOf}|${p.post.id}`) ?? null),
+    })),
   };
 }

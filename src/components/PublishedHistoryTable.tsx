@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { HistoryCell, HistoryWeek, PostHistory, PublishedHistory, PublishedPost } from '../lib/api'
+import type { ExternalBlankedRuns, HistoryCell, HistoryWeek, PostHistory, PublishedHistory, PublishedPost } from '../lib/api'
 import {
   distinctPostings,
   freshNoCiteNote,
@@ -40,18 +40,30 @@ export interface MovedPosting {
 }
 
 /**
- * 같은 주소를 앞서 「글을 내림」으로 뺀 뒤 다시 올린 행(앱 밖 글 — C9). 서버는 앞 행을 내린 날까지 한 측정을 이 행에서 비운다(「내린 뒤」 모양) — 그
- * 칸에는 「내린 뒤」 대신 「다시 올리기 전」과 까닭을 단다.
+ * 같은 주소를 앞서 「글을 내림」으로 뺀 뒤 다시 올린 행(앱 밖 글 — C9). 서버는 앞 행을 내린 날까지 한 측정을 이 행에서 비우고 그 회차를 까닭(repost)과
+ * 함께 싣는다(blankedOf) — 그 칸에는 「내린 뒤」 대신 「다시 올리기 전」과 까닭(이 내린 날)을 단다.
  */
 export interface RepostPosting {
-  /** 앞 행을 내린 날(가장 늦은 날). */
+  /** 앞 행을 내린 날(가장 늦은 날 — src/lib/externalPosts.ts repostBasis, 서버가 칸을 비운 것과 같은 함수). */
   downOn: string
-  /** 그 주 측정이 이 행이 세기 시작하는 날보다 앞인가 — 서버가 칸을 비운 것과 같은 규칙(src/lib/externalPosts.ts repostBasis · measuredBefore). */
-  beforeRepost: (week: HistoryWeek) => boolean
 }
 
 /** 날짜 모름 칸의 도움말(앱 글 표) — 날짜 없는 원장 줄은 주소만 남은 옛 기록이다. */
 const UNDATED_NOTE = '올린 날을 모르는 옛 기록입니다 — 판단에는 넣지 않습니다'
+
+/** 비운 칸의 까닭(칸 title). */
+const REMOVED_TITLE = '글을 내린 뒤에 한 측정이라 세지 않습니다'
+const MOVED_TITLE = '앱 글로 옮긴 주소입니다 — 이 측정은 「올린 글 인용 추적」 표가 셉니다(두 표가 같은 측정을 두 번 세지 않게 여기서는 비웁니다)'
+const repostTitle = (downOn: string | null) =>
+  `${downOn ? `같은 주소를 ${shortDate(downOn)}에 내렸습니다` : '같은 주소를 앞서 내렸습니다'} — 그날까지 한 측정은 이 행에서 세지 않습니다` +
+  '(내린 날 전 측정은 내린 행이 세고, 내린 날 측정은 어느 행도 세지 않습니다)'
+
+/** 칸 하나에서 서버가 비운 회차(앱 밖 글) — 까닭별 수, 그 주 회차 수, 다시 올린 행이면 앞 행을 내린 날. */
+interface CellBlank {
+  runs: ExternalBlankedRuns
+  total: number
+  downOn: string | null
+}
 
 /** 옮긴 행에서 「내림 · 올린 뒤 판단할 측정 없음」 대신 쓰는 판단 칸. */
 const MOVED_TIER_LABEL = '앱 글로 옮김 · 옮기기 전 판단할 측정 없음'
@@ -87,22 +99,30 @@ function cellView(
   c: HistoryCell | null,
   withProbe: boolean,
   moved: MovedPosting | null,
-  repostDown: string | null,
+  blank: CellBlank | null,
   undatedNote: string,
 ): { main: string; sub: string[]; cls: string; title: string } {
   if (!c) return { main: '확인 불가', sub: [], cls: 'muted', title: '그 주 판정 기록이 없습니다' }
-  if (c.afterRemoval && repostDown) {
+  // 서버가 이 행에서 비운 회차(앱 밖 글) — 이름 · 까닭은 서버가 비운 까닭 그대로 고른다(짐작하지 않는다).
+  const repostRuns = blank?.runs.repost ?? 0
+  const movedRuns = blank?.runs.moved ?? 0
+  if (c.afterRemoval) {
+    // 서버가 비우지 않은 회차는 이 행을 내린 뒤 회차다 — 앱 글로 옮긴 행이면 그 측정도 앱 글 표가 센다.
+    const rest = Math.max(0, (blank?.total ?? 1) - repostRuns - movedRuns)
+    const parts = [
+      { label: '다시 올리기 전', n: repostRuns, title: repostTitle(blank?.downOn ?? null) },
+      { label: '앱 글 표에서', n: movedRuns + (moved ? rest : 0), title: MOVED_TITLE },
+      { label: '내린 뒤', n: moved ? 0 : rest, title: REMOVED_TITLE },
+    ].filter((p) => p.n > 0)
+    if (parts.length <= 1) return { main: parts[0]?.label ?? '내린 뒤', sub: [], cls: 'muted', title: parts[0]?.title ?? REMOVED_TITLE }
+    // 회차마다 까닭이 다른 주 — 이 행은 그 주를 세지 않고, 까닭별 회차 수를 적는다.
     return {
-      main: '다시 올리기 전',
-      sub: [],
+      main: '세지 않음',
+      sub: parts.map((p) => `${p.label} 회차 ${p.n}번`),
       cls: 'muted',
-      title: `같은 주소를 ${shortDate(repostDown)}에 내렸습니다 — 그날까지 한 측정은 다시 올리기 전이라 이 행에서 세지 않습니다(내리기 전 측정은 내린 행이 셉니다)`,
+      title: parts.map((p) => `${p.label} 회차 ${p.n}번: ${p.title}`).join('\n'),
     }
   }
-  if (c.afterRemoval && moved) {
-    return { main: '앱 글 표에서', sub: [], cls: 'muted', title: '앱 글로 옮긴 주소입니다 — 이 측정은 「올린 글 인용 추적」 표가 셉니다(두 표가 같은 측정을 두 번 세지 않게 여기서는 비웁니다)' }
-  }
-  if (c.afterRemoval) return { main: '내린 뒤', sub: [], cls: 'muted', title: '글을 내린 뒤에 한 측정이라 세지 않습니다' }
   if (c.timing === 'before') return { main: '—', sub: [], cls: 'muted', title: '올리기 전에 한 측정이라 세지 않습니다' }
   const unsure = c.timing === 'during' || c.timing === 'ambiguous'
   const runs = runTallyText(c)
@@ -127,6 +147,9 @@ function cellView(
   }
   if (c.tally && unsure) sub.push('전후 불명')
   if (c.citedBeforeRuns) sub.push(`올리기 전 회차 ${c.citedBeforeRuns}번 인용`)
+  // 그 주 일부 회차만 서버가 비웠다 — 칸 숫자는 남은 회차 몫이다(주차 머리글의 회차 수와 견주어 읽지 않게).
+  if (repostRuns > 0) sub.push(`다시 올리기 전 회차 ${repostRuns}번 뺌`)
+  if (movedRuns > 0) sub.push(`앱 글 표가 센 회차 ${movedRuns}번 뺌`)
   if (c.variantCited > 0) sub.push(`질의만 다른 주소 ${c.variantCited}`)
   if (c.topicMention !== undefined) {
     sub.push(c.topicMention ? `겨냥한 이름 없는 질문 언급 ${c.topicMention.mentioned}/${c.topicMention.answered}` : '겨냥 질문: 확인 불가')
@@ -144,7 +167,8 @@ function cellView(
     c.runs && c.runs.measured + c.runs.unsure > 0
       ? `올린 뒤 회차 ${c.runs.measured}번${c.runs.unsure ? ` · 전후 불명 ${c.runs.unsure}번` : ''} — 한 회차라도 인용되면 그 주는 인용으로 셉니다`
       : ''
-  return { main, sub, cls: c.tally ? '' : 'muted', title: [title, runTitle].filter(Boolean).join('\n') }
+  const blankTitles = [repostRuns > 0 ? repostTitle(blank?.downOn ?? null) : '', movedRuns > 0 ? MOVED_TITLE : '']
+  return { main, sub, cls: c.tally ? '' : 'muted', title: [title, runTitle, ...blankTitles].filter(Boolean).join('\n') }
 }
 
 /**
@@ -154,8 +178,9 @@ function cellView(
  * 한 주로 센다. 측정 조건이 바뀌었거나 확인할 수 없는 주는 ◆, 측정하지 않은 주는 「…」, 여러 번 잰 주는 머리글에 「·3회」.
  *
  * 앱 밖 글 표(퍼포먼스 「앱 밖 글 인용 추적」)도 이 표를 쓴다 — 첫 열 머리글(header) · 앱 글 전용 설명 문장 대신 넣을 설명(description) ·
- * 앱 글로 옮긴 행(movedOf — 「내림」 대신 「앱 글로 옮김(날짜)」, 옮긴 뒤 칸은 「앱 글 표에서」) · 다시 올린 행(repostOf — 앞 행을 내린 날까지의
- * 비운 칸은 「다시 올리기 전」) · 날짜 모름 칸 도움말(undatedNote — 앱 밖 글은 옛 기록이 아니다) · 줄마다 한 행(groupRows false — 앱 밖 글은
+ * 앱 글로 옮긴 행(movedOf — 「내림」 대신 「앱 글로 옮김(날짜)」, 옮긴 뒤 칸은 「앱 글 표에서」) · 서버가 비운 회차(blankedOf — 까닭별 회차 수:
+ * 앞 행을 내린 날까지는 「다시 올리기 전」, 앱 글 표가 센 회차는 「앱 글 표에서」, 까닭이 섞인 주는 「세지 않음」과 까닭별 회차 수) · 다시 올린
+ * 행(repostOf — 그 까닭에 적을 내린 날) · 날짜 모름 칸 도움말(undatedNote — 앱 밖 글은 옛 기록이 아니다, 행마다 고를 수 있다) · 줄마다 한 행(groupRows false — 앱 밖 글은
  * 브랜드마다 주소 한 줄이 살아 있고, 내렸다 다시 올리면 새 줄이다. 원장의 「날짜 없는 옛 줄은 같은 주소의 날짜 있는 줄에 묻는다」 규칙을
  * 쓰면 날짜 모름으로 다시 올린 줄이 사라진다)을 넘긴다. 모두 주지 않으면 앱 글 표 그대로다.
  */
@@ -166,6 +191,7 @@ export default function PublishedHistoryTable({
   description,
   movedOf,
   repostOf,
+  blankedOf,
   undatedNote = UNDATED_NOTE,
   groupRows = true,
 }: {
@@ -177,10 +203,15 @@ export default function PublishedHistoryTable({
   description?: ReactNode
   /** 칸을 끊은 까닭이 앱 글로 옮긴 것인 행(앱 밖 글). 주지 않거나 null이면 원장의 「내림」 그대로. */
   movedOf?: (post: PublishedPost) => MovedPosting | null
-  /** 같은 주소를 앞서 내린 뒤 다시 올린 행(앱 밖 글). 주지 않거나 null이면 비운 칸은 「내린 뒤」 그대로. */
+  /** 같은 주소를 앞서 내린 뒤 다시 올린 행(앱 밖 글) — 「다시 올리기 전」 칸의 까닭에 내린 날을 적는다. */
   repostOf?: (post: PublishedPost) => RepostPosting | null
-  /** 날짜 모름 칸의 도움말. 주지 않으면 앱 글 표 문구(「올린 날을 모르는 옛 기록입니다」) 그대로. */
-  undatedNote?: string
+  /**
+   * 서버가 이 행에서 비운 회차(앱 밖 글 — weeks와 같은 순서, 까닭별 회차 수). 비운 칸의 이름 · 까닭을 이것으로 고른다. 주지 않거나 null이면
+   * 비운 칸은 「내린 뒤」(옮긴 행은 「앱 글 표에서」) 그대로.
+   */
+  blankedOf?: (post: PublishedPost) => readonly (ExternalBlankedRuns | null)[] | null
+  /** 날짜 모름 칸의 도움말(행마다 고르려면 함수). 주지 않으면 앱 글 표 문구(「올린 날을 모르는 옛 기록입니다」) 그대로. */
+  undatedNote?: string | ((post: PublishedPost) => string)
   /** false면 이력의 줄마다 한 행(묶지 않는다 — 앱 밖 글). 기본은 같은 주소 · 같은 올린 날을 한 행으로 묶는다(distinctPostings). */
   groupRows?: boolean
 }) {
@@ -197,6 +228,8 @@ export default function PublishedHistoryTable({
     const removedOn = p.post.removedAt ? kstDate(p.post.removedAt) : null
     const moved = movedOf?.(p.post) ?? null
     const repost = repostOf?.(p.post) ?? null
+    const blanked = blankedOf?.(p.post) ?? null
+    const note = typeof undatedNote === 'string' ? undatedNote : undatedNote(p.post)
     const summary = summarizePost(p.cells, history.weeks, removedOn)
     // 고친 글 — 마지막으로 고친 뒤의 결과를 따로 적고, 칸마다 고친 뒤 · 고친 날 측정인지 밝힌다(옛 글 · 새 글을 가르려고).
     const sinceEdit = summarizeSinceEdit(p.post, p.cells, history.weeks)
@@ -250,7 +283,9 @@ export default function PublishedHistoryTable({
           {summary.citedBeforePublish && <div className="doc-meta">올리기 전 측정에서 이미 인용됨 — 올린 날을 확인하세요</div>}
         </td>
         {cells.flatMap((c, i) => {
-          const v = cellView(c, withProbe, moved, repost && c?.afterRemoval && repost.beforeRepost(weeks[i]!) ? repost.downOn : null, undatedNote)
+          const runs = blanked?.[start + i] ?? null
+          const blank = runs ? { runs, total: weeks[i]!.runs?.length ?? 1, downOn: repost?.downOn ?? null } : null
+          const v = cellView(c, withProbe, moved, blank, note)
           // 고친 글이면 이 칸이 고친 글을 본 측정인지 — 올린 뒤 · 내리기 전 칸에만 붙인다. 고치기 전 회차가 섞인 주는 고친 뒤 몫을 따로 적는다.
           const editNote = c && !c.afterRemoval && c.timing === 'after' ? weekEditNote(p.post, c, weeks[i]!) : null
           if (editNote) v.sub.push(editNote)

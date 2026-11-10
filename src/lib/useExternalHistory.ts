@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { MovedPosting, RepostPosting } from '../components/PublishedHistoryTable'
-import { loadExternalHistory, type ExternalHistory, type PublishedPost } from './api'
-import { measuredBefore, repostBasis } from './externalPosts'
+import { loadExternalHistory, type ExternalHistory, type ExternalHistoryRow, type PublishedPost } from './api'
+import { repostBasis } from './externalPosts'
 import { ownedBrandsOf } from './postImport'
 import { kstDate } from './publishedUrl'
 
@@ -60,19 +60,59 @@ export function externalMovedOf(history: ExternalHistory): (post: PublishedPost)
 }
 
 /**
- * 행 → 다시 올린 행(성과 표 repostOf). 같은 브랜드에서 같은 주소를 앞서 「글을 내림」으로 뺀 줄이 있는 행에만, 그 내린 날과 그 주 측정이 이 행이
- * 세기 시작하는 날보다 앞인지를 준다 — 서버가 칸을 비운 것과 같은 함수(src/lib/externalPosts.ts repostBasis · measuredBefore). 이력의 행에는
- * 「잘못 적음」 줄만 빠지고 내린 줄은 모두 있어(그 함수는 내린 줄만 본다) 서버와 같은 날이 나온다.
+ * 행 → 다시 올린 행(성과 표 repostOf). 같은 브랜드에서 같은 주소를 앞서 「글을 내림」으로 뺀 줄이 있는 행에만, 그 내린 날을 준다 — 서버가 칸을 비운
+ * 것과 같은 함수(src/lib/externalPosts.ts repostBasis). 이력의 행에는 「잘못 적음」 줄만 빠지고 내린 줄은 모두 있어(그 함수는 내린 줄만 본다) 서버와
+ * 같은 날이 나온다. 어느 칸을 「다시 올리기 전」으로 볼지는 서버가 비운 까닭(externalBlankedOf)으로 정한다.
  */
 export function externalRepostOf(history: ExternalHistory): (post: PublishedPost) => RepostPosting | null {
   const rows = history.posts.map((p) => p.external)
   const reposts = new Map<string, RepostPosting>()
   for (const { post, external } of history.posts) {
     const basis = repostBasis(rows, external)
-    if (!basis) continue
-    reposts.set(post.id, { downOn: basis.downOn, beforeRepost: (week) => measuredBefore(basis.countsFrom, week.window, week.weekOf) })
+    if (basis) reposts.set(post.id, { downOn: basis.downOn })
   }
   return (post) => reposts.get(post.id) ?? null
+}
+
+/**
+ * 행 → 서버가 비운 회차(성과 표 blankedOf — 주마다 까닭별 회차 수, server/externalPosts.ts getExternalHistory). 화면은 비운 칸의 이름 · 까닭을
+ * 이 값으로만 고른다 — 주 카드 회차의 측정 기간으로 짐작하면 회차마다 까닭이 다른 주나, 날짜를 적은 다시 올린 줄을 앱 글로 옮긴 칸에서 서버와 다른
+ * 까닭을 단다.
+ */
+export function externalBlankedOf(history: ExternalHistory): (post: PublishedPost) => ExternalHistoryRow['blanked'] | null {
+  const byId = new Map(history.posts.map((p) => [p.post.id, p.blanked]))
+  return (post) => byId.get(post.id) ?? null
+}
+
+const monthDay = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`
+/** 날짜 모름 칸 도움말(앱 밖 글 표) — 앱 글 표의 「옛 기록」과 달리 날짜를 적을 수 있는 글이다(발행 현황 「관리」). */
+const EXTERNAL_UNDATED_NOTE = '올린 날을 모르는 앱 밖 글입니다 — 발행 현황 「관리」에서 날짜를 적으면 올리기 전 · 뒤를 가립니다'
+/** 앱 글로 옮긴 줄 — 「관리」에 날짜 칸이 없다(쉬는 줄). */
+const EXTERNAL_UNDATED_MOVED_NOTE = '올린 날을 모르는 앱 밖 글입니다 — 판단에는 넣지 않습니다'
+
+/**
+ * 행 → 날짜 모름 칸 도움말(성과 표 undatedNote). 날짜를 적을 수 있는 줄에만 발행 현황 「관리」를 안내한다 — 앱 글로 옮긴 줄은 「관리」에 날짜 칸이
+ * 없고, 다시 올린 줄은 올린 날이 앞 줄을 내린 날 뒤(repostDayProblem)이면서 추적을 시작한 날까지(trackedDayProblem)여야 해 내린 날(또는 그 전)에
+ * 다시 적은 줄은 고를 날이 없다(발행 현황 「관리」 날짜 칸과 같은 범위 — 내린 날은 서버와 같은 repostBasis).
+ */
+export function externalUndatedNote(history: ExternalHistory): (post: PublishedPost) => string {
+  const rows = history.posts.map((p) => p.external)
+  const notes = new Map<string, string>()
+  for (const { post, external } of history.posts) {
+    if (external.state === 'moved') {
+      notes.set(post.id, EXTERNAL_UNDATED_MOVED_NOTE)
+      continue
+    }
+    const downOn = repostBasis(rows, external)?.downOn ?? null
+    const trackedOn = kstDate(external.trackedAt)
+    if (downOn && trackedOn && trackedOn <= downOn) {
+      notes.set(
+        post.id,
+        `올린 날을 모르는 앱 밖 글입니다 — 앞 글을 내린 날(${monthDay(downOn)}) 뒤이면서 추적을 시작한 날(${monthDay(trackedOn)})까지인 날이 없어 날짜를 적을 수 없습니다(판단에는 넣지 않습니다)`,
+      )
+    }
+  }
+  return (post) => notes.get(post.id) ?? EXTERNAL_UNDATED_NOTE
 }
 
 /**
