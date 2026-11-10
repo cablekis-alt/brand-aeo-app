@@ -86,7 +86,7 @@ function wordForm(value: string): string {
  * 공백을 뺀 이름이 4글자 이상일 때만 받는다 — 「LG U+」 = 「LGU+」, 「바노바기 성형외과」 = 「바노바기성형외과」, 「T-order」 =
  * 「torder」. 3글자 이하는 받지 않는다 — 「군산 각」 · 「가 온」은 흔한 말의 띄어쓰기다.
  */
-function mentionsWord(text: string, name: string): boolean {
+export function mentionsWord(text: string, name: string): boolean {
   const n = wordForm(name)
   const core = n.replace(/\s/g, '')
   if (core.length < 2) return false
