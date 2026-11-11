@@ -23,8 +23,9 @@
  * 분모가 0이거나 목록이 없으면 rate는 null(화면 「확인 불가」). 언급은 판정된 있음만(판정 불가 null은 따로 센다). 출처 지표는 출처 목록을 받은
  * 있음만 분모로 쓰고 「출처 없는 개요」는 따로 센다. 자사 출처 · 올린 글 출처는 저장하지 않고 읽을 때 지금의 자사 주소 · 원장 · 앱 밖 글로
  * 계산한다(자사 주소 · 원장을 고치면 지난 회차에도 바로 적용). 올린 글은 그 글을 올린 뒤(timingOf 'after') · 올라가 있던 회차만 센다.
- * 요약 타일은 끝난(done) 회차나 잰 문항(있음 + 없음)이 예정의 90% 이상인 회차만 쓴다. 회차끼리는 두 회차 모두에서 잰 질문만 견준다. 질문 표 ·
- * 추이 · 올린 글 표는 최신 회차와 같은 조건인 회차만 묶는다. 한 번 측정은 흔들린다 — 두 번 이상 같은 방향일 때만 판단한다.
+ * 요약 타일은 끝난(done) 회차나 잰 문항(있음 + 없음)이 예정의 90% 이상인 회차만 쓴다(실행기는 90% 미만이면 끝까지 갔어도 done으로 적지
+ * 않는다). 회차끼리는 두 회차 모두에서 잰 질문만 견준다. 질문 표 · 추이 · 올린 글 표는 잰 문항이 있는 최신 회차와 같은 조건인 회차만 묶는다(추이 ·
+ * 올린 글 표는 그중 요약 회차만). 한 번 측정은 흔들린다 — 두 번 이상 같은 방향일 때만 판단한다.
  *
  * 서버가 import하므로 상대 import는 .js로 쓰고, node 모듈 · 서버 모듈 · 화면 모듈은 끌어오지 않는다. 네트워크도 부르지 않는다.
  */
@@ -85,7 +86,10 @@ export const AIO_STATUSES: readonly AioStatus[] = ['shown', 'absent', 'unreadabl
 export type AioKind = 'inline' | 'deferred'
 /** 오류로 못 잼 — 다시 보내지 않는다. timeout · upstream · bad-query는 실행기가 적는다(HTTP 오류 · 시간 초과 · 보내기 전 거절). */
 export type AioFailedReason = 'shape' | 'not-success' | 'upstream-error' | 'timeout' | 'upstream' | 'bad-query'
-/** 못 읽음 — follow-up-failed · follow-up-blocked는 실행기가 적는다(후속 요청 실패 · 몫 · 바닥에 막혀 후속을 보내지 않음). */
+/**
+ * 못 읽음 — follow-up-failed · follow-up-blocked는 실행기가 적는다(후속 요청 실패 · 몫 · 바닥에 막혀 후속을 보내지 않음). interrupted는 앱이
+ * 꺼질 때 날아가던 검색의 질문(aioSettleInFlight — 보낸 검색은 세고 다시 보내지 않는다).
+ */
 export type AioUnreadableReason =
   | 'overview-error'
   | 'overview-empty'
@@ -96,6 +100,7 @@ export type AioUnreadableReason =
   | 'follow-up-shape'
   | 'follow-up-failed'
   | 'follow-up-blocked'
+  | 'interrupted'
 export type AioReason = AioFailedReason | AioUnreadableReason
 
 export const AIO_STATUS_LABEL: Record<AioStatus, string> = { shown: '있음', absent: 'AI 개요 없음', unreadable: '못 읽음(확인 불가)', failed: '오류로 못 잼' }
@@ -115,6 +120,7 @@ export const AIO_REASON_TEXT: Record<AioReason, string> = {
   'follow-up-shape': '늦게 오는 개요 응답 모양을 읽지 못했어요',
   'follow-up-failed': '늦게 오는 개요를 받으러 간 요청이 실패했어요',
   'follow-up-blocked': '몫 · 계정 바닥에 닿아 늦게 오는 개요를 받으러 가지 않았어요',
+  interrupted: '앱이 꺼질 때 받던 검색이라 결과를 받지 못했어요(보낸 검색은 셌고, 다시 보내지 않아요)',
 }
 
 export interface AioReference {
@@ -216,6 +222,18 @@ export interface AioQuestionSet {
   hash: string
 }
 
+/**
+ * 날아가는 검색 — 실행기가 검색을 보내기 직전에 회차 파일에 적고(usage.searches도 그때 센다 — 공용 장부와 같은 규칙), 그 질문의 문항을 적을 때
+ * 지운다. 앱이 꺼져 이 칸이 남은 회차는 그 질문을 「못 읽음(interrupted)」으로 마무리한다 — 이어 재기가 같은 질문을 다시 사지 않게.
+ */
+export interface AioInFlight {
+  questionId: string
+  query: string
+  /** 그 질문에 지금까지 보낸 검색(날아가는 것 포함). */
+  searches: number
+  at: string
+}
+
 export interface AioRun {
   format: typeof GOOGLE_AIO_FORMAT
   runId: string
@@ -236,6 +254,8 @@ export interface AioRun {
   cycle: string | null
   usage: AioUsage
   items: AioItem[]
+  /** 날아가는 검색(실행기만 적는다 — 없으면 칸이 없거나 null). */
+  inFlight?: AioInFlight | null
 }
 
 export interface AioSettings {
@@ -775,6 +795,8 @@ export function parseAioRun(raw: unknown): Parsed<{ run: AioRun }> | ParseError 
     return bad('사용량 칸이 올바르지 않습니다')
   }
   if (!isNum(raw.maxSearches)) return bad('최대 검색 수가 없습니다')
+  const f = raw.inFlight
+  if (f !== undefined && f !== null && !(isObj(f) && isStr(f.questionId) && f.questionId && isStr(f.query) && isNum(f.searches) && isTime(f.at))) return bad('날아가는 검색 칸이 올바르지 않습니다')
   if (!Array.isArray(raw.items)) return bad('문항 목록이 없습니다')
   for (const i of raw.items) {
     const p = itemProblem(i)
@@ -799,6 +821,35 @@ function latestItems(run: AioRun): AioItem[] {
 export function aioRemaining(run: AioRun): string[] {
   const done = new Set(run.items.map((i) => i.questionId))
   return run.questionSet.ids.filter((id) => !done.has(id))
+}
+
+/**
+ * 앱이 꺼져 날아가는 검색(inFlight)이 남은 회차 — 그 질문을 「못 읽음(interrupted)」 문항으로 마무리한 사본(보낸 검색 수는 그 문항에 남는다).
+ * 회차의 usage.searches는 보내기 전에 이미 셌으므로 고치지 않는다. 날아가는 검색이 없거나 그 질문의 문항이 이미 있으면 칸만 지운다.
+ */
+export function aioSettleInFlight(run: AioRun): AioRun {
+  const f = run.inFlight
+  if (!f) return run.inFlight === undefined ? run : { ...run, inFlight: null }
+  if (run.items.some((i) => i.questionId === f.questionId) || !run.questionSet.ids.includes(f.questionId)) return { ...run, inFlight: null }
+  const item: AioItem = { questionId: f.questionId, query: f.query, status: 'unreadable', reason: 'interrupted', topKeys: [], fetchedAt: f.at, searches: Math.max(0, Math.floor(f.searches)) }
+  return { ...run, items: [...run.items, item], inFlight: null }
+}
+
+/** 잰 문항(있음 + 없음) · 예정 · 못 읽음 · 오류 — 문항마다 마지막 기록으로. */
+export function aioCoverage(run: AioRun): { planned: number; measured: number; unreadable: number; failed: number } {
+  const items = latestItems(run)
+  return {
+    planned: run.questionSet.ids.length,
+    measured: items.filter(isMeasured).length,
+    unreadable: items.filter((i) => i.status === 'unreadable').length,
+    failed: items.filter((i) => i.status === 'failed').length,
+  }
+}
+
+/** 잰 문항이 예정의 90% 이상인가(측정 MIN_QUESTION_COVERAGE와 같은 값). 실행기는 이보다 적으면 끝까지 갔어도 'done'이 아니라 'partial'로 적는다. */
+export function aioEnoughMeasured(run: AioRun): boolean {
+  const { planned, measured } = aioCoverage(run)
+  return planned > 0 && measured * 100 >= planned * AIO_SUMMARY_PCT
 }
 
 export type AioResumeProblem = 'not-stopped' | 'other-day' | 'conditions' | 'questions' | 'nothing-left'
@@ -974,6 +1025,8 @@ export interface AioReadContext {
 const isListed = (i: AioItem) => i.status === 'shown' && (i.references?.length ?? 0) > 0
 const isMeasured = (i: AioItem | null | undefined) => !!i && (i.status === 'shown' || i.status === 'absent')
 const isJudged = (i: AioItem | null | undefined) => !!i && i.status === 'shown' && typeof i.mentioned === 'boolean'
+/** 판정할 본문이 있는가(출처만 온 개요는 없다 — 판정하지 않는다). */
+const hasText = (i: AioItem) => isStr(i.text) && i.text.trim().length > 0
 const linksOfItem = (i: AioItem) => [...(i.references ?? []).map((r) => r.link), ...(i.links ?? [])]
 const citedKeys = (i: AioItem) => new Set(linksOfItem(i).flatMap((l) => trackingKey(l) ?? []))
 
@@ -1002,7 +1055,12 @@ export interface AioRunSummary {
   unreadable: number
   failed: number
   judged: number
+  /** 판정이 없는 있음(본문 없는 개요 포함). */
   judgeUnknown: number
+  /** 본문 없이 출처만 온 있음 — 판정할 글이 없어 판정하지 않는다(다시 판정 대상도 아니다). */
+  noText: number
+  /** 다시 판정할 수 있는 있음 — 본문이 있고 판정이 없음(판정 불가). 「다시 판정」 단추 · 「판정 최대 n회」가 이 수를 쓴다. */
+  rejudgeable: number
   /** 출처 목록 없이 온 있음 — 출처 분모에서 뺐다. */
   noSourceList: number
   sourceOnly: number
@@ -1076,6 +1134,8 @@ export function summarizeAioRun(run: AioRun, ctx: AioReadContext): AioRunSummary
     failed: count('failed'),
     judged: judged.length,
     judgeUnknown: shown.length - judged.length,
+    noText: shown.filter((i) => !hasText(i)).length,
+    rejudgeable: shown.filter((i) => hasText(i) && !isJudged(i)).length,
     noSourceList: shown.length - listed.length,
     sourceOnly: shown.filter((i) => sourceOnlyOf(i, ctx) === true).length,
     variantSource,
@@ -1087,12 +1147,14 @@ export function summarizeAioRun(run: AioRun, ctx: AioReadContext): AioRunSummary
   }
 }
 
-/** 요약 타일에 쓰는 회차 — 끝난(done) 회차, 또는 잰 문항이 예정의 90% 이상인 멈춘 회차. 도는 중인 회차는 쓰지 않는다. */
+/**
+ * 요약 타일에 쓰는 회차 — 끝난(done) 회차, 또는 잰 문항이 예정의 90% 이상인 멈춘 회차. 도는 중인 회차는 쓰지 않는다. 실행기는 잰 문항이 90%
+ * 미만이면 끝까지 갔어도 'done'으로 적지 않는다(늦게 오는 개요 장애로 「못 읽음」만 쌓인 회차가 노출 0%로 요약에 오르지 않게 — 'partial' · coverage).
+ */
 export function isSummaryRun(run: AioRun): boolean {
   if (run.state === 'running') return false
   if (run.state === 'done') return true
-  const planned = run.questionSet.ids.length
-  return planned > 0 && latestItems(run).filter(isMeasured).length * 100 >= planned * AIO_SUMMARY_PCT
+  return aioEnoughMeasured(run)
 }
 
 const byStart = (a: AioRun, b: AioRun) => Date.parse(a.startedAt) - Date.parse(b.startedAt) || a.runId.localeCompare(b.runId)
@@ -1146,9 +1208,13 @@ export function aioSameConditions(a: AioRun, b: AioRun): boolean {
   return aioConditionDiffs(a, b).length === 0
 }
 
-/** 끝난 회차(도는 중 제외) 가운데 최신과 같은 조건인 회차(오래된 순)와 다른 조건 회차 수. */
+/**
+ * 끝난 회차(도는 중 제외) 가운데 잰 문항(있음 + 없음)이 하나라도 있는 회차만 — 그중 최신과 같은 조건인 회차(오래된 순)와 다른 조건 회차 수.
+ * 잰 문항이 0개인 회차(첫 질문 전에 중단 · 키 오류로 바로 멈춤 · 판정 기록이 없어 시작 때 엔진으로 견줌)는 기준이 되지 않고 질문 표 · 추이에도
+ * 들지 않는다(회차 목록에는 그대로 보인다) — 빈 회차 하나가 앞 회차들의 표를 지우지 않게.
+ */
 function sameConditionSet(runs: readonly AioRun[]): { latest: AioRun | null; same: AioRun[]; other: number } {
-  const finished = runs.filter((r) => r.state !== 'running').sort(byStart)
+  const finished = runs.filter((r) => r.state !== 'running' && latestItems(r).some(isMeasured)).sort(byStart)
   const latest = finished.at(-1) ?? null
   if (!latest) return { latest: null, same: [], other: 0 }
   const same = finished.filter((r) => r === latest || aioSameConditions(r, latest))
@@ -1183,12 +1249,13 @@ export function compareAioRuns(a: AioRun, b: AioRun): AioRunComparison {
   }
 }
 
-export type AioCellKind = 'mentioned' | 'not-mentioned' | 'judge-unknown' | 'absent' | 'unreadable' | 'failed'
+export type AioCellKind = 'mentioned' | 'not-mentioned' | 'judge-unknown' | 'no-text' | 'absent' | 'unreadable' | 'failed'
 /** 질문 표 칸 기호 · 범례 글자(aria-label · title에도 같은 글자). */
 export const AIO_CELL: Record<AioCellKind, { symbol: string; label: string }> = {
   mentioned: { symbol: '●', label: 'AI 개요에 언급' },
   'not-mentioned': { symbol: '○', label: 'AI 개요는 있지만 언급 없음' },
   'judge-unknown': { symbol: '◌', label: '판정 불가' },
+  'no-text': { symbol: '◇', label: '본문 없는 개요(출처만 옴 · 판정 안 함)' },
   absent: { symbol: '—', label: 'AI 개요 없음' },
   unreadable: { symbol: '?', label: '못 읽음(확인 불가)' },
   failed: { symbol: '×', label: '오류로 못 잼' },
@@ -1201,7 +1268,15 @@ export interface AioCell {
 
 export function aioCellOf(item: AioItem): AioCell {
   const kind: AioCellKind =
-    item.status !== 'shown' ? item.status : item.mentioned === true ? 'mentioned' : item.mentioned === false ? 'not-mentioned' : 'judge-unknown'
+    item.status !== 'shown'
+      ? item.status
+      : item.mentioned === true
+        ? 'mentioned'
+        : item.mentioned === false
+          ? 'not-mentioned'
+          : hasText(item)
+            ? 'judge-unknown'
+            : 'no-text'
   return { kind, ...AIO_CELL[kind] }
 }
 
@@ -1286,10 +1361,13 @@ export interface AioPostTableRow {
   firstCitedOn: string | null
 }
 
-/** 올린 글 표 — 최신과 같은 조건 회차만, 그 글을 올린 뒤('after') · 올라가 있던 회차만 N에 넣는다(올리기 전 · 내린 뒤 회차를 「안 나옴」으로 세지 않는다). */
+/**
+ * 올린 글 표 — 최신과 같은 조건의 요약 회차(끝남 · 90% 이상)만, 그 글을 올린 뒤('after') · 올라가 있던 회차만 N에 넣는다(올리기 전 · 내린 뒤
+ * 회차를 「안 나옴」으로 세지 않는다). 일부만 잰 회차는 그 글이 나올 질문을 묻지 않았을 수 있어 N에 넣지 않는다(추이와 같은 규칙).
+ */
 export function aioPostTable(runs: readonly AioRun[], posts: readonly AioPost[]): AioPostTableRow[] {
   const { same } = sameConditionSet(runs)
-  const perRun = same.flatMap((run) => {
+  const perRun = same.filter(isSummaryRun).flatMap((run) => {
     const window = aioRunWindow(run)
     const listed = latestItems(run).filter(isListed)
     return window && listed.length > 0 ? [{ run, window, keys: listed.map(citedKeys) }] : []
@@ -1318,7 +1396,11 @@ export function aioPostTable(runs: readonly AioRun[], posts: readonly AioPost[])
 export interface AioRunRow {
   runId: string
   startedAt: string
+  /** 끝난 시각 — 끊긴 회차는 null. 화면은 「마지막으로 끝난 회차」를 이것으로 고른다(이어 잰 옛 회차의 멈춘 까닭도 보이게). */
+  finishedAt: string | null
   state: AioRunState
+  /** 끝 상태가 없는 문항 수(이어 재기 대상이 될 수 있는 질문). */
+  remaining: number
   summary: AioRunSummary
   /** 요약 타일에 쓸 수 있는 회차(done 또는 90% 이상). 아니면 「일부만 잰 회차」. */
   summaryRun: boolean
@@ -1366,7 +1448,9 @@ export function aioView(runs: readonly AioRun[], ctx: AioReadContext, opts: { un
       return {
         runId: run.runId,
         startedAt: run.startedAt,
+        finishedAt: run.finishedAt,
         state: run.state,
+        remaining: aioRemaining(run).length,
         summary: summarizeAioRun(run, ctx),
         summaryRun: isSummaryRun(run),
         sameCondition: diffs.length === 0,
@@ -1387,6 +1471,21 @@ export function aioView(runs: readonly AioRun[], ctx: AioReadContext, opts: { un
 }
 
 // ── 글자 ─────────────────────────────────────────────────────────────────────
+
+/** 판정 엔진 이름 — 서버(상태 · 계획의 judge.label)와 화면(회차 자세히 · 회차 목록)이 같은 글자를 쓴다. 모르는 id는 그대로. */
+export const AIO_JUDGE_LABEL: Readonly<Record<string, string>> = { gemini: 'Gemini', claude: 'Claude', openai: 'OpenAI', mock: '시험용 목 판정' }
+export function aioJudgeLabel(engine: string | null | undefined): string {
+  if (!engine) return '기록 없음'
+  return engine
+    .split('+')
+    .map((e) => (Object.hasOwn(AIO_JUDGE_LABEL, e) ? AIO_JUDGE_LABEL[e] : undefined) ?? e)
+    .join(' + ')
+}
+
+/** 날짜(YYYY-MM-DD) → 「12월 8일」 — 결제 주기 갱신일을 서버 알림 · 화면이 같은 꼴로 적는다. 꼴이 아니면 그대로. */
+export function aioDayText(day: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? `${Number(day.slice(5, 7))}월 ${Number(day.slice(8, 10))}일` : day
+}
 
 /** 「k/N」 — 분모가 0이거나 확인 불가면 「확인 불가」. */
 export function ratioText(r: AioRatio): string {

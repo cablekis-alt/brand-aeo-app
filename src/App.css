@@ -9810,6 +9810,10 @@ tr.ms-run-child td:nth-child(2) {
   display: grid;
   gap: 4px;
 }
+.gaio-note-box:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .gaio-plain,
 .gaio-state {
   color: var(--ink-2);
@@ -9971,6 +9975,7 @@ tr.ms-run-child td:nth-child(2) {
 .gaio-cell-mentioned { color: var(--good); }
 .gaio-cell-not-mentioned { color: var(--ink-2); }
 .gaio-cell-judge-unknown { color: var(--warn); }
+.gaio-cell-no-text { color: var(--muted); }
 .gaio-cell-absent { color: var(--muted); }
 .gaio-cell-unreadable { color: var(--warn); }
 .gaio-cell-failed { color: var(--bad); }
@@ -10167,5 +10172,15 @@ tr.ms-run-child td:nth-child(2) {
   }
   .gaio-detail {
     padding: 10px;
+  }
+  /* 좁은 화면 — 추이 그림이 줄어 축 글자가 너무 작아진다(viewBox 600 → 폭 약 360). 세로축 글자를 키우고, 가로축 날짜는 아래 목록이 같은 숫자를 주므로 숨긴다. */
+  .gaio-trend svg {
+    overflow: visible;
+  }
+  .gaio-axis {
+    font-size: 16px;
+  }
+  .gaio-axis-x {
+    display: none;
   }
 }

@@ -11,7 +11,9 @@
  *   실행(JSON planId) → 진행(role=status · 2초마다) → 끝 · 중단(JSON) · 멈춘 까닭(role=alert) · 막힘(몫) · 409(측정 중 · 계획 바뀜 · 도는 중 · 다른 창) ·
  *   다시 판정 확인창(판정 최대 n회 · 엔진 · 검색 0회) · 확인 불가(분모 0) · 질문 표 칸 기호 aria-label · k/N · 출처 없는 개요 · 읽지 못한 회차 ·
  *   흔들림 안내 · 노출 급락 경고 · 판정 비용(생각 토큰 포함) · 회차 자세히(http(s) 링크만) · 올린 글 표(작성자 키만) · 키보드 포커스 · 바깥 요청 0 ·
- *   계정(account.json) 읽기는 계획 때만.
+ *   계정(account.json) 읽기는 계획 때만. 2026-11-11 검토 반영: 도는 중에 새로 열면 ?view=1 한 번 · 마지막으로 끝난 회차의 멈춘 까닭 · 본문 없는
+ *   개요는 다시 판정에서 뺌 · 같은 날 회차 머리 시각 · 같은 제목 글 호스트 · 409 뒤 포커스 · 다시 읽기는 지난 알림을 지움 · 측정 중 다시 판정 단추
+ *   없음 · 중단은 보통 안내 · 위치만 다른 회차 문구 · 확인 불가 한 번만 · 판정 엔진 이름 · 이어 재기 진행 기준.
  *
  *   npx tsx scripts/verify-google-aio-ui.ts
  */
@@ -229,7 +231,7 @@ const MEASURING = '브랜드 측정이 도는 중이라 시작하지 않았어�
     const { kstStamp } = await import('../src/lib/runTrend')
     const doc = dom.window.document
 
-    type Asked = { method: string; path: string; type: string | null; body: unknown }
+    type Asked = { method: string; path: string; query: string; type: string | null; body: unknown }
     type Reply = { status: number; body: unknown }
     const asked: Asked[] = []
     const outside: string[] = []
@@ -241,7 +243,7 @@ const MEASURING = '브랜드 측정이 도는 중이라 시작하지 않았어�
         throw new TypeError('verify guard: /api/ 밖으로 나가는 요청을 막았습니다')
       }
       const headers = (init?.headers ?? {}) as Record<string, string>
-      const a: Asked = { method: (init?.method ?? 'GET').toUpperCase(), path: url.split('?')[0]!, type: headers['Content-Type'] ?? null, body: typeof init?.body === 'string' ? (JSON.parse(init.body) as unknown) : null }
+      const a: Asked = { method: (init?.method ?? 'GET').toUpperCase(), path: url.split('?')[0]!, query: url.split('?')[1] ?? '', type: headers['Content-Type'] ?? null, body: typeof init?.body === 'string' ? (JSON.parse(init.body) as unknown) : null }
       asked.push(a)
       const r = reply(a)
       const json = typeof r.body !== 'string'
@@ -637,6 +639,142 @@ const MEASURING = '브랜드 측정이 도는 중이라 시작하지 않았어�
     await waitFor(() => Boolean(dialog()))
     const rp = sent('POST', `${P}/plan`)
     ok('이어 재기 — 계획 본문 { resume: 회차 id } · 확인창 「남은 3문항」 · 검색 최대 8회', rp.length === 1 && JSON.stringify(rp[0]?.body) === JSON.stringify({ resume: R_PART.runId }) && dialogText().includes('남은 3문항') && dialogText().includes('최대 8회'), [rp, dialogText()])
+    await unmount()
+
+    // ── 2026-11-11 검토 반영 ────────────────────────────────────────────────────────────────────
+    const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+    const allAbsent = IDS.map((id) => [id, 'absent'] as [string, AioItem['status']])
+
+    // (검1) 도는 중에 화면을 새로 열면(앞서 받은 결과 없음) ?view=1로 한 번만 읽어 지난 결과를 보인다 — 2초 폴링은 가볍게.
+    st = status({ running: progress({ done: 6 }), view: null })
+    await mount((a) => (a.path === P && a.method === 'GET' && a.query === 'view=1' ? { status: 200, body: { ...st, view: VIEW } } : live(a)))
+    await waitFor(() => tiles().length >= 4)
+    const heavyGets = () => asked.filter((a) => a.method === 'GET' && a.path === P && a.query === 'view=1').length
+    ok(
+      '도는 중에 새로 열기 — 지난 결과(타일 · 회차 목록)를 한 번 읽어 보인다(?view=1) · 진행도 함께',
+      tile('AI 개요가 뜬 질문')?.value === '75%' && Boolean(host.querySelector('.gaio-runs')) && (progressEl()?.textContent ?? '').includes('6/50') && heavyGets() === 1,
+      [tiles(), heavyGets()],
+    )
+    await waitFor(() => sent('GET', P).length >= 3, 6000)
+    ok('도는 중에 새로 열기 — 무거운 읽기는 한 번뿐(그 뒤 2초마다 묻는 것은 가벼운 GET)', heavyGets() === 1 && sent('GET', P).length >= 3, asked.map((a) => `${a.method} ${a.path}?${a.query}`))
+    await unmount()
+
+    // (검2) 이어 잰 옛 회차가 멈춤 — 시작은 앞이어도 마지막으로 끝난 회차의 까닭을 보인다.
+    const STOP_401 = 'SerpAPI 키가 맞지 않아요(HTTP 401) — 가짜 안내. 남은 2문항은 재지 않았어요.'
+    const R_X = mkRun('2026-11-11T01:00:00.000Z', 'partial', [['q-001', 'absent'], ['q-002', 'absent'], ['q-003', 'absent'], ['q-004', 'absent']], { stopReason: 'key', stopMessage: STOP_401, finishedAt: '2026-11-11T03:00:00.000Z' })
+    const R_Y = mkRun('2026-11-11T02:00:00.000Z', 'done', allAbsent)
+    st = status({ view: viewOf([R_OLD, R_DONE, R_X, R_Y]), lastRunAt: R_Y.startedAt })
+    await mount(live)
+    ok('이어 잰 옛 회차가 멈춤 — 시작이 앞이어도 마지막으로 끝난 회차의 멈춘 까닭을 role=alert로', alerts().includes('키가 맞지 않아요'), alerts())
+    ok('회차 목록 — 멈춘 회차의 상태 칸에 까닭을 짧게', (host.querySelector('.gaio-runs')?.textContent ?? '').includes('키가 맞지 않아요'), host.querySelector('.gaio-runs')?.textContent)
+    await unmount()
+
+    // (검3) 본문 없이 출처만 온 개요 — 다시 판정 단추 · 확인창은 본문 있는 판정 불가만 센다.
+    const R_NT = mkRun('2026-11-12T01:00:00.000Z', 'done', [
+      ['q-001', 'shown', { text: '', references: refsOf(OWNED) }],
+      ['q-002', 'shown', { ...judged(null), text: '본문 있는 가짜 개요.', references: refsOf('https://x-ui.example.com/8') }],
+      ['q-003', 'absent'],
+      ['q-004', 'absent'],
+      ['q-005', 'absent'],
+      ['q-006', 'absent'],
+    ])
+    st = status({ view: viewOf([R_OLD, R_DONE, R_NT]), lastRunAt: R_NT.startedAt })
+    await mount(live)
+    const ntRow = [...host.querySelectorAll('.gaio-runs tbody tr')].find((r) => (r.textContent ?? '').includes(kstStamp(R_NT.startedAt)))
+    ok('본문 없는 개요 — 다시 판정 단추는 본문 있는 판정 불가만 센다(1개 — 2개가 아님)', (buttonNamed('다시 판정', ntRow ?? doc)?.textContent ?? '').includes('판정 불가 1개 다시 판정'), ntRow?.outerHTML)
+    ok('본문 없는 개요 — 언급 타일에 「판정 불가 1 · 본문 없는 개요 1(판정 안 함)」', (tile('언급')?.sub ?? '').includes('판정 불가 1') && (tile('언급')?.sub ?? '').includes('본문 없는 개요 1(판정 안 함)'), tiles())
+    const ntQ1 = [...host.querySelectorAll('.gaio-qtable tbody tr')].find((r) => (r.textContent ?? '').includes(TEXT['q-001']!))
+    ok('본문 없는 개요 — 질문 표 칸 「◇」(판정 불가 ◌와 가름)', [...(ntQ1?.querySelectorAll('.gaio-cell') ?? [])].some((c) => c.textContent === '◇' && c.getAttribute('aria-label') === AIO_CELL['no-text'].label), ntQ1?.outerHTML)
+    await click(buttonNamed('다시 판정', ntRow ?? doc))
+    ok('본문 없는 개요 — 다시 판정 확인창은 「판정 최대 1회」', dialogText().includes('판정 최대 1회'), dialogText())
+    await key('Escape')
+    await unmount()
+
+    // (검4) 같은 날 회차 — 질문 표 머리에 시각까지(다른 날은 날짜만), 머리 칸에 전체 시각 이름.
+    const shownTwo = IDS.map((id, i) => [id, i < 2 ? 'shown' : 'absent', i < 2 ? { ...judged(false), text: '가짜 개요.' } : {}] as [string, AioItem['status'], Partial<AioItem>])
+    const R_D1 = mkRun('2026-11-13T01:00:00.000Z', 'done', shownTwo)
+    const R_D2 = mkRun('2026-11-13T02:30:00.000Z', 'done', shownTwo)
+    st = status({ view: viewOf([R_OLD, R_D1, R_D2]), lastRunAt: R_D2.startedAt })
+    await mount(live)
+    const headCells = [...host.querySelectorAll('.gaio-qtable thead th.gaio-cellcol')]
+    ok(
+      '질문 표 머리 — 같은 날 회차는 시각까지(「11/13 10:00」 · 「11/13 11:30」), 다른 날은 날짜만 · 머리 칸 aria-label에 회차 시각',
+      eq(headCells.map((th) => th.textContent), ['11/3', '11/13 10:00', '11/13 11:30']) && headCells.every((th) => (th.getAttribute('aria-label') ?? '').endsWith('회차')),
+      headCells.map((th) => [th.textContent, th.getAttribute('aria-label')]),
+    )
+    await unmount()
+
+    // (검5) 올린 글 표 — 같은 제목 글(티스토리 · 네이버에 함께 올림)은 주소 호스트로 가른다.
+    const POST_NV = 'https://m.blog.naver.com/fakewriter2/223000000099'
+    const ledger2 = [...ledger, { id: 'p-w2n', url: POST_NV, key: trackingKey(POST_NV)!, publishedOn: '2026-11-05', publishedOnSource: 'user', recordedAt: '2026-11-05T03:00:00.000Z', articleId: 'topic:w2', articleTitle: '가짜 글 W2' }]
+    const ctx2: AioReadContext = { ...CTX, posts: aioPostRows(ledger2, external, (p) => (p.articleId === 'topic:w2' ? 'w2' : WRITER_NAME)) }
+    st = status({ view: aioView([R_OLD, R_DONE], ctx2, { unreadableRuns: 0 }) })
+    await mount(live)
+    const ptxt = host.querySelector('.gaio-posts')?.textContent ?? ''
+    ok('올린 글 표 — 같은 제목 글은 주소 호스트로 가른다(fakewriter2.tistory.com · m.blog.naver.com)', ptxt.includes('fakewriter2.tistory.com') && ptxt.includes('m.blog.naver.com') && !host.innerHTML.includes(WRITER_NAME), ptxt)
+    await unmount()
+
+    // (검6) 지난 알림 — 409 뒤 포커스는 알림으로, 「다시 읽기」는 지난 알림을 지운다, 다시 판정 결과 줄은 새 회차가 시작되면 숨긴다.
+    st = status()
+    planReply = { status: 409, body: { error: MEASURING, code: 'measuring' } }
+    await mount(live)
+    await click(buttonNamed('지금 재기'))
+    await waitFor(() => alerts().includes('측정이 도는 중'))
+    ok('409 뒤 포커스 — 알림(tabIndex -1)으로 옮긴다(꺼진 단추 뒤 몸통으로 빠지지 않음)', doc.activeElement?.id === 'gaio-note', doc.activeElement?.outerHTML)
+    await click(buttonNamed('다시 읽기'))
+    await settle()
+    ok('다시 읽기 — 지난 알림(측정 중 409)을 지운다', !alerts().includes('측정이 도는 중'), alerts())
+    await unmount()
+    planReply = { status: 200, body: plan() }
+    st = status({ view: VIEW_NEW, lastRunAt: R_NEW.startedAt, rejudged: { runId: R_DONE.runId, judged: 1, failed: 0, stopped: false, stopMessage: null, at: '2026-11-11T05:00:00.000Z' } })
+    await mount(live)
+    ok('다시 판정 결과 줄 — 그 뒤 새 회차가 시작됐으면 숨긴다', !text().includes('다시 판정을 마쳤어요'), text())
+    await unmount()
+    st = status({ rejudged: { runId: R_DONE.runId, judged: 0, failed: 0, stopped: true, stopMessage: '그 사이 회차가 바뀌어(다른 창의 이어 재기 등) 멈췄어요 — 가짜.', at: '2026-11-11T05:00:00.000Z' } })
+    await mount(live)
+    ok('다시 판정 결과 줄 — 멈춘 까닭은 서버 글자 그대로(「3번 잇따라」로 뭉뚱그리지 않음)', text().includes('회차가 바뀌어') && !text().includes('3번 잇따라 실패해'), text())
+    await unmount()
+
+    // (검7) 측정 중 — 「다시 판정」 단추를 보이지 않는다(확인창을 거쳐 409로 막히지 않게).
+    st = status({ measuring: true })
+    await mount(live)
+    ok('측정 중 — 「다시 판정」 단추 없음', !buttonNamed('다시 판정'), text())
+    await unmount()
+
+    // (검8) 문구 — 중단한 회차는 보통 안내 · 위치만 다른 회차 · 확인 불가 한 번만 · 판정 엔진 이름 · 분모 문구 · 이어 재기 진행 기준.
+    const R_CAN = mkRun('2026-11-12T01:00:00.000Z', 'cancelled', [['q-001', 'absent'], ['q-002', 'absent'], ['q-003', 'absent']], { stopReason: 'cancelled', stopMessage: '중단했어요 — 받은 검색은 남겼어요. 남은 3문항은 재지 않았어요.' })
+    st = status({ view: viewOf([R_OLD, R_DONE, R_CAN]), lastRunAt: R_CAN.startedAt })
+    await mount(live)
+    ok(
+      '중단한 회차 — 붉은 알림이 아니라 보통 안내(role=status) 「중단한 회차예요 — 남은 3문항」',
+      !alerts().includes('중단') && [...host.querySelectorAll('[role="status"]')].some((p) => (p.textContent ?? '').includes('중단한 회차예요 — 남은 3문항')),
+      [alerts(), text()],
+    )
+    await unmount()
+    const R_LOC = mkRun('2026-11-12T01:00:00.000Z', 'done', allAbsent, {
+      conditions: aioConditions({ startedAt: '2026-11-12T01:00:00.000Z', location: 'Seoul,South Korea', bankVersion: 'v6', questionSet: QSET, judgeEngine: 'gemini', judgeModel: null }),
+    })
+    st = status({ view: viewOf([R_OLD, R_DONE, R_LOC]), lastRunAt: R_LOC.startedAt })
+    await mount(live)
+    const runsText = host.querySelector('.gaio-runs')?.textContent ?? ''
+    ok('조건 다름 — 위치만 다르면 「검색 조건(위치 등) 바뀜」(「수집 모델」이라 쓰지 않음)', runsText.includes('검색 조건(위치 등) 바뀜') && !runsText.includes('수집 모델'), runsText)
+    await unmount()
+    st = status({ view: VIEW_DROP, lastRunAt: R_DROP.startedAt })
+    await mount(live)
+    ok('확인 불가 — 한 번만 쓴다(「확인 불가(확인 불가)」 · 「확인 불가 / 확인 불가」 없음)', !text().includes('확인 불가(확인 불가)') && text().includes('언급 확인 불가'), host.querySelector('.gaio-trend-list')?.textContent)
+    await unmount()
+    st = status()
+    await mount(live)
+    ok('분모 문구 — 「못 읽음 1개 · 오류 1개는 분모에서 뺐어요」', (tile('AI 개요가 뜬 질문')?.sub ?? '').includes('못 읽음 1개 · 오류 1개는 분모에서 뺐어요'), tiles())
+    const doneRow = [...host.querySelectorAll('.gaio-runs tbody tr')].find((r) => (r.textContent ?? '').includes(kstStamp(R_DONE.startedAt)))
+    ok('「자세히」 단추 — 접근 이름에 회차 시각', (buttonNamed('자세히', doneRow ?? doc)?.getAttribute('aria-label') ?? '') === `${kstStamp(R_DONE.startedAt)} 회차 자세히`, doneRow?.outerHTML)
+    await click(buttonNamed('자세히', doneRow ?? doc))
+    await waitFor(() => (doc.getElementById('gaio-detail')?.textContent ?? '').includes('경쟁가짜민박이 있어요'))
+    ok('회차 자세히 — 판정 엔진은 이름으로(「판정 Gemini」 — id 그대로 쓰지 않음)', (doc.getElementById('gaio-detail')?.textContent ?? '').includes('판정 Gemini'), doc.getElementById('gaio-detail')?.textContent)
+    await unmount()
+    st = status({ running: progress({ resumed: true, planned: 41, done: 2, searches: 3, maxSearches: 92 }), view: VIEW })
+    await mount(live)
+    ok('이어 재기 진행 — 「이번에 2/41문항 · 검색 3/92회」(확인창의 최대 검색과 같은 기준)', (progressEl()?.textContent ?? '').includes('이어 재는 중… 이번에 2/41문항') && (progressEl()?.textContent ?? '').includes('검색 3/92회'), progressEl()?.textContent)
     await unmount()
 
     ok('가짜 fetch — /api/ 밖(진짜 SerpAPI · LLM 포함)으로 나가려 한 요청이 없다', outside.length === 0, outside)

@@ -2870,7 +2870,7 @@ app.get('/api/google-aio/:tenantId', async (req, res) => {
   const tenant = await googleAioTenant(req, res);
   if (!tenant) return;
   try {
-    res.json(await googleAioStatus(tenant));
+    res.json(await googleAioStatus(tenant, { view: req.query.view === '1' }));
   } catch (err) {
     sendGoogleAioError(res, err);
   }
@@ -2934,6 +2934,23 @@ app.post('/api/google-aio/:tenantId/runs/:runId/rejudge', async (req, res) => {
   } catch (err) {
     sendGoogleAioError(res, err);
   }
+});
+
+// 본문 JSON이 깨졌으면 express.json()이 Host · Origin 검사보다 먼저 실패하고, Express 기본 처리기는 스택(설치 경로가 든 HTML)을 싣는다 — 이
+// 접두어는 Host · Origin을 먼저 보고(403) 아니면 400 { error }만 준다(스택 없음 · 검색 0). 다른 접두어의 같은 동작은 이 기능 전부터 있던 것이라 그대로 둔다.
+app.use('/api/google-aio', (err: unknown, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+  const problem = localRequestProblem(req.headers.host, typeof req.headers.origin === 'string' ? req.headers.origin : undefined);
+  if (problem) {
+    res.status(403).json({ error: problem });
+    return;
+  }
+  const status = typeof err === 'object' && err !== null && 'status' in err && typeof err.status === 'number' && err.status >= 400 && err.status < 500 ? err.status : 500;
+  if (status === 500) console.error('[google-aio]', scrubSerpKey(err instanceof Error ? (err.stack ?? err.message) : String(err)));
+  res.status(status).json({ error: status === 500 ? '앱 오류로 요청을 처리하지 못했어요.' : status === 413 ? '본문이 너무 커요.' : '본문 JSON을 읽지 못했어요.' });
 });
 
 // 앱 밖 글(server/externalPosts.ts) — 앱에서 만들지 않은 글의 주소를 브랜드마다 따로 적어 인용을 추적한다(data/<tenant>/external-posts.json).

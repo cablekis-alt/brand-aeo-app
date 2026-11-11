@@ -9,8 +9,12 @@ import {
   aioBankLabel,
   aioConditionSignature,
   aioConditions,
+  aioCoverage,
+  aioDayText,
+  aioEnoughMeasured,
   aioFollowUpParams,
   aioItemOf,
+  aioJudgeLabel,
   aioLocationFor,
   aioMaxSearches,
   aioParamsFit,
@@ -23,6 +27,7 @@ import {
   aioResumeProblem,
   aioRunId,
   aioSearchParams,
+  aioSettleInFlight,
   aioSourceMarks,
   aioView,
   parseAioRun,
@@ -34,6 +39,7 @@ import {
   summarizeAioRun,
   type AioFailedReason,
   type AioItem,
+  type AioJudgeTokens,
   type AioMentionVerdict,
   type AioPost,
   type AioQuestionSet,
@@ -94,19 +100,24 @@ import { thoughtTokensOf } from './usageStats.js';
  * - 실행 잠금(SerpAPI 공용 'aio')을 잡은 뒤 다시 본다: 이 PC 켜짐 · 시범 브랜드 · 측정 중 아님 · 판정 엔진(키가 있고 클라이언트가 만들어짐) ·
  *   질문 지문 · 조건 서명이 계획과 같음 · 계정을 새로 읽어 AI 개요 몫이 M 이상. 하나라도 어긋나면 잠금을 놓고 409(검색 0).
  * - 차례(executeAioRun — 검색 · 판정을 주입받는다): 질문 하나 → 첫 검색 → (늦게 오는 개요면 곧바로 후속 engine=google_ai_overview) → 못 읽음이면
- *   1번 다시 검색(회차당 질문의 10%까지) → 있음이면 판정(b5a 1회, 자르기 전 본문) → 문항마다 회차 파일에 적는다(판정 앞뒤 두 번). 보낸 검색은
- *   M을 넘지 않는다. 판정을 못 읽으면 mentioned null(판정 불가 — 미언급으로 세지 않는다), 판정이 3번 잇따라 실패하면 검색을 멈춘다('partial').
- *   판정 빈 응답 계수(브랜드 측정의 판정 차단기)는 되돌리지 않는다 — 되돌리는 것은 측정 시작뿐이다.
+ *   1번 다시 검색(회차당 질문의 10%까지) → 있음이면 판정(b5a 1회, 자르기 전 본문) → 문항마다 회차 파일에 적는다(판정 앞뒤 두 번). 검색마다
+ *   보내기 전에 회차 검색 수를 올리고 날아가는 검색(inFlight)을 함께 적는다(장부와 같은 규칙 — 앱이 꺼져도 보낸 검색을 센다). 보낸 검색은 M을
+ *   넘지 않는다. 판정을 못 읽으면 mentioned null(판정 불가 — 미언급으로 세지 않는다), 판정이 3번 잇따라 실패하면 검색을 멈춘다('partial').
+ *   판정 빈 응답 계수(브랜드 측정의 판정 차단기)는 되돌리지 않는다 — 되돌리는 것은 측정 시작뿐이다. 끝까지 갔어도 잰 문항이 90% 미만이면
+ *   'done'이 아니라 'partial'(coverage — 요약 · 추이에 쓰지 않는다).
  * - 멈춤: 401 · 403 · 400 · 429(결제 주기 소진 · 시간당) · 계정 · 장부 · 몫 · 바닥 · 시간당에서 바로(남은 질문 0회), 시간 초과 · 5xx가 3번 잇따르면.
  *   시간 초과는 다시 보내지 않는다(이미 과금됐을 수 있다). 몫 · 바닥에 막혀 후속을 못 보낸 질문은 「못 읽음」. 후속이 HTTP 400이어도 그 질문은
- *   「못 읽음」, 회차는 멈춘다(같은 요청은 다 실패하는 쪽 — 돈이 나가지 않는 쪽). 중단 · 이 PC 끔은 다음 검색 전에 본다.
- * - 끊긴 회차: 실행기 없이 'running'인 파일은 GET에서 'interrupted'로만 보이고(읽기 길에서는 쓰지 않는다), 다음 시작 때 한 번 고친다. 다른 창이
- *   AI 개요 잠금을 쥐고 있으면 그 창의 회차일 수 있어 끊김으로 보이지 않는다. 이어 재기는 같은 한국 날짜 · 같은 조건 서명 · 같은 질문 지문인
- *   멈춘 회차의 남은 질문만 보낸다(이중 과금 없음).
+ *   「못 읽음」, 회차는 멈춘다(같은 요청은 다 실패하는 쪽 — 돈이 나가지 않는 쪽). 중단 · 이 PC 끔 · 브랜드 측정 시작(G3)은 다음 검색 전에 본다.
+ * - 끊긴 회차: 실행기 없이 'running'인 파일은 GET에서 'interrupted'로만 보이고(읽기 길에서는 쓰지 않는다), 다음 시작 · 다시 판정 때 한 번 고친다
+ *   — 날아가던 검색의 질문은 「못 읽음(interrupted)」으로 마무리한다(보낸 검색은 셌고 다시 보내지 않는다). 다른 창이 AI 개요 잠금을 쥐고 있으면
+ *   그 창의 회차일 수 있어 끊김으로 보이지 않는다. 이어 재기는 같은 한국 날짜 · 같은 조건 서명 · 같은 질문 지문인 멈춘 회차의 남은 질문만
+ *   보낸다(이중 과금 없음).
  * - 읽기: 회차 파일 · 원장 · 앱 밖 글 · 배정 파일은 브랜드 쓰기 줄(queueTenantWrite) 안에서 읽는다. 자사 · 올린 글 출처는 저장하지 않고 읽을 때
  *   계산한다(자사 주소 · 원장을 고치면 지난 회차에도 바로 적용). 작성자는 배정 글의 키(w1~w8)만 옮긴다. 도는 동안 상태 GET은 메모리의 진행만
- *   준다(2초마다 원장을 읽지 않는다).
- * - 다시 판정: 저장된 본문으로 판정만 다시(검색 0) — 그 회차가 돌지 않고 다른 다시 판정이 없을 때만.
+ *   준다(2초마다 원장을 읽지 않는다 — 화면을 새로 열었을 때만 ?view=1로 한 번 읽는다).
+ * - 다시 판정: 저장된 본문으로 판정만 다시(검색 0) — 그 회차가 돌지 않고(이 서버 · 준비 중 · 다른 창) 다른 다시 판정이 없을 때만. 판정마다 회차
+ *   파일을 새로 읽어 판정 칸만 더해 쓰고, 그 사이 회차가 도는 중이 되거나 문항이 바뀌었으면(다른 창의 이어 재기) 멈춘다 — 이미 낸 검색 기록을
+ *   덮지 않는다.
  * - 웹(Vercel)에는 라우트가 없다(함수 12/12) — 화면은 404를 「데스크톱 앱에서 볼 수 있습니다」로 읽는다.
  */
 
@@ -130,11 +141,13 @@ const JUDGE_SECONDS = 4;
  * 계정의 월 검색 수 비율). 모르는 요금제면 환산하지 않는다(null).
  */
 const PLAN_PRICE_USD: Readonly<Record<string, number>> = { Free: 0, Starter: 25, Developer: 75, Production: 150, 'Big Data': 275 };
-const JUDGE_LABEL: Readonly<Record<string, string>> = { gemini: 'Gemini', claude: 'Claude', openai: 'OpenAI', mock: '시험용 목 판정' };
 /** 다시 검색하는 못 읽음 — 응답은 받았는데 내용이 비었거나 깨진 것. 토큰이 너무 김 · 후속 요청 실패(시간 초과 · HTTP 오류) · 몫에 막힘은 하지 않는다. */
 const RESEARCHABLE: ReadonlySet<AioUnreadableReason> = new Set(['overview-error', 'overview-empty', 'overview-shape', 'follow-up-error', 'follow-up-empty', 'follow-up-shape']);
 
 const SETTINGS_BROKEN = '이 PC의 구글 AI 개요 시범 설정 파일(google-aio-settings.json)이 깨져 있어 시작하지 않았어요';
+/** 설정 파일이 깨졌을 때의 글 — 까닭과 고치는 길(파일 위치 · 지우면 꺼짐으로 돌아감). */
+const settingsBroken = (detail: string | null) =>
+  `${SETTINGS_BROKEN}${detail ? ` — ${detail}` : ''}. 파일(${SETTINGS_FILE})을 바로잡거나 지워 주세요 — 지우면 「꺼짐」(기본)으로 돌아가요.`;
 const PILOT_OFF = '이 PC에서는 구글 AI 개요 시범 측정을 켜지 않았어요 — 「이 PC에서 켜기」를 먼저 눌러 주세요.';
 const NOT_PILOT = '이 브랜드는 시범 대상이 아니에요.';
 const MEASURING = '브랜드 측정이 도는 중이라 시작하지 않았어요 — 측정이 끝난 뒤 다시 눌러 주세요(판정 엔진을 함께 써요).';
@@ -159,7 +172,17 @@ const STOP_TEXT = {
   judge: '판정 엔진이 3번 잇따라 답하지 않아 검색을 멈췄어요 — 받은 개요는 저장했어요. 판정 엔진을 확인한 뒤 「다시 판정」을 눌러 주세요.',
   internal: '앱 오류로 멈췄어요 — 받은 검색은 남겼어요.',
   interrupted: '앱이 꺼져 멈춘 회차예요 — 받은 검색만 남았어요.',
+  measuring: '브랜드 측정이 시작돼 멈췄어요(판정 엔진을 함께 써요) — 받은 검색은 남겼어요. 측정이 끝난 뒤 「이어 재기」를 눌러 주세요(오늘 안).',
 } as const;
+/** 끝까지 갔지만 잰 문항이 90% 미만 — 요약 · 추이에 쓰지 않는다(늦게 오는 개요 장애가 노출 0%로 오르지 않게). */
+const coverageText = (c: { planned: number; measured: number; unreadable: number; failed: number }) =>
+  `잰 질문이 ${c.measured}/${c.planned}개라(90% 미만) 요약 · 추이에 쓰지 않아요 — 못 읽음 ${c.unreadable}개 · 오류 ${c.failed}개. 회차 자세히에서 까닭을 확인해 주세요.`;
+const REJUDGE_STOP = {
+  judge: '판정 엔진이 3번 잇따라 답하지 않아 멈췄어요(판정 엔진을 확인해 주세요).',
+  changed: '그 사이 회차가 바뀌어(다른 창의 이어 재기 등) 멈췄어요 — 받은 검색 · 문항은 그대로예요. 끝난 뒤 다시 판정해 주세요.',
+  measuring: '브랜드 측정이 시작돼 멈췄어요 — 측정이 끝난 뒤 다시 판정해 주세요.',
+} as const;
+const RUN_STARTING = '그 회차를 이어 재려고 준비하는 중이에요 — 끝난 뒤 다시 판정해 주세요.';
 
 export type GoogleAioErrorCode = 'plan-changed' | 'busy' | 'busy-elsewhere' | 'limit' | 'pilot-off' | 'not-pilot' | 'measuring' | 'judge' | 'resume' | 'not-running';
 
@@ -199,18 +222,18 @@ async function readSettingsInLock(): Promise<{ raw: unknown; settings: AioSettin
     text = await readFile(SETTINGS_FILE, 'utf-8');
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
-    if (code !== 'ENOENT') throw new GoogleAioError(`${SETTINGS_BROKEN}(${code ?? '읽기 오류'}).`, 500);
+    if (code !== 'ENOENT') throw new GoogleAioError(settingsBroken(`읽기 오류 ${code ?? ''}`.trim()), 500);
   }
   let raw: unknown;
   if (text !== null) {
     try {
       raw = JSON.parse(text);
     } catch {
-      throw new GoogleAioError(`${SETTINGS_BROKEN}.`, 500);
+      throw new GoogleAioError(settingsBroken('JSON을 읽지 못했어요'), 500);
     }
   }
   const parsed = parseAioSettings(raw);
-  if (!parsed.ok) throw new GoogleAioError(`${SETTINGS_BROKEN} — ${parsed.error}.`, 500);
+  if (!parsed.ok) throw new GoogleAioError(settingsBroken(parsed.error), 500);
   return { raw, settings: parsed.settings };
 }
 
@@ -304,7 +327,7 @@ export interface GoogleAioJudgeState {
 /** 판정 엔진 — 해석된(또는 이미 만든) 엔진의 키가 있어야 한다(목 엔진 제외). 키 값은 보지 않고 있는지만 본다. */
 function judgeState(): GoogleAioJudgeState {
   const engine = usedJudgeEngineId();
-  const label = JUDGE_LABEL[engine] ?? engine;
+  const label = aioJudgeLabel(engine);
   if (engine !== 'mock' && !(process.env[ENGINE_ENV[engine]] ?? '').trim()) {
     return { engine, label, ready: false, problem: `판정 엔진(${label}) 키가 이 PC에 없어 시작하지 않아요 — 판정 없이 검색비만 쓰지 않게요.` };
   }
@@ -396,8 +419,18 @@ interface ActiveRun {
   planned: number;
   done: number;
   cancel: boolean;
+  /** 이번 실행을 시작할 때의 회차 검색 수 · 문항 수 — 이어 재기 진행은 「이번에」 보낸 수 · 받은 문항으로 보인다(확인창의 최대 검색과 같은 기준). */
+  searchesAtStart: number;
+  itemsAtStart: number;
+  /** 이번 실행의 최대 검색(새 회차 = M, 이어 재기 = 계획의 최대 검색). */
+  budget: number;
 }
 let active: ActiveRun | null = null;
+/**
+ * 실행 잠금을 잡고 회차를 준비하는 동안(계정을 새로 읽느라 몇 초 걸린다) — active가 아직 없어도 이 표시로 같은 회차의 다시 판정 · 두 번째 시작을
+ * 막는다(준비 중에 다시 판정이 옛 사본을 들고 들어가 이어 재기 결과를 덮지 않게).
+ */
+let starting: { tenantId: string; resumeRunId: string | null } | null = null;
 
 interface Rejudging {
   tenantId: string;
@@ -406,7 +439,7 @@ interface Rejudging {
   done: number;
 }
 let rejudging: Rejudging | null = null;
-let lastRejudge: { tenantId: string; runId: string; judged: number; failed: number; stopped: boolean; at: string } | null = null;
+let lastRejudge: { tenantId: string; runId: string; judged: number; failed: number; stopped: boolean; stopMessage: string | null; at: string } | null = null;
 
 /** 다른 서버(앱을 두 번 켬)가 SerpAPI 실행 잠금을 쥐었으면 그 기능. 잠금 파일을 못 읽으면 누가 쥐었는지 모르니 쥔 것으로 본다(막힌 쪽). */
 async function elsewhereFeature(): Promise<string | null> {
@@ -421,7 +454,7 @@ async function elsewhereFeature(): Promise<string | null> {
 /** 지금 시작하지 못하는 까닭(이 서버 · 다른 창에서 SerpAPI 실행이 도는 중). */
 async function busyError(): Promise<GoogleAioError | null> {
   const holder = serpRunHolder();
-  if (active || holder === 'aio') return new GoogleAioError(BUSY, 409, 'busy');
+  if (active || starting || holder === 'aio') return new GoogleAioError(BUSY, 409, 'busy');
   if (holder) return new GoogleAioError(`다른 SerpAPI 작업(${FEATURE_LABEL[holder]})이 도는 중이에요 — 끝난 뒤 다시 눌러 주세요.`, 409, 'busy');
   return (await elsewhereFeature()) !== null ? new GoogleAioError(BUSY_ELSEWHERE, 409, 'busy-elsewhere') : null;
 }
@@ -431,11 +464,20 @@ async function busyError(): Promise<GoogleAioError | null> {
  * 끊김으로 보지 않는다.
  */
 function isStale(run: AioRun, elsewhere: string | null): boolean {
-  return run.state === 'running' && !(active && active.tenantId === run.tenantId && active.runId === run.runId) && elsewhere !== 'aio' && elsewhere !== 'unknown';
+  return (
+    run.state === 'running' &&
+    !(active && active.tenantId === run.tenantId && active.runId === run.runId) &&
+    !(starting && starting.tenantId === run.tenantId) &&
+    elsewhere !== 'aio' &&
+    elsewhere !== 'unknown'
+  );
 }
 
-/** 읽기 길의 회차 — 끊긴 회차는 'interrupted'로만 보인다(파일은 고치지 않는다). */
-const effective = (run: AioRun, elsewhere: string | null): AioRun => (isStale(run, elsewhere) ? { ...run, state: 'interrupted' } : run);
+/** 끊긴 회차를 고친 모양 — 날아가던 검색의 질문은 「못 읽음(interrupted)」으로 마무리한다(이어 재기가 다시 사지 않게). */
+const interruptedOf = (run: AioRun): AioRun => ({ ...aioSettleInFlight(run), state: 'interrupted', stopReason: 'interrupted', stopMessage: STOP_TEXT.interrupted });
+
+/** 읽기 길의 회차 — 끊긴 회차는 고친 모양으로만 보인다(파일은 고치지 않는다 — 다음 시작 · 다시 판정 때 한 번 고친다). */
+const effective = (run: AioRun, elsewhere: string | null): AioRun => (isStale(run, elsewhere) ? interruptedOf(run) : run);
 
 // ── 계정 · 몫 ─────────────────────────────────────────────────────────────────
 
@@ -483,7 +525,7 @@ function quotaOf(view: SerpApiAccountView): { quota: GoogleAioQuota | null; bloc
 
 /** 몫이 M보다 적을 때의 까닭 — 숫자는 계정 · 장부에서 온 값 그대로. */
 function limitMessage(q: GoogleAioQuota, need: number): string {
-  if (q.left < need) return `이번 결제 주기 구글 AI 개요 몫이 ${q.left}회 남아(몫 ${q.cap}회) 한 회차(최대 ${need}회)를 시작하지 않았어요 — ${q.planRenewalDate ?? '갱신일'}에 다시 채워져요.`;
+  if (q.left < need) return `이번 결제 주기 구글 AI 개요 몫이 ${q.left}회 남아(몫 ${q.cap}회) 한 회차(최대 ${need}회)를 시작하지 않았어요 — ${q.planRenewalDate ? aioDayText(q.planRenewalDate) : '다음 갱신일'}에 다시 채워져요.`;
   if (q.aboveFloor < need) return `계정에 남은 검색이 바닥(${q.floor}회) 위로 ${q.aboveFloor}회뿐이라 한 회차(최대 ${need}회)를 시작하지 않았어요 — 다른 PC · 다른 작업 몫이에요.`;
   if (q.hourLeft < need) return `이번 시간에 더 보낼 수 있는 검색이 ${q.hourLeft}회라 한 회차(최대 ${need}회)를 시작하지 않았어요 — 한 시간쯤 뒤 다시 눌러 주세요.`;
   return `지금 보낼 수 있는 검색이 ${q.allowed}회라 한 회차(최대 ${need}회)를 시작하지 않았어요.`;
@@ -511,7 +553,9 @@ export interface AioRunnerDeps {
   cancelled?: () => boolean;
   /** 질문마다 본다 — 거짓이면 더 보내지 않는다(이 PC 끔). 기본은 설정 파일. */
   pilotOn?: () => Promise<boolean>;
-  /** 문항마다(판정 앞뒤) 부른다 — 기본은 회차 파일 쓰기. */
+  /** 질문마다 본다 — 참이면 더 보내지 않는다(브랜드 측정이 시작됨 — 판정 빈 응답 계수를 함께 쓰므로 G3를 도는 동안에도 지킨다). 기본 measureInFlight. */
+  measuring?: () => boolean;
+  /** 검색 보내기 직전 · 문항마다(판정 앞뒤) 부른다 — 기본은 회차 파일 쓰기. */
   save?: (run: AioRun) => Promise<void>;
   /** 질문 하나가 끝날 때마다(화면 진행). */
   progress?: (run: AioRun) => void;
@@ -571,19 +615,26 @@ function failureOf(err: unknown): Omit<Extract<SendOutcome, { ok: false }>, 'ok'
   return { sent: !preSend, stop: { kind: err.kind, message, state: 'partial' }, streak: false, failedReason: 'upstream', message };
 }
 
-/** 검색 한 번 — 회차의 M에 닿았으면 보내지 않는다. 보낸 것(오류 · 시간 초과 포함)은 회차 검색 수에 센다(장부와 같은 셈). */
-async function sendOnce(run: AioRun, search: AioSearchFn, params: Record<string, string>): Promise<SendOutcome> {
+/**
+ * 검색 한 번 — 회차의 M에 닿았으면 보내지 않는다. 보내기 전에 회차 검색 수를 올리고 날아가는 검색(inFlight)과 함께 회차 파일에 적는다(공용 장부와
+ * 같은 규칙 — 앱이 응답 전에 꺼져도 보낸 검색을 센다, 이어 재기의 M 상한이 실제 보낸 수를 쓴다). 우리 쪽에서 막혀 보내지 않았으면 되돌린다.
+ */
+async function sendOnce(run: AioRun, search: AioSearchFn, params: Record<string, string>, beforeSend: () => Promise<void>): Promise<SendOutcome> {
   if (run.usage.searches >= run.maxSearches) {
     const message = `이 회차의 최대 검색 수(${run.maxSearches}회)에 닿아 멈췄어요.`;
     return { ok: false, sent: false, stop: { kind: 'max-searches', message, state: 'partial' }, streak: false, failedReason: 'upstream', message };
   }
+  run.usage.searches += 1;
+  await beforeSend();
   try {
     const { json } = await search(params);
-    run.usage.searches += 1;
     return { ok: true, json };
   } catch (err) {
     const f = failureOf(err);
-    if (f.sent) run.usage.searches += 1;
+    if (!f.sent) {
+      run.usage.searches -= 1;
+      if (run.inFlight) run.inFlight = { ...run.inFlight, searches: Math.max(0, run.inFlight.searches - 1) };
+    }
     return { ok: false, ...f };
   }
 }
@@ -598,18 +649,31 @@ interface QuestionStep {
   streak: boolean | null | undefined;
 }
 
-/** 질문 하나 — 첫 검색 → (늦게 오는 개요면) 후속 → (못 읽음이면) 1번 다시 검색. */
-async function searchQuestion(run: AioRun, q: { questionId: string; text: string }, search: AioSearchFn, deps: AioRunnerDeps, canReSearch: () => boolean): Promise<QuestionStep> {
+/** 질문 하나 — 첫 검색 → (늦게 오는 개요면) 후속 → (못 읽음이면) 1번 다시 검색. 검색마다 보내기 전에 날아가는 검색을 적는다(save). */
+async function searchQuestion(
+  run: AioRun,
+  q: { questionId: string; text: string },
+  search: AioSearchFn,
+  deps: AioRunnerDeps,
+  canReSearch: () => boolean,
+  save: (run: AioRun) => Promise<void>,
+): Promise<QuestionStep> {
   const params = aioSearchParams(q.text, run.conditions.location);
   const ref = { questionId: q.questionId, query: params.q };
   const now = () => new Date().toISOString();
   if (!aioParamsFit(params)) return { item: aioItemOf(ref, { status: 'failed', reason: 'bad-query', topKeys: [], searchId: null }, { fetchedAt: now(), searches: 0 }), text: null, stop: null, streak: undefined };
   let searches = 0;
   let previous: AioItem | null = null;
+  /** 보내기 직전 — 이 질문에 보낸 검색(이번 것 포함)을 날아가는 검색으로 적는다. */
+  const beforeSend = () => {
+    run.inFlight = { questionId: q.questionId, query: params.q, searches: searches + 1, at: now() };
+    return save(run);
+  };
+  const send = (p: Record<string, string>) => sendOnce(run, search, p, beforeSend);
   /** 다시 검색이 실패하면 앞의 「못 읽음」을 그 문항의 끝 상태로 둔다(그 사이 보낸 검색 수까지). */
   const keepPrevious = (extra: { error?: string }): AioItem | null => (previous ? { ...previous, searches, ...(extra.error ? { error: extra.error.slice(0, 300) } : {}) } : null);
   for (;;) {
-    const first = await sendOnce(run, search, params);
+    const first = await send(params);
     if (!first.ok) {
       if (first.sent) searches += 1;
       if (first.stop) return { item: keepPrevious({ error: first.message }), text: null, stop: first.stop, streak: undefined };
@@ -625,7 +689,7 @@ async function searchQuestion(run: AioRun, q: { questionId: string; text: string
       if (!aioParamsFit(fparams)) {
         read = { status: 'unreadable', reason: 'token-too-long', topKeys: [], searchId: read1.searchId };
       } else {
-        const follow = await sendOnce(run, search, fparams);
+        const follow = await send(fparams);
         if (!follow.ok) {
           if (follow.sent) {
             searches += 1;
@@ -676,6 +740,7 @@ async function judgeOnce(deps: Pick<AioRunnerDeps, 'judge' | 'judgeEngine'>, bra
 export async function executeAioRun(run: AioRun, questions: readonly { questionId: string; text: string }[], brand: BrandContext, deps: AioRunnerDeps): Promise<AioRun> {
   const search: AioSearchFn = deps.search ?? ((params) => serpSearch('aio', params));
   const save = deps.save ?? saveRun;
+  const measuring = deps.measuring ?? measureInFlight;
   const reSearchCap = aioReSearchCap(run.questionSet.ids.length);
   let streak = 0;
   let judgeFails = 0;
@@ -690,9 +755,14 @@ export async function executeAioRun(run: AioRun, questions: readonly { questionI
         stop = { kind: 'pilot-off', message: STOP_TEXT.pilotOff, state: 'cancelled' };
         break;
       }
-      const step = await searchQuestion(run, q, search, deps, () => run.usage.reSearches < reSearchCap);
+      if (measuring()) {
+        stop = { kind: 'measuring', message: STOP_TEXT.measuring, state: 'partial' };
+        break;
+      }
+      const step = await searchQuestion(run, q, search, deps, () => run.usage.reSearches < reSearchCap, save);
       if (step.item) {
         run.items.push(step.item);
+        run.inFlight = null;
         await save(run);
       }
       if (step.streak === true) streak += 1;
@@ -732,6 +802,9 @@ export async function executeAioRun(run: AioRun, questions: readonly { questionI
     console.error('[googleAio] 실행이 앱 오류로 멈췄습니다:', scrubSerpKey(err instanceof Error ? (err.stack ?? err.message) : String(err)));
   }
   const left = aioRemaining(run).length;
+  // 멈춘 질문의 날아간 검색은 회차 검색 수에 이미 들었다 — 그 질문은 남겨 이어 재기 대상으로 둔다(첫 검색과 후속 사이 중단 등).
+  run.inFlight = null;
+  if (!stop && left === 0 && !aioEnoughMeasured(run)) stop = { kind: 'coverage', message: coverageText(aioCoverage(run)), state: 'partial' };
   run.state = stop ? stop.state : left === 0 ? 'done' : 'partial';
   run.stopReason = stop?.kind ?? null;
   run.stopMessage = stop ? scrubSerpKey(`${stop.message}${left > 0 ? ` 남은 ${left}문항은 재지 않았어요.` : ''}`) : null;
@@ -744,48 +817,110 @@ export async function executeAioRun(run: AioRun, questions: readonly { questionI
   return run;
 }
 
+/** 다시 판정 한 건 — 회차 파일에 더할 판정 칸과 판정 사용량(문항은 질문 id · 받은 시각으로 찾는다). */
+export interface AioRejudgePatch {
+  questionId: string;
+  fetchedAt: string;
+  /** null이면 판정을 못 읽음 — 앞 판정을 지우지 않고 사용량만 더한다. */
+  verdict: AioMentionVerdict | null;
+  judgeEngine: string;
+  judgeModel: string | null;
+  at: string;
+  tokens: Partial<AioJudgeTokens>;
+}
+/** 다시 판정 저장 — 더해 쓴 회차를 돌려준다. 회차가 그 사이 바뀌었으면(도는 중 · 문항이 달라짐 · 없음) null(다시 판정을 멈춘다). */
+export type AioRejudgeCommit = (patch: AioRejudgePatch) => Promise<AioRun | null>;
+export type AioRejudgeStop = keyof typeof REJUDGE_STOP;
+
+/** 문항 목록의 모양(질문 id · 받은 시각) — 다시 판정이 읽은 뒤 다른 실행(다른 창의 이어 재기 등)이 문항을 더했는지 본다. */
+const itemsKey = (run: AioRun) => run.items.map((i) => `${i.questionId}@${i.fetchedAt}`).join('|');
+
+/** 회차에 다시 판정 한 건을 더한 사본 — 판정 칸 · 판정 사용량만 바꾼다(문항 · 검색 수 · 상태는 그대로). */
+function withRejudge(run: AioRun, p: AioRejudgePatch): AioRun {
+  const items = [...run.items];
+  const idx = items.findLastIndex((i) => i.questionId === p.questionId && i.fetchedAt === p.fetchedAt);
+  const target = idx >= 0 ? items[idx] : undefined;
+  if (p.verdict && target) {
+    items[idx] = {
+      ...target,
+      mentioned: p.verdict.mentioned,
+      mentionSentences: p.verdict.sentences,
+      competitorMentions: p.verdict.competitors,
+      judgeEngine: p.judgeEngine,
+      judgeModel: p.judgeModel,
+      rejudgedAt: p.at,
+    };
+  }
+  const conditions = p.verdict && target && p.judgeModel && !run.conditions.judgeModel ? { ...run.conditions, judgeModel: p.judgeModel } : run.conditions;
+  return { ...run, items, conditions, usage: { ...run.usage, judgeCalls: run.usage.judgeCalls + 1, judgeTokens: addJudgeTokens(run.usage.judgeTokens, p.tokens) } };
+}
+
+/**
+ * 다시 판정 기본 저장 — 브랜드 쓰기 줄 안에서 회차 파일을 새로 읽어 판정 칸만 더해 쓴다(읽은 사본을 통째로 덮지 않는다). 새로 읽은 회차가 도는
+ * 중이거나 문항 목록이 처음과 다르면(다른 창의 이어 재기가 문항 · 검색을 더함) 쓰지 않고 null — 이미 낸 검색 기록을 지우지 않는다.
+ */
+function fileCommit(base: AioRun): AioRejudgeCommit {
+  const key = itemsKey(base);
+  return (patch) =>
+    queueTenantWrite(base.tenantId, async () => {
+      let fresh: AioRun | null;
+      try {
+        fresh = await readRunInQueue(base.tenantId, base.runId);
+      } catch (err) {
+        console.warn('[googleAio] 다시 판정 중 회차 파일을 읽지 못해 멈춥니다:', errText(err));
+        return null;
+      }
+      if (!fresh || fresh.state === 'running' || itemsKey(fresh) !== key) return null;
+      const next = withRejudge(fresh, patch);
+      await writeJsonAtomic(runFile(next.tenantId, next.runId), next);
+      return next;
+    });
+}
+
 /**
  * 다시 판정(검색 0) — 저장된 본문으로 판정만 다시. scope 'unknown'은 판정 불가(null · 없음)인 있음만, 'all'은 본문이 있는 있음 모두. 다시 판정이
- * 실패하면 앞 판정을 지우지 않는다. 3번 잇따라 실패하면 멈춘다. run을 고쳐 돌려준다(같은 객체).
+ * 실패하면 앞 판정을 지우지 않는다. 3번 잇따라 실패하거나 · 브랜드 측정이 시작되거나 · 회차가 그 사이 바뀌면 멈춘다. 마지막으로 저장한 회차를 돌려준다.
  */
 export async function rejudgeAioItems(
   run: AioRun,
   brand: BrandContext,
   scope: 'unknown' | 'all',
-  deps: Pick<AioRunnerDeps, 'judge' | 'judgeEngine' | 'save'> & { progress?: (done: number) => void },
-): Promise<{ run: AioRun; judged: number; failed: number; stopped: boolean }> {
-  const save = deps.save ?? saveRun;
+  deps: Pick<AioRunnerDeps, 'judge' | 'judgeEngine' | 'measuring'> & { progress?: (done: number) => void; commit?: AioRejudgeCommit },
+): Promise<{ run: AioRun; judged: number; failed: number; stopped: boolean; stopReason: AioRejudgeStop | null }> {
+  const commit = deps.commit ?? fileCommit(run);
+  const measuring = deps.measuring ?? measureInFlight;
   const targets = rejudgeTargets(run, scope);
+  let current = run;
   let judged = 0;
   let failed = 0;
   let fails = 0;
-  let stopped = false;
+  let stopReason: AioRejudgeStop | null = null;
   for (const item of targets) {
+    if (measuring()) {
+      stopReason = 'measuring';
+      break;
+    }
     const j = await judgeOnce(deps, brand, item.text ?? '');
-    run.usage.judgeCalls += 1;
-    run.usage.judgeTokens = addJudgeTokens(run.usage.judgeTokens, j.tokens);
+    const next = await commit({ questionId: item.questionId, fetchedAt: item.fetchedAt, verdict: j.verdict, judgeEngine: deps.judgeEngine, judgeModel: j.model, at: new Date().toISOString(), tokens: j.tokens });
+    if (!next) {
+      stopReason = 'changed';
+      break;
+    }
+    current = next;
     if (j.verdict) {
-      item.mentioned = j.verdict.mentioned;
-      item.mentionSentences = j.verdict.sentences;
-      item.competitorMentions = j.verdict.competitors;
-      item.judgeEngine = deps.judgeEngine;
-      item.judgeModel = j.model;
-      item.rejudgedAt = new Date().toISOString();
-      if (j.model && !run.conditions.judgeModel) run.conditions.judgeModel = j.model;
       judged += 1;
       fails = 0;
     } else {
       failed += 1;
       fails += 1;
     }
-    await save(run);
     deps.progress?.(judged + failed);
     if (fails >= JUDGE_STOP) {
-      stopped = true;
+      stopReason = 'judge';
       break;
     }
   }
-  return { run, judged, failed, stopped };
+  return { run: current, judged, failed, stopped: stopReason !== null, stopReason };
 }
 
 function rejudgeTargets(run: AioRun, scope: 'unknown' | 'all'): AioItem[] {
@@ -819,6 +954,7 @@ async function readContextInQueue(tenant: TenantConfig): Promise<AioReadContext>
   return { brandName: tenant.brandName, aliases: [...tenant.aliases], ownedDomains: [...tenant.ownedDomains], competitors: tenant.competitors.map((c) => c.name), posts };
 }
 
+/** 진행 — 숫자는 모두 「이번 실행」 기준이다(이어 재기면 이번에 보낸 질문 · 검색 · 받은 문항만 — 확인창의 「검색 최대 n회」와 같은 기준). */
 export interface GoogleAioProgress {
   runId: string;
   startedAt: string;
@@ -827,18 +963,25 @@ export interface GoogleAioProgress {
   planned: number;
   done: number;
   totalQuestions: number;
+  /** 이번에 보낸 검색 · 이번 최대 검색. */
   searches: number;
   maxSearches: number;
   shown: number;
   absent: number;
   unreadable: number;
   failed: number;
+  /** 본문이 있는데 판정이 없는 있음(판정 불가). */
   judgeUnknown: number;
+  /** 본문 없이 출처만 온 있음(판정하지 않음). */
+  noText: number;
   cancelling: boolean;
 }
 
 function progressOf(a: ActiveRun): GoogleAioProgress {
-  const count = (s: AioItem['status']) => a.run.items.filter((i) => i.status === s).length;
+  const items = a.run.items.slice(a.itemsAtStart);
+  const count = (s: AioItem['status']) => items.filter((i) => i.status === s).length;
+  const shown = items.filter((i) => i.status === 'shown');
+  const noText = shown.filter((i) => !(typeof i.text === 'string' && i.text.trim())).length;
   return {
     runId: a.runId,
     startedAt: a.run.startedAt,
@@ -846,13 +989,14 @@ function progressOf(a: ActiveRun): GoogleAioProgress {
     planned: a.planned,
     done: a.done,
     totalQuestions: a.run.questionSet.ids.length,
-    searches: a.run.usage.searches,
-    maxSearches: a.run.maxSearches,
-    shown: count('shown'),
+    searches: Math.max(0, a.run.usage.searches - a.searchesAtStart),
+    maxSearches: a.budget,
+    shown: shown.length,
     absent: count('absent'),
     unreadable: count('unreadable'),
     failed: count('failed'),
-    judgeUnknown: a.run.items.filter((i) => i.status === 'shown' && typeof i.mentioned !== 'boolean').length,
+    judgeUnknown: shown.filter((i) => typeof i.mentioned !== 'boolean').length - noText,
+    noText,
     cancelling: a.cancel,
   };
 }
@@ -878,9 +1022,12 @@ export interface GoogleAioStatusView {
   /** 지금 시작하지 못하는 까닭(다른 브랜드 회차 · 색인 자동 확인 · 다른 창). */
   busy: string | null;
   rejudging: { runId: string; total: number; done: number } | null;
-  /** 이 브랜드의 마지막 다시 판정 결과(이 서버가 켜진 뒤). */
-  rejudged: { runId: string; judged: number; failed: number; stopped: boolean; at: string } | null;
-  /** 회차 · 지표 — 도는 중(이 서버 · 다른 창) · 다시 판정 중에는 null(가벼운 GET — 화면은 앞서 받은 것을 둔다). */
+  /** 이 브랜드의 마지막 다시 판정 결과(이 서버가 켜진 뒤). stopMessage는 멈춘 까닭(멈추지 않았으면 null). */
+  rejudged: { runId: string; judged: number; failed: number; stopped: boolean; stopMessage: string | null; at: string } | null;
+  /**
+   * 회차 · 지표 — 도는 중(이 서버 · 다른 창) · 다시 판정 중에는 null(가벼운 GET — 화면은 앞서 받은 것을 둔다). 화면이 앞서 받은 것이 없으면(도는
+   * 중에 화면을 새로 엶) ?view=1로 한 번만 무겁게 읽는다.
+   */
   view: AioView | null;
   unreadableRuns: number;
   lastRunAt: string | null;
@@ -898,8 +1045,11 @@ function resumableOf(runs: readonly AioRun[], pilot: Pilot, pick: QuestionPick |
 
 const latestStart = (runs: readonly AioRun[]): string | null => runs.reduce<string | null>((a, r) => (a === null || Date.parse(r.startedAt) > Date.parse(a) ? r.startedAt : a), null);
 
-/** 화면 상태 — 계정 · 검색은 부르지 않는다(비용 0). 도는 동안은 메모리의 진행만 준다. */
-export async function googleAioStatus(tenant: TenantConfig): Promise<GoogleAioStatusView> {
+/**
+ * 화면 상태 — 계정 · 검색은 부르지 않는다(비용 0). 도는 동안은 메모리의 진행만 준다(2초마다 묻는 가벼운 GET). opts.view면 도는 동안에도 회차 ·
+ * 지표를 한 번 읽는다(화면을 새로 열었는데 앞서 받은 결과가 없을 때 — 화면이 한 번만 부른다).
+ */
+export async function googleAioStatus(tenant: TenantConfig, opts: { view?: boolean } = {}): Promise<GoogleAioStatusView> {
   let settings: AioSettings | null = null;
   let settingsError: string | null = null;
   try {
@@ -929,18 +1079,22 @@ export async function googleAioStatus(tenant: TenantConfig): Promise<GoogleAioSt
     runningElsewhere: elsewhere === 'aio',
     busy,
     rejudging: rj ? { runId: rj.runId, total: rj.total, done: rj.done } : null,
-    rejudged: lastRejudge && lastRejudge.tenantId === tenant.tenantId ? { runId: lastRejudge.runId, judged: lastRejudge.judged, failed: lastRejudge.failed, stopped: lastRejudge.stopped, at: lastRejudge.at } : null,
+    rejudged:
+      lastRejudge && lastRejudge.tenantId === tenant.tenantId
+        ? { runId: lastRejudge.runId, judged: lastRejudge.judged, failed: lastRejudge.failed, stopped: lastRejudge.stopped, stopMessage: lastRejudge.stopMessage, at: lastRejudge.at }
+        : null,
   };
-  if (mine || rj || elsewhere === 'aio') return { ...base, view: null, unreadableRuns: 0, lastRunAt: null, resumable: null };
+  const live = Boolean(mine || rj || elsewhere === 'aio');
+  if (live && !opts.view) return { ...base, view: null, unreadableRuns: 0, lastRunAt: null, resumable: null };
   const { runs, unreadable, ctx } = await queueTenantWrite(tenant.tenantId, async () => ({ ...(await readRunsInQueue(tenant.tenantId)), ctx: await readContextInQueue(tenant) }));
   const shown = runs.map((r) => effective(r, elsewhere));
-  const picked = pilot.ok ? await pickQuestions(tenant) : null;
+  const picked = pilot.ok && !live ? await pickQuestions(tenant) : null;
   return {
     ...base,
     view: shown.length > 0 ? aioView(shown, ctx, { unreadableRuns: unreadable }) : null,
     unreadableRuns: unreadable,
     lastRunAt: latestStart(shown),
-    resumable: resumableOf(shown, pilot, picked?.ok ? picked.pick : null),
+    resumable: live ? null : resumableOf(shown, pilot, picked?.ok ? picked.pick : null),
   };
 }
 
@@ -1040,14 +1194,18 @@ async function gate(tenant: TenantConfig): Promise<{ settings: AioSettings; pilo
   return { settings, pilot };
 }
 
-/** 이어 재기 대상 — 끊긴 'running'은 interrupted로 본다. 맞지 않으면 그 까닭. */
-function resumeCheck(run: AioRun | undefined, pilot: Extract<Pilot, { ok: true }>, pick: QuestionPick, elsewhere: string | null): { ok: true; run: AioRun } | { ok: false; message: string } {
+/**
+ * 이어 재기 대상 — view가 끊긴 'running'을 고친 모양(interrupted · 날아가던 질문은 「못 읽음」)으로 보인다(계획은 읽기 길의 effective, 실행 준비는
+ * 잠금을 쥐었으니 'running'이면 모두 끊긴 회차). 맞으면 그 모양(남은 질문 · 최대 검색을 그것으로 센다), 아니면 그 까닭.
+ */
+function resumeCheck(run: AioRun | undefined, pilot: Extract<Pilot, { ok: true }>, pick: QuestionPick, view: (run: AioRun) => AioRun): { ok: true; run: AioRun } | { ok: false; message: string } {
   if (!run) return { ok: false, message: '이어 잴 회차를 찾지 못했어요.' };
   if (rejudging?.runId === run.runId && rejudging.tenantId === run.tenantId) return { ok: false, message: '그 회차를 다시 판정하는 중이에요 — 끝난 뒤 이어 재 주세요.' };
-  const problem = aioResumeProblem(effective(run, elsewhere), { today: todayKst(), signature: pilot.signature, fingerprint: pick.set.hash });
+  const shown = view(run);
+  const problem = aioResumeProblem(shown, { today: todayKst(), signature: pilot.signature, fingerprint: pick.set.hash });
   if (problem) return { ok: false, message: RESUME_TEXT[problem] };
-  if (resumeNeed(run) <= 0) return { ok: false, message: `이 회차는 최대 검색 수(${run.maxSearches}회)를 다 써서 이어 잴 수 없어요 — 새 회차로 재 주세요.` };
-  return { ok: true, run };
+  if (resumeNeed(shown) <= 0) return { ok: false, message: `이 회차는 최대 검색 수(${run.maxSearches}회)를 다 써서 이어 잴 수 없어요 — 새 회차로 재 주세요.` };
+  return { ok: true, run: shown };
 }
 
 /**
@@ -1074,7 +1232,7 @@ export async function planGoogleAio(tenant: TenantConfig, body: unknown): Promis
       runs.find((r) => r.runId === resumeId),
       pilot,
       picked.pick,
-      elsewhere,
+      (r) => effective(r, elsewhere),
     );
     if (!checked.ok) throw new GoogleAioError(checked.message, 409, 'resume');
     resume = checked.run;
@@ -1098,7 +1256,9 @@ export async function planGoogleAio(tenant: TenantConfig, body: unknown): Promis
     planId = `plan-${randomUUID()}`;
     plans.set(planId, { tenantId: tenant.tenantId, expires: now + PLAN_TTL_MS, resumeRunId: resume?.runId ?? null, fingerprint: picked.pick.set.hash, signature: pilot.signature, bankVersion: picked.pick.bankVersion, maxSearches });
   }
-  const lastRunAt = latestStart(runs);
+  // 이어 재기의 「지난 회차」는 이어 잴 그 회차를 빼고 본다(오늘 멈춘 그 회차 때문에 늘 「14일이 안 됐어요」가 뜨지 않게).
+  const resumeRunId = resume?.runId ?? null;
+  const lastRunAt = latestStart(runs.filter((r) => r.runId !== resumeRunId));
   const daysSince = lastRunAt ? daysBetween(kstDate(lastRunAt) ?? todayKst(), todayKst()) : null;
   const price = quota?.planName ? PLAN_PRICE_USD[quota.planName] : undefined;
   return {
@@ -1141,17 +1301,43 @@ export async function startGoogleAio(tenant: TenantConfig, body: unknown): Promi
   const stored = plans.get(input.planId);
   plans.delete(input.planId);
   if (!stored || stored.expires < Date.now() || stored.tenantId !== tenant.tenantId) throw new GoogleAioError(PLAN_CHANGED, 409, 'plan-changed');
-  const release = await claimSerpRun('aio');
-  if (!release) throw (await busyError()) ?? new GoogleAioError(BUSY_ELSEWHERE, 409, 'busy-elsewhere');
-  let prepared: { run: AioRun; questions: { questionId: string; text: string }[]; judge: AioJudgeFn; judgeEngine: string; resumed: boolean };
+  // 기다림(잠금 · 계정 다시 읽기) 앞에서 자리를 잡는다 — 준비하는 몇 초 사이에 같은 회차의 다시 판정 · 두 번째 시작이 끼어들지 않게.
+  if (active || starting) throw new GoogleAioError(BUSY, 409, 'busy');
+  starting = { tenantId: tenant.tenantId, resumeRunId: stored.resumeRunId };
+  let release: (() => Promise<void>) | null;
+  try {
+    release = await claimSerpRun('aio');
+  } catch (err) {
+    starting = null;
+    throw err;
+  }
+  if (!release) {
+    starting = null;
+    throw (await busyError()) ?? new GoogleAioError(BUSY_ELSEWHERE, 409, 'busy-elsewhere');
+  }
+  const unlock = release;
+  let prepared: Awaited<ReturnType<typeof prepareRun>>;
   try {
     prepared = await prepareRun(tenant, stored);
   } catch (err) {
-    await release();
+    starting = null;
+    await unlock();
     throw err;
   }
   plans.clear();
-  const job: ActiveRun = { tenantId: tenant.tenantId, runId: prepared.run.runId, run: prepared.run, resumed: prepared.resumed, planned: prepared.questions.length, done: 0, cancel: false };
+  const job: ActiveRun = {
+    tenantId: tenant.tenantId,
+    runId: prepared.run.runId,
+    run: prepared.run,
+    resumed: prepared.resumed,
+    planned: prepared.questions.length,
+    done: 0,
+    cancel: false,
+    searchesAtStart: prepared.run.usage.searches,
+    itemsAtStart: prepared.run.items.length,
+    budget: prepared.resumed ? stored.maxSearches : prepared.run.maxSearches,
+  };
+  starting = null;
   active = job;
   void executeAioRun(prepared.run, prepared.questions, brandOf(tenant), {
     judge: prepared.judge,
@@ -1171,10 +1357,10 @@ export async function startGoogleAio(tenant: TenantConfig, body: unknown): Promi
   })
     .catch((err: unknown) => console.error('[googleAio] 실행이 끝나지 않았습니다:', errText(err)))
     .finally(async () => {
-      await release();
+      await unlock();
       active = null;
     });
-  return { runId: prepared.run.runId, planned: prepared.questions.length, maxSearches: prepared.run.maxSearches, resumed: prepared.resumed };
+  return { runId: prepared.run.runId, planned: prepared.questions.length, maxSearches: job.budget, resumed: prepared.resumed };
 }
 
 /** 잠금을 쥔 뒤의 다시 보기 · 회차 준비(끊긴 회차 한 번 고치기 · 새 회차 적기 또는 멈춘 회차 이어 받기). */
@@ -1193,7 +1379,7 @@ async function prepareRun(tenant: TenantConfig, stored: StoredPlan) {
       runs.find((r) => r.runId === stored.resumeRunId),
       pilot,
       pick,
-      null,
+      (r) => (r.state === 'running' ? interruptedOf(r) : r),
     );
     if (!checked.ok) throw new GoogleAioError(`${PLAN_CHANGED} ${checked.message}`, 409, 'plan-changed');
     need = resumeNeed(checked.run);
@@ -1207,8 +1393,8 @@ async function prepareRun(tenant: TenantConfig, stored: StoredPlan) {
     const fresh = await readRunsInQueue(tenant.tenantId);
     for (const r of fresh.runs) {
       if (r.state !== 'running') continue;
-      const fixed: AioRun = { ...r, state: 'interrupted', stopReason: 'interrupted', stopMessage: STOP_TEXT.interrupted };
-      await writeJsonAtomic(runFile(r.tenantId, r.runId), fixed);
+      // 끊긴 회차 — 날아가던 검색의 질문은 「못 읽음(interrupted)」으로 마무리한다(보낸 검색은 이미 셌다 — 이어 재기가 다시 사지 않게).
+      await writeJsonAtomic(runFile(r.tenantId, r.runId), interruptedOf(r));
     }
     if (stored.resumeRunId) {
       const target = await readRunInQueue(tenant.tenantId, stored.resumeRunId);
@@ -1247,6 +1433,11 @@ export async function rejudgeGoogleAio(tenant: TenantConfig, runId: string, body
   if (input.scope !== 'unknown' && input.scope !== 'all') throw new GoogleAioError('scope는 unknown · all 가운데 하나여야 해요.', 400);
   const scope = input.scope;
   if (rejudging) throw new GoogleAioError(REJUDGE_BUSY, 409, 'busy');
+  const runBusy = () => {
+    if (active && active.tenantId === tenant.tenantId && active.runId === runId) throw new GoogleAioError('그 회차가 아직 도는 중이에요 — 끝난 뒤 다시 판정해 주세요.', 409, 'busy');
+    if (starting && starting.tenantId === tenant.tenantId && starting.resumeRunId === runId) throw new GoogleAioError(RUN_STARTING, 409, 'busy');
+  };
+  runBusy();
   // 기다림(설정 · 잠금 · 파일 읽기) 앞에서 자리를 잡는다 — 두 요청이 함께 검사를 지나 판정비가 두 번 나가지 않게.
   const job: Rejudging = { tenantId: tenant.tenantId, runId, total: 0, done: 0 };
   rejudging = job;
@@ -1258,16 +1449,20 @@ export async function rejudgeGoogleAio(tenant: TenantConfig, runId: string, body
     const pilot = pilotOf(tenant, settings);
     if (!pilot.ok) throw new GoogleAioError(pilot.message, 409, 'not-pilot');
     if (measureInFlight()) throw new GoogleAioError(MEASURING, 409, 'measuring');
-    if (active && active.tenantId === tenant.tenantId && active.runId === runId) throw new GoogleAioError('그 회차가 아직 도는 중이에요 — 끝난 뒤 다시 판정해 주세요.', 409, 'busy');
+    runBusy();
     judging = judgeOrError();
     const elsewhere = await elsewhereFeature();
     run = await queueTenantWrite(tenant.tenantId, async () => {
       const found = await readRunInQueue(tenant.tenantId, runId);
       if (!found) throw new GoogleAioError(RUN_NOT_FOUND, 404);
-      if (found.state === 'running' && elsewhere === 'aio') throw new GoogleAioError(`${BUSY_ELSEWHERE} 그 회차는 다른 창에서 도는 중일 수 있어요.`, 409, 'busy-elsewhere');
-      if (active && active.tenantId === tenant.tenantId && active.runId === runId) throw new GoogleAioError('그 회차가 아직 도는 중이에요 — 끝난 뒤 다시 판정해 주세요.', 409, 'busy');
-      // 끊긴 회차는 다시 판정하며 한 번 고친다(쓰는 길이다).
-      return isStale(found, elsewhere) ? { ...found, state: 'interrupted', stopReason: 'interrupted', stopMessage: STOP_TEXT.interrupted } : found;
+      runBusy();
+      if (found.state !== 'running') return found;
+      if (elsewhere === 'aio') throw new GoogleAioError(`${BUSY_ELSEWHERE} 그 회차는 다른 창에서 도는 중일 수 있어요.`, 409, 'busy-elsewhere');
+      if (!isStale(found, elsewhere)) throw new GoogleAioError('그 회차가 아직 도는 중일 수 있어요 — 끝난 뒤 다시 판정해 주세요.', 409, 'busy');
+      // 끊긴 회차는 다시 판정하며 한 번 고쳐 적는다 — 판정은 고친 파일에 더해 쓴다(날아가던 질문은 「못 읽음」).
+      const fixed = interruptedOf(found);
+      await writeJsonAtomic(runFile(fixed.tenantId, fixed.runId), fixed);
+      return fixed;
     });
   } catch (err) {
     rejudging = null;
@@ -1282,7 +1477,7 @@ export async function rejudgeGoogleAio(tenant: TenantConfig, runId: string, body
     },
   })
     .then((r) => {
-      lastRejudge = { tenantId: tenant.tenantId, runId, judged: r.judged, failed: r.failed, stopped: r.stopped, at: new Date().toISOString() };
+      lastRejudge = { tenantId: tenant.tenantId, runId, judged: r.judged, failed: r.failed, stopped: r.stopped, stopMessage: r.stopReason ? REJUDGE_STOP[r.stopReason] : null, at: new Date().toISOString() };
     })
     .catch((err: unknown) => console.error('[googleAio] 다시 판정이 끝나지 않았습니다:', errText(err)))
     .finally(() => {

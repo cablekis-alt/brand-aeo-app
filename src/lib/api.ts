@@ -946,7 +946,7 @@ export interface GoogleAioJudge {
   ready: boolean
   problem: string | null
 }
-/** 이 서버에서 도는 이 브랜드 회차의 진행(서버 메모리 — 파일 · 원장을 읽지 않는다). */
+/** 이 서버에서 도는 이 브랜드 회차의 진행(서버 메모리 — 파일 · 원장을 읽지 않는다). 숫자는 「이번 실행」 기준(이어 재기면 이번에 보낸 것만). */
 export interface GoogleAioProgress {
   runId: string
   startedAt: string
@@ -955,13 +955,17 @@ export interface GoogleAioProgress {
   planned: number
   done: number
   totalQuestions: number
+  /** 이번에 보낸 검색 · 이번 최대 검색. */
   searches: number
   maxSearches: number
   shown: number
   absent: number
   unreadable: number
   failed: number
+  /** 본문이 있는데 판정이 없는 있음. */
   judgeUnknown: number
+  /** 본문 없이 출처만 온 있음(판정하지 않음). 옛 서버는 칸이 없다. */
+  noText?: number
   cancelling: boolean
 }
 export interface GoogleAioStatus {
@@ -984,8 +988,9 @@ export interface GoogleAioStatus {
   /** 지금 시작하지 못하는 까닭(다른 브랜드 회차 · 색인 자동 확인 · 다른 창). */
   busy: string | null
   rejudging: { runId: string; total: number; done: number } | null
-  rejudged: { runId: string; judged: number; failed: number; stopped: boolean; at: string } | null
-  /** 회차 · 지표 — 도는 중 · 다시 판정 중에는 null(가벼운 GET — 화면은 앞서 받은 것을 둔다). */
+  /** 마지막 다시 판정 — stopMessage는 멈춘 까닭(멈추지 않았으면 null). */
+  rejudged: { runId: string; judged: number; failed: number; stopped: boolean; stopMessage?: string | null; at: string } | null
+  /** 회차 · 지표 — 도는 중 · 다시 판정 중에는 null(가벼운 GET — 화면은 앞서 받은 것을 둔다, 앞서 받은 것이 없으면 view 읽기로 한 번). */
   view: AioView | null
   unreadableRuns: number
   lastRunAt: string | null
@@ -1081,9 +1086,12 @@ async function googleAioRequest<T>(path: string, init: RequestInit | undefined, 
 
 const aioPath = (tenantId: string, rest = '') => `/api/google-aio/${encodeURIComponent(tenantId)}${rest}`
 
-/** 시범 상태 · 회차 · 지표(검색 · 계정 읽기 없음 — 진행을 2초마다 묻는 데 쓴다). **null은 이 환경에 기능이 없다(웹 — 404)**. */
-export async function loadGoogleAio(tenantId: string): Promise<GoogleAioStatus | null> {
-  const { status, body } = await googleAioRequest<GoogleAioStatus>(aioPath(tenantId), undefined, '구글 AI 개요 시범 상태를 읽지 못했습니다')
+/**
+ * 시범 상태 · 회차 · 지표(검색 · 계정 읽기 없음 — 진행을 2초마다 묻는 데 쓴다). **null은 이 환경에 기능이 없다(웹 — 404)**. opts.view는 도는
+ * 동안에도 회차 · 지표를 한 번 읽는다(화면을 새로 열었는데 앞서 받은 결과가 없을 때만 — 2초마다 쓰지 않는다).
+ */
+export async function loadGoogleAio(tenantId: string, opts: { view?: boolean } = {}): Promise<GoogleAioStatus | null> {
+  const { status, body } = await googleAioRequest<GoogleAioStatus>(aioPath(tenantId, opts.view ? '?view=1' : ''), undefined, '구글 AI 개요 시범 상태를 읽지 못했습니다')
   if (status === 404) return null
   if (!body || typeof body.enabled !== 'boolean' || typeof body.configured !== 'boolean' || !body.judge) throw new GoogleAioRequestError('구글 AI 개요 시범 상태를 읽지 못했습니다(응답 모양).', status)
   return body
