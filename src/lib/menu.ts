@@ -77,6 +77,8 @@ export const MENU: MenuGroup[] = [
       { label: 'AEO 퍼포먼스', to: '/performance', icon: 'performance' },
       { label: '브랜드·경쟁사 측정', to: '/measure-tenant', icon: 'measure', customerOnly: true },
       { label: '측정 상태', to: '/measure-status', badge: 'measuring', icon: 'status', customerOnly: true },
+      // 점수 밖 시범 — 구글 검색 AI 개요에 이 브랜드가 나오는지 SerpAPI로 따로 잰다(src/pages/GoogleAio.tsx). 시범 브랜드가 아니면 화면이 그렇게 알린다.
+      { label: '구글 AI 개요(시범)', to: '/google-aio', icon: 'aio', customerOnly: true },
     ],
   },
   {

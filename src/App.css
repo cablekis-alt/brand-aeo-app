@@ -9784,3 +9784,388 @@ tr.ms-run-child td:nth-child(2) {
     padding: 10px;
   }
 }
+/*
+ * ── 구글 AI 개요(시범)(src/pages/GoogleAio.tsx) ─────────────────────────────
+ * 이 PC · 지금 재기 상자 → 요약 타일 → 추이 → 질문별 표(칸 기호) → 회차 목록 · 자세히 → 올린 글 표. 색은 모두 공용 토큰이라 라이트 · 다크가 함께
+ * 바뀌고(다크 토큰은 화면에서만), 인쇄는 늘 라이트다. 표는 좁은 창에서 표 안에서만 옆으로 민다(.table-wrap).
+ */
+.gaio-control {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--card);
+}
+.gaio-control p,
+.gaio-note-box p {
+  margin: 0;
+  max-width: none;
+  font-size: 13.5px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.gaio-note-box {
+  display: grid;
+  gap: 4px;
+}
+.gaio-plain,
+.gaio-state {
+  color: var(--ink-2);
+}
+.gaio-state .ghost {
+  margin-left: 6px;
+  padding: 2px 8px;
+  font-size: 12.5px;
+}
+.gaio-blocked {
+  padding: 8px 12px;
+  border-radius: var(--r-ctl);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.gaio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+/* 계획을 받는 동안 — disabled 대신 aria-disabled(포커스가 몸통으로 빠지지 않게), 모양은 disabled와 같게. */
+.gaio-actions .btn[aria-disabled='true'],
+.gaio-state .ghost[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: default;
+}
+.gaio-actions .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.gaio-progress {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.gaio-progress:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.gaio-fine {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.gaio-block {
+  display: block;
+  margin-top: 2px;
+  white-space: normal;
+}
+.gaio-note {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.gaio-basis {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.gaio-warn {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  border-radius: var(--r-ctl);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.ce-dialog .gaio-warn {
+  margin: 0;
+}
+.gaio-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin: 0 0 10px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+  background: var(--line);
+}
+.gaio-tile {
+  flex: 1 1 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 18px 14px;
+  background: var(--paper);
+}
+.gaio-tile-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.gaio-tile-value {
+  font-family: var(--mono);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.gaio-tile-sub {
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.gaio-facts {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.gaio-section {
+  margin: 0 0 20px;
+}
+.gaio-section h2 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.gaio-section > .gaio-fine {
+  margin: 0 0 8px;
+  max-width: 80ch;
+  line-height: 1.5;
+}
+/* position: relative — 표 머리의 .sr-only(절대 위치)가 감싼 상자 밖으로 나가 쪽 전체를 옆으로 밀지 않게. */
+.gaio-table-wrap {
+  position: relative;
+  overflow-x: auto;
+}
+.gaio-table-wrap table {
+  font-size: 13px;
+}
+.gaio-table-wrap tbody tr {
+  cursor: default;
+}
+.gaio-qtext {
+  min-width: 220px;
+  font-weight: 500;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.gaio-qtable .gaio-cellcol {
+  text-align: center;
+}
+.gaio-cell {
+  display: inline-block;
+  min-width: 1.2em;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+.gaio-cell-mentioned { color: var(--good); }
+.gaio-cell-not-mentioned { color: var(--ink-2); }
+.gaio-cell-judge-unknown { color: var(--warn); }
+.gaio-cell-absent { color: var(--muted); }
+.gaio-cell-unreadable { color: var(--warn); }
+.gaio-cell-failed { color: var(--bad); }
+.gaio-cell-none { color: var(--line-strong); }
+.gaio-k {
+  font-family: var(--mono);
+}
+/* 「확인 불가」는 글자라 고정폭이 아니라 본문 글꼴로(고정폭 글꼴은 한글을 띄어 그린다). */
+.gaio-k.gaio-unknown {
+  font-family: inherit;
+  color: var(--muted);
+}
+.gaio-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.gaio-legend-sym {
+  display: inline-block;
+  min-width: 1.2em;
+  margin-right: 4px;
+  font-weight: 700;
+  text-align: center;
+}
+.gaio-runs td.gaio-state-cell {
+  min-width: 130px;
+  text-align: left;
+  white-space: normal;
+}
+.gaio-runs td.gaio-cost {
+  min-width: 96px;
+  white-space: normal;
+}
+.gaio-runs tr.gaio-dim > td {
+  color: var(--muted);
+}
+.gaio-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.gaio-chip {
+  margin-left: 6px;
+  padding: 1px 7px;
+  font-size: 11.5px;
+}
+.chip.gaio-chip:not(.good):not(.info):not(.warn) {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.gaio-trend svg {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+}
+.gaio-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.gaio-axis {
+  fill: var(--muted);
+  font-size: 11px;
+}
+.gaio-seg-exposure {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.gaio-seg-mention {
+  stroke: var(--info);
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+}
+.gaio-dot-exposure {
+  fill: var(--accent);
+}
+.gaio-dot-mention {
+  fill: var(--info);
+}
+.gaio-dot-exposure.gaio-dot-drop {
+  fill: var(--bad);
+}
+.gaio-legend-line {
+  margin: 4px 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.gaio-key {
+  display: inline-block;
+  width: 16px;
+  height: 0;
+  margin: 0 4px 3px 8px;
+  border-top: 2px solid var(--accent);
+  vertical-align: middle;
+}
+.gaio-key:first-child {
+  margin-left: 0;
+}
+.gaio-key-mention {
+  border-top: 2px dashed var(--info);
+}
+.gaio-trend-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.gaio-detail {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  background: var(--paper);
+}
+.gaio-detail h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.gaio-detail > p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.gaio-items {
+  display: grid;
+  gap: 10px;
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+.gaio-item p {
+  margin: 0 0 3px;
+  overflow-wrap: anywhere;
+}
+.gaio-item-q {
+  font-size: 13.5px;
+}
+.gaio-item-q a,
+.gaio-sources a,
+.gaio-ptitle a {
+  color: var(--accent);
+}
+.gaio-item-status {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.gaio-item-text {
+  padding: 6px 10px;
+  border-left: 2px solid var(--line-strong);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.gaio-sources {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.gaio-ptable td.gaio-ptitle {
+  min-width: 200px;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.gaio-confirm {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .gaio-control {
+    padding: 12px;
+  }
+  .gaio-tile {
+    flex-basis: 140px;
+    padding: 10px 12px 12px;
+  }
+  .gaio-tile-value {
+    font-size: 24px;
+  }
+  .gaio-detail {
+    padding: 10px;
+  }
+}

@@ -13,6 +13,9 @@ import type { BlogListResult, BlogSource, CommitItem, CommitResult, IgnoredList,
 // 앱 밖 글 모듈은 타입으로만 불러온다 — 정기진단 보고서가 이 파일을 불러오므로 런타임 import가 생기면 보고서가 앱 밖 글 모듈을 끌어온다
 // (scripts/verify-external-posts.ts 정적 검사).
 import type { ExternalPostView, ExternalRemovedReason } from './externalPosts'
+// 구글 AI 개요 규칙 모듈도 타입으로만 불러온다 — 같은 까닭(보고서 · 개요 화면의 닫힘에 시범 모듈이 들지 않게, scripts/verify-google-aio.ts 정적 검사).
+// 화면(src/pages/GoogleAio.tsx)이 쓰는 함수는 화면이 규칙 모듈에서 직접 불러온다.
+import type { AioItem, AioRun, AioRunSummary, AioSourceMark, AioView } from './googleAio'
 import type { AnswerEvidence } from './answerEvidence'
 import { validScene, type PhotoScene } from './photoScenes'
 import { isMapImageId, normalizeMapPoints, parseMapAppSrc, type MapPoint } from './mapImage'
@@ -931,6 +934,199 @@ export async function runIndexAuto(planId: string): Promise<{ runId: string; tot
 export async function saveIndexAutoSettings(patch: Partial<IndexAutoSettings>): Promise<IndexAutoSettings> {
   const { status, body } = await indexAutoRequest<{ settings: IndexAutoSettings }>('/api/index-auto/settings', jsonInit('PUT', patch), '자동 확인 설정을 저장하지 못했습니다')
   if (status === 404 || !body?.settings) throw new IndexAutoRequestError(body?.error || `자동 확인 설정을 저장하지 못했습니다 (HTTP ${status})`, status)
+  return body.settings
+}
+
+// ── 구글 AI 개요 시범(server/googleAio.ts) — 서버 타입과 같은 모양이다. Express 전용이라 웹은 404(상태 GET이 null). ──────────────
+
+/** 판정 엔진 — 키가 없으면 ready false · problem에 까닭(시작하지 않는다). */
+export interface GoogleAioJudge {
+  engine: string
+  label: string
+  ready: boolean
+  problem: string | null
+}
+/** 이 서버에서 도는 이 브랜드 회차의 진행(서버 메모리 — 파일 · 원장을 읽지 않는다). */
+export interface GoogleAioProgress {
+  runId: string
+  startedAt: string
+  resumed: boolean
+  /** 이번에 보낼 질문 수 · 끝낸 수. */
+  planned: number
+  done: number
+  totalQuestions: number
+  searches: number
+  maxSearches: number
+  shown: number
+  absent: number
+  unreadable: number
+  failed: number
+  judgeUnknown: number
+  cancelling: boolean
+}
+export interface GoogleAioStatus {
+  tenantId: string
+  /** 이 PC 스위치. */
+  enabled: boolean
+  settingsError: string | null
+  pilot: boolean
+  pilotMessage: string | null
+  location: string | null
+  signature: string | null
+  /** 이 PC에 SerpAPI 키가 있는가 · 연결 주소 설정이 틀렸으면 그 까닭. */
+  configured: boolean
+  configError: string | null
+  judge: GoogleAioJudge
+  measuring: boolean
+  running: GoogleAioProgress | null
+  /** 다른 창(앱을 두 번 켬)이 AI 개요 잠금을 쥐었다. */
+  runningElsewhere: boolean
+  /** 지금 시작하지 못하는 까닭(다른 브랜드 회차 · 색인 자동 확인 · 다른 창). */
+  busy: string | null
+  rejudging: { runId: string; total: number; done: number } | null
+  rejudged: { runId: string; judged: number; failed: number; stopped: boolean; at: string } | null
+  /** 회차 · 지표 — 도는 중 · 다시 판정 중에는 null(가벼운 GET — 화면은 앞서 받은 것을 둔다). */
+  view: AioView | null
+  unreadableRuns: number
+  lastRunAt: string | null
+  /** 이어 잴 수 있는 오늘 멈춘 회차. */
+  resumable: { runId: string; remaining: number } | null
+}
+/** 이번 결제 주기 AI 개요 몫 · 계정 숫자(계정 값 − 그 뒤 이 PC가 보낸 수). 숫자는 계정 · 장부 값 그대로다. */
+export interface GoogleAioQuota {
+  cycle: string
+  cap: number
+  sent: number
+  left: number
+  /** 지금 더 보낼 수 있는 수(몫 · 계정 바닥 · 시간당 남은 수의 최솟값). */
+  allowed: number
+  floor: number
+  accountLeft: number
+  aboveFloor: number
+  hourLeft: number
+  planName: string | null
+  searchesPerMonth: number | null
+  rateLimitPerHour: number | null
+  planRenewalDate: string | null
+}
+export interface GoogleAioPlan {
+  /** 실행에 넘길 계획 id(10분) — 시작할 수 없으면 null(blocked에 까닭). */
+  planId: string | null
+  expiresAt: string | null
+  tenantId: string
+  resume: { runId: string; remaining: number } | null
+  questions: number
+  totalQuestions: number
+  /** 이번에 예약하는 최대 검색 M. */
+  maxSearches: number
+  maxJudgeCalls: number
+  judge: GoogleAioJudge
+  location: string | null
+  signature: string
+  bankLabel: string | null
+  quota: GoogleAioQuota | null
+  /** 「이미 낸 요금 안 · 검색당 환산」(USD) — 모르는 요금제면 null. */
+  perSearchUsd: number | null
+  /** 걸리는 시간 어림(분) — [적게, 많게]. */
+  expectedMinutes: [number, number]
+  lastRunAt: string | null
+  daysSinceLastRun: number | null
+  /** 지난 회차가 14일 안. */
+  recent: boolean
+  blocked: { kind: 'bank' | 'judge' | 'account' | 'limit'; message: string } | null
+}
+export interface GoogleAioDetailItem extends Omit<AioItem, 'rawBlock'> {
+  hasRawBlock: boolean
+  sources: AioSourceMark[]
+  /** 본문엔 이름이 없고 출처 제목 · 이름에만 나옴(null = 확인 불가 · 있음 아님). */
+  sourceOnly: boolean | null
+}
+export interface GoogleAioRunDetail {
+  run: Omit<AioRun, 'items'>
+  summary: AioRunSummary
+  items: GoogleAioDetailItem[]
+  /** 원장 · 앱 밖 글을 못 읽어 올린 글 표시를 못 했다. */
+  postsUnreadable: boolean
+}
+
+/**
+ * 구글 AI 개요 시범 요청 실패 — status는 서버 HTTP 상태(닿지 못했으면 0), code는 409의 까닭(plan-changed · busy · busy-elsewhere · limit ·
+ * pilot-off · not-pilot · measuring · judge · resume · not-running). 화면은 글자 대신 code로 할 일을 고른다.
+ */
+export class GoogleAioRequestError extends Error {
+  readonly status: number
+  readonly code: string | null
+  constructor(message: string, status: number, code: string | null = null) {
+    super(message)
+    this.name = 'GoogleAioRequestError'
+    this.status = status
+    this.code = code
+  }
+}
+
+async function googleAioRequest<T>(path: string, init: RequestInit | undefined, what: string): Promise<{ status: number; body: (T & { error?: string; code?: string }) | null }> {
+  let res: Response
+  try {
+    res = await fetch(path, init)
+  } catch (err) {
+    throw new GoogleAioRequestError(`앱 서버에 닿지 못했습니다: ${err instanceof Error ? err.message : String(err)}`, 0)
+  }
+  const body = (await res.json().catch(() => null)) as (T & { error?: string; code?: string }) | null
+  const error = typeof body?.error === 'string' ? body.error : null
+  if (!res.ok && res.status !== 404) throw new GoogleAioRequestError(error || `${what} (HTTP ${res.status})`, res.status, typeof body?.code === 'string' ? body.code : null)
+  // 브랜드가 없다는 404(경쟁사 · 지운 브랜드)는 「이 환경에 기능이 없음」(웹 404)과 가른다 — 늘 오류다.
+  if (res.status === 404 && error?.startsWith('tenant not found')) throw new GoogleAioRequestError(error, 404)
+  return { status: res.status, body }
+}
+
+const aioPath = (tenantId: string, rest = '') => `/api/google-aio/${encodeURIComponent(tenantId)}${rest}`
+
+/** 시범 상태 · 회차 · 지표(검색 · 계정 읽기 없음 — 진행을 2초마다 묻는 데 쓴다). **null은 이 환경에 기능이 없다(웹 — 404)**. */
+export async function loadGoogleAio(tenantId: string): Promise<GoogleAioStatus | null> {
+  const { status, body } = await googleAioRequest<GoogleAioStatus>(aioPath(tenantId), undefined, '구글 AI 개요 시범 상태를 읽지 못했습니다')
+  if (status === 404) return null
+  if (!body || typeof body.enabled !== 'boolean' || typeof body.configured !== 'boolean' || !body.judge) throw new GoogleAioRequestError('구글 AI 개요 시범 상태를 읽지 못했습니다(응답 모양).', status)
+  return body
+}
+
+/** 회차 하나 — 문항마다 본문 앞부분 · 출처(자사 · 올린 글 표시는 서버가 읽을 때 계산). */
+export async function loadGoogleAioRun(tenantId: string, runId: string): Promise<GoogleAioRunDetail> {
+  const { status, body } = await googleAioRequest<GoogleAioRunDetail>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}`), undefined, '회차를 읽지 못했습니다')
+  if (status === 404 || !body || !body.run || !Array.isArray(body.items)) throw new GoogleAioRequestError(body?.error || `회차를 읽지 못했습니다 (HTTP ${status})`, status)
+  return body
+}
+
+/** 계획 — 검색은 하지 않는다(서버가 SerpAPI 계정만 무료로 읽는다). 시작할 수 있으면 planId를 준다. resume은 이어 잴 회차 id. */
+export async function planGoogleAio(tenantId: string, resume: string | null = null): Promise<GoogleAioPlan> {
+  const { status, body } = await googleAioRequest<GoogleAioPlan>(aioPath(tenantId, '/plan'), jsonInit('POST', resume ? { resume } : {}), '계획을 받지 못했습니다')
+  if (status === 404 || !body || typeof body.maxSearches !== 'number') throw new GoogleAioRequestError(body?.error || `계획을 받지 못했습니다 (HTTP ${status})`, status)
+  return body
+}
+
+/** 실행 — 계획 id로만(검색이 든다). 서버는 202로 바로 돌려주고 뒤에서 하나씩 잰다(진행은 loadGoogleAio). */
+export async function runGoogleAio(tenantId: string, planId: string): Promise<{ runId: string; planned: number; maxSearches: number; resumed: boolean }> {
+  const { status, body } = await googleAioRequest<{ runId: string; planned: number; maxSearches: number; resumed: boolean }>(aioPath(tenantId, '/run'), jsonInit('POST', { planId }), '시작하지 못했습니다')
+  if (status === 404 || !body || typeof body.runId !== 'string') throw new GoogleAioRequestError(body?.error || `시작하지 못했습니다 (HTTP ${status})`, status)
+  return body
+}
+
+/** 중단 — 다음 검색 전에 멈춘다(지금 날아가는 요청 하나는 끝까지 받는다). */
+export async function cancelGoogleAio(tenantId: string, runId: string): Promise<void> {
+  const { status, body } = await googleAioRequest<{ cancelling: boolean }>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}/cancel`), jsonInit('POST', {}), '중단하지 못했습니다')
+  if (status === 404 || !body?.cancelling) throw new GoogleAioRequestError(body?.error || `중단하지 못했습니다 (HTTP ${status})`, status)
+}
+
+/** 다시 판정(검색 0) — unknown은 판정 불가만, all은 본문이 있는 있음 모두. 202로 바로 돌려준다(진행은 loadGoogleAio). */
+export async function rejudgeGoogleAio(tenantId: string, runId: string, scope: 'unknown' | 'all'): Promise<{ runId: string; total: number }> {
+  const { status, body } = await googleAioRequest<{ runId: string; total: number }>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}/rejudge`), jsonInit('POST', { scope }), '다시 판정을 시작하지 못했습니다')
+  if (status === 404 || !body || typeof body.total !== 'number') throw new GoogleAioRequestError(body?.error || `다시 판정을 시작하지 못했습니다 (HTTP ${status})`, status)
+  return body
+}
+
+/** 이 PC 켜기 · 끄기 — 본문은 { enabled }만. */
+export async function saveGoogleAioSettings(enabled: boolean): Promise<{ enabled: boolean }> {
+  const { status, body } = await googleAioRequest<{ settings: { enabled: boolean } }>('/api/google-aio/settings', jsonInit('PUT', { enabled }), '이 PC 설정을 저장하지 못했습니다')
+  if (status === 404 || typeof body?.settings?.enabled !== 'boolean') throw new GoogleAioRequestError(body?.error || `이 PC 설정을 저장하지 못했습니다 (HTTP ${status})`, status)
   return body.settings
 }
 

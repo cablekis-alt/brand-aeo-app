@@ -1326,6 +1326,13 @@ export interface AioRunRow {
   sameCondition: boolean
   diffs: ConditionDiff[]
   usage: AioUsage
+  /** 이 회차의 최대 검색 수(M). */
+  maxSearches: number
+  /** 멈춘 까닭(실행기가 적은 글 — 키는 지웠다). 실행기 없이 끊긴 회차는 파일을 고치기 전이라 null일 수 있다. */
+  stopReason: string | null
+  stopMessage: string | null
+  /** 판정 엔진(문항의 판정 기록 — 섞였으면 「a+b」, 판정이 없으면 시작 때 엔진). 화면이 판정 비용 단가를 고를 때 쓴다. */
+  judgeEngine: string | null
 }
 
 export interface AioView {
@@ -1356,7 +1363,20 @@ export function aioView(runs: readonly AioRun[], ctx: AioReadContext, opts: { un
     previous: last && prev ? compareAioRuns(prev, last) : null,
     runs: [...sorted].reverse().map((run): AioRunRow => {
       const diffs = latest && run !== latest ? aioConditionDiffs(latest, run) : []
-      return { runId: run.runId, startedAt: run.startedAt, state: run.state, summary: summarizeAioRun(run, ctx), summaryRun: isSummaryRun(run), sameCondition: diffs.length === 0, diffs, usage: run.usage }
+      return {
+        runId: run.runId,
+        startedAt: run.startedAt,
+        state: run.state,
+        summary: summarizeAioRun(run, ctx),
+        summaryRun: isSummaryRun(run),
+        sameCondition: diffs.length === 0,
+        diffs,
+        usage: run.usage,
+        maxSearches: run.maxSearches,
+        stopReason: run.stopReason ?? null,
+        stopMessage: run.stopMessage ?? null,
+        judgeEngine: aioCard(run).judgeEngine ?? null,
+      }
     }),
     questions: aioQuestionRows(sorted),
     posts: ctx.posts ? aioPostTable(sorted, ctx.posts) : null,

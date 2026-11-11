@@ -773,6 +773,16 @@ const IDS50 = Array.from({ length: 50 }, (_, i) => `c1-${String(i + 1).padStart(
   ok('화면 모델 — 회차 목록은 새것부터, 조건이 같은지 · 요약 회차인지', same(view.runs.map((r) => r.runId), [run3.runId, run2.runId, run1.runId]) && view.runs.every((r) => r.sameCondition && r.summaryRun), view.runs)
   ok('화면 모델 — 직전 비교는 공통 질문으로', view.previous?.common === 1, view.previous)
   ok('화면 모델 — 작성자 이름이 없다', !JSON.stringify(view).includes('가짜작성자이름'))
+  const stopped = { ...mkRun({ startedAt: '2026-11-26T01:00:00.000Z', state: 'partial', items: [item('c1-001', 'absent')] }), stopReason: 'streak', stopMessage: '가짜 멈춘 까닭' }
+  const mixed = mkRun({ startedAt: '2026-11-27T01:00:00.000Z', items: [item('c1-001', 'shown', { ...judged(true), text: 'x' }), item('c1-002', 'shown', { ...judged(false, { judgeEngine: 'claude' }), text: 'x' })] })
+  const rows = aioView([stopped, mixed, run1], { ...BRAND, posts: POSTS }, { unreadableRuns: 0 }).runs
+  const rowOf = (id: string) => rows.find((r) => r.runId === id)
+  ok(
+    '화면 모델 — 회차 줄에 멈춘 까닭 · 최대 검색 수 · 판정 엔진(문항 기록 — 섞이면 a+b, 판정이 없으면 시작 때 엔진)',
+    rowOf(stopped.runId)?.stopReason === 'streak' && rowOf(stopped.runId)?.stopMessage === '가짜 멈춘 까닭' && rowOf(stopped.runId)?.maxSearches === aioMaxSearches(10) &&
+      rowOf(stopped.runId)?.judgeEngine === 'gemini' && rowOf(mixed.runId)?.judgeEngine === 'claude+gemini' && rowOf(run1.runId)?.stopMessage === null && rowOf(run1.runId)?.judgeEngine === 'gemini',
+    rows.map((r) => ({ id: r.runId, stopReason: r.stopReason, stopMessage: r.stopMessage, judgeEngine: r.judgeEngine, maxSearches: r.maxSearches })),
+  )
   const empty = aioView([], { ...BRAND, posts: null }, { unreadableRuns: 0 })
   ok('화면 모델 — 회차가 없으면 요약 null · 빈 표', empty.summary === null && empty.runs.length === 0 && empty.questions.rows.length === 0 && empty.trend.points.length === 0 && empty.previous === null, empty)
 }

@@ -12,6 +12,7 @@ import Citations from './pages/Citations'
 import CompetitorTrends from './pages/CompetitorTrends'
 import Dashboard from './pages/Dashboard'
 import Eeat from './pages/Eeat'
+import GoogleAio from './pages/GoogleAio'
 import MeasureStatus from './pages/MeasureStatus'
 import MeasureTenant from './pages/MeasureTenant'
 import PeriodicReport from './pages/PeriodicReport'
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="brand-onboarding" element={<BrandOnboarding />} />
             <Route path="measure-tenant" element={<MeasureTenant />} />
             <Route path="measure-status" element={<MeasureStatus />} />
+            <Route path="google-aio" element={<GoogleAio />} />
           </Route>
         </Routes>
       </BrowserRouter>

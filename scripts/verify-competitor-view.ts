@@ -13,7 +13,7 @@ import { cohortOfCompetitor, customerForCompetitorRow, sameCohort } from '../src
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
 
-const LOCKED = ['/gap-actions', '/content-library', '/publish-status', '/site-diagnosis', '/report', '/measure-tenant', '/measure-status', '/ai-referrals', '/brand-facts', '/questions', '/brand-onboarding']
+const LOCKED = ['/gap-actions', '/content-library', '/publish-status', '/site-diagnosis', '/report', '/measure-tenant', '/measure-status', '/google-aio', '/ai-referrals', '/brand-facts', '/questions', '/brand-onboarding']
 const OPEN = ['/brands', '/', '/answers', '/ranking', '/citation-gap', '/diagnosis', '/performance', '/question-winloss', '/gap-analysis', '/sentiment', '/citations', '/citation-sources', '/eeat', '/competitor-trends']
 
 for (const p of LOCKED) ok(`잠김: ${p}`, isCustomerOnlyPath(p))
