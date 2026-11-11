@@ -16,11 +16,28 @@
  *    개요)과 AI 개요가 읽기만 하는 모듈(원장 · 앱 밖 글 · 발행 현황 · 색인 자동 확인 · 측정 진행 · 판정 엔진 · SerpAPI 공용 연결)의 닫힘에 AI 개요
  *    모듈이 없다. AI 개요 모듈은 resetJudgeHealth를 쓰지 않는다. src/lib/googleAio.ts의 닫힘은 화면 · 서버 공용 순수 모듈뿐이다(node 모듈 ·
  *    서버 모듈 · 네트워크 없음).
+ * C. 실행기(server/googleAio.ts, 같은 프로세스) — 이 프로세스의 env를 가짜로 정한 뒤 불러온다(임시 APP_DATA_DIR · 가짜 키 · 가짜 SerpAPI
+ *    127.0.0.1:4198 · 목 엔진 · LLM 키 비움). 판정 · 검색을 주입해 판정 불가 null · 판정 3번 잇따라 실패면 'partial' · 생각 토큰 · 다시 판정 검색 0을,
+ *    진짜 공용 연결(serpSearch)과 가짜 SerpAPI로 멈춤 규칙(401 · 403 · 429 두 가지 · 400 · 시간 초과 · 5xx 3번 잇따름 · 계정 바닥 · 몫 · 시간당 ·
+ *    최대 검색 수 M · 중단 · 긴 page_token · 못 읽음 다시 검색 10% · 후속 400 · 만료)을 가짜 서버가 받은 수와 장부 sent로 본다. 계획 → 실행 사이
+ *    다시 보기(측정 중 · 이 PC 꺼짐 · 질문지 바뀜 · 몫 모자람 — 검색 0 · 잠금 놓음)도 본다.
+ * B. 라우트(앱 서버 127.0.0.1:4199를 띄움 — DOTENV_CONFIG_PATH는 없는 파일, serpapi.com · LLM 공급자로 가는 fetch는 --import 가드가 막음) —
+ *    계획(검색 0) → 실행(202) → 진행(메모리, 가벼운 GET) → 결과 · 회차 상세(자사 · 올린 글 출처는 읽을 때 계산, 작성자는 w1~w8만) · 다시
+ *    판정(검색 0) · 중단 · 이어 재기 · Host/Origin 403 · JSON만(415) · 회차 id 400 · 고객 브랜드만(404) · 409(이 PC 꺼짐 · 시범 아님 · 몫 ·
+ *    도는 중 · 다른 창 · 색인 자동 확인과 서로) · 질문지 없음(동봉본 복사 없음) · 판정 엔진 키 없음 · SerpAPI 키 없음 · 끊긴 회차(GET은 바꾸지
+ *    않고 다음 시작 때 한 번 고침) · 격리(브랜드 데이터 · 이 PC 상태 파일 · 코호트 질문지 바이트 같음 · GET /api/usage 같음) · 가짜 키(원문 ·
+ *    인코딩)와 가짜 작성자 이름이 응답 · 회차 파일 · 장부 · 서버 로그 어디에도 없음.
  *
  *   npx tsx scripts/verify-google-aio.ts
  */
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { execSync, spawn, type ChildProcess } from 'node:child_process'
+import { createHash, randomBytes } from 'node:crypto'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
+import http from 'node:http'
+import net from 'node:net'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { setTimeout as sleep } from 'node:timers/promises'
 import {
   AIO_CELL,
   AIO_FOLLOW_UP_ENGINE,
@@ -43,6 +60,7 @@ import {
   aioMaxSearches,
   aioParamsFit,
   aioPostRows,
+  aioPostsUpDuring,
   aioPostTable,
   aioQuestionRows,
   aioQuestionSet,
@@ -53,6 +71,7 @@ import {
   aioRunId,
   aioSameConditions,
   aioSearchParams,
+  aioSourceMarks,
   aioTrend,
   aioView,
   compareAioRuns,
@@ -78,16 +97,24 @@ import {
   type AioRunState,
 } from '../src/lib/googleAio'
 import { mentionsWord } from '../src/lib/aeo/entityMatch'
-import { trackingKey } from '../src/lib/publishedUrl'
+import { addDays } from '../src/lib/publishStatus'
+import { parseWriterPlan } from '../src/lib/probePlan'
+import { todayKst, trackingKey } from '../src/lib/publishedUrl'
+import type { AioJudgeFn, AioSearchFn, GoogleAioPlanView, GoogleAioRunDetail, GoogleAioStatusView } from '../server/googleAio'
+import type { TenantConfig } from '../server/types'
 
 // 안전 — 이 프로세스의 fetch는 127.0.0.1만 나간다(그 밖은 막고 기록한다). A부는 fetch를 부르지 않는다.
 const fetchCalls: string[] = []
+const blockedHosts: string[] = []
 const realFetch = globalThis.fetch
 globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
   const href = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
   fetchCalls.push(href.split('?')[0]!)
   const host = URL.canParse(href) ? new URL(href).hostname : ''
-  if (host !== '127.0.0.1') return Promise.reject(new Error('verify guard: 127.0.0.1 밖으로 나가는 요청을 막았습니다'))
+  if (host !== '127.0.0.1') {
+    blockedHosts.push(host || '(주소 아님)')
+    return Promise.reject(new Error('verify guard: 127.0.0.1 밖으로 나가는 요청을 막았습니다'))
+  }
   return realFetch(input, init)
 }) as typeof fetch
 
@@ -722,6 +749,25 @@ const IDS50 = Array.from({ length: 50 }, (_, i) => `c1-${String(i + 1).padStart(
   ok('올린 글 표 — 내린 뒤 회차는 N에 안 든다(D 0/0)', rd.runs === 0 && rd.cited === 0, rd)
   ok('올린 글 표 — 처음 나온 날 · 작성자는 w 키만', ra.firstCitedOn === '2026-11-10' && rc.firstCitedOn === '2026-11-24' && ra.writerKey === 'w1' && rc.writerKey === null, [ra, rc])
 
+  const up1 = aioPostsUpDuring(run1, POSTS).map((p) => p.key).sort()
+  ok('회차 상세 — 그 회차 때 올린 뒤 · 올라가 있던 글만(A · B — C는 올리기 전, D는 내린 뒤)', same(up1, [trackingKey(POST_A), trackingKey(POST_B)].sort()), up1)
+  const marks = aioSourceMarks(
+    item('c1-001', 'shown', { ...judged(false), text: 'x', references: refsOf(POST_A, 'https://rooms.fake-stay.example/1', `${POST_B}?ref=aio`, POST_C), links: ['https://www.google.com/maps/fake'] }),
+    BRAND.ownedDomains,
+    aioPostsUpDuring(run1, POSTS),
+  )
+  ok(
+    '회차 상세 — 출처마다 자사(하위 도메인) · 올린 글(작성자 키) · 질의만 다른 주소 · 본문 링크를 읽을 때 표시',
+    marks.length === 5 &&
+      marks[0]!.post?.writerKey === 'w1' && marks[0]!.post.origin === 'app' && !marks[0]!.owned &&
+      marks[1]!.owned && marks[1]!.post === null &&
+      marks[2]!.variant && marks[2]!.post === null &&
+      marks[3]!.post === null && !marks[3]!.variant &&
+      marks[4]!.kind === 'link' && !marks[4]!.owned && marks[4]!.title === null,
+    marks,
+  )
+  ok('회차 상세 — 자사 주소 칸이 비면 자사 표시 없음', aioSourceMarks(item('c1-001', 'shown', { references: refsOf('https://fake-stay.example/a') }), [], []).every((m) => !m.owned))
+
   const view = aioView([run2, run1, run3], { ...BRAND, posts: POSTS }, { unreadableRuns: 2 })
   ok('화면 모델 — 요약은 마지막 요약 회차 · 읽지 못한 회차 수 · 흔들림 안내', view.summary?.runId === run3.runId && view.unreadableRuns === 2 && view.note === AIO_NOISE_NOTE && AIO_NOISE_NOTE === '한 번 측정은 흔들립니다 — 두 번 이상 같은 방향일 때만 판단하세요', view)
   ok('화면 모델 — 회차 목록은 새것부터, 조건이 같은지 · 요약 회차인지', same(view.runs.map((r) => r.runId), [run3.runId, run2.runId, run1.runId]) && view.runs.every((r) => r.sameCondition && r.summaryRun), view.runs)
@@ -797,10 +843,10 @@ const IDS50 = Array.from({ length: 50 }, (_, i) => `c1-${String(i + 1).padStart(
 }
 
 // ── 정적 검사 — 격리 · 순수 ─────────────────────────────────────────────────────────────────────
-/** 있어야 하는 AI 개요 모듈. 실행기(server/googleAio.ts)는 다음 커밋에서 생긴다 — 생기면 여기에 더한다. */
-const NEW_MODULES = ['src/lib/googleAio.ts']
-/** 격리 검사가 지키는 AI 개요 모듈 — 아직 없는 파일은 어느 닫힘에도 들 수 없으니 미리 넣어 둔다(생기는 순간부터 지킨다). */
-const GUARDED_MODULES = [...NEW_MODULES, 'server/googleAio.ts']
+/** 있어야 하는 AI 개요 모듈 — 순수 규칙과 실행기. */
+const NEW_MODULES = ['src/lib/googleAio.ts', 'server/googleAio.ts']
+/** 격리 검사가 지키는 AI 개요 모듈. */
+const GUARDED_MODULES = [...NEW_MODULES]
 /**
  * 닫힘(런타임으로 불러오는 모듈을 따라간 전체)에 AI 개요 모듈이 없어야 하는 뿌리 — 점수 · 보고서 · 같은 조건 · 회차 기록 · 사용량, 그리고 AI
  * 개요가 읽기만 하는 원장 · 앱 밖 글 · 발행 현황 · 색인 자동 확인 · 측정 진행 · 판정 엔진 · SerpAPI 공용 연결(거꾸로 불러오면 고리가 생긴다).
@@ -889,6 +935,13 @@ function closureOf(root: string): Set<string> {
   })
   ok(`정적 검사 — 점수 · 보고서 · 같은 조건 · 회차 기록 · 사용량 · 원장 · 발행 현황 · 색인 모듈은 AI 개요 모듈을 불러오지 않는다${leaks.length ? `: ${leaks.join(', ')}` : ''}`, leaks.length === 0)
   ok('정적 검사 — 검사가 실제로 잡는다(이 시험 스크립트의 닫힘에는 AI 개요 모듈이 있다)', newAbs.every((n) => closureOf('scripts/verify-google-aio.ts').has(n)))
+  ok('정적 검사 — 대조: 앱 서버(server/index.ts)의 닫힘에는 실행기와 순수 규칙이 있다(라우트가 실제로 묶인다)', newAbs.every((n) => closureOf('server/index.ts').has(n)))
+  const runner = path.resolve(repo, 'server/googleAio.ts')
+  const runnerSrc = existsSync(runner) ? readFileSync(runner, 'utf8') : ''
+  const runnerSpecs = existsSync(runner) ? [...runnerSrc.matchAll(SPEC)].map((m) => (m[3] ?? m[4])!).filter((s) => s.startsWith('.')) : []
+  ok(`실행기 — 상대 import는 모두 .js로 끝난다(Vercel · 묶음 규칙)${runnerSpecs.filter((s) => !s.endsWith('.js')).join(', ')}`, runnerSpecs.length > 0 && runnerSpecs.every((s) => s.endsWith('.js')), runnerSpecs)
+  ok('실행기 — 디버그 출력(console.log)이 없고 작성자 이름 칸(writer.name · writerLabel · buildTenantStatus)을 쓰지 않는다', runnerSrc.length > 0 && !/console\.log\(/.test(runnerSrc) && !/writer\.name|writerLabel|buildTenantStatus/.test(runnerSrc))
+  ok('실행기 — 시험 전용 env 이름을 새로 읽지 않는다(process.env 읽기는 판정 엔진 키 확인뿐 — 이름을 적어 읽는 곳이 없다)', runnerSrc.length > 0 && !/process\.env\.[A-Za-z_]|process\.env\[\s*['"`]/.test(runnerSrc), [...runnerSrc.matchAll(/process\.env[^\s;)]*/g)].map((m) => m[0]))
   const resets = guardedAbs.filter((f) => existsSync(f) && /\bresetJudgeHealth\b/.test(readFileSync(f, 'utf8'))).map((f) => path.relative(repo, f))
   ok(`정적 검사 — AI 개요 모듈은 resetJudgeHealth를 부르지도 불러오지도 않는다(브랜드 측정의 판정 차단기를 지우지 않는다)${resets.length ? `: ${resets.join(', ')}` : ''}`, resets.length === 0)
 
@@ -908,6 +961,1029 @@ function closureOf(root: string): Set<string> {
 }
 
 ok('A부는 fetch를 한 번도 부르지 않았다(진짜 SerpAPI · LLM 0회)', fetchCalls.length === 0, fetchCalls)
+
+// ══ B · C 공통 — 가짜 SerpAPI(127.0.0.1:4198) ════════════════════════════════════════════════════
+const MOCK_PORT = 4198
+const APP_PORT = 4199
+const MOCK_BASE = `http://127.0.0.1:${MOCK_PORT}`
+const APP_BASE = `http://127.0.0.1:${APP_PORT}`
+const FAKE_KEY = `test-serp-${randomBytes(6).toString('hex')}`
+const WRITER_NAME = '가짜작성자이름'
+const CYCLE = '2026-12-08'
+/** C(같은 프로세스)의 검색 시간 초과 — 'slow'는 이보다 늦게 답한다. */
+const C_TIMEOUT_MS = 600
+/** B(띄운 서버)의 검색 시간 초과 — 'slowok'은 이보다 일찍 답한다. */
+const B_TIMEOUT_MS = 2500
+if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(MOCK_BASE) || !FAKE_KEY.startsWith('test-serp-')) {
+  console.error('가짜 SerpAPI 주소(127.0.0.1) · 가짜 키가 아니라 시작하지 않습니다.')
+  process.exit(1)
+}
+const portFree = (port: number) =>
+  new Promise<boolean>((resolve) => {
+    const srv = net.createServer()
+    srv.once('error', () => resolve(false))
+    srv.listen(port, '127.0.0.1', () => srv.close(() => resolve(true)))
+  })
+const dirC = mkdtempSync(path.join(tmpdir(), 'verify-google-aio-c-'))
+const dirB = mkdtempSync(path.join(tmpdir(), 'verify-google-aio-b-'))
+const seedB = mkdtempSync(path.join(tmpdir(), 'verify-google-aio-seed-'))
+const removeDirs = () => {
+  for (const d of [dirC, dirB, seedB]) rmSync(d, { recursive: true, force: true })
+}
+/** 띄운 앱 서버(B) — 시험이 중간에 멈춰도(예외 · 실패) 끄고 임시 폴더를 지운다. */
+const children: ChildProcess[] = []
+process.on('exit', () => {
+  for (const c of children) if (c.exitCode === null && c.signalCode === null) c.kill()
+  removeDirs()
+})
+for (const port of [MOCK_PORT, APP_PORT]) {
+  if (!(await portFree(port))) {
+    console.error(`포트 ${port}을 다른 프로그램이 쓰고 있어 확인하지 못했습니다.`)
+    removeDirs()
+    process.exit(1)
+  }
+}
+
+const account = (over: Record<string, unknown> = {}) => ({
+  account_id: 'acct-fake-aio',
+  api_key: FAKE_KEY,
+  account_email: 'fake-owner@example.test',
+  account_status: 'Active',
+  plan_name: 'Starter',
+  searches_per_month: 1000,
+  plan_searches_left: 990,
+  extra_credits: 0,
+  total_searches_left: 990,
+  this_month_usage: 10,
+  this_hour_searches: 0,
+  account_rate_limit_per_hour: 200,
+  plan_renewal_date: CYCLE,
+  ...over,
+})
+interface Seen {
+  path: string
+  engine: string | null
+  q: string | null
+  token: string | null
+  keyOk: boolean
+  params: Record<string, string>
+  at: number
+}
+const seen: Seen[] = []
+let accountBody: Record<string, unknown> = account()
+const searchesSeen = () => seen.filter((s) => s.path === '/search.json')
+const tokens = new Map<string, string>()
+const qCount = new Map<string, number>()
+const issueToken = (q: string, len = 1500) => {
+  const t = `t${tokens.size + 1}-${'Ab0-_Zx9'.repeat(Math.ceil(len / 8) + 1)}`.slice(0, len)
+  tokens.set(t, q)
+  return t
+}
+/** 질문 문장 「가짜 질문 <종류> <번호>」의 종류 — 가짜 서버가 이 글자로 답을 고른다. */
+const kindOf = (q: string) => /^가짜 질문 (\S+)/.exec(q)?.[1] ?? ''
+const inlineB = {
+  search_metadata: meta('fake-inline-b'),
+  search_parameters: { engine: 'google', q: '가짜', google_domain: 'google.co.kr', hl: 'ko', gl: 'kr', device: 'desktop' },
+  ai_overview: {
+    text_blocks: [{ type: 'paragraph', snippet: '뷰성형외과는 조용한 가짜 병원이에요. 강남성형A도 가까워요.', reference_indexes: [0, 1] }],
+    references: [ref(0, 'https://fake-view.example/about', '가짜 소개'), ref(1, 'https://fake-hand.example.net/posts/5', '가짜 손글')],
+  },
+}
+const LONG_TEXT = '뷰성형외과 가짜 긴 본문 문장입니다. '.repeat(1200)
+const bigInline = { ...inlineB, ai_overview: { text_blocks: [{ type: 'paragraph', snippet: LONG_TEXT }], references: [ref(0, 'https://fake-view.example/long', '가짜 긴 글')] } }
+const errOnly = { search_metadata: meta('fake-err-only'), search_parameters: { engine: 'google', q: '가짜' }, ai_overview: { error: 'An error occurred while fetching the AI Overview.' } }
+const deferredFirst = (q: string, len?: number) => ({
+  ...k1First,
+  search_parameters: { ...k1First.search_parameters, q },
+  ai_overview: { page_token: issueToken(q, len), serpapi_link: 'https://serpapi.com/search.json?engine=google_ai_overview&page_token=x' },
+})
+type Reply = { status: number; body: unknown; delayMs?: number }
+function firstReply(q: string, n: number): Reply {
+  switch (kindOf(q)) {
+    case 'inline':
+      return { status: 200, body: inlineB }
+    case 'big':
+      return { status: 200, body: bigInline }
+    case 'refsonly':
+      return { status: 200, body: { ...inlineB, ai_overview: { references: [ref(0, 'https://fake-view.example/only', '가짜 출처만')] } } }
+    case 'deferred':
+    case 'norefs':
+    case 'expired':
+    case 'f400':
+    case 'fslow':
+      return { status: 200, body: deferredFirst(q) }
+    case 'longtoken':
+      return { status: 200, body: deferredFirst(q, AIO_VALUE_MAX + 1) }
+    case 'noresults':
+      return { status: 200, body: noResultsFirst }
+    case 'erronce':
+      return { status: 200, body: n === 1 ? errOnly : inlineB }
+    case 'errtwice':
+      return { status: 200, body: errOnly }
+    case 'k401':
+      return { status: 401, body: { error: 'Invalid API key. Your API key should be here: https://serpapi.com/manage-api-key' } }
+    case 'k403':
+      return { status: 403, body: { error: 'This account is not allowed to use this API.' } }
+    case 'k429m':
+      return { status: 429, body: { error: 'Your account has run out of searches.' } }
+    case 'k429h':
+      return { status: 429, body: { error: 'Your account has exceeded the hourly throughput limit.' } }
+    case 'k400':
+      return { status: 400, body: { error: 'Missing query `q` parameter.' } }
+    case 'e500':
+      return { status: 500, body: { error: 'Internal error.' } }
+    case 'slow':
+      return { status: 200, body: absentFirst, delayMs: C_TIMEOUT_MS + 900 }
+    case 'slowok':
+      return { status: 200, body: absentFirst, delayMs: 1200 }
+    default:
+      return { status: 200, body: absentFirst }
+  }
+}
+function followReply(q: string): Reply {
+  switch (kindOf(q)) {
+    case 'deferred':
+      return { status: 200, body: k1Follow }
+    case 'norefs':
+      return { status: 200, body: k2Follow }
+    case 'f400':
+      return { status: 400, body: { error: 'Invalid page_token.' } }
+    case 'fslow':
+      return { status: 200, body: k1Follow, delayMs: C_TIMEOUT_MS + 900 }
+    default:
+      return { status: 200, body: { search_metadata: meta('fake-expired', { status: 'Error' }), error: 'This page_token has expired.' } }
+  }
+}
+const mock = http.createServer((req, res) => {
+  const url = new URL(req.url ?? '/', MOCK_BASE)
+  const p = url.searchParams
+  const s: Seen = { path: url.pathname, engine: p.get('engine'), q: p.get('q'), token: p.get('page_token'), keyOk: p.get('api_key') === FAKE_KEY, params: Object.fromEntries(p.entries()), at: Date.now() }
+  seen.push(s)
+  const reply = (r: Reply) => {
+    const send = () => {
+      if (res.writableEnded || res.destroyed) return
+      res.writeHead(r.status, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify(r.body))
+    }
+    if (!r.delayMs) return send()
+    const t = setTimeout(send, r.delayMs)
+    res.on('close', () => clearTimeout(t))
+  }
+  if (s.path === '/account.json') return reply({ status: 200, body: accountBody })
+  if (s.path !== '/search.json') return reply({ status: 404, body: { error: 'not found' } })
+  if (s.engine === 'google_ai_overview') return reply(followReply(tokens.get(s.token ?? '') ?? ''))
+  const q = s.q ?? ''
+  if (q.startsWith('site:')) return reply({ status: 200, body: { search_metadata: { status: 'Success' }, organic_results: [] }, delayMs: 1500 })
+  const n = (qCount.get(q) ?? 0) + 1
+  qCount.set(q, n)
+  return reply(firstReply(q, n))
+})
+await new Promise<void>((resolve) => mock.listen(MOCK_PORT, '127.0.0.1', resolve))
+const writeJson = (p: string, v: unknown) => {
+  mkdirSync(path.dirname(p), { recursive: true })
+  writeFileSync(p, JSON.stringify(v, null, 2))
+}
+const qsOf = (kinds: string[], prefix = 'c1') => kinds.map((k, i) => ({ questionId: `${prefix}-${String(i + 1).padStart(3, '0')}`, text: `가짜 질문 ${k} ${i + 1}` }))
+const bankOf = (version: string, items: { questionId: string; text: string; category?: string; probe?: boolean; containsBrandName?: boolean }[], extra: Record<string, unknown> = {}) => ({
+  version,
+  generatedAt: '2026-11-01T00:00:00.000Z',
+  questions: items.map((q) => ({ industry: '가상업종', region: '전북 군산', containsBrandName: false, version, category: 'category-agnostic', ...q })),
+  ...extra,
+})
+const ledgerSent = (file: string): number => {
+  if (!existsSync(file)) return 0
+  const j = JSON.parse(readFileSync(file, 'utf8')) as { cycles?: Record<string, { aio?: { sent?: number } }> }
+  return j.cycles?.[CYCLE]?.aio?.sent ?? 0
+}
+const errOf = (p: Promise<unknown>) => p.then(
+  () => null,
+  (e: { status?: number; code?: string | null; message?: string }) => e,
+)
+
+// ══ C. 실행기 — 같은 프로세스(env를 가짜로 정한 뒤 불러온다) ════════════════════════════════════════
+Object.assign(process.env, {
+  APP_DATA_DIR: dirC,
+  DOTENV_CONFIG_PATH: path.join(dirC, 'no-such.env'),
+  SERPAPI_API_KEY: FAKE_KEY,
+  SERPAPI_LIVE: '',
+  SERPAPI_BASE_URL: MOCK_BASE,
+  SERPAPI_TIMEOUT_MS: String(C_TIMEOUT_MS),
+  USE_MOCK_ENGINES: 'true',
+  GEMINI_API_KEY: '',
+  OPENAI_API_KEY: '',
+  ANTHROPIC_API_KEY: '',
+  PERPLEXITY_API_KEY: '',
+  JUDGE_ENGINE: '',
+})
+const BRAND_C = {
+  brandName: '뷰성형외과',
+  aliases: ['뷰성형'],
+  ownedDomains: ['fake-view.example'],
+  competitors: [{ name: '강남성형A', aliases: [], domains: [] }],
+  industry: '가상업종',
+  region: '전북 군산',
+}
+const TENANT_C = { tenantId: 'vaio-c', ...BRAND_C, engines: ['gemini'], questionBankSize: 3, questionBankVersion: 'v1', repeatsPerQuestion: 1, factGraph: [] } as unknown as TenantConfig
+const SETTINGS_C = path.join(dirC, 'google-aio-settings.json')
+const BANK_C = path.join(dirC, 'data', 'vaio-c', 'question-bank', 'v1.json')
+const C_QS = qsOf(['inline', 'absent', 'deferred'])
+writeJson(SETTINGS_C, { format: 'google-aio-settings/1', enabled: true, tenants: ['vaio-c'] })
+writeJson(BANK_C, bankOf('v1', C_QS))
+const LEDGER_C = path.join(dirC, 'serpapi-usage.json')
+const aio = await import('../server/googleAio')
+const serp = await import('../server/serpApi')
+const tracker = await import('../server/measureTracker')
+
+const OK_TEXT = JSON.stringify({ targetBrand: { mentioned: true, mentionCount: 1, mentions: [{ mentionOrder: 1, sentence: '뷰성형외과는 조용한 가짜 병원이에요.', sentiment: 'neutral' }] }, competitorMentions: [{ name: '강남성형A', mentionCount: 1, mentions: [] }] })
+const judgeOk: AioJudgeFn = async () => ({ text: OK_TEXT, citations: [], usedWebSearch: false, model: 'fake-judge-1', inputTokens: 100, outputTokens: 20, thoughtTokens: 30 })
+const judgeThrow: AioJudgeFn = async () => {
+  throw new Error('가짜 판정 실패')
+}
+let injectedCalls = 0
+/** 주입 검색 — 가짜 서버를 거치지 않고 같은 답을 바로 준다(판정 시험용, 1초 간격 없음). */
+const injected: AioSearchFn = async (params) => {
+  injectedCalls += 1
+  const r = params.engine === 'google_ai_overview' ? followReply(tokens.get(params.page_token ?? '') ?? '') : firstReply(params.q ?? '', 1)
+  return { json: r.body as Record<string, unknown> }
+}
+async function core(kinds: string[], opts: { judge?: AioJudgeFn; search?: AioSearchFn; maxSearches?: number; cancelAt?: number; cancelled?: () => boolean; account?: Record<string, unknown>; ledger?: unknown; pilotOn?: () => Promise<boolean> } = {}) {
+  accountBody = account(opts.account)
+  if (opts.ledger !== undefined) writeFileSync(LEDGER_C, JSON.stringify(opts.ledger))
+  await serp.serpAccount({ fresh: true })
+  await sleep(3)
+  const questions = qsOf(kinds)
+  const run = aio.newAioRun({ tenantId: 'vaio-c', startedAt: new Date(), location: GUNSAN, bankVersion: 'v1', cohortBank: null, questions, maxSearches: opts.maxSearches, cycle: CYCLE, judgeEngine: 'fake-judge' })
+  const before = searchesSeen().length
+  const sentBefore = ledgerSent(LEDGER_C)
+  const release = opts.search ? null : await serp.claimSerpRun('aio')
+  if (!opts.search && !release) throw new Error('실행 잠금을 잡지 못했습니다')
+  try {
+    const out = await aio.executeAioRun(run, questions, BRAND_C, {
+      search: opts.search,
+      judge: opts.judge ?? judgeOk,
+      judgeEngine: 'fake-judge',
+      cancelled: () => (opts.cancelled?.() ?? false) || (opts.cancelAt !== undefined && run.items.length >= opts.cancelAt),
+      pilotOn: opts.pilotOn,
+    })
+    return { run: out, requests: searchesSeen().slice(before), sent: ledgerSent(LEDGER_C) - sentBefore }
+  } finally {
+    await release?.()
+  }
+}
+const shownItems = (r: AioRun) => r.items.filter((i) => i.status === 'shown')
+
+// ── C1. 판정 — 판정 불가 null · 3번 잇따라 실패면 멈춤 · 생각 토큰 · 자르기 전 본문 ─────────────────────────────
+{
+  injectedCalls = 0
+  const r1 = await core(['inline', 'absent', 'inline', 'inline', 'inline'], { search: injected, judge: judgeThrow })
+  ok('C 판정 — 판정이 실패하면 mentioned null(미언급 false로 세지 않는다)', shownItems(r1.run).length === 3 && shownItems(r1.run).every((i) => i.mentioned === null), r1.run.items)
+  ok(
+    'C 판정 — 3번 잇따라 실패하면 검색을 멈춘다(partial · judge) — 남은 질문은 보내지 않는다',
+    r1.run.state === 'partial' && r1.run.stopReason === 'judge' && injectedCalls === 4 && r1.run.items.length === 4 && r1.run.usage.judgeCalls === 3 && /판정 엔진/.test(r1.run.stopMessage ?? ''),
+    { state: r1.run.state, stop: r1.run.stopReason, injectedCalls, usage: r1.run.usage },
+  )
+  const seq = ['', '판정 답이 아닌 글', OK_TEXT, '', OK_TEXT]
+  let k = 0
+  const seqJudge: AioJudgeFn = async () => ({ text: seq[k++] ?? '', citations: [], usedWebSearch: false, model: 'fake-judge-1', inputTokens: 10, outputTokens: 2, thoughtTokens: 3 })
+  const r2 = await core(['inline', 'inline', 'inline', 'inline', 'inline'], { search: injected, judge: seqJudge })
+  ok(
+    'C 판정 — 빈 답 · 못 읽는 답은 null, 성공하면 잇따름을 되돌린다(멈추지 않음)',
+    same(r2.run.items.map((i) => i.mentioned), [null, null, true, null, true]) && r2.run.state === 'done' && r2.run.usage.judgeCalls === 5,
+    { m: r2.run.items.map((i) => i.mentioned), state: r2.run.state },
+  )
+  ok('C 판정 — 생각 토큰을 따로 센다(입력 · 출력 · 생각)', same(r2.run.usage.judgeTokens, { input: 50, output: 10, thought: 15 }), r2.run.usage.judgeTokens)
+  ok(
+    'C 판정 — 판정 엔진(주입한 id) · 모델(결과가 실어 온 값)을 문항 · 조건에 적는다',
+    r2.run.items.every((i) => i.judgeEngine === 'fake-judge' && i.judgeModel === 'fake-judge-1' && typeof i.judgedAt === 'string') && r2.run.conditions.judgeEngine === 'fake-judge' && r2.run.conditions.judgeModel === 'fake-judge-1',
+    r2.run.conditions,
+  )
+  ok('C 판정 — 경쟁사 · 언급 문장을 함께 적는다', same(r2.run.items[2]?.competitorMentions, [{ name: '강남성형A', count: 1 }]) && r2.run.items[2]?.mentionSentences?.length === 1, r2.run.items[2])
+  let promptLen = 0
+  const lenJudge: AioJudgeFn = async (prompt) => {
+    promptLen = prompt.user.length
+    return judgeOk(prompt)
+  }
+  const r3 = await core(['big'], { search: injected, judge: lenJudge })
+  ok('C 판정 — 판정은 자르기 전 전체 본문으로, 회차 파일에는 16,000자까지(잘림 표시)', promptLen > AIO_TEXT_MAX + 1000 && r3.run.items[0]?.text?.length === AIO_TEXT_MAX && r3.run.items[0]?.truncated === true, { promptLen, len: r3.run.items[0]?.text?.length })
+  injectedCalls = 0
+  let absentJudged = 0
+  const r4 = await core(['absent', 'noresults'], { search: injected, judge: async (p) => ((absentJudged += 1), judgeOk(p)) })
+  ok('C 판정 — 없음 · 결과 0건은 판정하지 않는다(판정 0회)', absentJudged === 0 && r4.run.usage.judgeCalls === 0 && r4.run.items[1]?.noResults === true && r4.run.state === 'done', r4.run.items)
+
+  // ── C2. 다시 판정 — 검색 0 ──
+  const seenBefore = seen.length
+  const sentBefore = ledgerSent(LEDGER_C)
+  injectedCalls = 0
+  const rj = await aio.rejudgeAioItems(r1.run, BRAND_C, 'unknown', { judge: judgeOk, judgeEngine: 'fake-judge' })
+  ok(
+    'C 다시 판정 — 판정 불가였던 문항이 판정되고 rejudgedAt이 붙는다',
+    rj.judged === 3 && shownItems(rj.run).every((i) => i.mentioned === true && typeof i.rejudgedAt === 'string') && rj.run.usage.judgeCalls === 6,
+    { judged: rj.judged, items: shownItems(rj.run) },
+  )
+  const rj2 = await aio.rejudgeAioItems(rj.run, BRAND_C, 'all', { judge: judgeThrow, judgeEngine: 'fake-judge' })
+  ok('C 다시 판정 — 다시 판정이 실패하면 앞 판정을 지우지 않는다 · 3번 잇따르면 멈춘다', rj2.stopped && rj2.failed === 3 && shownItems(rj2.run).every((i) => i.mentioned === true), rj2)
+  ok('C 다시 판정 — 가짜 SerpAPI가 받은 요청 0 · 장부 그대로 · 주입 검색 0', seen.length === seenBefore && ledgerSent(LEDGER_C) === sentBefore && injectedCalls === 0)
+}
+
+// ── C3. 멈춤 규칙 — 진짜 공용 연결(serpSearch) · 가짜 SerpAPI가 받은 수 · 장부 sent ─────────────────────────────
+{
+  const stopCase = async (kind: string, reason: string, label: string) => {
+    const r = await core([kind, 'absent'])
+    ok(
+      `C 멈춤 — ${label}: 바로 멈춘다(partial · ${reason}) · 그 뒤 질문은 보내지 않는다 · 보낸 1회는 장부에 센다`,
+      r.run.state === 'partial' && r.run.stopReason === reason && r.requests.length === 1 && r.sent === 1 && r.run.usage.searches === 1 && r.run.items.length === 0 && !(r.run.stopMessage ?? '').includes(FAKE_KEY),
+      { state: r.run.state, stop: r.run.stopReason, req: r.requests.length, sent: r.sent, msg: r.run.stopMessage },
+    )
+  }
+  await stopCase('k401', 'key', '401(키)')
+  await stopCase('k403', 'forbidden', '403')
+  await stopCase('k429m', 'quota-month', '429 결제 주기 소진')
+  await stopCase('k429h', 'rate-hour', '429 시간당 한도')
+  await stopCase('k400', 'bad-request', '400')
+
+  const streak = await core(['slow', 'e500', 'slow', 'absent'])
+  const perQ = (r: { requests: Seen[] }) => [...new Set(r.requests.map((s) => s.q))].map((q) => r.requests.filter((s) => s.q === q).length)
+  ok(
+    'C 멈춤 — 시간 초과 · 5xx가 3번 잇따르면 멈춘다 · 시간 초과는 다시 보내지 않는다(질문마다 1회)',
+    streak.run.state === 'partial' && streak.run.stopReason === 'streak' && streak.requests.length === 3 && perQ(streak).every((n) => n === 1) && same(streak.run.items.map((i) => [i.status, i.reason]), [['failed', 'timeout'], ['failed', 'upstream'], ['failed', 'timeout']]) && streak.sent === 3,
+    { stop: streak.run.stopReason, req: streak.requests.length, items: streak.run.items.map((i) => [i.status, i.reason]) },
+  )
+  const followStreak = await core(['fslow', 'fslow', 'fslow', 'absent'])
+  ok(
+    'C 멈춤 — 늦게 오는 개요 후속의 시간 초과도 잇따름에 센다(3번이면 멈춤 · 다시 보내지 않음)',
+    followStreak.run.stopReason === 'streak' && followStreak.requests.length === 6 && followStreak.run.items.every((i) => i.reason === 'follow-up-failed' && i.searches === 2),
+    { stop: followStreak.run.stopReason, req: followStreak.requests.length, items: followStreak.run.items.map((i) => [i.reason, i.searches]) },
+  )
+  const reset = await core(['slow', 'e500', 'absent', 'slow'])
+  ok('C 멈춤 — 사이에 성공이 있으면 잇따름을 되돌린다(끝까지 · 질문마다 1회)', reset.run.state === 'done' && reset.requests.length === 4 && perQ(reset).every((n) => n === 1), { state: reset.run.state, req: reset.requests.length })
+
+  const floor = await core(['deferred', 'deferred', 'absent'], { account: { total_searches_left: 503 } })
+  ok(
+    'C 멈춤 — 실행 중 계정 바닥에 닿으면 후속을 보내지 않고 그 질문은 「못 읽음」, 멈춘다(요청 · 장부 3)',
+    floor.run.state === 'partial' && floor.run.stopReason === 'floor' && floor.requests.length === 3 && floor.sent === 3 && same(floor.run.items.map((i) => [i.status, i.reason ?? null]), [['shown', null], ['unreadable', 'follow-up-blocked']]),
+    { stop: floor.run.stopReason, req: floor.requests.length, sent: floor.sent, items: floor.run.items.map((i) => [i.status, i.reason]) },
+  )
+  const cap = await core(['absent', 'absent'], { ledger: { format: 'serpapi-usage/1', cycles: { [CYCLE]: { aio: { sent: 249 } } }, pending: [] } })
+  ok('C 멈춤 — 이 PC 시범 몫(이번 결제 주기)에 닿으면 다음 검색을 보내지 않는다(feature-cap)', cap.run.stopReason === 'feature-cap' && cap.requests.length === 1 && cap.sent === 1 && cap.run.items.length === 1, { stop: cap.run.stopReason, req: cap.requests.length })
+  writeFileSync(LEDGER_C, JSON.stringify({ format: 'serpapi-usage/1', cycles: {}, pending: [] }))
+  const hour = await core(['absent', 'absent'], { account: { this_hour_searches: 199 } })
+  ok('C 멈춤 — 이번 시간 한도에 닿으면 보내지 않는다(hour)', hour.run.stopReason === 'hour' && hour.requests.length === 1, { stop: hour.run.stopReason, req: hour.requests.length })
+  const maxed = await core(['deferred', 'deferred'], { maxSearches: 3 })
+  ok(
+    'C 상한 — 한 회차가 보낸 검색은 M을 넘지 않는다(닿으면 후속을 보내지 않고 멈춤)',
+    maxed.requests.length === 3 && maxed.run.usage.searches === 3 && maxed.run.stopReason === 'max-searches' && maxed.run.items[1]?.reason === 'follow-up-blocked',
+    { req: maxed.requests.length, usage: maxed.run.usage, stop: maxed.run.stopReason },
+  )
+  const cancelled = await core(['absent', 'absent', 'absent'], { cancelAt: 1 })
+  ok('C 중단 — 중단하면 남은 질문은 0회(cancelled · 받은 것은 남김)', cancelled.run.state === 'cancelled' && cancelled.run.stopReason === 'cancelled' && cancelled.requests.length === 1 && cancelled.run.items.length === 1, { state: cancelled.run.state, req: cancelled.requests.length })
+  injectedCalls = 0
+  let stopNow = false
+  const cancelMid: AioSearchFn = async (params) => {
+    const r = await injected(params)
+    if (params.engine === 'google') stopNow = true
+    return r
+  }
+  const midCancel = await core(['deferred', 'absent'], { search: cancelMid, cancelled: () => stopNow })
+  ok(
+    'C 중단 — 첫 검색과 후속 사이에 중단하면 후속도 보내지 않는다(그 질문은 남겨 이어 재기 대상)',
+    injectedCalls === 1 && midCancel.run.state === 'cancelled' && midCancel.run.items.length === 0 && midCancel.run.usage.searches === 1 && midCancel.run.usage.followUps === 0,
+    { calls: injectedCalls, state: midCancel.run.state, usage: midCancel.run.usage },
+  )
+  let pilotChecks = 0
+  const off = await core(['absent', 'absent'], { pilotOn: async () => (pilotChecks += 1) === 1 })
+  ok('C 중단 — 실행 중 이 PC에서 끄면 다음 질문부터 보내지 않는다', off.run.state === 'cancelled' && off.run.stopReason === 'pilot-off' && off.requests.length === 1, { state: off.run.state, stop: off.run.stopReason, req: off.requests.length })
+
+  const long = await core(['longtoken', 'absent'])
+  ok(
+    'C 읽기 — page_token이 공용 상한(2048자)보다 길면 후속을 보내지 않고 「못 읽음」(다시 검색도 않음)',
+    long.requests.length === 2 && long.requests.every((s) => s.engine === 'google') && long.run.items[0]?.status === 'unreadable' && long.run.items[0]?.reason === 'token-too-long' && long.run.items[0]?.searches === 1,
+    { req: long.requests.map((s) => s.engine), item: long.run.items[0] },
+  )
+  const re = await core(['erronce', 'errtwice', 'absent', 'absent'])
+  ok(
+    'C 다시 검색 — 못 읽음은 1번만 다시 검색 · 회차당 질문의 10%(올림)까지',
+    re.requests.length === 5 && re.run.usage.reSearches === 1 && re.run.items[0]?.status === 'shown' && re.run.items[0]?.searches === 2 && re.run.items[1]?.status === 'unreadable' && re.run.items[1]?.searches === 1,
+    { req: re.requests.length, usage: re.run.usage, items: re.run.items.map((i) => [i.status, i.searches]) },
+  )
+  const re2 = await core(['errtwice', 'absent'])
+  ok('C 다시 검색 — 다시 검색도 못 읽으면 「못 읽음」(그 문항 검색 2)', re2.run.items[0]?.status === 'unreadable' && re2.run.items[0]?.reason === 'overview-error' && re2.run.items[0]?.searches === 2 && re2.requests.length === 3, re2.run.items[0])
+  const f400 = await core(['f400', 'absent'])
+  ok(
+    'C 후속 — 후속이 HTTP 400이면 그 질문은 「못 읽음」, 회차는 멈춘다(같은 요청은 다 실패 — 돈이 안 나가는 쪽)',
+    f400.requests.length === 2 && f400.run.items[0]?.status === 'unreadable' && f400.run.items[0]?.reason === 'follow-up-failed' && f400.run.stopReason === 'bad-request' && f400.sent === 2,
+    { req: f400.requests.length, item: f400.run.items[0], stop: f400.run.stopReason },
+  )
+  const expired = await core(['expired'])
+  ok(
+    'C 후속 — 만료(Success 아님)는 「못 읽음」이고 1번 다시 검색한다(검색 4 · 후속 2)',
+    expired.requests.length === 4 && expired.run.items[0]?.status === 'unreadable' && expired.run.items[0]?.reason === 'follow-up-error' && expired.run.items[0]?.searches === 4 && expired.run.usage.followUps === 2 && expired.run.usage.reSearches === 1,
+    { req: expired.requests.length, item: expired.run.items[0], usage: expired.run.usage },
+  )
+  const fslow = await core(['fslow', 'absent'])
+  ok(
+    'C 후속 — 후속이 시간 초과면 다시 보내지 않고 다시 검색도 않는다(「못 읽음」)',
+    fslow.requests.length === 3 && fslow.run.items[0]?.status === 'unreadable' && fslow.run.items[0]?.reason === 'follow-up-failed' && fslow.run.state === 'done',
+    { req: fslow.requests.length, item: fslow.run.items[0] },
+  )
+  const deferred = await core(['deferred'])
+  const follow = deferred.requests[1]
+  ok(
+    'C 후속 — 늦게 오는 개요는 고정 엔진 + page_token으로 직접 받는다(serpapi_link를 따라가지 않음 · 질의 · 위치 없음)',
+    deferred.requests.length === 2 && follow?.engine === 'google_ai_overview' && same(Object.keys(follow.params).sort(), ['api_key', 'engine', 'no_cache', 'page_token']) && deferred.run.items[0]?.kind === 'deferred' && deferred.run.usage.followUps === 1,
+    follow?.params,
+  )
+  const firstParams = deferred.requests[0]?.params ?? {}
+  ok(
+    'C 검색 — 첫 검색 매개변수(engine · q · google.co.kr · kr · ko · desktop · no_cache · 위치)',
+    firstParams.engine === 'google' && firstParams.q === '가짜 질문 deferred 1' && firstParams.google_domain === 'google.co.kr' && firstParams.gl === 'kr' && firstParams.hl === 'ko' && firstParams.device === 'desktop' && firstParams.no_cache === 'true' && firstParams.location === GUNSAN,
+    firstParams,
+  )
+  const file = path.join(dirC, 'data', 'vaio-c', 'google-aio', `${deferred.run.runId}.json`)
+  const saved = existsSync(file) ? parseAioRun(JSON.parse(readFileSync(file, 'utf8'))) : null
+  ok(
+    'C 저장 — data/<브랜드>/google-aio/<회차 id>.json에 문항마다 적고, 원문 블록에는 page_token · serpapi_link가 없다',
+    saved?.ok === true && saved.run.state === 'done' && saved.run.items.length === 1 && !readFileSync(file, 'utf8').includes('page_token') && !readFileSync(file, 'utf8').includes('serpapi_link'),
+    saved,
+  )
+  ok('C — 가짜 서버가 받은 모든 요청은 가짜 키였다', seen.every((s) => s.keyOk))
+}
+
+// ── C4. 계획(검색 0) → 실행 사이 다시 보기 — 측정 중 · 이 PC 꺼짐 · 질문지 바뀜 · 몫 모자람(검색 0 · 잠금 놓음) ─────────────
+{
+  accountBody = account()
+  const before = searchesSeen().length
+  const p0 = await aio.planGoogleAio(TENANT_C, {})
+  ok(
+    'C 계획 — 검색 0 · 질문 3 · 최대 검색 M = 2n + 2⌈0.1n⌉ · 몫은 계정 비율에서(이번 주기 aio 몫)',
+    typeof p0.planId === 'string' && p0.questions === 3 && p0.maxSearches === aioMaxSearches(3) && p0.quota?.cap === 250 && p0.quota.floor === 500 && p0.blocked === null && searchesSeen().length === before,
+    p0,
+  )
+  const lockFile = path.join(dirC, 'serpapi-run.lock')
+  const released = () => serp.serpRunHolder() === null && !existsSync(lockFile)
+  tracker.beginMeasureRun()
+  const pm = await errOf(aio.planGoogleAio(TENANT_C, {}))
+  const rm = await errOf(aio.startGoogleAio(TENANT_C, { planId: p0.planId }))
+  tracker.endMeasureRun()
+  ok('C G3 — 측정 중이면 계획 · 실행 모두 409 measuring(검색 0 · 잠금 놓음)', pm?.status === 409 && pm.code === 'measuring' && rm?.status === 409 && rm.code === 'measuring' && searchesSeen().length === before && released(), [pm, rm])
+  const p1 = await aio.planGoogleAio(TENANT_C, {})
+  writeJson(SETTINGS_C, { format: 'google-aio-settings/1', enabled: false, tenants: ['vaio-c'] })
+  const r1 = await errOf(aio.startGoogleAio(TENANT_C, { planId: p1.planId }))
+  writeJson(SETTINGS_C, { format: 'google-aio-settings/1', enabled: true, tenants: ['vaio-c'] })
+  ok('C 다시 보기 — 계획 뒤 이 PC에서 끄면 실행 409 pilot-off(검색 0 · 잠금 놓음)', r1?.status === 409 && r1.code === 'pilot-off' && searchesSeen().length === before && released(), r1)
+  const p2 = await aio.planGoogleAio(TENANT_C, {})
+  writeJson(BANK_C, bankOf('v1', [{ ...C_QS[0]!, text: '가짜 질문 inline 1 바뀜' }, C_QS[1]!, C_QS[2]!]))
+  const r2 = await errOf(aio.startGoogleAio(TENANT_C, { planId: p2.planId }))
+  writeJson(BANK_C, bankOf('v1', C_QS))
+  ok('C 다시 보기 — 계획 뒤 질문지가 바뀌면(질문 지문) 실행 409 plan-changed(검색 0 · 잠금 놓음)', r2?.status === 409 && r2.code === 'plan-changed' && searchesSeen().length === before && released(), r2)
+  const p3 = await aio.planGoogleAio(TENANT_C, {})
+  accountBody = account({ total_searches_left: 505 })
+  const r3 = await errOf(aio.startGoogleAio(TENANT_C, { planId: p3.planId }))
+  accountBody = account()
+  ok('C 다시 보기 — 계획 뒤 계정 남은 수가 줄어 M에 못 미치면 실행 409 limit(검색 0 · 잠금 놓음 · 회차를 줄이지 않음)', r3?.status === 409 && r3.code === 'limit' && searchesSeen().length === before && released(), r3)
+  const r4 = await errOf(aio.startGoogleAio(TENANT_C, { planId: p3.planId }))
+  ok('C 계획 id — 한 번 쓴(또는 없는) 계획 id는 409 plan-changed', r4?.status === 409 && r4.code === 'plan-changed', r4)
+  const p5 = await aio.planGoogleAio(TENANT_C, {})
+  const started = await aio.startGoogleAio(TENANT_C, { planId: p5.planId })
+  const during = await aio.googleAioStatus(TENANT_C)
+  ok('C 실행 — 도는 동안 상태는 메모리의 진행만(가벼운 GET — 회차 · 원장을 읽지 않음)', during.running?.runId === started.runId && during.view === null && during.running.planned === 3, during)
+  for (let i = 0; i < 200 && (await aio.googleAioStatus(TENANT_C)).running; i += 1) await sleep(100)
+  const after = await aio.googleAioStatus(TENANT_C)
+  const last = after.view?.runs[0]
+  ok('C 실행 — 끝나면 회차가 보이고(done) 잠금을 놓는다', after.running === null && last?.runId === started.runId && last.state === 'done' && released(), { running: after.running, last })
+
+  // 이어 재기 거절 — 조건 서명 · 질문 지문이 다르면(계획 409 resume, 검색 0)
+  const stopped = { ...aio.newAioRun({ tenantId: 'vaio-c', startedAt: new Date(Date.now() - 5_000), location: GUNSAN, bankVersion: 'v1', cohortBank: null, questions: C_QS, cycle: CYCLE, judgeEngine: 'mock' }), state: 'cancelled' as const, finishedAt: new Date().toISOString() }
+  writeJson(path.join(dirC, 'data', 'vaio-c', 'google-aio', `${stopped.runId}.json`), stopped)
+  const rOk = await aio.planGoogleAio(TENANT_C, { resume: stopped.runId })
+  writeJson(SETTINGS_C, { format: 'google-aio-settings/1', enabled: true, tenants: ['vaio-c'], locations: { 'vaio-c': 'Seoul,South Korea' } })
+  const rCond = await errOf(aio.planGoogleAio(TENANT_C, { resume: stopped.runId }))
+  writeJson(SETTINGS_C, { format: 'google-aio-settings/1', enabled: true, tenants: ['vaio-c'] })
+  writeJson(BANK_C, bankOf('v1', [...C_QS, { questionId: 'c1-009', text: '가짜 질문 absent 9' }]))
+  const rQs = await errOf(aio.planGoogleAio(TENANT_C, { resume: stopped.runId }))
+  writeJson(BANK_C, bankOf('v1', C_QS))
+  ok(
+    'C 이어 재기 — 같은 날 · 같은 조건 · 같은 지문이면 남은 질문만 계획, 위치(조건 서명)나 질문지(지문)가 다르면 409 resume',
+    rOk.resume?.runId === stopped.runId && rOk.questions === 3 && typeof rOk.planId === 'string' && rCond?.status === 409 && rCond.code === 'resume' && /검색 조건/.test(rCond.message ?? '') && rQs?.status === 409 && rQs.code === 'resume' && /질문지/.test(rQs.message ?? '') && searchesSeen().length === before + 4,
+    [rOk.resume, rCond, rQs],
+  )
+
+  // 코호트 질문지를 쓰는 브랜드 — 은행의 코호트 출처가 지금 코호트(업종 · 지역 · 판)와 같아야 한다
+  const cohortTenant = { ...TENANT_C, cohortQuestionBank: 'c1' } as TenantConfig
+  const noCohort = await aio.planGoogleAio(cohortTenant, {})
+  writeJson(BANK_C, bankOf('v1', C_QS, { cohortBank: { key: '가상업종__전북_군산', version: 'c1' } }))
+  const withCohort = await aio.planGoogleAio(cohortTenant, {})
+  writeJson(BANK_C, bankOf('v1', C_QS, { cohortBank: { key: '가상업종__전북_군산', version: 'c0' } }))
+  const oldCohort = await aio.planGoogleAio(cohortTenant, {})
+  writeJson(BANK_C, bankOf('v1', C_QS))
+  ok(
+    'C 질문지 — 코호트 질문지를 쓰는 브랜드는 은행의 코호트 출처(키 · 판)가 지금과 같을 때만(아니면 「측정을 한 번 한 뒤 재세요」 · 계획 id 없음)',
+    noCohort.planId === null && noCohort.blocked?.kind === 'bank' && /측정을 한 번 한 뒤 재세요/.test(noCohort.blocked.message) && typeof withCohort.planId === 'string' && oldCohort.planId === null && oldCohort.blocked?.kind === 'bank',
+    [noCohort.blocked, withCohort.blocked, oldCohort.blocked],
+  )
+
+  // 다시 판정 — 두 요청이 함께 와도 하나만(판정비 두 번 없음)
+  const [j1, j2] = await Promise.allSettled([aio.rejudgeGoogleAio(TENANT_C, started.runId, { scope: 'all' }), aio.rejudgeGoogleAio(TENANT_C, started.runId, { scope: 'all' })])
+  const rejected = [j1, j2].filter((r): r is PromiseRejectedResult => r.status === 'rejected').map((r) => r.reason as { status?: number; code?: string })
+  ok('C 다시 판정 — 두 요청이 함께 오면 하나는 409 busy', [j1, j2].filter((r) => r.status === 'fulfilled').length === 1 && rejected.length === 1 && rejected[0]!.status === 409 && rejected[0]!.code === 'busy', [j1, j2])
+  for (let i = 0; i < 100 && (await aio.googleAioStatus(TENANT_C)).rejudging; i += 1) await sleep(50)
+  writeJson(SETTINGS_C, { format: 'google-aio-settings/1', enabled: false, tenants: ['vaio-c'] })
+  const pOffRj = await errOf(aio.rejudgeGoogleAio(TENANT_C, started.runId, { scope: 'all' }))
+  writeJson(SETTINGS_C, { format: 'google-aio-settings/1', enabled: true, tenants: ['vaio-c'] })
+  tracker.beginMeasureRun()
+  const mRj = await errOf(aio.rejudgeGoogleAio(TENANT_C, started.runId, { scope: 'all' }))
+  tracker.endMeasureRun()
+  const noRun = await errOf(aio.rejudgeGoogleAio(TENANT_C, '2020-01-01T00-00-00-000Z', { scope: 'all' }))
+  ok('C 다시 판정 — 이 PC 꺼짐 409 pilot-off · 측정 중 409 measuring · 없는 회차 404 · 그 뒤 다시 받을 수 있다', pOffRj?.status === 409 && pOffRj.code === 'pilot-off' && mRj?.status === 409 && mRj.code === 'measuring' && noRun?.status === 404 && (await aio.googleAioStatus(TENANT_C)).rejudging === null, [pOffRj, mRj, noRun])
+
+  // 회차 폴더 — 쓰다 만 임시 파일 · 다른 이름은 거르고, 깨진 회차 파일은 숨기지 않고 센다
+  const folder = path.join(dirC, 'data', 'vaio-c', 'google-aio')
+  writeFileSync(path.join(folder, `${started.runId}.json.123.abc.tmp`), '{')
+  writeFileSync(path.join(folder, 'memo.txt'), 'x')
+  writeFileSync(path.join(folder, '2020-01-01T00-00-00-000Z.json'), '{"format":"google-aio/1"')
+  const validRuns = readdirSync(folder).filter((n) => /^[\w-]+\.json$/.test(n)).length - 1
+  const listed = await aio.googleAioStatus(TENANT_C)
+  ok('C 회차 폴더 — 임시 파일 · 다른 이름은 거르고, 깨진 회차 파일은 「읽지 못한 회차 1개」', listed.unreadableRuns === 1 && listed.view?.unreadableRuns === 1 && listed.view.runs.length === validRuns, { unreadable: listed.unreadableRuns, runs: listed.view?.runs.map((r) => r.runId) })
+  for (const f of [`${started.runId}.json.123.abc.tmp`, 'memo.txt', '2020-01-01T00-00-00-000Z.json']) unlinkSync(path.join(folder, f))
+
+  injectedCalls = 0
+  let refsJudged = 0
+  const refsOnly = await core(['refsonly'], { search: injected, judge: async (p) => ((refsJudged += 1), judgeOk(p)) })
+  ok('C 판정 — 본문 없이 출처만 온 개요는 판정하지 않는다(판정 불가로 남음 · 판정 0회)', refsOnly.run.items[0]?.status === 'shown' && refsOnly.run.items[0]?.mentioned === undefined && refsJudged === 0 && refsOnly.run.usage.judgeCalls === 0, refsOnly.run.items[0])
+}
+
+// ══ B. 라우트 — 앱 서버(127.0.0.1:4199)를 띄운다 ══════════════════════════════════════════════════
+const GUARD = `data:text/javascript,${encodeURIComponent(
+  [
+    'const real = globalThis.fetch;',
+    'globalThis.fetch = (input, init) => {',
+    "  const href = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;",
+    "  const host = URL.canParse(href) ? new URL(href).hostname : '';",
+    '  if (/(^|\\.)(serpapi\\.com|googleapis\\.com|openai\\.com|anthropic\\.com|perplexity\\.ai)$/i.test(host)) {',
+    "    process.stderr.write('VERIFY-GUARD blocked a real SerpAPI or LLM request\\n');",
+    "    return Promise.reject(new Error('verify guard'));",
+    '  }',
+    '  return real(input, init);',
+    '};',
+  ].join('\n'),
+)}`
+const D = (n: number) => addDays(todayKst(), -n)
+const tenantB = (tenantId: string, brandName: string, over: Record<string, unknown> = {}) => ({
+  tenantId,
+  brandName,
+  aliases: [],
+  ownedDomains: [`${tenantId}.example`],
+  industry: '가상업종',
+  region: '전북 군산',
+  engines: ['gemini'],
+  questionBankSize: 8,
+  questionBankVersion: 'v1',
+  repeatsPerQuestion: 1,
+  factGraph: [],
+  competitors: [],
+  ...over,
+})
+writeJson(path.join(dirB, 'tenants.overlay.json'), [
+  tenantB('vaio-a', '뷰성형외과', { aliases: ['뷰성형'], ownedDomains: ['fake-view.example'], competitors: [{ name: '강남성형A', aliases: [], domains: [] }] }),
+  tenantB('vaio-n', '가상전국', { region: '전국', marketScope: 'national' }),
+  tenantB('vaio-x', '가상시범아님'),
+  tenantB('vaio-nobank', '가상질문지없음'),
+  tenantB('vaio-comp', '가상경쟁', { cohortOnly: true }),
+])
+const A_QS = [
+  ...qsOf(['inline', 'deferred', 'absent', 'noresults', 'norefs']),
+  { questionId: 'b1-001', text: '뷰성형외과 어때?', category: 'brand-direct', containsBrandName: true },
+  { questionId: 'c1-006', text: '가짜 질문 probe 6', probe: true },
+]
+const N_QS = qsOf(['slowok', 'slowok', 'slowok', 'slowok'], 'n1')
+const dataB = (tenantId: string, ...rest: string[]) => path.join(dirB, 'data', tenantId, ...rest)
+writeJson(dataB('vaio-a', 'question-bank', 'v1.json'), bankOf('v1', A_QS))
+writeJson(dataB('vaio-n', 'question-bank', 'v1.json'), bankOf('v1', N_QS))
+writeJson(dataB('vaio-x', 'question-bank', 'v1.json'), bankOf('v1', qsOf(['absent'], 'x1')))
+writeJson(path.join(seedB, 'question-banks', 'vaio-nobank', 'v1.json'), bankOf('v1', qsOf(['absent'], 'nb')))
+const POST_W1 = 'https://m.blog.naver.com/fakewriter1/223000000001'
+const ledgerPost = (id: string, url: string, publishedOn: string, extra: Record<string, unknown> = {}) => ({
+  id,
+  url,
+  key: trackingKey(url),
+  publishedOn,
+  publishedOnSource: 'user',
+  recordedAt: `${publishedOn}T03:00:00.000Z`,
+  articleId: 'content:category-agnostic',
+  targetActionId: 'content:category-agnostic',
+  via: 'own',
+  articleTitle: '가짜 글',
+  ...extra,
+})
+const LEDGER_A_TEXT = JSON.stringify(
+  {
+    version: 1,
+    keyRule: 3,
+    posts: [
+      ledgerPost('p-aio00000001', POST_W1, D(5), { articleId: 'topic:c1-001', targetActionId: 'topic:c1-001', via: 'channel', articleTitle: '가짜 작성자 글', topic: { bankVersion: 'v1', questionIds: ['c1-001'], questionTexts: ['가짜 질문 inline 1'] } }),
+      ledgerPost('p-aio00000002', 'https://slowidx.tistory.com/1', D(14)),
+    ],
+  },
+  null,
+  2,
+)
+writeFileSync(dataB('vaio-a', 'published-posts.json'), LEDGER_A_TEXT)
+writeJson(dataB('vaio-a', 'external-posts.json'), {
+  version: 1,
+  keyRule: 3,
+  posts: [{ id: 'x-a10000000001', url: 'https://fake-hand.example.net/posts/5', key: trackingKey('https://fake-hand.example.net/posts/5'), title: '가짜 손글', publishedOn: D(6), publishedOnSource: 'page', trackedAt: `${D(6)}T01:00:00.000Z` }],
+})
+const PLAN_B = {
+  format: 'probe-plan/2',
+  tenantId: 'vaio-a',
+  bankVersion: 'v1',
+  activeUntil: '2027-03-31',
+  source: { writers: 'docs/writers.json', seed: 1 },
+  articles: [{ id: 'topic:c1-001', name: '가짜 주제 하나', angle: '처음 가는 사람의 눈으로', writer: { key: 'w1', name: WRITER_NAME }, blog: '', questionIds: ['c1-001'], questionTexts: ['가짜 질문 inline 1'] }],
+}
+ok('B 준비 — 가짜 배정 파일(가짜 작성자 이름)은 앱의 검사를 통과한다', parseWriterPlan(PLAN_B).plan !== undefined)
+writeJson(dataB('vaio-a', 'probe-plan.json'), PLAN_B)
+const SETTINGS_B = path.join(dirB, 'google-aio-settings.json')
+writeJson(SETTINGS_B, { format: 'google-aio-settings/1', enabled: false, tenants: ['vaio-a', 'vaio-n', 'vaio-nobank'] })
+const LEDGER_B = path.join(dirB, 'serpapi-usage.json')
+const LOCK_B = path.join(dirB, 'serpapi-run.lock')
+
+let logs = ''
+const startApp = async (over: Record<string, string> = {}): Promise<ChildProcess> => {
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    APP_DATA_DIR: dirB,
+    PORT: String(APP_PORT),
+    USE_MOCK_ENGINES: 'true',
+    DOTENV_CONFIG_PATH: path.join(dirB, 'no-such.env'),
+    SEED_DATA_DIR: seedB,
+    BLOB_READ_WRITE_TOKEN: '',
+    BLOB_STORE_ID: '',
+    PIPELINE_CRON: '',
+    GH_MEASURE_TOKEN: '',
+    GEMINI_API_KEY: '',
+    OPENAI_API_KEY: '',
+    ANTHROPIC_API_KEY: '',
+    PERPLEXITY_API_KEY: '',
+    JUDGE_ENGINE: '',
+    SERPAPI_API_KEY: FAKE_KEY,
+    SERPAPI_LIVE: '',
+    SERPAPI_BASE_URL: MOCK_BASE,
+    SERPAPI_TIMEOUT_MS: String(B_TIMEOUT_MS),
+    ...over,
+  }
+  delete env.AEO_SERVER_HOST
+  if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(env.SERPAPI_BASE_URL ?? '')) throw new Error('가짜 SerpAPI 주소가 아니라 서버를 띄우지 않습니다.')
+  const srv = spawn(process.execPath, ['--import', GUARD, '--import', 'tsx', 'server/index.ts'], { cwd: repo, env, stdio: ['ignore', 'pipe', 'pipe'] })
+  children.push(srv)
+  srv.stdout?.on('data', (d: Buffer) => (logs += d.toString()))
+  srv.stderr?.on('data', (d: Buffer) => (logs += d.toString()))
+  for (let i = 0; i < 120; i += 1) {
+    if (await fetch(`${APP_BASE}/api/health`).then((r) => r.ok, () => false)) return srv
+    await sleep(500)
+  }
+  throw new Error(`앱 서버가 뜨지 않았습니다:\n${logs.slice(-2000)}`)
+}
+const stopApp = async (srv: ChildProcess) => {
+  const exited = new Promise<void>((resolve) => (srv.exitCode !== null || srv.signalCode !== null ? resolve() : srv.once('exit', () => resolve())))
+  srv.kill()
+  await exited
+  for (let i = 0; i < 20 && !(await portFree(APP_PORT)); i += 1) await sleep(250)
+}
+const bodies: string[] = []
+const call = async <T = Record<string, unknown>>(method: string, p: string, body?: unknown, raw?: { text: string; type?: string }) => {
+  const headers: Record<string, string> = {}
+  let payload: string | undefined
+  if (raw) {
+    payload = raw.text
+    if (raw.type) headers['Content-Type'] = raw.type
+  } else if (body !== undefined) {
+    payload = JSON.stringify(body)
+    headers['Content-Type'] = 'application/json'
+  }
+  const r = await fetch(`${APP_BASE}${p}`, { method, headers, body: payload })
+  const text = await r.text()
+  bodies.push(text)
+  return { status: r.status, text, body: (text.startsWith('{') ? JSON.parse(text) : {}) as T & { error?: string; code?: string } }
+}
+/** Host · Origin을 마음대로 붙이는 요청(fetch는 Host를 못 바꾼다) — 127.0.0.1의 앱 서버로만 간다. */
+const rawCall = (method: string, p: string, headers: Record<string, string>, body?: unknown) =>
+  new Promise<{ status: number; text: string }>((resolve, reject) => {
+    const payload = body === undefined ? undefined : JSON.stringify(body)
+    const rq = http.request(
+      { host: '127.0.0.1', port: APP_PORT, path: p, method, headers: { ...headers, ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': String(Buffer.byteLength(payload)) } : {}) } },
+      (rs) => {
+        let text = ''
+        rs.on('data', (d: Buffer) => (text += d.toString()))
+        rs.on('end', () => resolve({ status: rs.statusCode ?? 0, text }))
+      },
+    )
+    rq.on('error', reject)
+    if (payload) rq.write(payload)
+    rq.end()
+  })
+const status = (tenantId: string) => call<GoogleAioStatusView>('GET', `/api/google-aio/${tenantId}`)
+const plan = (tenantId: string, body: Record<string, unknown> = {}) => call<GoogleAioPlanView>('POST', `/api/google-aio/${tenantId}/plan`, body)
+const runPlan = (tenantId: string, planId: string | null) => call<{ runId: string; planned: number; maxSearches: number }>('POST', `/api/google-aio/${tenantId}/run`, { planId })
+const waitIdle = async (tenantId: string) => {
+  for (let i = 0; i < 600; i += 1) {
+    const s = await status(tenantId)
+    if (s.status === 200 && s.body.running === null && s.body.rejudging === null && !s.body.runningElsewhere) return s.body
+    await sleep(200)
+  }
+  return null
+}
+const runFileOf = (tenantId: string, runId: string) => dataB(tenantId, 'google-aio', `${runId}.json`)
+const readRun = (tenantId: string, runId: string) => JSON.parse(readFileSync(runFileOf(tenantId, runId), 'utf8')) as AioRun
+const readRunMaybe = (tenantId: string, runId: string): AioRun | null => (existsSync(runFileOf(tenantId, runId)) ? readRun(tenantId, runId) : null)
+const hashTree = (root: string, skip: (rel: string) => boolean) => {
+  const out = new Map<string, string>()
+  const walk = (d: string) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name)
+      const rel = path.relative(root, p).split(path.sep).join('/')
+      if (skip(rel)) continue
+      if (e.isDirectory()) walk(p)
+      else out.set(rel, createHash('sha256').update(readFileSync(p)).digest('hex'))
+    }
+  }
+  if (existsSync(root)) walk(root)
+  return out
+}
+const changed = (a: Map<string, string>, b: Map<string, string>) => [...new Set([...a.keys(), ...b.keys()])].filter((k) => a.get(k) !== b.get(k))
+/** 격리 비교에서 빼는 것 — AI 개요 회차 폴더 · 공용 장부 · 실행 잠금 · 쓰다 만 임시 파일. */
+const isolationSkip = (rel: string) => rel === 'serpapi-usage.json' || rel === 'serpapi-run.lock' || /^data\/[^/]+\/google-aio(\/|$)/.test(rel) || rel.endsWith('.tmp')
+const today = todayKst()
+
+let app = await startApp()
+try {
+  // ── B1. Host · Origin · JSON · 회차 id · 고객 브랜드만 ──
+  const before = searchesSeen().length
+  const evil = { Host: 'evil.example:4199' }
+  const fromEvil = { Host: '127.0.0.1:4199', Origin: 'http://evil.example' }
+  const rid = '2026-11-11T00-00-00-000Z'
+  const blocked403 = [
+    await rawCall('GET', '/api/google-aio/vaio-a', evil),
+    await rawCall('GET', `/api/google-aio/vaio-a/runs/${rid}`, evil),
+    await rawCall('POST', '/api/google-aio/vaio-a/plan', fromEvil, {}),
+    await rawCall('POST', '/api/google-aio/vaio-a/run', evil, { planId: 'x' }),
+    await rawCall('POST', `/api/google-aio/vaio-a/runs/${rid}/cancel`, evil, {}),
+    await rawCall('POST', `/api/google-aio/vaio-a/runs/${rid}/rejudge`, fromEvil, { scope: 'all' }),
+    await rawCall('PUT', '/api/google-aio/settings', fromEvil, { enabled: true }),
+  ]
+  ok('B Host/Origin — 이 PC 화면이 아닌 요청은 GET 상태 · 회차 상세 · 계획 · 실행 · 중단 · 다시 판정 · 설정 모두 403', blocked403.every((r) => r.status === 403), blocked403.map((r) => r.status))
+  const t415 = [
+    await call('POST', '/api/google-aio/vaio-a/plan', undefined, { text: '{}', type: 'text/plain' }),
+    await call('POST', '/api/google-aio/vaio-a/run', undefined, { text: 'planId=x', type: 'application/x-www-form-urlencoded' }),
+    await call('PUT', '/api/google-aio/settings', undefined, { text: '{"enabled":true}', type: 'text/plain' }),
+    await call('POST', `/api/google-aio/vaio-a/runs/${rid}/rejudge`, undefined, { text: '{}', type: 'text/plain' }),
+    await call('POST', `/api/google-aio/vaio-a/runs/${rid}/cancel`, undefined, { text: '{}' }),
+  ]
+  ok('B JSON만 — 계획 · 실행 · 설정 · 다시 판정 · 중단은 JSON이 아니면 415', t415.every((r) => r.status === 415), t415.map((r) => r.status))
+  const bad400 = [
+    await call('GET', '/api/google-aio/vaio-a/runs/..%2F..%2Fgoogle-aio-settings'),
+    await call('GET', '/api/google-aio/vaio-a/runs/..%2F..%2F..%2Fserpapi-usage'),
+    await call('GET', '/api/google-aio/vaio-a/runs/2026-11-11T00:00:00.000Z'),
+    await call('POST', '/api/google-aio/vaio-a/runs/..%2Fx/cancel', {}),
+    await call('POST', '/api/google-aio/vaio-a/runs/..%2Fx/rejudge', { scope: 'all' }),
+  ]
+  ok('B 회차 id — 꼴이 아니면(..%2F · 원래 ISO) 파일을 열기 전에 400', bad400.every((r) => r.status === 400), bad400.map((r) => r.status))
+  const t404 = [await status('vaio-none'), await status('vaio-comp'), await plan('vaio-comp'), await call('GET', `/api/google-aio/vaio-a/runs/${rid}`)]
+  ok('B 고객 브랜드만 — 없는 브랜드 · 경쟁사는 404(tenant not found), 없는 회차는 404', t404.every((r) => r.status === 404) && /tenant not found/.test(t404[0]!.body.error ?? '') && /tenant not found/.test(t404[1]!.body.error ?? ''), t404.map((r) => [r.status, r.body.error]))
+
+  // ── B2. 이 PC 꺼짐 · 켜기 · 시범 아님 · 질문지 없음 ──
+  const s0 = await status('vaio-a')
+  ok('B 상태 — 이 PC 꺼짐 · 시범 브랜드 · 위치(전북 군산) · 키 있음 · 판정 엔진(목) 준비', s0.status === 200 && s0.body.enabled === false && s0.body.pilot === true && s0.body.location === GUNSAN && s0.body.configured === true && s0.body.judge.ready === true, s0.body)
+  const pOff = await plan('vaio-a')
+  ok('B 이 PC 꺼짐 — 계획 409 pilot-off', pOff.status === 409 && pOff.body.code === 'pilot-off', pOff.body)
+  const badPut = [await call('PUT', '/api/google-aio/settings', { enabled: 'yes' }), await call('PUT', '/api/google-aio/settings', { enabled: true, tenants: ['vaio-x'] }), await call('PUT', '/api/google-aio/settings', {})]
+  ok('B 설정 — enabled(참 · 거짓) 하나만 받는다(그 밖은 400)', badPut.every((r) => r.status === 400), badPut.map((r) => r.status))
+  const put = await call('PUT', '/api/google-aio/settings', { enabled: true })
+  const settingsFile = JSON.parse(readFileSync(SETTINGS_B, 'utf8')) as { enabled?: boolean; tenants?: string[] }
+  ok('B 설정 — 이 PC에서 켜기(파일의 시범 브랜드 목록은 그대로)', put.status === 200 && settingsFile.enabled === true && same(settingsFile.tenants, ['vaio-a', 'vaio-n', 'vaio-nobank']), [put.body, settingsFile])
+  const pX = await plan('vaio-x')
+  const sX = await status('vaio-x')
+  ok('B 시범 아님 — 계획 409 not-pilot · 상태는 「이 브랜드는 시범 대상이 아니에요」', pX.status === 409 && pX.body.code === 'not-pilot' && sX.body.pilot === false && /시범 대상이 아니에요/.test(sX.body.pilotMessage ?? ''), [pX.body, sX.body.pilotMessage])
+  const sN = await status('vaio-n')
+  ok('B 위치 — 전국형은 위치 없이(gl=kr만)', sN.body.location === null && /loc=없음/.test(sN.body.signature ?? ''), sN.body.signature)
+  const pNb = await plan('vaio-nobank')
+  ok(
+    'B 질문지 없음 — 「측정을 한 번 한 뒤 재세요」(계획 id 없음) · 동봉 질문지를 이 PC로 복사하지 않는다',
+    pNb.status === 200 && pNb.body.planId === null && pNb.body.blocked?.kind === 'bank' && /측정을 한 번 한 뒤 재세요/.test(pNb.body.blocked.message) && !existsSync(dataB('vaio-nobank', 'question-bank')),
+    pNb.body,
+  )
+  accountBody = account({ total_searches_left: 505 })
+  const pLow = await plan('vaio-a')
+  accountBody = account()
+  ok(
+    'B 몫 — 계정 바닥 위로 남은 수가 M보다 적으면 시작하지 않는다(계획 id 없음 · 숫자와 까닭)',
+    pLow.status === 200 && pLow.body.planId === null && pLow.body.blocked?.kind === 'limit' && pLow.body.maxSearches === aioMaxSearches(5) && /12회/.test(pLow.body.blocked.message) && pLow.body.quota?.aboveFloor === 5,
+    pLow.body,
+  )
+  ok('B — 여기까지 가짜 SerpAPI가 받은 검색 0(계정만 무료로 읽음)', searchesSeen().length === before)
+
+  // ── B3. 계획 → 실행 → 진행 → 결과(격리 · 장부 · 매개변수) ──
+  const usageBefore = await call('GET', '/api/usage')
+  const treeBefore = hashTree(dirB, isolationSkip)
+  const sentBefore = ledgerSent(LEDGER_B)
+  const p1 = await plan('vaio-a')
+  ok(
+    'B 계획 — 검색 0 · 점수에 세는 이름 없는 질문만(브랜드 · 실증 질문 빼고 5) · M 12 · 판정 최대 5 · 몫(aio 250 · 바닥 500)은 계정에서 · 확인창 재료',
+    p1.status === 200 && typeof p1.body.planId === 'string' && p1.body.questions === 5 && p1.body.maxSearches === 12 && p1.body.maxJudgeCalls === 5 && p1.body.quota?.cap === 250 && p1.body.quota.floor === 500 && p1.body.quota.hourLeft === 200 && p1.body.judge.ready === true && p1.body.lastRunAt === null && p1.body.expectedMinutes.length === 2 && searchesSeen().length === before,
+    p1.body,
+  )
+  accountBody = account({ this_hour_searches: 195 })
+  const rLow = await runPlan('vaio-a', p1.body.planId)
+  accountBody = account()
+  ok('B 실행 — 계획 뒤 시간당 남은 수가 M보다 적어지면 409 limit · 검색 0 · 잠금 놓음', rLow.status === 409 && rLow.body.code === 'limit' && searchesSeen().length === before && !existsSync(LOCK_B), rLow.body)
+  const p2 = await plan('vaio-a')
+  const r2 = await runPlan('vaio-a', p2.body.planId)
+  const sRun = await status('vaio-a')
+  ok('B 실행 — 202 · 도는 동안 상태는 메모리의 진행(가벼운 GET — view 없음)', r2.status === 202 && r2.body.planned === 5 && r2.body.maxSearches === 12 && (sRun.body.running === null || (sRun.body.running.runId === r2.body.runId && sRun.body.view === null)), [r2.body, sRun.body.running])
+  const done = await waitIdle('vaio-a')
+  const runId = r2.body.runId
+  const run = readRun('vaio-a', runId)
+  const mine = searchesSeen().slice(before)
+  const firsts = mine.filter((s) => s.engine === 'google')
+  const follows = mine.filter((s) => s.engine === 'google_ai_overview')
+  ok(
+    'B 결과 — done · 문항 5 · 검색 7(첫 검색 5 + 늦게 오는 개요 후속 2) · 장부 aio sent +7 · 가짜 서버가 받은 수와 같다',
+    run.state === 'done' && run.items.length === 5 && run.usage.searches === 7 && run.usage.followUps === 2 && mine.length === 7 && ledgerSent(LEDGER_B) - sentBefore === 7 && firsts.length === 5 && follows.length === 2,
+    { state: run.state, usage: run.usage, mine: mine.length, sent: ledgerSent(LEDGER_B) - sentBefore },
+  )
+  ok(
+    'B 결과 — 첫 검색은 고정 조건 + 위치, 후속은 엔진 · page_token · no_cache만',
+    firsts.every((s) => s.params.hl === 'ko' && s.params.gl === 'kr' && s.params.google_domain === 'google.co.kr' && s.params.device === 'desktop' && s.params.no_cache === 'true' && s.params.location === GUNSAN) &&
+      follows.every((s) => same(Object.keys(s.params).sort(), ['api_key', 'engine', 'no_cache', 'page_token'])),
+    mine.map((s) => s.params.engine),
+  )
+  const summary = done?.view?.summary
+  ok(
+    'B 결과 — 노출 3/5 · 언급 1/3(목 판정) · 출처 목록 받은 개요 2(출처 없는 개요 1) · 자사 1/2 · 올린 글 2/2 · 경쟁사 강남성형A 1',
+    summary?.exposure.k === 3 && summary.exposure.n === 5 && summary.mention.k === 1 && summary.mention.n === 3 && summary.noSourceList === 1 && summary.ownSource.k === 1 && summary.ownSource.n === 2 && summary.postSource.k === 2 && summary.postSource.n === 2 && same(summary.competitors, [{ name: '강남성형A', count: 1 }]),
+    summary,
+  )
+  const postRow = done?.view?.posts?.find((p) => p.url === POST_W1)
+  ok('B 올린 글 표 — 작성자는 키(w1)만 · 이 회차에 출처로 나옴 1/1', postRow?.writerKey === 'w1' && postRow.cited === 1 && postRow.runs === 1, done?.view?.posts)
+  ok('B 결과 — 질문 표는 같은 조건 회차만, 칸 기호 · 범례 글자', done?.view?.questions.rows.length === 5 && done.view.questions.rows[0]?.cells[0]?.kind === 'mentioned' && done.view.questions.rows[2]?.cells[0]?.label === 'AI 개요 없음', done?.view?.questions)
+  const treeAfter = hashTree(dirB, isolationSkip)
+  const usageAfter = await call('GET', '/api/usage')
+  ok('B 격리 — 브랜드 데이터(회차 폴더 밖) · 이 PC 상태 파일 · 코호트 질문지 바이트가 그대로(점수 · 회차 기록 · 원장 · 앱 밖 글 · 질문지 복사 없음)', changed(treeBefore, treeAfter).length === 0, changed(treeBefore, treeAfter))
+  ok('B 격리 — GET /api/usage 응답이 그대로(시범 판정 · 검색은 사용량 표에 들지 않음)', usageBefore.status === 200 && usageBefore.text === usageAfter.text)
+  const detail = await call<GoogleAioRunDetail>('GET', `/api/google-aio/vaio-a/runs/${runId}`)
+  const inlineItem = detail.body.items?.find((i) => i.questionId === 'c1-001')
+  const deferredItem = detail.body.items?.find((i) => i.questionId === 'c1-002')
+  ok(
+    'B 회차 상세 — 원문 블록은 싣지 않고, 출처마다 자사 · 올린 글(작성자 키)을 읽을 때 표시',
+    detail.status === 200 && detail.body.items.every((i) => !('rawBlock' in i)) && inlineItem?.sources.some((s) => s.owned && s.link === 'https://fake-view.example/about') === true && inlineItem.sources.some((s) => s.post?.origin === 'external') && deferredItem?.sources.some((s) => s.post?.writerKey === 'w1' && s.link === POST_W1) === true,
+    detail.body.items?.map((i) => i.sources),
+  )
+
+  // ── B4. 다시 판정(검색 0) ──
+  const beforeRj = searchesSeen().length
+  const sentRj = ledgerSent(LEDGER_B)
+  const rj = await call<{ runId: string; total: number }>('POST', `/api/google-aio/vaio-a/runs/${runId}/rejudge`, { scope: 'all' })
+  const rjBad = await call('POST', `/api/google-aio/vaio-a/runs/${runId}/rejudge`, { scope: 'some' })
+  await waitIdle('vaio-a')
+  const rejudged = readRun('vaio-a', runId)
+  ok(
+    'B 다시 판정 — 202 · 판정 3(있음만) · 문항에 rejudgedAt · 가짜 SerpAPI 요청 0 · 장부 그대로 · scope가 틀리면 400',
+    rj.status === 202 && rj.body.total === 3 && rejudged.items.filter((i) => i.rejudgedAt).length === 3 && searchesSeen().length === beforeRj && ledgerSent(LEDGER_B) === sentRj && rjBad.status === 400,
+    [rj.body, rjBad.status],
+  )
+
+  // ── B5. 도는 중 — 409 busy · 색인 자동 확인과 서로 · 가벼운 GET · 중단 · 이어 재기 ──
+  const pN = await plan('vaio-n')
+  const rN = await runPlan('vaio-n', pN.body.planId)
+  await sleep(300)
+  const busyA = await plan('vaio-a')
+  const busyIdx = await call('POST', '/api/index-auto/plan', { trigger: 'button' })
+  const busyRj = await call('POST', `/api/google-aio/vaio-n/runs/${rN.body.runId}/rejudge`, { scope: 'all' })
+  writeFileSync(dataB('vaio-n', 'published-posts.json'), '{"version":1,"posts":[')
+  const light = await status('vaio-n')
+  ok(
+    'B 도는 중 — 다른 브랜드 계획 409 busy · 색인 자동 확인 계획 409(「구글 AI 개요 시범」이 도는 중) · 그 회차 다시 판정 409 busy',
+    rN.status === 202 && busyA.status === 409 && busyA.body.code === 'busy' && busyIdx.status === 409 && /구글 AI 개요 시범/.test(busyIdx.body.error ?? '') && busyRj.status === 409 && busyRj.body.code === 'busy',
+    [rN.body, busyA.body, busyIdx.body, busyRj.body],
+  )
+  ok('B 도는 중 — 상태 GET은 원장을 읽지 않는다(원장이 깨져도 200 · 진행만)', light.status === 200 && light.body.running?.runId === rN.body.runId && light.body.view === null, light.body)
+  for (let i = 0; i < 100 && (readRunMaybe('vaio-n', rN.body.runId)?.items.length ?? 0) < 1; i += 1) await sleep(100)
+  const cancel = await call('POST', `/api/google-aio/vaio-n/runs/${rN.body.runId}/cancel`, {})
+  const nIdle = await waitIdle('vaio-n')
+  const nRun = readRun('vaio-n', rN.body.runId)
+  const nAfterCancel = searchesSeen().filter((s) => (s.q ?? '').includes('slowok')).length
+  ok('B 중단 — 200 · cancelled · 남은 질문은 보내지 않는다', cancel.status === 200 && nRun.state === 'cancelled' && nRun.items.length >= 1 && nRun.items.length < 4 && nAfterCancel === nRun.items.length, { cancel: cancel.body, state: nRun.state, items: nRun.items.length, sent: nAfterCancel })
+  ok('B 원장 깨짐 — 끝난 뒤 상태는 올린 글 출처를 「확인 불가」(posts null · 0 아님)', nIdle?.view?.posts === null && nIdle.view.runs[0]?.summary.postSource.rate === null && nIdle.view.runs[0]?.summary.postSource.reason === 'posts-unreadable', nIdle?.view?.runs[0]?.summary.postSource)
+  writeFileSync(dataB('vaio-n', 'published-posts.json'), JSON.stringify({ version: 1, keyRule: 3, posts: [] }))
+  ok('B 이어 재기 — 상태가 오늘 멈춘 회차를 알려 준다', nIdle?.resumable?.runId === rN.body.runId && nIdle.resumable.remaining === 4 - nRun.items.length, nIdle?.resumable)
+  const pRes = await plan('vaio-n', { resume: rN.body.runId })
+  const rRes = await runPlan('vaio-n', pRes.body.planId)
+  await waitIdle('vaio-n')
+  const resumed = readRun('vaio-n', rN.body.runId)
+  const perQuery = N_QS.map((q) => searchesSeen().filter((s) => s.q === q.text).length)
+  ok(
+    'B 이어 재기 — 남은 질문만 보낸다(질문마다 검색 1 — 이중 과금 없음) · 같은 회차가 done',
+    pRes.status === 200 && pRes.body.resume?.runId === rN.body.runId && pRes.body.questions === 4 - nRun.items.length && rRes.status === 202 && resumed.state === 'done' && resumed.items.length === 4 && perQuery.every((n) => n === 1),
+    { plan: pRes.body.resume, state: resumed.state, perQuery },
+  )
+  const pResBad = await plan('vaio-n', { resume: '../x' })
+  const pResNone = await plan('vaio-n', { resume: '2020-01-01T00-00-00-000Z' })
+  const pResDone = await plan('vaio-n', { resume: rN.body.runId })
+  ok('B 이어 재기 — 회차 id 꼴이 아니면 400, 없는 회차 · 끝난 회차는 409 resume', pResBad.status === 400 && pResNone.status === 409 && pResNone.body.code === 'resume' && pResDone.status === 409 && pResDone.body.code === 'resume', [pResBad.status, pResNone.body, pResDone.body])
+
+  // ── B6. 색인 자동 확인이 도는 중 → AI 개요 409 ──
+  const ip = await call<{ planId: string | null; searches: number }>('POST', '/api/index-auto/plan', { trigger: 'button' })
+  const ir = await call('POST', '/api/index-auto/run', { planId: ip.body.planId })
+  const aioWhileIdx = await plan('vaio-a')
+  ok('B 색인 자동 확인이 도는 중 — AI 개요 계획 409 busy(「색인 자동 확인」이 도는 중)', ip.body.searches >= 1 && ir.status === 202 && aioWhileIdx.status === 409 && aioWhileIdx.body.code === 'busy' && /색인 자동 확인/.test(aioWhileIdx.body.error ?? ''), [ip.body.searches, ir.status, aioWhileIdx.body])
+  for (let i = 0; i < 100; i += 1) {
+    const s = await call<{ running: unknown }>('GET', '/api/index-auto')
+    if (s.body.running === null) break
+    await sleep(200)
+  }
+
+  // ── B7. 다른 창(앱을 두 번 켬)이 잠금을 쥠 · 끊긴 회차 ──
+  const staleToday = { ...run, runId: aioRunId(new Date(Date.now() - 60_000)), startedAt: new Date(Date.now() - 60_000).toISOString(), finishedAt: null, state: 'running', stopReason: null, stopMessage: null, items: run.items.slice(0, 2) }
+  const yesterdayAt = new Date(Date.now() - 36 * 3600_000)
+  const staleOld = { ...staleToday, runId: aioRunId(yesterdayAt), startedAt: yesterdayAt.toISOString(), items: run.items.slice(0, 1).map((i) => ({ ...i, fetchedAt: yesterdayAt.toISOString() })) }
+  writeJson(runFileOf('vaio-a', staleToday.runId), staleToday)
+  writeJson(runFileOf('vaio-a', staleOld.runId), staleOld)
+  const staleText = readFileSync(runFileOf('vaio-a', staleToday.runId), 'utf8')
+  writeFileSync(LOCK_B, JSON.stringify({ format: 'serpapi-run-lock/1', pid: process.pid, feature: 'aio', token: 'other-window', at: new Date().toISOString() }))
+  const se = await status('vaio-a')
+  const pe = await plan('vaio-a')
+  const re1 = await runPlan('vaio-a', 'plan-x')
+  const rje = await call('POST', `/api/google-aio/vaio-a/runs/${staleToday.runId}/rejudge`, { scope: 'unknown' })
+  const ce = await call('POST', `/api/google-aio/vaio-a/runs/${staleToday.runId}/cancel`, {})
+  const ie = await call('POST', '/api/index-auto/plan', { trigger: 'button' })
+  ok(
+    'B 다른 창 — 다른 창이 AI 개요를 쥐면 상태는 「도는 중(다른 창)」(가벼운 GET), 계획 · 실행 · 다시 판정 · 중단 · 색인 계획 모두 409 busy-elsewhere',
+    se.body.runningElsewhere === true && se.body.view === null && pe.body.code === 'busy-elsewhere' && re1.body.code === 'busy-elsewhere' && rje.body.code === 'busy-elsewhere' && ce.body.code === 'busy-elsewhere' && ie.status === 409 && ie.body.code === 'busy-elsewhere',
+    [se.body.runningElsewhere, pe.body, re1.body, rje.body, ce.body, ie.body],
+  )
+  ok('B 다른 창 — 그 창이 쓰는 「도는 중」 회차 파일을 끊김으로 바꾸지 않는다', readFileSync(runFileOf('vaio-a', staleToday.runId), 'utf8') === staleText)
+  writeFileSync(LOCK_B, JSON.stringify({ format: 'serpapi-run-lock/1', pid: process.pid, feature: 'index', token: 'other-window', at: new Date().toISOString() }))
+  const pi = await plan('vaio-a')
+  ok('B 다른 창 — 다른 창이 색인 자동 확인을 쥐어도 AI 개요 계획 409 busy-elsewhere', pi.status === 409 && pi.body.code === 'busy-elsewhere', pi.body)
+  unlinkSync(LOCK_B)
+  const sFree = await status('vaio-a')
+  const staleRow = sFree.body.view?.runs.find((r) => r.runId === staleToday.runId)
+  ok(
+    'B 끊긴 회차 — 실행기 없이 「도는 중」인 파일은 GET에서 「끊김」으로만 보인다(파일은 그대로) · 오늘 것이면 이어 재기 후보',
+    staleRow?.state === 'interrupted' && readFileSync(runFileOf('vaio-a', staleToday.runId), 'utf8') === staleText && sFree.body.resumable?.runId === staleToday.runId,
+    [staleRow?.state, sFree.body.resumable],
+  )
+  const pStale = await plan('vaio-a', { resume: staleToday.runId })
+  const rStale = await runPlan('vaio-a', pStale.body.planId)
+  await waitIdle('vaio-a')
+  const fixedOld = readRun('vaio-a', staleOld.runId)
+  const resumedToday = readRun('vaio-a', staleToday.runId)
+  ok(
+    'B 끊긴 회차 — 다음 시작 때 한 번 고친다(어제 것은 interrupted로) · 오늘 것은 이어 재서 done',
+    rStale.status === 202 && fixedOld.state === 'interrupted' && resumedToday.state === 'done' && resumedToday.items.length === 5,
+    [rStale.body, fixedOld.state, resumedToday.state],
+  )
+  const pOld = await plan('vaio-a', { resume: staleOld.runId })
+  ok('B 이어 재기 — 날이 다른 회차는 409 resume(「오늘 시작한 회차만」)', pOld.status === 409 && pOld.body.code === 'resume' && /오늘/.test(pOld.body.error ?? ''), pOld.body)
+
+  // ── B8. 키 · 작성자 이름 ──
+  const files = [LEDGER_B, ...readdirSync(dataB('vaio-a', 'google-aio')).map((f) => dataB('vaio-a', 'google-aio', f)), ...readdirSync(dataB('vaio-n', 'google-aio')).map((f) => dataB('vaio-n', 'google-aio', f))]
+  const fileText = files.map((f) => readFileSync(f, 'utf8')).join('\n')
+  const keyIn = (t: string) => t.includes(FAKE_KEY) || t.includes(encodeURIComponent(FAKE_KEY)) || t.includes('api_key=')
+  ok('B 키 — 가짜 키(원문 · 인코딩)가 응답 · 회차 파일 · 장부 · 서버 로그 어디에도 없다', [...bodies, fileText, logs].every((t) => !keyIn(t)) && !logs.includes('VERIFY-GUARD'), logs.slice(-1500))
+  ok('B 작성자 — 가짜 작성자 이름이 응답 · 회차 파일 · 서버 로그 어디에도 없다', [...bodies, fileText, logs].every((t) => !t.includes(WRITER_NAME)))
+  ok('B 날짜 — 오늘 회차 id는 오늘 한국 날짜로 읽힌다', resumedToday.runId.startsWith(today.slice(0, 4)))
+} finally {
+  await stopApp(app)
+}
+
+// ── B9. 판정 엔진 키 없음 · SerpAPI 키 없음 — 시작 안 함(검색 0) ──
+const beforeOff = searchesSeen().length
+app = await startApp({ USE_MOCK_ENGINES: '' })
+try {
+  const s = await status('vaio-a')
+  const p = await plan('vaio-a')
+  ok('B 판정 엔진 키 없음 — 상태 judge.ready false · 계획 id 없음(까닭 judge) · 검색 0', s.body.judge.ready === false && p.status === 200 && p.body.planId === null && p.body.blocked?.kind === 'judge' && searchesSeen().length === beforeOff, [s.body.judge, p.body.blocked])
+} finally {
+  await stopApp(app)
+}
+app = await startApp({ SERPAPI_API_KEY: '' })
+try {
+  const s = await status('vaio-a')
+  const p = await plan('vaio-a')
+  const r = await runPlan('vaio-a', 'plan-x')
+  ok('B SerpAPI 키 없음 — 상태 configured false · 계획 · 실행 503 · 검색 0', s.body.configured === false && p.status === 503 && r.status === 503 && searchesSeen().length === beforeOff, [s.body.configured, p.status, r.status])
+} finally {
+  await stopApp(app)
+}
+ok('B — .gitignore가 dev 설정 파일(server/google-aio-settings.json)을 올리지 않는다', readFileSync('.gitignore', 'utf8').split(/\r?\n/).includes('server/google-aio-settings.json'))
+ok('B — 웹 함수는 그대로 12개(api/ — 새 라우트는 Express 전용)', execSync('git ls-files api', { encoding: 'utf8' }).trim().split(/\r?\n/).length === 12)
+ok('B · C — 가짜 서버가 받은 모든 요청은 가짜 키였다', seen.every((s) => s.keyOk))
+ok('B · C — 이 프로세스의 fetch가 127.0.0.1 밖으로 나가려 한 적이 없다(진짜 SerpAPI · LLM 0회)', blockedHosts.length === 0, blockedHosts)
+
+for (const c of children) if (c.exitCode === null && c.signalCode === null) c.kill()
+mock.closeAllConnections()
+mock.close()
+removeDirs()
 
 let failed = 0
 for (const [label, pass] of checks) {

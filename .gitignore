@@ -49,4 +49,5 @@ server/post-import-ignored.json
 server/serpapi-usage.json
 server/serpapi-run.lock
 server/index-auto.json
+server/google-aio-settings.json
 .claude/launch.json

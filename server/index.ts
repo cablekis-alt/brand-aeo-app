@@ -176,6 +176,17 @@ import { queueTenantWrite } from './tenantWriteQueue.js';
 import { getPublishedHistory } from './publishedHistory.js';
 import { IndexChecksError, setIndexCheck } from './indexChecks.js';
 import { IndexAutoError, indexAutoStatus, planIndexAuto, saveIndexAutoSettings, startIndexAuto } from './indexAuto.js';
+import {
+  cancelGoogleAio,
+  GoogleAioError,
+  googleAioRunDetail,
+  googleAioStatus,
+  isAioRunId,
+  planGoogleAio,
+  rejudgeGoogleAio,
+  saveGoogleAioSettings,
+  startGoogleAio,
+} from './googleAio.js';
 import { readPublishStatus } from './publishStatus.js';
 import { commitPostImport, listBlogPosts, PostImportError, readBlogSources, readPostForImport, saveBlogSources } from './postImport.js';
 import { IGNORED_MAX, IgnoredListError, listIgnored, unignoreUrls } from './postImportIgnored.js';
@@ -2737,11 +2748,11 @@ app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
   }
 });
 
-// SerpAPI를 쓰는 라우트(계정 · 색인 자동 확인 — 검색 한 번마다 돈이 든다)는 이 PC의 앱 화면에서 온 요청만 받는다: Host가 127.0.0.1 · localhost ·
+// SerpAPI를 쓰는 라우트(계정 · 색인 자동 확인 · 구글 AI 개요 시범 — 검색 한 번마다 돈이 든다)는 이 PC의 앱 화면에서 온 요청만 받는다: Host가 127.0.0.1 · localhost ·
 // [::1]이고 Origin이 있으면 그것도 같아야 한다(server/serpApi.ts localRequestProblem). DNS 리바인딩 페이지는 브라우저가 보기에 같은 출처라 CORS
 // 사전 요청으로는 막히지 않는다 — Host · Origin에 남는 그 페이지 이름으로 막는다(403, 계정 · 검색 0). dev는 vite 프록시가 Host를 localhost:5173
 // 그대로 넘기고, 설치본 창은 http://localhost:<포트>에서 연다.
-app.use(['/api/serpapi', '/api/index-auto'], (req, res, next) => {
+app.use(['/api/serpapi', '/api/index-auto', '/api/google-aio'], (req, res, next) => {
   const problem = localRequestProblem(req.headers.host, typeof req.headers.origin === 'string' ? req.headers.origin : undefined);
   if (problem) {
     res.status(403).json({ error: problem });
@@ -2812,6 +2823,116 @@ app.put('/api/index-auto/settings', async (req, res) => {
     res.json(await saveIndexAutoSettings(req.body));
   } catch (err) {
     sendIndexAutoError(res, err);
+  }
+});
+
+// 구글 AI 개요 시범(server/googleAio.ts · 규칙 src/lib/googleAio.ts) — 점수에 세는 이름 없는 질문을 SerpAPI 구글 검색으로 물어 AI 개요에 이 브랜드가
+// 나오는지 따로 잰다(점수 · 정기진단 보고서 · 전주 비교에 넣지 않는다). 위 Host · Origin 검사 뒤에 둔다(그 앞에 두면 검사를 지나지 않는다).
+// 이 PC 스위치(PUT settings — { enabled }만)가 켜져 있고 시범 브랜드일 때만, 사람이 단추를 눌러야 돈다: POST plan(검색 0 — 계정만 무료로 읽음,
+// { resume? }) → POST run({ planId } — 202, 진행은 GET 상태). 돈 · 판정이 드는 길(plan · run · cancel · rejudge · settings)은 JSON만(415). 회차 id는
+// 파일에 닿기 전에 꼴을 본다(400). 고객 브랜드만(경쟁사 · 없는 브랜드 404). 오류: 409 code(plan-changed · busy · busy-elsewhere · limit ·
+// pilot-off · not-pilot · measuring · judge · resume · not-running), 502 계정을 못 읽음, 503 키 없음 · 연결 설정 틀림, 500 설정 · 회차 파일이 깨짐
+// (덮어쓰지 않는다). Express 전용(Vercel 함수 12/12 — 웹은 404를 「데스크톱 앱에서 볼 수 있습니다」로 읽는다).
+function sendGoogleAioError(res: import('express').Response, err: unknown) {
+  if (!(err instanceof GoogleAioError)) console.error('[google-aio]', scrubSerpKey(err instanceof Error ? (err.stack ?? err.message) : String(err)));
+  const code = err instanceof GoogleAioError ? err.code : null;
+  res.status(err instanceof GoogleAioError ? err.status : 500).json({ error: scrubSerpKey(err instanceof Error ? err.message : String(err)), ...(code ? { code } : {}) });
+}
+
+/** 고객 브랜드 — 경쟁사(비교용) · 지운 · 없는 브랜드면 404로 끝낸다. */
+async function googleAioTenant(req: import('express').Request, res: import('express').Response): Promise<TenantConfig | null> {
+  const tenant = (await loadRuntimeTenants()).find((t) => t.tenantId === req.params.tenantId);
+  if (!tenant || tenant.cohortOnly) {
+    res.status(404).json({ error: `tenant not found: ${req.params.tenantId}` });
+    return null;
+  }
+  return tenant;
+}
+
+/** 회차 id — 꼴이 아니면(경로 · 인코딩된 구분자) 파일에 닿기 전에 400으로 끝낸다. */
+function googleAioRunParam(req: import('express').Request, res: import('express').Response): string | null {
+  const runId = req.params.runId;
+  if (isAioRunId(runId)) return runId;
+  res.status(400).json({ error: '회차 id가 올바르지 않아요.' });
+  return null;
+}
+
+app.put('/api/google-aio/settings', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  try {
+    res.json(await saveGoogleAioSettings(req.body));
+  } catch (err) {
+    sendGoogleAioError(res, err);
+  }
+});
+
+app.get('/api/google-aio/:tenantId', async (req, res) => {
+  const tenant = await googleAioTenant(req, res);
+  if (!tenant) return;
+  try {
+    res.json(await googleAioStatus(tenant));
+  } catch (err) {
+    sendGoogleAioError(res, err);
+  }
+});
+
+app.get('/api/google-aio/:tenantId/runs/:runId', async (req, res) => {
+  const runId = googleAioRunParam(req, res);
+  if (!runId) return;
+  const tenant = await googleAioTenant(req, res);
+  if (!tenant) return;
+  try {
+    res.json(await googleAioRunDetail(tenant, runId));
+  } catch (err) {
+    sendGoogleAioError(res, err);
+  }
+});
+
+app.post('/api/google-aio/:tenantId/plan', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  const tenant = await googleAioTenant(req, res);
+  if (!tenant) return;
+  try {
+    res.json(await planGoogleAio(tenant, req.body));
+  } catch (err) {
+    sendGoogleAioError(res, err);
+  }
+});
+
+app.post('/api/google-aio/:tenantId/run', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  const tenant = await googleAioTenant(req, res);
+  if (!tenant) return;
+  try {
+    res.status(202).json(await startGoogleAio(tenant, req.body));
+  } catch (err) {
+    sendGoogleAioError(res, err);
+  }
+});
+
+app.post('/api/google-aio/:tenantId/runs/:runId/cancel', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  const runId = googleAioRunParam(req, res);
+  if (!runId) return;
+  const tenant = await googleAioTenant(req, res);
+  if (!tenant) return;
+  try {
+    res.json(await cancelGoogleAio(tenant, runId));
+  } catch (err) {
+    sendGoogleAioError(res, err);
+  }
+});
+
+app.post('/api/google-aio/:tenantId/runs/:runId/rejudge', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  const runId = googleAioRunParam(req, res);
+  if (!runId) return;
+  const tenant = await googleAioTenant(req, res);
+  if (!tenant) return;
+  try {
+    res.status(202).json(await rejudgeGoogleAio(tenant, runId, req.body));
+  } catch (err) {
+    sendGoogleAioError(res, err);
   }
 });
 

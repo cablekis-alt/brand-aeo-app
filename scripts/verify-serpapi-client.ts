@@ -316,7 +316,7 @@ try {
       JSON.stringify(q5) === JSON.stringify({ floor: 2500, index: 1000, aio: 1250, slack: 250 }),
     { q1, q5 },
   )
-  ok('기능 — 지금은 index, aio는 몫만 잡아 둠', JSON.stringify(serp.SERP_FEATURES) === JSON.stringify(['index', 'aio']))
+  ok('기능 — index(색인 자동 확인) · aio(구글 AI 개요 시범)', JSON.stringify(serp.SERP_FEATURES) === JSON.stringify(['index', 'aio']))
 
   // ── 2. 막힌 쪽 주소 · 키 없음 — 요청 0 ─────────────────────────────────────
   for (const bad of ['', 'http://localhost:4196', 'https://example.com', 'https://serpapi.com', 'http://127.0.0.1:4196/x']) {

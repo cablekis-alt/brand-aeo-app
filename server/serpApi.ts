@@ -5,7 +5,7 @@ import { stateFilePath } from './appPaths.js';
 import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
 
 /**
- * SerpAPI 공용 연결 — 색인 자동 확인(feature 'index')이 먼저 쓰고, 구글 AI 개요 시범(feature 'aio')이 나중에 같은 계약 위에 얹는다.
+ * SerpAPI 공용 연결 — 색인 자동 확인(feature 'index', server/indexAuto.ts)과 구글 AI 개요 시범(feature 'aio', server/googleAio.ts)이 같은 계약을 쓴다.
  * 검색 1회마다 계정 크레딧이 들므로 「돈이 나가지 않는 쪽」으로 실패하게 짰다.
  *
  * - 키: process.env.SERPAPI_API_KEY를 이 서버에서만 읽는다. 화면 · 로그 · 오류 · 파일에 싣지 않는다(scrubSerpKey). 키가 질의 문자열에
@@ -32,7 +32,7 @@ import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
  */
 
 export type SerpFeature = 'index' | 'aio';
-/** 장부 · 몫을 가진 기능. 'aio'(구글 AI 개요 시범)는 몫만 잡아 두었다 — 지금 부르는 곳은 색인 자동 확인뿐이다. */
+/** 장부 · 몫을 가진 기능 — 'index'는 색인 자동 확인(server/indexAuto.ts), 'aio'는 구글 AI 개요 시범(server/googleAio.ts)이 부른다. */
 export const SERP_FEATURES: readonly SerpFeature[] = ['index', 'aio'];
 export const FEATURE_LABEL: Record<SerpFeature, string> = { index: '색인 자동 확인', aio: '구글 AI 개요 시범' };
 
@@ -728,7 +728,7 @@ async function assertRunLockHeld(feature: SerpFeature): Promise<void> {
 }
 
 /**
- * 앱 전체에서 SerpAPI를 쓰는 실행(색인 자동 확인 · 나중의 AI 개요 시범)은 한 번에 하나 — 두 실행이 시간당 한도 · 몫을 나눠 셈하지 않게. 앱을
+ * 앱 전체에서 SerpAPI를 쓰는 실행(색인 자동 확인 · 구글 AI 개요 시범)은 한 번에 하나 — 두 실행이 시간당 한도 · 몫을 나눠 셈하지 않게. 앱을
  * 두 번 켠 두 서버 사이에도 하나다(잠금 파일). 잡으면 놓는 함수를 돌려주고(두 번 불러도 한 번만 놓는다, 잃은 잠금은 남의 파일이라 지우지
  * 않는다), 이미 누가 잡았으면 null. 잠금 파일을 다루지 못하면 SerpApiError('ledger')(시작하지 않는다).
  */

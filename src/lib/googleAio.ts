@@ -907,6 +907,38 @@ function postUpDuring(post: AioPost, window: MeasureWindow, weekOf: string): boo
   })
 }
 
+/** 이 회차 때 올린 뒤였고 올라가 있던 글 — 회차 상세가 출처마다 올린 글을 표시할 때 쓴다(요약 셈과 같은 규칙). */
+export function aioPostsUpDuring(run: AioRun, posts: readonly AioPost[]): AioPost[] {
+  const window = aioRunWindow(run)
+  return window ? posts.filter((p) => postUpDuring(p, window, run.conditions.weekOf)) : []
+}
+
+/** 회차 상세의 출처 한 줄 — 자사 · 올린 글 표시는 읽을 때 계산한다(저장하지 않는다). 작성자는 키만. */
+export interface AioSourceMark {
+  kind: 'reference' | 'link'
+  link: string
+  title: string | null
+  source: string | null
+  /** 자사 주소(하위 도메인 포함). 자사 주소 칸이 비면 false. */
+  owned: boolean
+  /** 이 회차 때 올라가 있던 올린 글(주소 키가 같음). */
+  post: { key: string; origin: AioPost['origin']; writerKey: string | null } | null
+  /** 올린 글 주소에 질의(?…)만 다른 주소 — 올린 글 출처로 세지 않는다. */
+  variant: boolean
+}
+
+/** 문항의 출처(references)와 본문 안 링크(snippet_links)마다 자사 · 올린 글 표시. upPosts는 aioPostsUpDuring의 결과. */
+export function aioSourceMarks(item: AioItem, ownedDomains: readonly string[], upPosts: readonly AioPost[]): AioSourceMark[] {
+  const owned = ownedDomains.map((d) => d.trim()).filter(Boolean)
+  const mark = (kind: AioSourceMark['kind'], link: string, title: string | null, source: string | null): AioSourceMark => {
+    const key = trackingKey(link)
+    const post = key ? (upPosts.find((p) => p.key === key) ?? null) : null
+    const variant = !post && key !== null && upPosts.some((p) => matchKind(p.key, key) === 'query-variant')
+    return { kind, link, title, source, owned: owned.length > 0 && ownedUrl(link, owned), post: post ? { key: post.key, origin: post.origin, writerKey: post.writerKey } : null, variant }
+  }
+  return [...(item.references ?? []).map((r) => mark('reference', r.link, r.title, r.source)), ...(item.links ?? []).map((l) => mark('link', l, null, null))]
+}
+
 // ── 지표 ─────────────────────────────────────────────────────────────────────
 
 /** k/N — 분모가 0이면 rate는 null(확인 불가, 0 아님). */
