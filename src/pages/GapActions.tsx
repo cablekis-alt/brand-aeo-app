@@ -10,6 +10,7 @@ import {
   loadContentDrafts,
   loadFactGraph,
   loadPublishSettings,
+  loadPublishStatus,
   PHOTO_RIGHTS_EVENT,
   type ActionStatus,
   type ChannelAdaptation,
@@ -27,6 +28,9 @@ import PhotoAutoFill from '../components/PhotoAutoFill'
 import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
+import ContentProgressBoard, { type StatusLoad } from '../components/ContentProgressBoard'
+import { contentProgress, postedArticleIds, showsArticle, type ListMode } from '../lib/contentProgress'
+import type { PublishStatusRow } from '../lib/publishStatus'
 import type { PublishSettings } from '../lib/publishSettings'
 import { bulkRunsAfter, passForTenant, type BulkKind, type BulkRuns } from '../lib/bulkRun'
 import { briefInputOf, draftRequestOf, effectiveDraft, publishMarkdownOf } from '../lib/draftGaps'
@@ -1114,6 +1118,9 @@ export default function GapActions() {
   const [writerPick, setWriterPick] = useState<{ tenantId: string; key: string } | null>(null)
   const pickedKey = writerPick && writerPick.tenantId === tenant?.tenantId ? writerPick.key : ''
   const writerKey = activePlan && pickedKey && activePlan.articles.some((a) => a.writer.key === pickedKey) ? pickedKey : null
+  // 「할 일만 · 전체」 — 작성자 배정 기간에만 쓰고 기본은 할 일만(안 올린 글). 브랜드마다 따로 둔다(작성자 거르기와 같은 까닭).
+  const [modePick, setModePick] = useState<{ tenantId: string; mode: ListMode } | null>(null)
+  const listMode: ListMode = activePlan ? (modePick && modePick.tenantId === tenant?.tenantId ? modePick.mode : 'todo') : 'all'
   // 도는 일괄 실행 — 작성자 배정 기간에는 도는 동안 카드와 「글 더 만들기」를 잠근다(브리프 · 초안 파일 쓰기에 줄이 없다). 브랜드마다
   // 따로 센다 — 브랜드를 바꿔도 이 화면은 그대로라, 앞 브랜드에서 누른 실행이 끝날 때까지 지금 브랜드를 잠그면 안 된다(src/lib/bulkRun.ts).
   const [bulkRuns, setBulkRuns] = useState<BulkRuns>({})
@@ -1138,6 +1145,33 @@ export default function GapActions() {
     [weekHistory.history, weekOf, plan.weekWindow],
   )
   const cardPosts = canRecordPosts ? { ...posts, citedInWeek, timingInWeek } : null
+  // 발행 현황(올린 글 · 구글 확인) — 작성자 진행판의 올림 · 색인 칸과 「할 일만」 거르기에 쓴다. 작성자 배정 기간에만 읽고, 원장이 바뀌면
+  // 다시 읽는다. 못 읽으면 진행판은 0이 아니라 확인 불가, 거르기는 아무것도 숨기지 않는다(src/lib/contentProgress.ts).
+  const [statusState, setStatusState] = useState<{ key: string; load: StatusLoad; rows: PublishStatusRow[] | null; error: string | null } | null>(null)
+  const statusKey = activePlan && tenant ? `${tenant.tenantId}|${postsRevision}` : ''
+  useEffect(() => {
+    if (!statusKey) return
+    let alive = true
+    const tenantId = statusKey.slice(0, statusKey.indexOf('|'))
+    loadPublishStatus().then(
+      (s) => {
+        if (!alive) return
+        if (s === null) setStatusState({ key: statusKey, load: 'none', rows: null, error: null })
+        else setStatusState({ key: statusKey, load: 'ok', rows: s.rows.filter((r) => r.tenantId === tenantId), error: null })
+      },
+      (e: unknown) => {
+        if (!alive) return
+        console.warn('[GapActions] 발행 현황을 읽지 못해 진행판의 올림 · 색인을 확인 불가로 둡니다', e)
+        setStatusState({ key: statusKey, load: 'error', rows: null, error: e instanceof Error ? e.message : String(e) })
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [statusKey])
+  const shownStatus = statusState && statusState.key === statusKey ? statusState : null
+  const statusRows = shownStatus?.load === 'ok' ? shownStatus.rows : null
+  const postedIds = useMemo(() => postedArticleIds(statusRows), [statusRows])
   // 저장된 브리프 — 라우트가 없는 환경(웹)이면 null로 남아 카드가 버튼을 숨긴다.
   const [briefs, setBriefs] = useState<Record<string, StoredBrief> | null>(null)
   useEffect(() => {
@@ -1263,9 +1297,12 @@ export default function GapActions() {
     activePlan && extraDefs.get(id)?.bankVersion === activePlan.bankVersion ? writerArticle(activePlan, id) : null
   /** 추가 글 카드 머리의 작성자 표시 — 「작성자 이름 · 블로그」. 배정 글이 아니면 null. */
   const writerLabelOf = (a: GapAction) => (a.extra && writerArticleOf(a.id) ? writerChip(activePlan, a.id) : null)
-  // 작성자 거르기 — 고른 작성자의 배정 글만 카드 · 올리기 목록에 남긴다. 고르지 않으면 지금과 같다.
-  const shownByWriter = (id: string) => !writerKey || writerArticleOf(id)?.writer.key === writerKey
-  const shownCards = writerKey ? articleCards.filter((x) => shownByWriter(x.action.id)) : articleCards
+  // 작성자 거르기 — 고른 작성자의 배정 글만 카드 · 올리기 목록에 남긴다. 「할 일만」이면 올린 글(발행 현황)도 뺀다 — 발행 현황을 못 읽었으면
+  // 아무것도 빼지 않는다. 고르지 않고 「전체」면 지금과 같다(배정 기간이 아니면 늘 「전체」).
+  const writerOfArticle = (id: string) => writerArticleOf(id)?.writer.key ?? null
+  const shownByWriter = (id: string) => showsArticle(id, writerOfArticle, { writer: writerKey, mode: listMode }, postedIds)
+  const filtering = writerKey !== null || (listMode === 'todo' && postedIds !== null)
+  const shownCards = filtering ? articleCards.filter((x) => shownByWriter(x.action.id)) : articleCards
   // 사진 자동 채우기 — 반복 상한은 브랜드의 초안 전부와 작성자로 센다. 배정이 없으면 작성자 상한 없이 글 · 브랜드 상한만.
   const photoContext = drafts ? { drafts, groupOf: (id: string) => writerArticleOf(id)?.writer.key } : undefined
   const photoCards = drafts
@@ -1274,7 +1311,7 @@ export default function GapActions() {
         return stored ? [{ stored, title: draftTitle(effectiveDraft(stored)) }] : []
       })
     : []
-  const shownPlan = writerKey
+  const shownPlan = filtering
     ? {
         ...publishPlan,
         articles: publishPlan.articles.filter((x) => shownByWriter(x.action.id)),
@@ -1301,6 +1338,28 @@ export default function GapActions() {
       locked={pageLocked}
     />
   )
+  // 작성자 진행판 — 사진 자리 셈은 초안이 바뀔 때만 다시 센다(글마다 발행 원고를 만든다 — WriterRuns와 같은 셈).
+  const writerPhotos = useMemo(() => {
+    const out: Record<string, { slots: number; filled: number; empty: number }> = {}
+    if (!activePlan || !drafts || !photosOn) return out
+    for (const w of planWriters(activePlan)) {
+      const mine = activePlan.articles.filter((a) => a.writer.key === w.key && drafts[a.id])
+      const s = photoSlotStats(mine.map((a) => ({ markdown: publishMarkdownOf(drafts[a.id]!), picks: drafts[a.id]!.photos, cleared: drafts[a.id]!.photoCleared })))
+      out[w.key] = { slots: s.slots, filled: s.filled, empty: s.empty }
+    }
+    return out
+  }, [activePlan, drafts, photosOn])
+  const progress =
+    activePlan && drafts
+      ? contentProgress({
+          plan: activePlan,
+          drafted: new Set(activePlan.articles.filter((a) => drafts[a.id]).map((a) => a.id)),
+          gapsLeft: Object.fromEntries(publishPlan.articles.filter((x) => x.draft).map((x) => [x.action.id, x.gapsLeft])),
+          photos: writerPhotos,
+          statusRows,
+          today: todayKst(),
+        })
+      : null
   const articleCount = articleCards.filter((x) => x.action.kind === 'content').length
   const confirmedCount = shownPlan.articles.filter((x) => x.confirmed).length
   const showArticle = (id: string) => {
@@ -1380,7 +1439,8 @@ export default function GapActions() {
         </div>
       )}
 
-      <div className="filters">
+      {/* 작성자 배정 기간에는 거르기 줄을 위에 붙여 둔다 — 아래 글을 내려 보면서도 작성자 · 「할 일만」을 바꿀 수 있게(2026-11-11 개편 시안). */}
+      <div className={activePlan ? 'filters filters-sticky' : 'filters'}>
         <WeekPicker weeks={weeks} value={weekOf} onChange={setWeekOf} />
         {activePlan && (
           // 작성자 거르기 — 작성자 단추 · 글 카드 · 올리기 목록 · 「글 더 만들기」의 배정표 글을 그 작성자 것만 남긴다.
@@ -1395,6 +1455,27 @@ export default function GapActions() {
               ))}
             </select>
           </label>
+        )}
+        {activePlan && (
+          <div className="mode-toggle" role="group" aria-label="보일 글">
+            {(['todo', 'all'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={listMode === m}
+                className={listMode === m ? 'is-on' : undefined}
+                onClick={() => setModePick({ tenantId: tenant.tenantId, mode: m })}
+              >
+                {m === 'todo' ? '할 일만 · 안 올린 글' : '전체'}
+              </button>
+            ))}
+          </div>
+        )}
+        {activePlan && (
+          <span className="muted filters-count" role="status">
+            보이는 글 {shownCards.length}편
+            {listMode === 'todo' && postedIds === null ? ' · 발행 현황을 몰라 모두 보여요' : ''}
+          </span>
         )}
       </div>
 
@@ -1459,12 +1540,24 @@ export default function GapActions() {
         </p>
       )}
 
+      {activePlan && progress && !loading && (
+        <ContentProgressBoard
+          writers={progress.writers}
+          totals={progress.totals}
+          status={shownStatus?.load ?? 'loading'}
+          statusError={shownStatus?.error ?? null}
+          writerKey={writerKey}
+          onPickWriter={(key) => setWriterPick({ tenantId: tenant.tenantId, key: key ?? '' })}
+        />
+      )}
+
       {showWriters && activePlan && briefs !== null && drafts !== null && !loading && (
-        // 작성자 단추 — 작성자마다 배정 글을 만들고 브리프 · 초안까지. 이번 주 밀린 질문이 없어도 배정 글은 만든다.
-        <section>
-          <h3 className="step-head">
-            작성자 배정 <span className="muted">— 작성자 {planWriters(activePlan).length}명 · 글 {activePlan.articles.length}편 · {activePlan.bankVersion} 판</span>
-          </h3>
+        // 작성자 단추 — 작성자마다 배정 글을 만들고 브리프 · 초안까지. 이번 주 밀린 질문이 없어도 배정 글은 만든다. 진행판이 상태를 보여 주므로
+        // 단추 칸은 접어 둔다 — 일괄 실행이 도는 동안은 펼친다(접어도 실행은 이어진다 — 칸이 화면에서 빠지지 않는다).
+        <details className="writer-tools" open={bulkRunning === 'writer' || bulkRunning === 'photos' || undefined}>
+          <summary>
+            작성자 작업 <span className="muted">— 글 만들기 · 묶음 받기 · 사진 자동 채우기 · 작성자 {planWriters(activePlan).length}명 · 글 {activePlan.articles.length}편 · {activePlan.bankVersion} 판</span>
+          </summary>
           <WriterRuns
             key={tenant.tenantId}
             tenantId={tenant.tenantId}
@@ -1493,7 +1586,7 @@ export default function GapActions() {
             onPhotosBusyChange={bulkBusy(tenant.tenantId, 'photos')}
             photosOn={photosOn}
           />
-        </section>
+        </details>
       )}
 
       {ready && (
