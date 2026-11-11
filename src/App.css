@@ -9114,6 +9114,11 @@ tr.ms-run-child td:nth-child(2) {
 .ps-index {
   min-width: 118px;
 }
+/* 「AI 인용」 칸 — 판단 글자 아래 작은 줄(올린 뒤 측정 n주 중 m주 등)이 길어 폭을 묶는다. */
+.ps-cite {
+  min-width: 120px;
+  max-width: 210px;
+}
 .ps-date {
   display: block;
   margin-top: 3px;

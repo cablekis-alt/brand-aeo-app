@@ -1,8 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import IndexAutoPanel, { type IndexAutoLoad } from '../components/IndexAutoPanel'
 import PostImportPanel from '../components/PostImportPanel'
-import { commitPostImport, loadIndexAuto, loadPublishStatus, patchExternalPost, saveIndexCheck, type IndexAutoPlan, type IndexAutoStatus } from '../lib/api'
+import {
+  commitPostImport,
+  loadExternalHistory,
+  loadIndexAuto,
+  loadPublishedHistory,
+  loadPublishStatus,
+  patchExternalPost,
+  saveIndexCheck,
+  type IndexAutoPlan,
+  type IndexAutoStatus,
+} from '../lib/api'
 import { downloadCsv } from '../lib/fileDownload'
 import { safeFileName } from '../lib/markdownFile'
 import { repostDayProblem, takenDownBefore } from '../lib/externalPosts'
@@ -44,6 +54,7 @@ import {
   type StateFilter,
   type StatusFilter,
 } from '../lib/publishStatus'
+import { citationCellOf, citationTargets, type CitationCell, type TenantCitationSource } from '../lib/statusCitation'
 
 const DEFAULT_FILTER: StatusFilter = { tenantId: '', writer: '', naver: '', google: '', dueOnly: false, showUnposted: true, showRemoved: false }
 
@@ -151,6 +162,25 @@ function RecheckView({ row, today }: { row: PublishStatusRow; today: string }) {
   }
   return <td className="muted">{r.label}</td>
 }
+
+/** 「AI 인용」 칸 — 측정한 AI 답변에 인용됐는지(src/lib/statusCitation.ts). 여러 주 · 한 주 인용만 칩, 나머지는 글자. */
+function CitationView({ cell }: { cell: CitationCell }) {
+  if (cell.kind === 'na') return <td className="muted" title={cell.sub[0]}>{cell.label}</td>
+  const quiet = cell.kind === 'loading' || cell.kind === 'unknown' || cell.kind === 'moved'
+  return (
+    <td className="ps-cite">
+      {cell.tone ? <span className={`chip ${cell.tone}`}>{cell.label}</span> : <span className={quiet ? 'muted' : undefined}>{cell.label}</span>}
+      {cell.sub.map((s) => (
+        <span key={s} className="ps-date">
+          {s}
+        </span>
+      ))}
+    </td>
+  )
+}
+
+/** 인용 이력은 퍼포먼스 「올린 글 인용 추적」과 같은 창(12주)으로 읽는다 — 두 화면이 같은 글을 다르게 말하지 않게. */
+const CITATION_WEEKS = 12
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err))
 const validDay = (day: string, limit: string) => /^\d{4}-\d{2}-\d{2}$/.test(day) && day <= limit && day >= '2020-01-01'
@@ -451,6 +481,45 @@ export default function PublishStatus() {
   const data = state.value
   const today = data?.today ?? ''
   const rows = data?.rows ?? []
+
+  // 「AI 인용」 칸 — 올린 줄이 있는 브랜드마다 인용 이력(앱 글 · 앱 밖 글)을 읽는다. 색인 표시는 줄을 바꾸지만 읽을 브랜드는 그대로라
+  // 다시 읽지 않는다(표 「다시 읽기」 때만). 읽는 중 · 못 읽음은 칸이 「읽는 중」 · 「확인 불가」로 보인다.
+  const targetJson = JSON.stringify(citationTargets(rows))
+  const targets = useMemo(() => JSON.parse(targetJson) as ReturnType<typeof citationTargets>, [targetJson])
+  const citeKey = `${reloadKey}|${targetJson}`
+  const [cite, setCite] = useState<{ key: string; by: Record<string, Partial<TenantCitationSource>> }>({ key: '', by: {} })
+  useEffect(() => {
+    let alive = true
+    const key = `${reloadKey}|${JSON.stringify(targets)}`
+    const put = (tenantId: string, part: Partial<TenantCitationSource>) => {
+      if (!alive) return
+      setCite((c) => {
+        const by = c.key === key ? c.by : {}
+        return { key, by: { ...by, [tenantId]: { ...by[tenantId], ...part } } }
+      })
+    }
+    for (const t of targets) {
+      if (t.app) {
+        loadPublishedHistory(t.tenantId, CITATION_WEEKS).then(
+          (value) => put(t.tenantId, { app: { state: 'ok', value } }),
+          (err: unknown) => put(t.tenantId, { app: { state: 'error', error: message(err) } }),
+        )
+      }
+      if (t.external) {
+        loadExternalHistory(t.tenantId, CITATION_WEEKS).then(
+          (value) => put(t.tenantId, { external: { state: 'ok', value } }),
+          (err: unknown) => put(t.tenantId, { external: { state: 'error', error: message(err) } }),
+        )
+      }
+    }
+    return () => {
+      alive = false
+    }
+  }, [targets, reloadKey])
+  const citationOf = (r: PublishStatusRow): CitationCell => {
+    const got = cite.key === citeKey ? cite.by[r.tenantId] : undefined
+    return citationCellOf(r, got ? { app: got.app ?? { state: 'loading' }, external: got.external ?? { state: 'loading' } } : undefined)
+  }
   // 거르기는 늘 지금 줄에 있는 브랜드 · 작성자로 본다(읽은 직후에도 되돌리지만, 그 사이 한 번 그리는 값도 어긋나지 않게).
   const filter = validFilter(filterState, rows)
   const patchFilter = (patch: Partial<StatusFilter>) => setFilter((f) => ({ ...validFilter(f, rows), ...patch }))
@@ -510,7 +579,9 @@ export default function PublishStatus() {
   }
 
   // CSV 끝에 「네이버/구글 확인 방법」(직접 · 자동) 두 열 — 자동 「아직」을 사람이 본 「아직」과 가른다(D9 A).
-  const exportCsv = () => downloadCsv(safeFileName(publishStatusFileName(today)), publishStatusCsv(shown, today, { checkMethods: true }))
+  // 「다시 볼 날」 뒤에 「AI 인용」(확인 방법 두 열은 끝 그대로) — 이력을 읽는 중인 줄은 빈칸.
+  const exportCsv = () =>
+    downloadCsv(safeFileName(publishStatusFileName(today)), publishStatusCsv(shown, today, { checkMethods: true, citation: (r) => citationOf(r).csv }))
   const tiles = [
     // 앱 밖 글이 있으면 올린 글을 앱 글 · 앱 밖 글로 나눠 보인다(같은 주소가 한 브랜드에서라도 앱 글이면 앱 글 — 합이 올린 글).
     { label: '올린 글', value: sum.posted, sub: sum.external > 0 ? `앱 글 ${sum.app} · 앱 밖 ${sum.external}` : '뺀 글 · 안 올린 글 제외', tone: '' },
@@ -741,6 +812,9 @@ export default function PublishStatus() {
                         <th scope="col">발행일</th>
                         <th scope="col">네이버 노출</th>
                         <th scope="col">구글 색인</th>
+                        <th scope="col" title="측정한 AI 답변이 이 글 주소를 출처로 달았는지 — 측정마다 셉니다. 구글 색인(검색엔진이 글을 아는가)과는 다릅니다.">
+                          AI 인용
+                        </th>
                         <th scope="col">다시 볼 날</th>
                       </tr>
                     </thead>
@@ -792,6 +866,7 @@ export default function PublishStatus() {
                           <td className="mono">{r.kind === 'unposted' ? '—' : (r.publishedOn ?? '모름')}</td>
                           <IndexCell row={r} engine="naver" busy={busy === `${r.rowKey}|naver`} onMark={mark} />
                           <IndexCell row={r} engine="google" busy={busy === `${r.rowKey}|google`} onMark={mark} auto={googleAuto(r)} />
+                          <CitationView cell={citationOf(r)} />
                           <RecheckView row={r} today={today} />
                         </tr>
                       ))}

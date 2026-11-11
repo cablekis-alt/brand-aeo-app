@@ -962,10 +962,16 @@ export const unpostedLabel = (row: Pick<PublishStatusRow, 'postedUnknown'>) => (
 /**
  * 표에 보이는 줄 그대로 — 열은 표와 같고 엔진마다 확인일을 더한다. 엑셀이 한글을 깨뜨리지 않게 BOM을 붙이고 줄은 CRLF. checkMethods면 끝에
  * 「네이버 확인 방법」 「구글 확인 방법」(직접 · 자동 · 빈칸) 두 열을 더한다 — 자동 「아직」(site: 검색에서 못 봄)을 사람이 본 「아직」과 가르려고
- * (색인 자동 확인 D9 A). 발행 현황 화면은 늘 켠다. 앞 열 순서는 그대로다.
+ * (색인 자동 확인 D9 A). 발행 현황 화면은 늘 켠다. citation을 주면 「다시 볼 날」 바로 뒤(확인 방법 두 열 앞)에 「AI 인용」 열을 더한다
+ * (src/lib/statusCitation.ts — 측정한 AI 답변에 인용됐는지, 읽는 중이면 빈칸). 앞 11열 순서는 그대로이고 확인 방법 두 열은 늘 끝이다.
  */
-export function publishStatusCsv(rows: PublishStatusRow[], today: string, opts: { checkMethods?: boolean } = {}): string {
+export function publishStatusCsv(
+  rows: PublishStatusRow[],
+  today: string,
+  opts: { checkMethods?: boolean; citation?: (row: PublishStatusRow) => string } = {},
+): string {
   const head = ['브랜드', '작성자', '글 제목', '플랫폼', '주소', '발행일', '네이버 노출', '네이버 확인일', '구글 색인', '구글 확인일', '다시 볼 날']
+  if (opts.citation) head.push('AI 인용')
   if (opts.checkMethods) head.push('네이버 확인 방법', '구글 확인 방법')
   const lines = [head.map(csvCell).join(',')]
   for (const r of rows) {
@@ -983,6 +989,7 @@ export function publishStatusCsv(rows: PublishStatusRow[], today: string, opts: 
       r.google?.checkedOn ?? '',
       posted ? recheckCell(r, today) : '',
     ]
+    if (opts.citation) cells.push(opts.citation(r))
     if (opts.checkMethods) cells.push(posted ? checkSourceLabel(r.naver) : '', posted ? checkSourceLabel(r.google) : '')
     lines.push(cells.map(csvCell).join(','))
   }
