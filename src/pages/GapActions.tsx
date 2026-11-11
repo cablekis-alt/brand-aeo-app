@@ -28,6 +28,7 @@ import PhotoAutoFill from '../components/PhotoAutoFill'
 import PublishList from '../components/PublishList'
 import PublishedUrlEditor from '../components/PublishedUrlEditor'
 import PublishSettingsPanel from '../components/PublishSettingsPanel'
+import ArticleDrawer from '../components/ArticleDrawer'
 import ContentProgressBoard, { type StatusLoad } from '../components/ContentProgressBoard'
 import { contentProgress, postedArticleIds, showsArticle, type ListMode } from '../lib/contentProgress'
 import type { PublishStatusRow } from '../lib/publishStatus'
@@ -62,7 +63,7 @@ import {
   type WriterPlanArticle,
 } from '../lib/probePlan'
 import { todayKst } from '../lib/publishedUrl'
-import { buildPublishPlan, recordInputOf, type PublishArticle } from '../lib/publishPlan'
+import { buildPublishPlan, recordInputOf, type PublishArticle, type PublishRow } from '../lib/publishPlan'
 import { VERDICT_WORD } from '../lib/questionWinLoss'
 import { useGapActionPlan } from '../lib/useGapActionPlan'
 import { useProbePlan } from '../lib/useProbePlan'
@@ -1121,6 +1122,7 @@ export default function GapActions() {
   // 「할 일만 · 전체」 — 작성자 배정 기간에만 쓰고 기본은 할 일만(안 올린 글). 브랜드마다 따로 둔다(작성자 거르기와 같은 까닭).
   const [modePick, setModePick] = useState<{ tenantId: string; mode: ListMode } | null>(null)
   const listMode: ListMode = activePlan ? (modePick && modePick.tenantId === tenant?.tenantId ? modePick.mode : 'todo') : 'all'
+  const [drawerPick, setDrawerPick] = useState<{ tenantId: string; id: string } | null>(null)
   // 도는 일괄 실행 — 작성자 배정 기간에는 도는 동안 카드와 「글 더 만들기」를 잠근다(브리프 · 초안 파일 쓰기에 줄이 없다). 브랜드마다
   // 따로 센다 — 브랜드를 바꿔도 이 화면은 그대로라, 앞 브랜드에서 누른 실행이 끝날 때까지 지금 브랜드를 잠그면 안 된다(src/lib/bulkRun.ts).
   const [bulkRuns, setBulkRuns] = useState<BulkRuns>({})
@@ -1362,7 +1364,12 @@ export default function GapActions() {
       : null
   const articleCount = articleCards.filter((x) => x.action.kind === 'content').length
   const confirmedCount = shownPlan.articles.filter((x) => x.confirmed).length
+  /** 글로 가기 — 글이 여러 편이면 서랍으로 열고(카드는 접혀 있다), 한 편이면 그 카드로 옮겨 간다. */
   const showArticle = (id: string) => {
+    if (manyArticles && shownCards.some((x) => x.action.id === id)) {
+      setDrawerPick({ tenantId: tenant?.tenantId ?? '', id })
+      return
+    }
     document.getElementById(`action-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   }
 
@@ -1371,11 +1378,93 @@ export default function GapActions() {
   const idle = plan.actions.filter(isIdleAction)
   /** 글이 여러 편일 때만 글 목록 · 한꺼번에 만들기를 보인다 — 보통은 한 편(gapActions contentActions)이고, 손댄 채널이 따로 쓴 글을 가질 때만 늘어난다. */
   const manyArticles = publishPlan.articles.length > 1
+  // 글 서랍 — 글이 여러 편이면 카드를 접어 두고 한 편씩 연다(2026-11-11 개편 시안). 브랜드마다 따로 두고, id ''는 사람이 닫은 것이라
+  // 인용 갭 분석에서 넘어온 글(focus)로 다시 열지 않는다. 거르기로 목록에서 빠진 글이면 닫는다.
+  const pickedDrawer = drawerPick && drawerPick.tenantId === tenant?.tenantId ? drawerPick.id : null
+  // 넘어온 focus가 채널 항목이면 그 채널 줄을 가진 글의 서랍을 연다(페이지에는 채널 줄이 따로 없다).
+  const focusArticleId = focusId
+    ? shownCards.some((x) => x.action.id === focusId)
+      ? focusId
+      : (shownPlan.rows.find((r) => r.target.id === focusId)?.article.action.id ?? '')
+    : ''
+  const drawerId = manyArticles ? (pickedDrawer ?? focusArticleId) : ''
+  const drawerIndex = drawerId ? shownCards.findIndex((x) => x.action.id === drawerId) : -1
+  const drawerArticle = drawerIndex >= 0 ? shownCards[drawerIndex]! : null
+  const openDrawerAt = (i: number) => setDrawerPick({ tenantId: tenant?.tenantId ?? '', id: shownCards[i]!.action.id })
   // 글에 넣지 않은 밀린 질문만 있는 주(카테고리 무관 질문은 모두 이김)도 그린다 — 그 질문들을 밝히는 칸이 있다. 실증 질문만 있는 주도
   // 그린다 — 실증 칸과 「글 더 만들기」가 있다.
   const ready = !loading && (plan.actions.length > 0 || plan.otherLost.length > 0 || plan.probes.length > 0)
 
   if (!tenant) return null
+
+  /** 글 카드 — 글이 한 편이면 페이지에, 여러 편이면 글 서랍에 그린다(같은 카드). */
+  const cardOf = (x: PublishArticle) => (
+    <ActionCard
+      action={x.action}
+      article={x}
+      writerLabel={writerLabelOf(x.action)}
+      locked={pageLocked}
+      focused={focusId === x.action.id}
+      canSaveStatus={canSaveStatus}
+      onStatus={setStatus}
+      tenantId={tenant.tenantId}
+      briefs={briefs}
+      onBrief={onBrief}
+      drafts={drafts}
+      onDraft={onDraft}
+      posts={cardPosts}
+      weekOf={weekOf}
+      coveredBy={null}
+      mainDraft={mainDraft}
+      takenByExtras={x === mainArticle ? takenByExtras : 0}
+      onRemoveExtra={x.action.extra && extras.available ? () => extras.update({ id: x.action.id, removed: true }) : undefined}
+      photoContext={photoContext}
+    />
+  )
+
+  /** 올리기 줄의 「올렸어요」 칸 — 페이지의 올리기 목록과 글 서랍이 같은 칸을 쓴다. 상태를 저장할 수 없는 환경이면 없다. */
+  const urlSlotOf = (row: PublishRow) =>
+    canRecordPosts ? (
+      <PublishedUrlEditor
+        addLabel="올렸어요"
+        hits={row.hits}
+        // 뺀 주소도 그 줄이 보이는 기록과 같은 규칙으로(publishPlan.ts keepsArticle) — 다르면 뺀 주소를 되살릴 곳이 없다.
+        removed={posts.list.filter((p) => p.targetActionId === row.target.id && p.removedAt && row.keepsArticle(p.articleId))}
+        weekOf={weekOf}
+        citedInWeek={citedInWeek}
+        timingInWeek={timingInWeek}
+        busy={posts.busy}
+        // 올린 글 · 올린 곳 · 초안 판을 함께 남긴다 — 채널 항목 하나를 여러 글이 함께 쓰고, 초안은 다시 만들면 덮인다.
+        // 글 · 대상 · 집행 상태를 바꿀지 · 추가 글의 질문 스냅샷은 줄 모델이 정한다(publishPlan.ts recordInputOf).
+        onRecord={(url, publishedOn, chosen) =>
+          posts.record({
+            url,
+            ...recordInputOf(row),
+            articleTitle: row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title,
+            ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
+            ...(adaptations?.[row.article.action.id]?.[row.target.id]
+              ? { adaptationSourceKey: adaptations[row.article.action.id]![row.target.id]!.sourceKey }
+              : {}),
+            publishedOn,
+            publishedOnChosen: chosen,
+          })
+        }
+        onRemove={posts.remove}
+        onRestore={posts.restore}
+        onSetDate={posts.setPublishedOn}
+        // 고친 날에는 지금 이 줄이 복사하는 판을 남긴다 — 「본문 다시 복사」로 붙여 넣은 글이다.
+        onAddEdit={(postId, editedOn) =>
+          posts.addEdit(postId, {
+            editedOn,
+            ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
+            ...(row.needsAdapt && adaptations?.[row.article.action.id]?.[row.target.id]
+              ? { adaptationSourceKey: adaptations[row.article.action.id]![row.target.id]!.sourceKey }
+              : {}),
+          })
+        }
+        onRemoveEdit={posts.removeEdit}
+      />
+    ) : null
 
   return (
     <>
@@ -1658,24 +1747,36 @@ export default function GapActions() {
                     : '빈칸을 채우거나 빼면 글이 확인되고, 아래 올리기 목록의 줄이 열립니다. 모든 곳에 이 글 한 편을 올립니다.'}
                 </p>
                 {manyArticles && (
+                  // 글이 여러 편이면 카드는 접어 두고 이 목록에서 「열기」로 서랍을 연다 — 한 줄에 올림 · 작성자 · 빈칸 상태를 함께 본다.
                   <ul className="article-check-list" aria-label="글별 확인 상태">
                     {shownCards.map((x) => {
                       const state = articleStateOf(x)
+                      const writer = writerOfArticle(x.action.id)
+                      const posted = postedIds ? postedIds.has(x.action.id) : null
                       return (
-                        <li key={x.action.id}>
+                        <li key={x.action.id} className={drawerId === x.action.id ? 'is-open' : undefined}>
+                          {posted !== null && (
+                            <span className={`status-pill ${posted ? 'st-good' : 'st-warn'}`}>{posted ? '올림' : '안 올림'}</span>
+                          )}
                           <span className={`status-pill ${state.tone}`}>{state.label}</span>
+                          {writer && <span className="article-check-writer">{writer}</span>}
                           {/* 사용자가 알아보는 것은 글 제목이다 — 글이 없을 때만 항목 이름. */}
                           <span className="article-check-title">
                             {x.draft ? draftTitle(effectiveDraft(x.draft)) : x.action.title}
                             {x.draft && <span className="muted"> · {articleRoleOf(x.action).short}</span>}
                           </span>
-                          <button type="button" className="ghost" onClick={() => showArticle(x.action.id)}>
-                            보기
+                          <button type="button" onClick={() => showArticle(x.action.id)}>
+                            열기
                           </button>
                         </li>
                       )
                     })}
                   </ul>
+                )}
+                {manyArticles && shownCards.length === 0 && (
+                  <p className="muted">
+                    {listMode === 'todo' ? '안 올린 글이 없어요 — 위 「전체」를 누르면 올린 글도 보여요.' : '보일 글이 없어요.'}
+                  </p>
                 )}
                 {/* 한 편이면 카드의 「초안 만들기」가 같은 일을 한다. */}
                 {manyArticles && briefs !== null && drafts !== null && (
@@ -1711,37 +1812,22 @@ export default function GapActions() {
                 {writerKey && shownCards.length === 0 && (
                   <p className="muted">이 작성자의 글이 아직 없어요 — 위 작성자 단추로 만드세요.</p>
                 )}
-                <div className="gap-grid">
-                  {shownCards.map((x) => (
-                    <Fragment key={x.action.id}>
-                      <ActionCard
-                        action={x.action}
-                        article={x}
-                        writerLabel={writerLabelOf(x.action)}
-                        locked={pageLocked}
-                        focused={focusId === x.action.id}
-                        canSaveStatus={canSaveStatus}
-                        onStatus={setStatus}
-                        tenantId={tenant.tenantId}
-                        briefs={briefs}
-                        onBrief={onBrief}
-                        drafts={drafts}
-                        onDraft={onDraft}
-                        posts={cardPosts}
-                        weekOf={weekOf}
-                        coveredBy={null}
-                        mainDraft={mainDraft}
-                        takenByExtras={x === mainArticle ? takenByExtras : 0}
-                        onRemoveExtra={x.action.extra && extras.available ? () => extras.update({ id: x.action.id, removed: true }) : undefined}
-                        photoContext={photoContext}
-                      />
-                      {/* 「글 더 만들기」는 본 글 카드 바로 아래. 이 환경에 기능이 없으면(웹) 칸째 숨긴다 — 오류 문구도 띄우지 않는다. */}
-                      {x === mainArticle && formSlot === 'under-main' && extras.available && extraForm(x.action)}
-                    </Fragment>
-                  ))}
-                  {/* 작성자를 골라 본 글 카드가 걸러진 주 — 「글 더 만들기」를 글 카드 뒤에 둔다. */}
-                  {mainArticle && formSlot === 'after-cards' && extras.available && extraForm(mainArticle.action)}
-                </div>
+                {manyArticles ? (
+                  // 글 카드는 서랍에서 연다(위 목록의 「열기」) — 「글 더 만들기」만 목록 아래에 둔다.
+                  mainArticle && formSlot !== null && extras.available && <div className="gap-grid">{extraForm(mainArticle.action)}</div>
+                ) : (
+                  <div className="gap-grid">
+                    {shownCards.map((x) => (
+                      <Fragment key={x.action.id}>
+                        {cardOf(x)}
+                        {/* 「글 더 만들기」는 본 글 카드 바로 아래. 이 환경에 기능이 없으면(웹) 칸째 숨긴다 — 오류 문구도 띄우지 않는다. */}
+                        {x === mainArticle && formSlot === 'under-main' && extras.available && extraForm(x.action)}
+                      </Fragment>
+                    ))}
+                    {/* 작성자를 골라 본 글 카드가 걸러진 주 — 「글 더 만들기」를 글 카드 뒤에 둔다. */}
+                    {mainArticle && formSlot === 'after-cards' && extras.available && extraForm(mainArticle.action)}
+                  </div>
+                )}
               </section>
               )}
 
@@ -1758,7 +1844,33 @@ export default function GapActions() {
                     onSaved={(s) => setSettingsState({ key: tenant.tenantId, value: s })}
                   />
                 )}
-                {drafts !== null ? (
+                {drafts !== null && manyArticles ? (
+                  // 글이 여러 편이면 글마다 한 줄 — 채널마다 올림 · 대기만 보이고, 복사 · 주소 적기는 그 글의 서랍에서 한다(2026-11-11 개편 시안).
+                  <>
+                    <p className="hint" style={{ marginTop: 0 }}>글마다 한 줄입니다 — 「열기」를 누르면 서랍에서 채널별 복사 · 주소 적기를 해요.</p>
+                    <ul className="publish-summary" aria-label="글별 올리기">
+                      {shownPlan.articles.map((x) => {
+                        const rows = shownPlan.rows.filter((r) => r.article.action.id === x.action.id)
+                        if (rows.length === 0) return null
+                        return (
+                          <li key={x.action.id}>
+                            <span className="publish-summary-title">{x.draft ? draftTitle(effectiveDraft(x.draft)) : x.action.title}</span>
+                            <span className="publish-summary-chips">
+                              {rows.map((r) => (
+                                <span key={r.key} className={`status-pill ${r.done ? 'st-good' : r.locked ? 'st-ok' : 'st-warn'}`}>
+                                  {r.name} · {r.done ? '올림' : r.locked ? '빈칸 처리 전' : '대기'}
+                                </span>
+                              ))}
+                            </span>
+                            <button type="button" onClick={() => showArticle(x.action.id)}>
+                              열기
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </>
+                ) : drafts !== null ? (
                   <PublishList
                     tenantId={tenant.tenantId}
                     plan={shownPlan}
@@ -1767,49 +1879,7 @@ export default function GapActions() {
                     onAdapted={onAdapted}
                     focusId={focusId}
                     onShowArticle={showArticle}
-                    urlSlot={(row) =>
-                      canRecordPosts ? (
-                        <PublishedUrlEditor
-                          addLabel="올렸어요"
-                          hits={row.hits}
-                          // 뺀 주소도 그 줄이 보이는 기록과 같은 규칙으로(publishPlan.ts keepsArticle) — 다르면 뺀 주소를 되살릴 곳이 없다.
-                          removed={posts.list.filter((p) => p.targetActionId === row.target.id && p.removedAt && row.keepsArticle(p.articleId))}
-                          weekOf={weekOf}
-                          citedInWeek={citedInWeek}
-                          timingInWeek={timingInWeek}
-                          busy={posts.busy}
-                          // 올린 글 · 올린 곳 · 초안 판을 함께 남긴다 — 채널 항목 하나를 여러 글이 함께 쓰고, 초안은 다시 만들면 덮인다.
-                          // 글 · 대상 · 집행 상태를 바꿀지 · 추가 글의 질문 스냅샷은 줄 모델이 정한다(publishPlan.ts recordInputOf).
-                          onRecord={(url, publishedOn, chosen) =>
-                            posts.record({
-                              url,
-                              ...recordInputOf(row),
-                              articleTitle: row.article.draft ? draftTitle(effectiveDraft(row.article.draft)) : row.article.action.title,
-                              ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
-                              ...(adaptations?.[row.article.action.id]?.[row.target.id]
-                                ? { adaptationSourceKey: adaptations[row.article.action.id]![row.target.id]!.sourceKey }
-                                : {}),
-                              publishedOn,
-                              publishedOnChosen: chosen,
-                            })
-                          }
-                          onRemove={posts.remove}
-                          onRestore={posts.restore}
-                          onSetDate={posts.setPublishedOn}
-                          // 고친 날에는 지금 이 줄이 복사하는 판을 남긴다 — 「본문 다시 복사」로 붙여 넣은 글이다.
-                          onAddEdit={(postId, editedOn) =>
-                            posts.addEdit(postId, {
-                              editedOn,
-                              ...(row.article.draft ? { draftGeneratedAt: row.article.draft.generatedAt } : {}),
-                              ...(row.needsAdapt && adaptations?.[row.article.action.id]?.[row.target.id]
-                                ? { adaptationSourceKey: adaptations[row.article.action.id]![row.target.id]!.sourceKey }
-                                : {}),
-                            })
-                          }
-                          onRemoveEdit={posts.removeEdit}
-                        />
-                      ) : null
-                    }
+                    urlSlot={urlSlotOf}
                   />
                 ) : (
                   // 초안 라우트가 없는 환경(웹) — 올릴 글이 없으니 채널 카드로 근거 · 상태만 보인다.
@@ -1948,6 +2018,40 @@ export default function GapActions() {
             </details>
           </section>
         </>
+      )}
+
+      {ready && drawerArticle && drafts !== null && (
+        // 글 서랍 — 그 글의 카드(확인 · 사진)와 그 글의 올리기 줄(채널별 복사 · 주소 적기). 이전/다음은 지금 보이는 목록 차례.
+        <ArticleDrawer
+          title={drawerArticle.draft ? draftTitle(effectiveDraft(drawerArticle.draft)) : drawerArticle.action.title}
+          position={`${drawerIndex + 1} / ${shownCards.length}`}
+          onClose={() => setDrawerPick({ tenantId: tenant.tenantId, id: '' })}
+          onPrev={drawerIndex > 0 ? () => openDrawerAt(drawerIndex - 1) : null}
+          onNext={drawerIndex < shownCards.length - 1 ? () => openDrawerAt(drawerIndex + 1) : null}
+        >
+          <div key={drawerArticle.action.id} className="article-drawer-content">
+            {cardOf(drawerArticle)}
+            {(() => {
+              const rows = shownPlan.rows.filter((r) => r.article.action.id === drawerArticle.action.id)
+              if (rows.length === 0) return null
+              return (
+                <section className="article-drawer-publish">
+                  <h3 className="step-head">올리기 <span className="muted">— 채널마다 한 줄</span></h3>
+                  <PublishList
+                    tenantId={tenant.tenantId}
+                    plan={{ ...shownPlan, articles: [drawerArticle], rows }}
+                    settings={publishSettings}
+                    adaptations={adaptations}
+                    onAdapted={onAdapted}
+                    focusId={focusId}
+                    onShowArticle={() => document.getElementById(`action-${drawerArticle.action.id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })}
+                    urlSlot={urlSlotOf}
+                  />
+                </section>
+              )
+            })()}
+          </div>
+        </ArticleDrawer>
       )}
     </>
   )
