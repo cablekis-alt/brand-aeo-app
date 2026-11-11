@@ -143,6 +143,19 @@ const JUDGE_SECONDS = 4;
  * 계정의 월 검색 수 비율). 모르는 요금제면 환산하지 않는다(null).
  */
 const PLAN_PRICE_USD: Readonly<Record<string, number>> = { Free: 0, Starter: 25, Developer: 75, Production: 150, 'Big Data': 275 };
+
+/**
+ * 계정의 요금제 이름(account.json plan_name) → 월 요금(USD). 실제 응답은 「Starter Plan」처럼 끝에 「Plan」이 붙어 와서(2026-11-10 계정 확인)
+ * 표의 이름과 바로 맞지 않았다 — 끝의 「Plan」을 떼고 대소문자 · 띄어쓰기를 접어 맞춘다. 모르는 요금제면 null(환산하지 않는다).
+ */
+export function aioPlanPriceUsd(planName: string | null | undefined): number | null {
+  const fold = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  const name = fold(planName ?? '').replace(/\s*plan$/, '');
+  if (!name) return null;
+  const hit = Object.entries(PLAN_PRICE_USD).find(([k]) => fold(k) === name);
+  return hit ? hit[1] : null;
+}
+
 /** 다시 검색하는 못 읽음 — 응답은 받았는데 내용이 비었거나 깨진 것. 토큰이 너무 김 · 후속 요청 실패(시간 초과 · HTTP 오류) · 몫에 막힘은 하지 않는다. */
 const RESEARCHABLE: ReadonlySet<AioUnreadableReason> = new Set(['overview-error', 'overview-empty', 'overview-shape', 'follow-up-error', 'follow-up-empty', 'follow-up-shape']);
 
@@ -1277,7 +1290,7 @@ export async function planGoogleAio(tenant: TenantConfig, body: unknown): Promis
   const resumeRunId = resume?.runId ?? null;
   const lastRunAt = latestStart(runs.filter((r) => r.runId !== resumeRunId));
   const daysSince = lastRunAt ? daysBetween(kstDate(lastRunAt) ?? todayKst(), todayKst()) : null;
-  const price = quota?.planName ? PLAN_PRICE_USD[quota.planName] : undefined;
+  const price = aioPlanPriceUsd(quota?.planName) ?? undefined;
   return {
     planId,
     expiresAt: planId ? new Date(now + PLAN_TTL_MS).toISOString() : null,

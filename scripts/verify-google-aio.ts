@@ -1102,7 +1102,9 @@ const account = (over: Record<string, unknown> = {}) => ({
   api_key: FAKE_KEY,
   account_email: 'fake-owner@example.test',
   account_status: 'Active',
-  plan_name: 'Starter',
+  // 실제 account.json은 「Starter Plan」처럼 끝에 「Plan」이 붙는다(2026-11-10 계정 확인) — 가짜도 그 모양으로 둔다. 앞선 판의 'Starter'는
+  // 실제와 달라 확인창의 검색당 환산이 늘 빠지는 것을 시험이 잡지 못했다(2026-11-11 첫 회차에서 발견).
+  plan_name: 'Starter Plan',
   searches_per_month: 1000,
   plan_searches_left: 990,
   extra_credits: 0,
@@ -1288,6 +1290,16 @@ const LEDGER_C = path.join(dirC, 'serpapi-usage.json')
 const aio = await import('../server/googleAio')
 const serp = await import('../server/serpApi')
 const tracker = await import('../server/measureTracker')
+
+// 요금제 이름 → 월 요금(USD) — 실제 응답의 끝 「Plan」 · 대소문자 · 띄어쓰기를 접어 맞춘다(2026-11-11 첫 회차 확인창에서 발견).
+ok(
+  'C 요금 — 「Starter Plan」 · 「Starter」 · 「starter  plan」은 모두 $25, 「Big Data Plan」 $275, 「Free Plan」 $0',
+  aio.aioPlanPriceUsd('Starter Plan') === 25 && aio.aioPlanPriceUsd('Starter') === 25 && aio.aioPlanPriceUsd(' starter  plan ') === 25 && aio.aioPlanPriceUsd('Big Data Plan') === 275 && aio.aioPlanPriceUsd('Free Plan') === 0,
+)
+ok(
+  'C 요금 — 모르는 요금제 · 빈 이름 · 「Plan」만은 null(환산하지 않는다)',
+  aio.aioPlanPriceUsd('Enterprise Plan') === null && aio.aioPlanPriceUsd('') === null && aio.aioPlanPriceUsd(null) === null && aio.aioPlanPriceUsd(undefined) === null && aio.aioPlanPriceUsd('Plan') === null,
+)
 
 const OK_TEXT = JSON.stringify({ targetBrand: { mentioned: true, mentionCount: 1, mentions: [{ mentionOrder: 1, sentence: '뷰성형외과는 조용한 가짜 병원이에요.', sentiment: 'neutral' }] }, competitorMentions: [{ name: '강남성형A', mentionCount: 1, mentions: [] }] })
 const judgeOk: AioJudgeFn = async () => ({ text: OK_TEXT, citations: [], usedWebSearch: false, model: 'fake-judge-1', inputTokens: 100, outputTokens: 20, thoughtTokens: 30 })
@@ -2109,6 +2121,7 @@ try {
     p1.status === 200 && typeof p1.body.planId === 'string' && p1.body.questions === 5 && p1.body.maxSearches === 12 && p1.body.maxJudgeCalls === 5 && p1.body.quota?.cap === 250 && p1.body.quota.floor === 500 && p1.body.quota.hourLeft === 200 && p1.body.judge.ready === true && p1.body.lastRunAt === null && p1.body.expectedMinutes.length === 2 && searchesSeen().length === before,
     p1.body,
   )
+  ok('B 계획 — 요금제 「Starter Plan」이면 검색당 환산이 나온다($25 / 월 1,000회)', near(p1.body.perSearchUsd ?? NaN, 0.025), p1.body.perSearchUsd)
   accountBody = account({ this_hour_searches: 195 })
   const rLow = await runPlan('vaio-a', p1.body.planId)
   accountBody = account()
