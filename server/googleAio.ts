@@ -106,12 +106,14 @@ import { thoughtTokensOf } from './usageStats.js';
  *   판정 빈 응답 계수(브랜드 측정의 판정 차단기)는 되돌리지 않는다 — 되돌리는 것은 측정 시작뿐이다. 끝까지 갔어도 잰 문항이 90% 미만이면
  *   'done'이 아니라 'partial'(coverage — 요약 · 추이에 쓰지 않는다).
  * - 멈춤: 401 · 403 · 400 · 429(결제 주기 소진 · 시간당) · 계정 · 장부 · 몫 · 바닥 · 시간당에서 바로(남은 질문 0회), 시간 초과 · 5xx가 3번 잇따르면.
- *   시간 초과는 다시 보내지 않는다(이미 과금됐을 수 있다). 몫 · 바닥에 막혀 후속을 못 보낸 질문은 「못 읽음」. 후속이 HTTP 400이어도 그 질문은
- *   「못 읽음」, 회차는 멈춘다(같은 요청은 다 실패하는 쪽 — 돈이 나가지 않는 쪽). 중단 · 이 PC 끔 · 브랜드 측정 시작(G3)은 다음 검색 전에 본다.
+ *   시간 초과는 다시 보내지 않는다(이미 과금됐을 수 있다). 몫 · 바닥에 막혀 후속을 못 보낸 질문은 「못 읽음」. 후속이 HTTP 400이면(만료된
+ *   page_token — 길이 초과는 보내기 전에 aioParamsFit이 가른다) 그 질문만 「못 읽음(follow-up-failed)」으로 두고 다음 질문으로 간다 — 다만
+ *   잇따름에 세어 3번 잇따르면 멈춘다(2026-11-11 사용자 결정 ②). 첫 검색의 400은 그대로 바로 멈춘다. 중단 · 이 PC 끔 · 브랜드 측정 시작(G3)은
+ *   다음 검색 전에 본다.
  * - 끊긴 회차: 실행기 없이 'running'인 파일은 GET에서 'interrupted'로만 보이고(읽기 길에서는 쓰지 않는다), 다음 시작 · 다시 판정 때 한 번 고친다
  *   — 날아가던 검색의 질문은 「못 읽음(interrupted)」으로 마무리한다(보낸 검색은 셌고 다시 보내지 않는다). 다른 창이 AI 개요 잠금을 쥐고 있으면
- *   그 창의 회차일 수 있어 끊김으로 보이지 않는다. 이어 재기는 같은 한국 날짜 · 같은 조건 서명 · 같은 질문 지문인 멈춘 회차의 남은 질문만
- *   보낸다(이중 과금 없음).
+ *   그 창의 회차일 수 있어 끊김으로 보이지 않는다. 이어 재기는 같은 한국 날짜 · 같은 조건 서명 · 같은 판정 엔진(회차를 시작할 때의 엔진 —
+ *   2026-11-11 사용자 결정 ③) · 같은 질문 지문인 멈춘 회차의 남은 질문만 보낸다(이중 과금 없음).
  * - 읽기: 회차 파일 · 원장 · 앱 밖 글 · 배정 파일은 브랜드 쓰기 줄(queueTenantWrite) 안에서 읽는다. 자사 · 올린 글 출처는 저장하지 않고 읽을 때
  *   계산한다(자사 주소 · 원장을 고치면 지난 회차에도 바로 적용). 작성자는 배정 글의 키(w1~w8)만 옮긴다. 도는 동안 상태 GET은 메모리의 진행만
  *   준다(2초마다 원장을 읽지 않는다 — 화면을 새로 열었을 때만 ?view=1로 한 번 읽는다).
@@ -162,6 +164,7 @@ const RESUME_TEXT: Record<AioResumeProblem, string> = {
   'not-stopped': '이 회차는 멈춘 회차가 아니라 이어 잴 수 없어요.',
   'other-day': '오늘 시작한 회차만 이어 잴 수 있어요 — 날이 바뀌었으면 새 회차로 재 주세요.',
   conditions: '검색 조건(위치 등)이 그 회차와 달라 이어 잴 수 없어요 — 새 회차로 재 주세요.',
+  'judge-engine': '판정 엔진이 그 회차를 시작할 때와 달라 이어 잴 수 없어요 — 한 회차 안에서 언급 판정 기준이 섞이지 않게, 새 회차로 재 주세요.',
   questions: '질문지가 그 회차와 달라 이어 잴 수 없어요 — 새 회차로 재 주세요.',
   'nothing-left': '이 회차는 남은 질문이 없어요.',
 };
@@ -603,17 +606,23 @@ interface Stop {
 
 type SendOutcome =
   | { ok: true; json: Record<string, unknown> }
-  | { ok: false; sent: boolean; stop: Stop | null; streak: boolean; failedReason: AioFailedReason; message: string };
+  | { ok: false; sent: boolean; stop: Stop | null; streak: boolean; failedReason: AioFailedReason; message: string; httpStatus: number | null };
 
 /** 검색 오류 → 보냈는지 · 멈춤인지 · 잇따름에 세는지. 우리 쪽에서 막힌 것(몫 · 계정 · 장부 · 설정 · 요청 모양)은 보내지 않은 것이다. */
 function failureOf(err: unknown): Omit<Extract<SendOutcome, { ok: false }>, 'ok'> {
-  if (err instanceof SerpApiBudgetError) return { sent: false, stop: { kind: err.kind, message: err.message, state: 'partial' }, streak: false, failedReason: 'upstream', message: err.message };
+  if (err instanceof SerpApiBudgetError) return { sent: false, stop: { kind: err.kind, message: err.message, state: 'partial' }, streak: false, failedReason: 'upstream', message: err.message, httpStatus: null };
   if (!(err instanceof SerpApiError)) throw err;
   const message = scrubSerpKey(err.message);
-  if (err.kind === 'timeout' || err.kind === 'upstream') return { sent: true, stop: null, streak: true, failedReason: err.kind, message };
+  if (err.kind === 'timeout' || err.kind === 'upstream') return { sent: true, stop: null, streak: true, failedReason: err.kind, message, httpStatus: err.httpStatus };
   const preSend = err.kind === 'no-key' || err.kind === 'config' || err.kind === 'account' || err.kind === 'ledger' || (err.kind === 'bad-request' && err.httpStatus === null);
-  return { sent: !preSend, stop: { kind: err.kind, message, state: 'partial' }, streak: false, failedReason: 'upstream', message };
+  return { sent: !preSend, stop: { kind: err.kind, message, state: 'partial' }, streak: false, failedReason: 'upstream', message, httpStatus: err.httpStatus };
 }
+
+/**
+ * 후속(늦게 오는 개요)이 보낸 뒤 HTTP 400으로 돌아왔는가 — 만료되거나 받지 않는 page_token이다(길이 초과는 보내기 전에 aioParamsFit이 거른다).
+ * 그 질문만 「못 읽음」으로 두고 잇따름에 센다(2026-11-11 사용자 결정 ②). 첫 검색의 400은 요청 모양 문제라 그대로 바로 멈춘다.
+ */
+const isFollowUpTokenRejected = (f: Extract<SendOutcome, { ok: false }>): boolean => f.sent && f.stop?.kind === 'bad-request' && f.httpStatus === 400;
 
 /**
  * 검색 한 번 — 회차의 M에 닿았으면 보내지 않는다. 보내기 전에 회차 검색 수를 올리고 날아가는 검색(inFlight)과 함께 회차 파일에 적는다(공용 장부와
@@ -622,7 +631,7 @@ function failureOf(err: unknown): Omit<Extract<SendOutcome, { ok: false }>, 'ok'
 async function sendOnce(run: AioRun, search: AioSearchFn, params: Record<string, string>, beforeSend: () => Promise<void>): Promise<SendOutcome> {
   if (run.usage.searches >= run.maxSearches) {
     const message = `이 회차의 최대 검색 수(${run.maxSearches}회)에 닿아 멈췄어요.`;
-    return { ok: false, sent: false, stop: { kind: 'max-searches', message, state: 'partial' }, streak: false, failedReason: 'upstream', message };
+    return { ok: false, sent: false, stop: { kind: 'max-searches', message, state: 'partial' }, streak: false, failedReason: 'upstream', message, httpStatus: null };
   }
   run.usage.searches += 1;
   await beforeSend();
@@ -697,6 +706,7 @@ async function searchQuestion(
           }
           const reason: AioUnreadableReason = follow.sent ? 'follow-up-failed' : 'follow-up-blocked';
           const item = aioItemOf(ref, { status: 'unreadable', reason, topKeys: [], searchId: read1.searchId }, { fetchedAt: now(), searches, error: follow.message });
+          if (isFollowUpTokenRejected(follow)) return { item, text: null, stop: null, streak: true };
           return { item, text: null, stop: follow.stop, streak: follow.stop ? undefined : follow.streak };
         }
         searches += 1;
@@ -1035,10 +1045,10 @@ export interface GoogleAioStatusView {
   resumable: { runId: string; remaining: number } | null;
 }
 
-/** 이어 잴 수 있는 가장 최근 회차(오늘 · 같은 조건 · 같은 지문 · 남은 질문). */
+/** 이어 잴 수 있는 가장 최근 회차(오늘 · 같은 조건 · 같은 판정 엔진 · 같은 지문 · 남은 질문). */
 function resumableOf(runs: readonly AioRun[], pilot: Pilot, pick: QuestionPick | null): { runId: string; remaining: number } | null {
   if (!pilot.ok || !pick) return null;
-  const want = { today: todayKst(), signature: pilot.signature, fingerprint: pick.set.hash };
+  const want = { today: todayKst(), signature: pilot.signature, fingerprint: pick.set.hash, judgeEngine: usedJudgeEngineId() };
   const run = [...runs].sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt)).find((r) => aioResumeProblem(r, want) === null && resumeNeed(r) > 0);
   return run ? { runId: run.runId, remaining: aioRemaining(run).length } : null;
 }
@@ -1198,11 +1208,17 @@ async function gate(tenant: TenantConfig): Promise<{ settings: AioSettings; pilo
  * 이어 재기 대상 — view가 끊긴 'running'을 고친 모양(interrupted · 날아가던 질문은 「못 읽음」)으로 보인다(계획은 읽기 길의 effective, 실행 준비는
  * 잠금을 쥐었으니 'running'이면 모두 끊긴 회차). 맞으면 그 모양(남은 질문 · 최대 검색을 그것으로 센다), 아니면 그 까닭.
  */
-function resumeCheck(run: AioRun | undefined, pilot: Extract<Pilot, { ok: true }>, pick: QuestionPick, view: (run: AioRun) => AioRun): { ok: true; run: AioRun } | { ok: false; message: string } {
+function resumeCheck(
+  run: AioRun | undefined,
+  pilot: Extract<Pilot, { ok: true }>,
+  pick: QuestionPick,
+  judgeEngine: string,
+  view: (run: AioRun) => AioRun,
+): { ok: true; run: AioRun } | { ok: false; message: string } {
   if (!run) return { ok: false, message: '이어 잴 회차를 찾지 못했어요.' };
   if (rejudging?.runId === run.runId && rejudging.tenantId === run.tenantId) return { ok: false, message: '그 회차를 다시 판정하는 중이에요 — 끝난 뒤 이어 재 주세요.' };
   const shown = view(run);
-  const problem = aioResumeProblem(shown, { today: todayKst(), signature: pilot.signature, fingerprint: pick.set.hash });
+  const problem = aioResumeProblem(shown, { today: todayKst(), signature: pilot.signature, fingerprint: pick.set.hash, judgeEngine });
   if (problem) return { ok: false, message: RESUME_TEXT[problem] };
   if (resumeNeed(shown) <= 0) return { ok: false, message: `이 회차는 최대 검색 수(${run.maxSearches}회)를 다 써서 이어 잴 수 없어요 — 새 회차로 재 주세요.` };
   return { ok: true, run: shown };
@@ -1232,6 +1248,7 @@ export async function planGoogleAio(tenant: TenantConfig, body: unknown): Promis
       runs.find((r) => r.runId === resumeId),
       pilot,
       picked.pick,
+      judge.engine,
       (r) => effective(r, elsewhere),
     );
     if (!checked.ok) throw new GoogleAioError(checked.message, 409, 'resume');
@@ -1379,6 +1396,7 @@ async function prepareRun(tenant: TenantConfig, stored: StoredPlan) {
       runs.find((r) => r.runId === stored.resumeRunId),
       pilot,
       pick,
+      judgeEngine,
       (r) => (r.state === 'running' ? interruptedOf(r) : r),
     );
     if (!checked.ok) throw new GoogleAioError(`${PLAN_CHANGED} ${checked.message}`, 409, 'plan-changed');

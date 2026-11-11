@@ -808,8 +808,18 @@ const IDS50 = Array.from({ length: 50 }, (_, i) => `c1-${String(i + 1).padStart(
 {
   const startedAt = '2026-11-10T15:30:00.000Z' // KST 2026-11-11 00:30
   const part = mkRun({ startedAt, state: 'partial', items: [item('c1-001', 'shown', { ...judged(true), text: 'x' }), item('c1-002', 'absent')] })
-  const want = { today: '2026-11-11', signature: SIG, fingerprint: QSET10.hash }
-  ok('이어 재기 — 같은 KST 날 · 같은 서명 · 같은 지문이면 된다', aioResumeProblem(part, want) === null, aioResumeProblem(part, want))
+  const want = { today: '2026-11-11', signature: SIG, fingerprint: QSET10.hash, judgeEngine: 'gemini' }
+  ok('이어 재기 — 같은 KST 날 · 같은 서명 · 같은 판정 엔진 · 같은 지문이면 된다', aioResumeProblem(part, want) === null, aioResumeProblem(part, want))
+  // 2026-11-11 사용자 결정 ③ — 회차를 시작할 때의 판정 엔진과 지금 엔진이 다르면 이어 재지 않는다(한 회차 안에서 판정 기준이 섞이지 않게).
+  ok('이어 재기 — 판정 엔진이 회차를 시작할 때와 다르면 거절(judge-engine)', aioResumeProblem(part, { ...want, judgeEngine: 'claude' }) === 'judge-engine')
+  ok(
+    '이어 재기 — 시작 판정 엔진을 모르는 회차(null)도 거절(judge-engine)',
+    aioResumeProblem(mkRun({ startedAt, state: 'partial', judgeEngine: null, items: [item('c1-001', 'absent')] }), want) === 'judge-engine',
+  )
+  ok(
+    '이어 재기 — 중단 · 끊긴 회차도 판정 엔진이 다르면 거절',
+    aioResumeProblem({ ...part, state: 'cancelled' }, { ...want, judgeEngine: 'openai' }) === 'judge-engine' && aioResumeProblem({ ...part, state: 'interrupted' }, { ...want, judgeEngine: 'openai' }) === 'judge-engine',
+  )
   ok('이어 재기 — 남은 문항은 끝 상태가 없는 것만(8개)', same(aioRemaining(part), IDS10.slice(2)))
   ok('이어 재기 — 날이 다르면 거절(other-day)', aioResumeProblem(part, { ...want, today: '2026-11-12' }) === 'other-day')
   ok('이어 재기 — 조건 서명이 다르면 거절(conditions)', aioResumeProblem(part, { ...want, signature: aioConditionSignature(null) }) === 'conditions')
@@ -1457,11 +1467,45 @@ const shownItems = (r: AioRun) => r.items.filter((i) => i.status === 'shown')
   )
   const re2 = await core(['errtwice', 'absent'])
   ok('C 다시 검색 — 다시 검색도 못 읽으면 「못 읽음」(그 문항 검색 2)', re2.run.items[0]?.status === 'unreadable' && re2.run.items[0]?.reason === 'overview-error' && re2.run.items[0]?.searches === 2 && re2.requests.length === 3, re2.run.items[0])
+  // 2026-11-11 사용자 결정 ② — 후속이 HTTP 400(만료된 page_token)이면 회차 전체를 멈추지 않고 그 질문만 「못 읽음」으로 두고 다음 질문으로 간다.
+  // 앞선 판 기대값(「회차는 멈춘다 · stopReason bad-request · 요청 2」)은 이 결정으로 바뀌었다. 잇따름에는 센다(아래 두 시험).
   const f400 = await core(['f400', 'absent'])
   ok(
-    'C 후속 — 후속이 HTTP 400이면 그 질문은 「못 읽음」, 회차는 멈춘다(같은 요청은 다 실패 — 돈이 안 나가는 쪽)',
-    f400.requests.length === 2 && f400.run.items[0]?.status === 'unreadable' && f400.run.items[0]?.reason === 'follow-up-failed' && f400.run.stopReason === 'bad-request' && f400.sent === 2,
-    { req: f400.requests.length, item: f400.run.items[0], stop: f400.run.stopReason },
+    'C 후속 — 후속이 HTTP 400이면 그 질문만 「못 읽음」(다시 검색 않음), 다음 질문으로 간다(끝까지 · 잰 문항 1/2라 partial · coverage)',
+    f400.requests.length === 3 &&
+      f400.sent === 3 &&
+      f400.run.items.length === 2 &&
+      f400.run.items[0]?.status === 'unreadable' &&
+      f400.run.items[0]?.reason === 'follow-up-failed' &&
+      f400.run.items[0]?.searches === 2 &&
+      f400.run.items[1]?.status === 'absent' &&
+      f400.run.usage.reSearches === 0 &&
+      f400.run.state === 'partial' &&
+      f400.run.stopReason === 'coverage',
+    { req: f400.requests.length, sent: f400.sent, items: f400.run.items.map((i) => [i.status, i.reason ?? null, i.searches]), state: f400.run.state, stop: f400.run.stopReason },
+  )
+  const f400Streak = await core(['f400', 'f400', 'f400', 'absent'])
+  ok(
+    'C 후속 — 후속 HTTP 400이 3번 잇따르면 멈춘다(streak · 네 번째 질문은 0회 · 요청 · 장부 6)',
+    f400Streak.run.state === 'partial' &&
+      f400Streak.run.stopReason === 'streak' &&
+      f400Streak.requests.length === 6 &&
+      f400Streak.sent === 6 &&
+      f400Streak.run.items.length === 3 &&
+      f400Streak.run.items.every((i) => i.status === 'unreadable' && i.reason === 'follow-up-failed' && i.searches === 2),
+    { stop: f400Streak.run.stopReason, req: f400Streak.requests.length, sent: f400Streak.sent, items: f400Streak.run.items.map((i) => [i.reason, i.searches]) },
+  )
+  const f400Reset = await core(['f400', 'f400', 'absent', 'f400', 'f400'])
+  ok(
+    'C 후속 — 후속 400 사이에 받은 응답이 있으면 잇따름을 되돌린다(끝까지 · 요청 9 · 잰 문항 1/5라 partial · coverage)',
+    f400Reset.run.stopReason === 'coverage' && f400Reset.run.state === 'partial' && f400Reset.requests.length === 9 && f400Reset.run.items.length === 5,
+    { stop: f400Reset.run.stopReason, state: f400Reset.run.state, req: f400Reset.requests.length, items: f400Reset.run.items.length },
+  )
+  const k400 = await core(['k400', 'absent'])
+  ok(
+    'C 멈춤 — 첫 검색의 HTTP 400은 그대로 바로 멈춘다(후속 400 예외는 후속에만 · 다음 질문 0회)',
+    k400.run.stopReason === 'bad-request' && k400.requests.length === 1 && k400.run.items.length === 0,
+    { stop: k400.run.stopReason, req: k400.requests.length, items: k400.run.items.length },
   )
   const expired = await core(['expired'])
   ok(

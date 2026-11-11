@@ -852,16 +852,19 @@ export function aioEnoughMeasured(run: AioRun): boolean {
   return planned > 0 && measured * 100 >= planned * AIO_SUMMARY_PCT
 }
 
-export type AioResumeProblem = 'not-stopped' | 'other-day' | 'conditions' | 'questions' | 'nothing-left'
+export type AioResumeProblem = 'not-stopped' | 'other-day' | 'conditions' | 'judge-engine' | 'questions' | 'nothing-left'
 
 /**
- * 이어 재도 되는가 — 멈춘(partial · cancelled · interrupted) 회차가 같은 한국 날짜 · 같은 조건 서명 · 같은 질문 지문이고 남은 문항이 있을 때만.
- * 날이 넘으면 새 회차로 한다(한 회차 표본이 여러 날에 걸치면 흔들림 해석이 섞인다).
+ * 이어 재도 되는가 — 멈춘(partial · cancelled · interrupted) 회차가 같은 한국 날짜 · 같은 조건 서명 · 같은 판정 엔진 · 같은 질문 지문이고 남은 문항이
+ * 있을 때만. 날이 넘으면 새 회차로 한다(한 회차 표본이 여러 날에 걸치면 흔들림 해석이 섞인다). 판정 엔진은 회차를 시작할 때의 엔진
+ * (conditions.judgeEngine)과 지금 엔진을 견준다 — 한 회차 안에서 언급 판정 기준이 섞이지 않게(2026-11-11 사용자 결정 ③). 시작 엔진을 모르는
+ * 회차(null)도 거절한다.
  */
-export function aioResumeProblem(run: AioRun, want: { today: string; signature: string; fingerprint: string }): AioResumeProblem | null {
+export function aioResumeProblem(run: AioRun, want: { today: string; signature: string; fingerprint: string; judgeEngine: string }): AioResumeProblem | null {
   if (run.state !== 'partial' && run.state !== 'cancelled' && run.state !== 'interrupted') return 'not-stopped'
   if (kstDate(run.startedAt) !== want.today) return 'other-day'
   if (run.conditions.modelsUsed.aio !== want.signature) return 'conditions'
+  if (run.conditions.judgeEngine !== want.judgeEngine) return 'judge-engine'
   if (run.questionSet.hash !== want.fingerprint) return 'questions'
   if (aioRemaining(run).length === 0) return 'nothing-left'
   return null
