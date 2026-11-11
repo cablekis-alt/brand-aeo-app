@@ -1,6 +1,5 @@
-import { AUTO_LATE_DAY, AUTO_TURN_DAY } from './indexAuto'
 import { planWriters, type WriterPlan } from './probePlan'
-import { addDays, type PublishStatusRow } from './publishStatus'
+import type { PublishStatusRow } from './publishStatus'
 
 /**
  * 콘텐츠 생성 화면 맨 위 「작성자 진행판」의 숫자 — 작성자마다 초안 · 사진 · 빈칸 처리 · 올림 · 구글 색인과 다음 할 일(2026-11-11 개편 시안,
@@ -11,7 +10,18 @@ import { addDays, type PublishStatusRow } from './publishStatus'
  * 0이 아니라 「확인 불가」(tone 'na')다(memory aeo-unmeasured-metric-policy).
  *
  * 「빈칸 처리」는 앱의 「확인됨」과 같은 뜻이다 — 빈칸을 모두 채우거나 뺀 글. 작성자 묶음은 빈칸 줄을 빼고 내보내므로 다음 할 일에는 넣지 않는다.
+ *
+ * 실행 계획 화면(GapActions.tsx)이 불러오므로 publishStatus.ts · indexAuto.ts는 타입으로만 불러온다 — 둘은 앱 밖 글 모듈(externalPosts.ts)을
+ * 끌어오고, 실행 계획은 그 모듈을 불러오지 않아야 한다(scripts/verify-external-posts.ts 정적 검사). 그래서 구글 자동 확인 날(14일째 · 30일째)과
+ * 날짜 더하기를 여기 따로 두고, verify-content-progress가 indexAuto.ts의 AUTO_TURN_DAY · AUTO_LATE_DAY와 같은지 본다.
  */
+
+/** 구글 자동 확인 차례 — indexAuto.ts AUTO_TURN_DAY(올린 지 14일째) · AUTO_LATE_DAY(30일째)와 같아야 한다. */
+const GOOGLE_TURN_DAY = 14
+const GOOGLE_LATE_DAY = 30
+
+/** 날짜(YYYY-MM-DD)에 n일을 더한다(publishStatus.ts addDays와 같은 계산). */
+const addDays = (day: string, n: number): string => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
 export type StageTone = 'done' | 'partial' | 'none' | 'na'
 
@@ -96,8 +106,8 @@ export function nextGoogleCheck(row: Pick<PublishStatusRow, 'publishedOn' | 'rec
   if (row.google?.state === 'shown') return null
   const base = row.recheckFrom ?? row.publishedOn
   if (!base) return null
-  if (!row.google) return addDays(base, AUTO_TURN_DAY)
-  const late = addDays(base, AUTO_LATE_DAY)
+  if (!row.google) return addDays(base, GOOGLE_TURN_DAY)
+  const late = addDays(base, GOOGLE_LATE_DAY)
   return row.google.checkedOn < late ? late : null
 }
 

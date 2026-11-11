@@ -12,8 +12,9 @@ import {
   showsArticle,
   stageTone,
 } from '../src/lib/contentProgress'
+import { AUTO_LATE_DAY, AUTO_TURN_DAY } from '../src/lib/indexAuto'
 import type { WriterPlan, WriterPlanArticle } from '../src/lib/probePlan'
-import type { PublishStatusRow } from '../src/lib/publishStatus'
+import { addDays, type PublishStatusRow } from '../src/lib/publishStatus'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -133,6 +134,15 @@ ok('다음 확인 — 확인 전이면 14일째', nextGoogleCheck(row('x', { rec
 ok('다음 확인 — 자동 「아직」(14일째에 봄)이면 30일째', nextGoogleCheck(row('x', { recheckFrom: '2026-11-09', google: notYetAuto })) === '2026-12-09')
 ok('다음 확인 — 30일째 넘어 이미 봤으면 없음', nextGoogleCheck(row('x', { recheckFrom: '2026-10-01', google: notYetAuto })) === null)
 ok('다음 확인 — 올린 날 · 추적 시작일을 모르면 없음', nextGoogleCheck(row('x', { recheckFrom: null, publishedOn: null })) === null)
+// 진행판은 실행 계획 화면이 불러오므로 indexAuto · publishStatus를 런타임에 불러오지 않고 날짜 규칙을 따로 둔다 — 둘이 어긋나지 않는지 본다.
+ok(
+  '다음 확인 — 14일째 · 30일째가 indexAuto.ts(AUTO_TURN_DAY · AUTO_LATE_DAY) · publishStatus.ts addDays와 같음',
+  ['2026-01-31', '2026-02-20', '2026-12-25'].every(
+    (d) =>
+      nextGoogleCheck(row('x', { recheckFrom: d })) === addDays(d, AUTO_TURN_DAY) &&
+      nextGoogleCheck(row('x', { recheckFrom: d, google: { ...notYetAuto, checkedOn: addDays(d, AUTO_TURN_DAY) } })) === addDays(d, AUTO_LATE_DAY),
+  ),
+)
 
 // ── 거르기 ──
 const posted = postedArticleIds(statusRows)!
