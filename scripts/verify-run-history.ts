@@ -378,28 +378,27 @@ try {
 
   const React = await import('react')
   const { renderToStaticMarkup } = await import('react-dom/server')
+  const { MemoryRouter } = await import('react-router-dom')
   Object.assign(globalThis, { React })
   const { default: RunTrendPanel } = await import('../src/components/RunTrendPanel')
+  // 패널이 발행 현황으로 가는 링크를 달아 라우터 안에서 그린다.
+  const render = (history: RunHistory) =>
+    renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(RunTrendPanel, { history, selectedWeek: '2026-W44' })))
   const withLegacy: RunHistory = { ...hist, points: [point('old', '2026-10-26T01:00:00Z', { kind: 'week-file', runId: null, weekCard: 'week-file', engines: null }), ...pts], posts: hist.posts.map((r) => ({ ...r, cells: [null, ...r.cells] })) }
-  const html = renderToStaticMarkup(React.createElement(RunTrendPanel, { history: withLegacy, selectedWeek: '2026-W44' }))
+  const html = render(withLegacy)
   ok('패널: 저장된 신뢰구간 띠 · 중앙값 · 코호트 순위를 그리지 않는다', !html.includes('st-band') && !html.includes('중앙값') && !html.includes('코호트'))
   ok('패널: 일부만 든 회차는 점선 점 · 조건 변경은 마름모 · 옛 기록은 네모', html.includes('rt-dot-partial') && html.includes('st-break-mark') && html.includes('rt-base'))
   ok('패널: 범례에 범위 방식과 쉬운 말', html.includes('Clopper–Pearson') && html.includes('대략의 범위') && html.includes('같은 26문항을 엔진 2곳에'))
-  ok('패널: 글 요약 — 첫 인용 확인 D+8(직전 D+6) · 인용된 회차 1/3 · 엔진 빠진 회차(Gemini)', html.includes('첫 인용 확인 D+8(직전 인용 없음 D+6)') && html.includes('인용된 회차 1/3') && html.includes('엔진 빠진 회차 1(Gemini)'))
-  ok('패널: 글별 95% 범위는 싣지 않는다', !/인용된 회차 1\/3 \(95%/.test(html))
+  // 글별 줄은 그리지 않는다(2026-11-12) — 작성자 글이 80편을 넘자 줄이 85개가 돼 그림이 읽히지 않았다. 글마다의 인용은 발행 현황.
+  ok('패널: 글 목록 · 글별 인용 점 · 글 이름(글1a)을 그리지 않는다', !html.includes('글1a') && !html.includes('첫 인용 확인') && !html.includes('rt-mark') && !html.includes('인용된 회차'))
+  ok('패널: 글마다의 인용은 발행 현황 「AI 인용」 칸으로 안내(링크)', html.includes('href="/publish-status"') && html.includes('「AI 인용」 칸'))
+  ok('패널: 올린 날은 번호 없는 세로선 하나 — 점 제목에 편 수 · 제목', (html.match(/class="st-exec-pin"/g) ?? []).length === 1 && html.includes('10/21 올린 글 2편') && html.includes('「글 x」') && !html.includes('st-exec-num'))
+  ok('패널: 색인 대기 띠를 그리지 않는다', !html.includes('rt-grace'))
   ok('패널: 회차 표에 엔진 성공/예정', html.includes('Gemini 12/26'))
-  ok('패널: 같은 날 올린 글은 줄 이름으로 가른다(글1a · 글1b)', html.includes('글1a') && html.includes('글1b'))
   ok('패널: 카테고리 무관 질문이라고 밝힌다', html.includes('카테고리 무관 질문'))
   ok('패널: 점수는 조건 섞임이면 평균 안 냄', html.includes('조건 섞임 — 평균 안 냄'))
-  ok('패널: 날짜별 합계 표와 안내(평균 아님 · 날짜끼리 견주지 않기)', html.includes('날짜별 합계') && html.includes('평균이 아닙니다') && html.includes('글1a 인용된 회차 0/2 · 색인 대기'))
-  ok('패널: 색인 대기가 끝나는 날(10/21 + 14일 = 11/4)', html.includes('색인 대기 · 11/4 측정부터 판단'))
-  const downHtml = renderToStaticMarkup(
-    React.createElement(RunTrendPanel, {
-      history: { ...hist, posts: [{ ...hist.posts[1]!, post: { ...hist.posts[1]!.post, removedAt: '2026-10-30T05:00:00Z', removedReason: 'taken-down' } }] },
-      selectedWeek: '2026-W44',
-    }),
-  )
-  ok('패널: 내린 글에는 판단 날짜를 약속하지 않는다', downHtml.includes('색인 대기(14일) 중 내림') && !downHtml.includes('측정부터 판단'))
+  ok('패널: 날짜별 합계 표와 안내(평균 아님 · 날짜끼리 견주지 않기) · 글 칸 없음', html.includes('날짜별 합계') && html.includes('평균이 아닙니다') && !html.includes('rt-day-posts'))
+  ok('패널: 올린 글이 없으면 발행 현황 안내 · 세로선도 없음', ((h) => !h.includes('/publish-status') && !h.includes('st-exec-pin'))(render({ ...hist, posts: [] })))
 } finally {
   delete process.env.COLLECT_ENGINES
   rmSync(dir, { recursive: true, force: true })

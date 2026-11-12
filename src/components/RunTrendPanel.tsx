@@ -1,44 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { RunHistory, RunPoint, RunPostCell } from '../lib/api'
+import { Link } from 'react-router-dom'
+import type { RunHistory, RunPoint } from '../lib/api'
 import { ENGINE_LABEL } from '../lib/format'
-import { engineName, INDEXING_GRACE_DAYS, monthDay } from '../lib/publishTracking'
-import { buildRunTrend, dayLabel, kstStamp, pct, type RunMark, type RunTrendModel } from '../lib/runTrend'
+import { monthDay } from '../lib/publishTracking'
+import { buildRunTrend, dayLabel, kstStamp, pct, type RunPin } from '../lib/runTrend'
 
 const MIN_W = 520
 const PAD = { left: 44, right: 16 }
-const PIN_Y = 12
-const ROWS_TOP = 28
-const ROW_H = 16
+const PIN_Y = 10
+const GRAPH_TOP = 34
 const GRAPH_H = 150
 const BOTTOM = 40
+/** 올린 날 점 제목에 늘어놓는 글 제목 수 — 하루 수십 편이면 나머지는 「외 n편」. */
+const PIN_TITLES = 5
 
 const shortWeek = (weekOf: string) => weekOf.replace(/^\d{4}-/, '')
-
-/** "2026-10-21" + 14 → "2026-11-04". */
-const addDays = (date: string, n: number) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
-
-/**
- * 날짜별 합계의 글 칸 — 「글1 인용된 회차 0/2 · 색인 대기」 · 「글2 올리기 전 1회 · 인용된 회차 0/1」. 숫자는 회차 수다(같은 줄의 다른 k/N은
- * 응답 수라 단위를 밝힌다). 그날 알 것이 없으면 null.
- */
-function dayPostText(p: NonNullable<RunTrendModel['daily']>[number]['posts'][number]): string | null {
-  const parts: string[] = []
-  if (p.before > 0) parts.push(`올리기 전 ${p.before}회`)
-  if (p.measured > 0) parts.push(`인용된 회차 ${p.cited}/${p.measured}${p.cited === 0 && p.grace === p.measured ? ' · 색인 대기' : ''}`)
-  if (p.unsure > 0) parts.push(`전후 불명 ${p.unsure}회`)
-  if (p.removed > 0) parts.push(`내린 뒤 ${p.removed}회`)
-  return parts.length > 0 ? `${p.name} ${parts.join(' · ')}` : null
-}
-
-const MARK_TEXT: Record<RunMark, string> = {
-  cited: '인용됨',
-  none: '인용 없음',
-  grace: `인용 없음 · 올린 지 ${INDEXING_GRACE_DAYS}일 안(색인 대기)`,
-  unsure: '전후 불명(측정하던 날 올림)',
-  weak: '인용 없음 · 엔진이 빠진 회차(근거 약함)',
-  skip: '',
-  unknown: '판정 기록 없음',
-}
 
 /** 회차의 엔진 성공/예정 — 「ChatGPT 26/26 · Gemini 12/26」. 예정 수를 모르는 옛 기록은 쓴 엔진만. */
 function engineCounts(p: RunPoint): string {
@@ -48,20 +24,6 @@ function engineCounts(p: RunPoint): string {
       .join(' · ')
   }
   return p.enginesUsed.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')
-}
-
-function markTitle(p: RunPoint, c: RunPostCell | null, mark: RunMark): string {
-  const parts = [p.at ? kstStamp(p.at) : shortWeek(p.weekOf)]
-  if (c?.daysAfterPublish !== null && c?.daysAfterPublish !== undefined) parts.push(`D+${c.daysAfterPublish}`)
-  parts.push(MARK_TEXT[mark])
-  if (c && c.cited > 0) {
-    const engines = Object.entries(c.byEngine)
-      .map(([e, n]) => `${ENGINE_LABEL[e] ?? e} ${n}`)
-      .join(' · ')
-    parts.push(`인용 응답 ${c.cited}${engines ? `(${engines})` : ''}${c.unnamedCited !== null ? ` · 이름 없는 질문 ${c.unnamedCited}` : ''}`)
-  }
-  if (p.partialEngines.length || p.missingEngines.length) parts.push(`엔진: ${engineCounts(p)}`)
-  return parts.join(' · ')
 }
 
 /** 점 제목 — 측정 시각 · 순위 응답 · 엔진 · 주 카드 여부. */
@@ -78,37 +40,21 @@ function dotTitle(p: RunPoint): string {
   return lines.join('\n')
 }
 
-function MarkShape({ mark, cx, cy, title }: { mark: RunMark; cx: number; cy: number; title: string }) {
-  if (mark === 'skip') return null
-  const t = <title>{title}</title>
-  if (mark === 'unknown' || mark === 'weak') {
-    return (
-      <text className={`rt-mark-text ${mark}`} x={cx} y={cy + 4} textAnchor="middle">
-        {t}
-        {mark === 'unknown' ? '?' : '–'}
-      </text>
-    )
-  }
-  if (mark === 'unsure') {
-    return (
-      <g className="rt-mark unsure">
-        {t}
-        <circle cx={cx} cy={cy} r={4.5} />
-        <path d={`M ${cx} ${cy - 4.5} A 4.5 4.5 0 0 0 ${cx} ${cy + 4.5} Z`} />
-      </g>
-    )
-  }
-  return (
-    <circle className={`rt-mark ${mark}`} cx={cx} cy={cy} r={4.5}>
-      {t}
-    </circle>
-  )
+/** 올린 날 점 제목 — 「10/21 올린 글 2편」과 제목 몇 개. 같은 글을 두 곳에 올리면 제목이 같아 올린 곳을 붙인다. */
+function pinTitle(pin: RunPin): string {
+  const titles = pin.postings.map((p) => `「${p.post.articleTitle ?? p.post.articleId}」 ${p.places.join(' · ')}`.trim())
+  const more = titles.length > PIN_TITLES ? [`외 ${titles.length - PIN_TITLES}편`] : []
+  return [`${monthDay(pin.date)} 올린 글 ${titles.length}편`, ...titles.slice(0, PIN_TITLES), ...more].join('\n')
 }
 
 /**
- * 측정 회차별 보기 — 성과 화면. 같은 주에 여러 번 잰 회차를 시간순으로 늘어놓고, 올린 글이 회차마다 인용됐는지와 이름 없는
- * 질문의 답에서 순위와 함께 불린 응답 k/N을 앞세운다. 점수는 보조 한 줄이다(server/runHistory.ts 머리 주석). 회차 사이 대비 칩 ·
- * 저장된 신뢰구간 띠 · 코호트 순위는 그리지 않는다.
+ * 측정 회차별 보기 — 성과 화면. 같은 주에 여러 번 잰 회차를 시간순으로 늘어놓고, 이름 없는 질문의 답에서 순위와 함께 불린 응답
+ * k/N을 앞세운다. 점수는 보조 한 줄이다(server/runHistory.ts 머리 주석). 회차 사이 대비 칩 · 저장된 신뢰구간 띠 · 코호트 순위는
+ * 그리지 않는다.
+ *
+ * 글별 줄(글 목록 · 회차마다 인용 점 · 날짜별 합계의 글 칸 · 회차 표의 글 열)은 뺐다(2026-11-12 사용자 「뭘 의미하는지 어렵게 되어
+ * 있네요」) — 작성자 글이 브랜드마다 80편을 넘자 군산각에서 줄이 85개, 절 높이가 1만 px을 넘어 본론인 회차 점이 맨 아래에 묻혔다.
+ * 글마다의 인용은 발행 현황 「AI 인용」 칸과 정기진단 보고서 「집행한 글과 인용」 표가 보인다. 올린 날만 번호 없는 세로선으로 남긴다.
  */
 export default function RunTrendPanel({
   history,
@@ -143,12 +89,11 @@ export default function RunTrendPanel({
   const dayW = Math.max(24, (Math.max(MIN_W, boxW) - PAD.left - PAD.right) / days)
   const W = PAD.left + PAD.right + dayW * days
   const innerW = dayW * days
-  const graphTop = ROWS_TOP + m.rows.length * ROW_H + 18
-  const H = graphTop + GRAPH_H + BOTTOM
+  const H = GRAPH_TOP + GRAPH_H + BOTTOM
   const x = (pos: number) => PAD.left + (pos / days) * innerW
   const maxUpper = Math.max(0, ...points.map((p) => p.ranked?.ci?.upper ?? 0))
   const top = Math.max(0.1, Math.ceil(maxUpper * 20) / 20)
-  const y = (v: number) => graphTop + GRAPH_H - (Math.max(0, Math.min(top, v)) / top) * GRAPH_H
+  const y = (v: number) => GRAPH_TOP + GRAPH_H - (Math.max(0, Math.min(top, v)) / top) * GRAPH_H
   const ticks = [0, top / 2, top]
   const weekStarts = m.days.map((d, i) => ({ d, i })).filter(({ d }) => new Date(`${d}T00:00:00Z`).getUTCDay() === 1)
   const dailyTicks = dayW >= 36
@@ -176,89 +121,19 @@ export default function RunTrendPanel({
       ? `같은 ${latest.agnosticQuestions}문항을 엔진 ${engineCount}곳에${(latest.repeatsPerQuestion ?? 1) > 1 ? ` ${latest.repeatsPerQuestion}번씩` : ''} 물어 응답끼리 함께 움직이므로 실제 흔들림은 이 범위보다 큽니다.`
       : '응답끼리 함께 움직이므로 실제 흔들림은 이 범위보다 큽니다.'
 
-  const latestDays = (cells: (RunPostCell | null)[]) =>
-    cells.reduce<number | null>((n, c) => (c && c.timing === 'after' && !c.afterRemoval && c.daysAfterPublish !== null ? Math.max(n ?? 0, c.daysAfterPublish) : n), null)
-
   return (
     <div className="run-trend">
       <p className="hint" style={{ marginTop: 0 }}>
-        이 브랜드를 잰 회차를 시간순으로 봅니다. 위 줄은 올린 글이 회차마다 인용됐는지, 아래 점은 카테고리 무관 질문(점수와 같은 기준 —
-        브랜드 이름 없이 묻는 일반 질문)의 답 가운데 우리가 순위와 함께 불린 응답 수입니다.{' '}
+        이 브랜드를 잰 회차를 시간순으로 봅니다. 점은 카테고리 무관 질문(점수와 같은 기준 — 브랜드 이름 없이 묻는 일반 질문)의 답
+        가운데 우리가 순위와 함께 불린 응답 수입니다.{' '}
         {m.sameDay
           ? `같은 날 같은 조건으로 다시 재도 크게 흔들립니다(이 브랜드 ${dayLabel(m.sameDay.date)} ${m.sameDay.scores.length}회 점수 ${m.sameDay.scores.join('·')}) — 회차 하나의 오르내림으로 판단하지 마세요.`
           : '같은 날 다시 재도 크게 흔들릴 수 있습니다 — 회차 하나의 오르내림으로 판단하지 마세요.'}
       </p>
-
-      {m.rows.length === 0 ? (
-        <p className="muted">올린 글 기록이 없어 회차별 인용은 없습니다.</p>
-      ) : (
-        <ul className="rt-post-list">
-          {m.rows.map(({ posting, pin, label, sinceEdit }) => {
-            const r = posting.item
-            const d = latestDays(r.cells)
-            const extras = [
-              ...(r.weakRuns > 0 ? [`엔진 빠진 회차 ${r.weakRuns}${r.weakEngines.length ? `(${r.weakEngines.map(engineName).join(' · ')})` : ''}`] : []),
-              ...(r.unsureRuns > 0 ? [`전후 불명 ${r.unsureRuns}회`] : []),
-            ]
-            let line: string
-            if (r.measuredRuns === 0) line = '올린 뒤 회차 없음 — 다음 측정부터'
-            else if (r.firstCited) {
-              line =
-                `첫 인용 확인 D+${r.firstCited.daysAfterPublish}` +
-                (r.lastUncitedDaysBefore !== null ? `(직전 인용 없음 D+${r.lastUncitedDaysBefore})` : '') +
-                ` · 인용된 회차 ${r.citedRuns}/${r.measuredRuns}` +
-                (r.afterGrace.measured > 0 ? ` · 올린 지 ${INDEXING_GRACE_DAYS}일 지난 회차 ${r.afterGrace.cited}/${r.afterGrace.measured}` : '')
-            } else {
-              // 색인 대기가 끝나는 날 — 올린 지 INDEXING_GRACE_DAYS일째 측정부터 「인용 없음」을 판단한다. 내린 글에는 다시 오지 않을 판단을
-              // 약속하지 않는다(내린 뒤 회차는 세지 않는다).
-              const graceEnd = r.post.publishedOn && !r.post.removedAt ? addDays(r.post.publishedOn, INDEXING_GRACE_DAYS) : null
-              line =
-                `아직 인용 없음 · 회차 0/${r.measuredRuns}` +
-                (d !== null ? ` · 올린 지 ${d}일` : '') +
-                (d !== null && d < INDEXING_GRACE_DAYS
-                  ? r.post.removedAt
-                    ? ` · 색인 대기(${INDEXING_GRACE_DAYS}일) 중 내림`
-                    : graceEnd
-                      ? ` · 색인 대기 · ${monthDay(graceEnd)} 측정부터 판단`
-                      : ` · 색인 대기(${INDEXING_GRACE_DAYS}일) 중`
-                  : '')
-            }
-            return (
-              <li key={r.post.id} className="rt-post-line">
-                {pin !== null && (
-                  <span className="st-key exec rt-label" aria-hidden="true">
-                    {label}
-                  </span>
-                )}
-                <b>{r.post.articleTitle ?? r.post.articleId}</b>
-                {posting.places.map((place) => (
-                  <span key={place} className="st st-info">
-                    {place}
-                  </span>
-                ))}
-                <span className="muted">
-                  {r.post.publishedOn ? `${monthDay(r.post.publishedOn)} 올림` : '올린 날 모름'}
-                  {r.post.edits && r.post.edits.length > 0 && ` · ${r.post.edits.map((e) => monthDay(e.editedOn)).join(' · ')} 고침`}
-                </span>
-                <div className="doc-meta">
-                  {line}
-                  {extras.length > 0 && ` · ${extras.join(' · ')}`}
-                </div>
-                {/* 고친 글 — 고친 글을 본 회차만 따로 센다(옛 글 · 새 글을 가르려고). */}
-                {sinceEdit && (
-                  <div className="doc-meta">
-                    {sinceEdit.measured === 0
-                      ? // 내린 글에는 다시 오지 않을 측정을 약속하지 않는다.
-                        `${monthDay(sinceEdit.editedOn)} 고친 뒤 회차 ${r.post.removedAt ? '없이 내림' : '없음 — 다음 측정부터'}`
-                      : `${monthDay(sinceEdit.editedOn)} 고친 뒤 인용된 회차 ${sinceEdit.cited}/${sinceEdit.measured}` +
-                        (sinceEdit.firstCitedDays !== null ? ` · 고친 뒤 첫 인용 D+${sinceEdit.firstCitedDays}` : '') +
-                        (sinceEdit.weak > 0 ? ` · 그중 엔진 빠진 회차 ${sinceEdit.weak}` : '')}
-                  </div>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+      {m.rows.length > 0 && (
+        <p className="hint" style={{ marginTop: 0 }}>
+          올린 글마다 인용됐는지는 <Link to="/publish-status">발행 현황</Link>의 「AI 인용」 칸에서 봅니다.
+        </p>
       )}
 
       <figure className="score-trend">
@@ -275,13 +150,8 @@ export default function RunTrendPanel({
             {selectedDays.map(({ i }) => (
               <rect key={`sel-${i}`} className="rt-week-on" x={x(i)} width={dayW} y={0} height={H - BOTTOM + 4} />
             ))}
-            {m.pins.map((pin) => (
-              <rect key={`grace-${pin.n}`} className="rt-grace" x={x(pin.x)} width={Math.max(0, x(pin.graceEndX) - x(pin.x))} y={0} height={H - BOTTOM + 4}>
-                <title>{`올린 뒤 ${INDEXING_GRACE_DAYS}일 — 색인 대기`}</title>
-              </rect>
-            ))}
             {weekStarts.map(({ d, i }) => (
-              <line key={`wk-${d}`} className="st-grid" x1={x(i)} x2={x(i)} y1={ROWS_TOP - 6} y2={graphTop + GRAPH_H} />
+              <line key={`wk-${d}`} className="st-grid" x1={x(i)} x2={x(i)} y1={GRAPH_TOP - 12} y2={GRAPH_TOP + GRAPH_H} />
             ))}
             {ticks.map((t) => (
               <g key={t}>
@@ -292,50 +162,20 @@ export default function RunTrendPanel({
               </g>
             ))}
 
+            {/* 올린 날 — 번호 없는 세로선. 하루에 올린 글이 많아도 선 하나, 편 수와 제목은 점 제목에. */}
             {m.pins.map((pin) => (
-              <g key={`pin-${pin.n}`} className="st-exec-pin">
-                <title>{pin.postings.map((p) => `${monthDay(pin.date)} 「${p.post.articleTitle ?? p.post.articleId}」 ${p.places.join(' · ')}`).join('\n')}</title>
-                <line className="st-exec" x1={x(pin.x)} x2={x(pin.x)} y1={PIN_Y + 7} y2={graphTop + GRAPH_H} />
-                <circle className="st-exec-dot" cx={x(pin.x)} cy={PIN_Y} r={7} />
-                <text className="st-exec-num" x={x(pin.x)} y={PIN_Y + 3.5} textAnchor="middle">
-                  {pin.n}
-                </text>
+              <g key={`pin-${pin.date}`} className="st-exec-pin">
+                <title>{pinTitle(pin)}</title>
+                <line className="st-exec" x1={x(pin.x)} x2={x(pin.x)} y1={PIN_Y + 4} y2={GRAPH_TOP + GRAPH_H} />
+                <circle className="st-exec-dot" cx={x(pin.x)} cy={PIN_Y} r={4} />
               </g>
             ))}
-
-            {m.rows.map((row, r) => {
-              const cy = ROWS_TOP + r * ROW_H + ROW_H / 2
-              return (
-                <g key={`row-${row.posting.item.post.id}`}>
-                  <text className="st-axis" x={PAD.left - 6} y={cy + 4} textAnchor="end">
-                    {`글${row.label}`}
-                  </text>
-                  {/* 고친 날 — 그 줄에 짧은 점선(그 날 칸 왼쪽, 올린 날 핀과 같은 자리). 그 날 회차는 전후 불명, 다음 날부터 고친 글을 본 측정이다. */}
-                  {row.edits
-                    .filter((e) => e.x !== null)
-                    .map((e) => (
-                      <line key={`edit-${e.date}`} className="rt-edit" x1={x(e.x!)} x2={x(e.x!)} y1={cy - ROW_H / 2 + 2} y2={cy + ROW_H / 2 - 2}>
-                        <title>{`글${row.label} ${monthDay(e.date)} 고침 — 이 날 회차는 고치기 전후 불명, 다음 날 회차부터 고친 글을 본 측정`}</title>
-                      </line>
-                    ))}
-                  {row.marks.map((mark, k) => (
-                    <MarkShape
-                      key={k}
-                      mark={mark}
-                      cx={x(m.dots[k]!.x)}
-                      cy={cy}
-                      title={`글${row.label} ${row.posting.places.join(' · ')} · ${markTitle(points[k]!, row.posting.item.cells[k] ?? null, mark)}`}
-                    />
-                  ))}
-                </g>
-              )
-            })}
 
             {m.breaks.map((b, k) => (
               <g key={`brk-${k}`}>
                 <title>{`측정 조건: ${b.text} — 앞뒤를 잇지 않음`}</title>
-                <line className="st-break" x1={x(b.x)} x2={x(b.x)} y1={graphTop - 6} y2={graphTop + GRAPH_H} />
-                <rect className="st-break-mark" x={x(b.x) - 4} y={graphTop - 10} width={8} height={8} transform={`rotate(45 ${x(b.x)} ${graphTop - 6})`} />
+                <line className="st-break" x1={x(b.x)} x2={x(b.x)} y1={GRAPH_TOP - 6} y2={GRAPH_TOP + GRAPH_H} />
+                <rect className="st-break-mark" x={x(b.x) - 4} y={GRAPH_TOP - 10} width={8} height={8} transform={`rotate(45 ${x(b.x)} ${GRAPH_TOP - 6})`} />
               </g>
             ))}
 
@@ -356,7 +196,7 @@ export default function RunTrendPanel({
               const select = onSelectWeek ? () => onSelectWeek(p.weekOf) : undefined
               if (d.unknown || !p.ranked) {
                 return (
-                  <text key={`dot-${d.i}`} className="st-week none" x={cx} y={graphTop + GRAPH_H - 4} textAnchor="middle" onClick={select}>
+                  <text key={`dot-${d.i}`} className="st-week none" x={cx} y={GRAPH_TOP + GRAPH_H - 4} textAnchor="middle" onClick={select}>
                     <title>{dotTitle(p)}</title>?
                   </text>
                 )
@@ -389,7 +229,7 @@ export default function RunTrendPanel({
 
             {m.days.map((d, i) =>
               dailyTicks || new Date(`${d}T00:00:00Z`).getUTCDay() === 1 ? (
-                <text key={`day-${d}`} className="st-axis" x={x(i + 0.5)} y={graphTop + GRAPH_H + 16} textAnchor="middle">
+                <text key={`day-${d}`} className="st-axis" x={x(i + 0.5)} y={GRAPH_TOP + GRAPH_H + 16} textAnchor="middle">
                   {dayLabel(d)}
                 </text>
               ) : null,
@@ -397,7 +237,7 @@ export default function RunTrendPanel({
             {[...new Set(points.map((p) => p.weekOf))].map((weekOf) => {
               const idx = points.map((p, k) => (p.weekOf === weekOf ? m.dots[k]!.x : null)).filter((v): v is number => v !== null)
               return (
-                <text key={`w-${weekOf}`} className="st-week" x={x((Math.min(...idx) + Math.max(...idx)) / 2)} y={graphTop + GRAPH_H + 32} textAnchor="middle">
+                <text key={`w-${weekOf}`} className="st-week" x={x((Math.min(...idx) + Math.max(...idx)) / 2)} y={GRAPH_TOP + GRAPH_H + 32} textAnchor="middle">
                   {shortWeek(weekOf)}
                 </text>
               )
@@ -405,16 +245,6 @@ export default function RunTrendPanel({
           </svg>
         </div>
         <figcaption className="score-trend-legend">
-          <span>
-            <span className="rt-key cited" aria-hidden="true" /> 인용된 회차
-          </span>
-          <span>
-            <span className="rt-key none" aria-hidden="true" /> 인용 없음
-          </span>
-          <span>
-            <span className="rt-key grace" aria-hidden="true" /> 올린 지 {INDEXING_GRACE_DAYS}일 안 인용 없음(색인 대기)
-          </span>
-          <span>◐ 전후 불명 · – 엔진이 빠진 회차의 인용 없음(근거 약함)</span>
           <span>
             세로 막대 = 그 회차 응답 수로 본 대략의 범위(95%, Clopper–Pearson). {spreadNote}
           </span>
@@ -430,7 +260,7 @@ export default function RunTrendPanel({
               <span className="st-key diamond" aria-hidden="true" /> 측정 조건: {b.text} — 앞뒤를 잇지 않음
             </span>
           ))}
-          {m.pins.length > 0 && <span>번호 핀 = 올린 날 · 옅은 띠 = 올린 뒤 {INDEXING_GRACE_DAYS}일</span>}
+          {m.pins.length > 0 && <span>위 점과 세로선 = 글을 올린 날(점에 마우스를 올리면 편 수 · 제목)</span>}
         </figcaption>
       </figure>
 
@@ -451,7 +281,6 @@ export default function RunTrendPanel({
                   <th title="카테고리 무관 질문 응답 가운데 우리 이름이 나온 응답 / 응답 합">언급(카테고리 무관)</th>
                   <th>순위 든 응답</th>
                   <th>점수(참고)</th>
-                  {m.rows.length > 0 && <th className="rt-day-posts">올린 글</th>}
                 </tr>
               </thead>
               <tbody>
@@ -461,10 +290,6 @@ export default function RunTrendPanel({
                     ...(d.isolated ? [`엔진 빠진 회차 ${d.isolated} 뺌`] : []),
                     ...(d.unknown ? [`질문지 못 찾은 회차 ${d.unknown} 뺌`] : []),
                   ]
-                  const posts = d.posts.flatMap((p) => {
-                    const text = dayPostText(p)
-                    return text ? [{ id: p.id, text }] : []
-                  })
                   return (
                     <tr key={d.date}>
                       <td>{dayLabel(d.date)}</td>
@@ -472,9 +297,6 @@ export default function RunTrendPanel({
                       <td>{d.mentioned ? `${d.mentioned.k}/${d.mentioned.n}` : '—'}</td>
                       <td>{d.ranked ? `${d.ranked.k}/${d.ranked.n}` : '—'}</td>
                       <td>{d.scores.length > 0 ? d.scores.join(' · ') : '—'}</td>
-                      {m.rows.length > 0 && (
-                        <td className="rt-day-posts">{posts.length > 0 ? posts.map((p) => <div key={p.id}>{p.text}</div>) : '—'}</td>
-                      )}
                     </tr>
                   )
                 })}
@@ -514,31 +336,18 @@ export default function RunTrendPanel({
                 <th>방식</th>
                 <th>엔진 성공/예정</th>
                 <th>순위 든 응답</th>
-                {m.rows.map((row) => (
-                  <th key={row.posting.item.post.id} title={`${row.posting.item.post.articleTitle ?? ''} · ${row.posting.places.join(' · ')}`}>
-                    {`글${row.label}`}
-                  </th>
-                ))}
                 <th>점수</th>
                 <th>주 카드</th>
               </tr>
             </thead>
             <tbody>
-              {points.map((p, k) => (
+              {points.map((p) => (
                 <tr key={`${p.weekOf}-${p.runId ?? 'week'}`}>
                   <td>{p.at ? kstStamp(p.at) : '시각 모름'}</td>
                   <td>{shortWeek(p.weekOf)}</td>
                   <td>{p.kind === 'week-file' ? '옛 기록' : p.preserved ? '옮겨 둔 옛 측정' : p.inCohortRun ? '경쟁사로 측정' : p.selfOnly ? '이 브랜드만' : '함께 측정'}</td>
                   <td>{engineCounts(p)}</td>
                   <td className="num">{p.ranked ? `${p.ranked.k}/${p.ranked.n}` : '확인 불가'}</td>
-                  {m.rows.map((row) => {
-                    const mark = row.marks[k]!
-                    return (
-                      <td key={row.posting.item.post.id} title={MARK_TEXT[mark] || undefined}>
-                        {{ cited: '●', none: '○', grace: '◌', unsure: '◐', weak: '–', skip: '', unknown: '?' }[mark]}
-                      </td>
-                    )
-                  })}
                   <td className="num">{p.score ?? '?'}</td>
                   <td>{p.isWeekCard ? '지금 주 카드' : p.weekCard === 'kept' ? `유지 — ${p.weekCardKeptReason ?? ''}` : p.kind === 'week-file' ? '—' : '뒤 회차로 바뀜'}</td>
                 </tr>
