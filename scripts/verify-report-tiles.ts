@@ -6,7 +6,7 @@
  */
 import { aggregateWeeklyMetrics } from '../server/aggregate'
 import type { QuestionSpec } from '../src/prompts/types'
-import { citationDetail, mentionDetail, pct1, reportTileCounts, roundedPoints, shareDetail } from '../src/lib/reportTiles'
+import { citationDetail, mentionDetail, pct1, reportTileCounts, roundedPoints } from '../src/lib/reportTiles'
 import type { QuestionRepeatAnalysis } from '../src/lib/types'
 
 const checks: [string, boolean][] = []
@@ -52,32 +52,19 @@ const ANALYSES = [
 
 const tenant = { competitors: [{ name: '경쟁0' }, { name: '경쟁1' }] }
 const metrics = aggregateWeeklyMetrics(tenant, QUESTIONS, ANALYSES as never)
-const c = reportTileCounts(ANALYSES, QUESTIONS, true)!
+const c = reportTileCounts(ANALYSES, QUESTIONS)!
 
 ok('언급 — 이름 없는 질문 4응답 중 2(실증 · 이름 넣은 질문 제외)', c.mention.responses === 4 && c.mention.mentioned === 2)
 ok('언급 — 건수 비율이 서버 언급률과 같음', c.mention.mentioned / c.mention.responses === metrics.mentionRate)
-ok('점유 — 우리 3회 · 전체 14회(실증 제외)', c.share.brand === 3 && c.share.total === 14 && c.share.measurable)
-ok('점유 — 건수 비율이 서버 점유율과 같음', metrics.shareOfMention !== null && c.share.brand / c.share.total === metrics.shareOfMention)
 ok('인용 — 전체 24건 중 자사 9건(실증 제외 · 이름 넣은 질문 포함)', c.citations.total === 24 && c.citations.owned === 9)
 ok('인용 — 건수 비율이 서버 자사 인용률과 같음', c.citations.owned / c.citations.total === metrics.brandOwnedCitationRate)
 
-// 점유율을 판정하지 않는 경우 — 서버가 null을 내는 경우와 같다.
-const few = [an('a1', { mentioned: true, competitors: [2] }), an('a2', {})]
-const fewMetrics = aggregateWeeklyMetrics(tenant, QUESTIONS, few as never)
-const fewC = reportTileCounts(few, QUESTIONS, true)!
-ok('점유 — 언급 10회 미만이면 판정 안 함(서버도 null)', !fewC.share.measurable && fewMetrics.shareOfMention === null)
-ok('점유 — 판정 안 할 때 까닭 글자', shareDetail(fewC) === '브랜드 언급 3회 — 10회 미만이라 판정하지 않음')
-const noComp = reportTileCounts(ANALYSES, QUESTIONS, false)!
-ok('점유 — 경쟁사 목록이 없으면 판정 안 함(서버도 null)', !noComp.share.measurable && aggregateWeeklyMetrics({ competitors: [] }, QUESTIONS, ANALYSES as never).shareOfMention === null)
-const none = reportTileCounts([an('a1', {}), an('a2', {})], QUESTIONS, true)!
-ok('점유 — 언급이 하나도 없으면 「언급이 없음」', shareDetail(none) === '이름 없는 질문 답에 브랜드 언급이 없음')
-
 // 못 읽음 — 0건으로 채우지 않는다.
-ok('기록을 못 읽으면 null(0건 아님)', reportTileCounts(null, QUESTIONS, true) === null && reportTileCounts([], QUESTIONS, true) === null && reportTileCounts(ANALYSES, null, true) === null)
-ok('건수를 모르면 작은 줄 없음', mentionDetail(null) === null && shareDetail(null) === null && citationDetail(null) === null)
+ok('기록을 못 읽으면 null(0건 아님)', reportTileCounts(null, QUESTIONS) === null && reportTileCounts([], QUESTIONS) === null && reportTileCounts(ANALYSES, null) === null)
+ok('건수를 모르면 작은 줄 없음', mentionDetail(null) === null && citationDetail(null) === null)
 
 // 글자.
-ok('작은 줄 글자', mentionDetail(c) === '이름 없는 질문 응답 4건 중 2건' && shareDetail(c) === '브랜드 언급 14회 중 우리 3회' && citationDetail(c) === '인용 24건 중 자사 9건')
+ok('작은 줄 글자', mentionDetail(c) === '이름 없는 질문 응답 4건 중 2건' && citationDetail(c) === '인용 24건 중 자사 9건')
 ok('천 단위 쉼표', citationDetail({ ...c, citations: { owned: 120, total: 1739 } }) === '인용 1,739건 중 자사 120건')
 ok('비율 → % 소수 한 자리', pct1(0.069) === 6.9 && pct1(0.0076) === 0.8 && pct1(0.027) === 2.7 && pct1(0) === 0)
 

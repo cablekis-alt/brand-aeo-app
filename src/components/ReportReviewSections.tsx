@@ -412,7 +412,7 @@ function ExplainFigure({ line, data }: { line: ExplainLine['key']; data: ScoreEx
           {data.parts.map((p) => (
             <span key={p.key}>
               <span className={`ov-swatch part-${p.key}`} />
-              {p.label} 약 {p.points}점
+              {p.label} 약 {p.points.toFixed(1)}점
             </span>
           ))}
           <span className="explain-legend-scale">막대 길이 = {data.score}점</span>

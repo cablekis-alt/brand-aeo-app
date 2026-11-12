@@ -565,13 +565,13 @@ export default function Dashboard() {
                   <div className="ov-bar-label">
                     <b>구성 — 지표별</b>
                     <span className="mono">
-                      {explain.score} = {explain.parts.map((p) => p.points).join(' + ')}
+                      {explain.score} = {explain.parts.map((p) => p.points.toFixed(1)).join(' + ')}
                     </span>
                   </div>
                   <div
                     className="ov-bar"
                     role="img"
-                    aria-label={`${explain.score}점 구성: ${explain.parts.map((p) => `${p.label} 약 ${p.points}점`).join(', ')}`}
+                    aria-label={`${explain.score}점 구성: ${explain.parts.map((p) => `${p.label} 약 ${p.points.toFixed(1)}점`).join(', ')}`}
                   >
                     {explain.parts
                       .filter((p) => p.points > 0)
@@ -587,7 +587,7 @@ export default function Dashboard() {
                           {p.label}
                         </span>
                         <span>
-                          약 <b className="mono">{p.points}</b>점{' '}
+                          약 <b className="mono">{p.points.toFixed(1)}</b>점{' '}
                           {parts?.get(p.key) && (
                             <span className="dash-sub">
                               · 비중 <span className="mono">{Math.round(parts.get(p.key)!.weight * 100)}%</span>

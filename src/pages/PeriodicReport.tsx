@@ -51,7 +51,7 @@ import { brandLabel, variantTag } from '../lib/brandVariant'
 import { usePublishedHistory } from '../lib/usePublishedHistory'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../lib/types'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
-import type { WeeklyScorecard } from '../prompts/b8-report'
+import { RANK_FULL_WEIGHT_RESPONSES, type WeeklyScorecard } from '../prompts/b8-report'
 import { comparableRun, compareConditions, conditionReason, conditionSummary, siteDifference } from '../lib/comparability'
 import { isoWeekMonth, monthLabel } from '../prompts/isoWeek'
 import { ENGINE_LABEL, measureConditionParts, measureConditionText, weekLabel } from '../lib/format'
@@ -59,7 +59,7 @@ import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
 import { buildPeriodicReport, PRIORITY_LABEL, scoreBreakdown, STATUS_LABEL, weightTagText, type ScorePartKey } from '../lib/b9-report'
-import { citationDetail, mentionDetail, pct1, reportTileCounts, roundedPoints, shareDetail } from '../lib/reportTiles'
+import { citationDetail, mentionDetail, pct1, reportTileCounts, roundedPoints } from '../lib/reportTiles'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 
 const EMPTY_EEAT: EeatAnalysis = {
@@ -79,6 +79,19 @@ function Delta({ now, prev }: { now: number; prev: number | null }) {
   if (d === 0) return <span className="delta flat">보합</span>
   return (
     <span className={`delta ${d > 0 ? 'up' : 'down'}`}>
+      {d > 0 ? '+' : ''}
+      {d}
+    </span>
+  )
+}
+
+/** 순위 증감 — 낮을수록 좋아 색을 거꾸로 칠한다(2.4위 → 2.0위는 −0.4, 초록). */
+function RankDelta({ now, prev }: { now: number; prev: number | null }) {
+  if (prev === null) return null
+  const d = Math.round((now - prev) * 10) / 10
+  if (d === 0) return <span className="delta flat">보합</span>
+  return (
+    <span className={`delta ${d < 0 ? 'up' : 'down'}`} title={d < 0 ? '순위가 올라감(숫자가 작을수록 좋음)' : '순위가 내려감'}>
       {d > 0 ? '+' : ''}
       {d}
     </span>
@@ -411,10 +424,10 @@ export default function PeriodicReport() {
   // 언급률도 평균(%) — 점수와 같은 이유로 한 주가 그 달을 대표하지 못한다.
   const monthMention = mean(weeksInMonth.map((h) => h.mentionRate * 100))
   const prevMonthMention = mean(weeksInPrevMonth.map((h) => h.mentionRate * 100))
-  // 언급 점유율 · 자사 인용률도 평균(%). 점유율을 판정하지 않은 주(경쟁사 없음 · 언급 표본 부족)는 0으로 치지 않고 뺀다 — 모두 빠지면 확인 불가.
-  const shareOf = (h: WeeklyScorecard) => (h.shareOfMention === null ? [] : [h.shareOfMention * 100])
-  const monthShare = mean(weeksInMonth.flatMap(shareOf))
-  const prevMonthShare = mean(weeksInPrevMonth.flatMap(shareOf))
+  // 평균 추천 순위 · 자사 인용률도 평균. 순위가 매겨진 답이 없는 주는 최하위로 치지 않고 뺀다 — 모두 빠지면 null(칸에는 「—」).
+  const rankOf = (h: WeeklyScorecard) => (h.avgRecommendationRank === null ? [] : [h.avgRecommendationRank])
+  const monthRank = mean(weeksInMonth.flatMap(rankOf))
+  const prevMonthRank = mean(weeksInPrevMonth.flatMap(rankOf))
   const monthOwned = mean(weeksInMonth.map((h) => h.brandOwnedCitationRate * 100))
   const prevMonthOwned = mean(weeksInPrevMonth.map((h) => h.brandOwnedCitationRate * 100))
 
@@ -459,11 +472,7 @@ export default function PeriodicReport() {
   }, [card])
   const evidence = evidenceData?.key === evidenceKey ? evidenceData : null
   // 숫자 칸의 「n건 중 m건」 — 그 주 판정 기록에서 서버 점수와 같은 규칙으로 센다(src/lib/reportTiles.ts). 주간 보기에만 쓴다.
-  // 점유율의 경쟁사 유무는 카드의 표본 기록으로 본다(경쟁사가 있던 주에만 shareOfMentionMentions가 있다).
-  const tileCounts = useMemo(
-    () => (evidence && card ? reportTileCounts(evidence.analyses, evidence.bank?.questions ?? null, card.shareOfMentionMentions !== undefined) : null),
-    [evidence, card],
-  )
+  const tileCounts = useMemo(() => (evidence ? reportTileCounts(evidence.analyses, evidence.bank?.questions ?? null) : null), [evidence])
   // 점수 몫 — Brand 칸의 「= 언급률 + 추천 순위 + 자사 인용」과 칸마다 「점수 n점 · 비중 m%」(합이 총점과 같게 소수 한 자리). 주간 보기에만 쓴다.
   const tileParts = useMemo(() => {
     if (!card) return null
@@ -961,39 +970,48 @@ export default function PeriodicReport() {
               </p>
             </article>
             {/*
-              언급 점유율 — 이름 없는 질문 답에서 우리 · 경쟁사가 불린 횟수 중 우리 몫(점수에는 들어가지 않는다, b8-report.ts). 판정하지
-              않은 주는 0이 아니라 확인 불가로, 까닭은 작은 줄에 적는다.
+              평균 추천 순위 — 점수에 드는 세 지표 중 하나(2026-11-12 「언급 점유율 대신 점수 들어가는 평균 추천 순위」). 이름 없이 물은 질문의
+              답에서 우리가 불리고 순위가 매겨진 답의 평균이다. 낮을수록 좋아 증감 색을 거꾸로 칠한다. 순위가 매겨진 답이 없는 주는 「—」(다른 칸과 같은 표시,
+              작은 줄이 「0건 · 점수 없음」을 밝힌다) — 그 주는 순위 몫을 빼고 나머지 두 지표로 점수를 낸다(scoreBreakdown).
             */}
             <article>
-              <p className="tile-label">언급 점유율{period === 'month' && ' 월 평균'}</p>
+              <p className="tile-label">평균 추천 순위{period === 'month' && ' 월 평균'}</p>
               {(() => {
-                const now = period === 'month' ? monthShare : card.shareOfMention === null ? null : pct1(card.shareOfMention)
+                const now = period === 'month' ? monthRank : card.avgRecommendationRank
                 const prev =
                   period === 'month'
                     ? monthCompare?.comparable
-                      ? prevMonthShare
+                      ? prevMonthRank
                       : null
-                    : comparison?.comparable && prevCard && prevCard.shareOfMention !== null
-                      ? pct1(prevCard.shareOfMention)
+                    : comparison?.comparable && prevCard
+                      ? prevCard.avgRecommendationRank
                       : null
                 return (
                   <p className="tile-value">
                     {now === null ? (
-                      <span className="muted">확인 불가</span>
+                      <span className="muted">—</span>
                     ) : (
                       <>
-                        {now.toFixed(1)}%
-                        <Delta now={now} prev={prev} />
+                        {now.toFixed(1)}위
+                        <RankDelta now={now} prev={prev} />
                       </>
                     )}
                   </p>
                 )
               })()}
-              {period === 'week' && shareDetail(tileCounts) && <p className="tile-detail">{shareDetail(tileCounts)}</p>}
-              {period === 'week' && <p className="tile-points">점수에 들어가지 않음(참고 지표)</p>}
+              {period === 'week' && typeof card.rankedResponses === 'number' && (
+                <p className="tile-detail">순위가 매겨진 답 {card.rankedResponses.toLocaleString()}건</p>
+              )}
+              {period === 'week' && (
+                <p className="tile-points">{pointsLine('avgRecommendationRank') ?? '점수 없음 — 순위 몫은 다른 두 지표로 나눔'}</p>
+              )}
               <p className="tile-note">
-                이름 없이 물은 질문의 답에 나온 브랜드 언급 중 우리 몫 · 증감은 %p
-                {period === 'month' && ` · 판정한 주 ${weeksInMonth.filter((h) => h.shareOfMention !== null).length}/${weeksInMonth.length}주 평균`}
+                이름 없이 물은 질문의 답에서 매겨진 우리 순위 · 낮을수록 좋음 · 순위 답이 {RANK_FULL_WEIGHT_RESPONSES}건보다 적으면 비중이 줄어듦
+                {period === 'month' &&
+                  (() => {
+                    const ranked = weeksInMonth.filter((h) => h.avgRecommendationRank !== null).length
+                    return ranked === 0 ? ` · ${weeksInMonth.length}주 모두 순위 없음` : ` · 순위 있는 주 ${ranked}/${weeksInMonth.length}주 평균`
+                  })()}
               </p>
             </article>
             {/* 자사 인용률 — 점수에 드는 지표(인용 단위). 작은 줄에 전체 인용 건수를 함께 적어 「인용 건수」 칸을 대신한다. */}
@@ -1076,7 +1094,7 @@ export default function PeriodicReport() {
               ※ 직전 측정({weekLabel(comparison.previousWeekOf)})과{' '}
               {comparison.diffs.some((d) => d.state === 'changed') ? '측정 조건이 달라' : '견줄 측정 조건 기록이 한쪽에 없어'}(
               <ReasonText full={conditionReason(comparison.diffs)} plain={conditionSummary(comparison.diffs)} />) 표지 · Brand AEO Score · 언급률 ·
-              언급 점유율 · 자사 인용률 칸 · 지표별 진단에 증감을 적지 않았습니다.
+              평균 추천 순위 · 자사 인용률 칸 · 지표별 진단에 증감을 적지 않았습니다.
               같은 조건으로 다시 재면 증감이 다시 나옵니다.
             </p>
           )}

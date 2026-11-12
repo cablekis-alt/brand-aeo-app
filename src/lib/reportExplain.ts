@@ -15,6 +15,7 @@ import { comparableRun, compareConditions, conditionSummary } from './comparabil
 import { formatRank, weekLabel } from './format'
 import { platformGroupHost } from './hostNames'
 import { isProbe, isScoredAgnostic } from './questionScope'
+import { roundedPoints } from './reportTiles'
 import { kstStamp } from './runTrend'
 import type { CitationSourceAnalysis } from '../prompts/b7-citation-sources'
 import type { QuestionBank, QuestionRepeatAnalysis } from './types'
@@ -104,22 +105,6 @@ function withRanked(base: ScoreInputs, n: number, otherMentions: number, ranks: 
   }
 }
 
-/** 정수 몫 나누기 — 합이 점수와 같게(내림한 뒤 소수부가 큰 항목부터 1점씩). 「12점 = 10 + 1 + 1」이 더해서 맞아야 한다. */
-function apportion(values: number[], total: number): number[] {
-  const floors = values.map((v) => Math.floor(Math.max(0, v)))
-  let diff = total - floors.reduce((a, b) => a + b, 0)
-  const order = values.map((v, i) => ({ i, frac: Math.max(0, v) - floors[i]! })).sort((a, b) => b.frac - a.frac)
-  for (let j = 0; diff > 0 && j < order.length; j += 1, diff -= 1) floors[order[j]!.i]! += 1
-  // 합이 넘치면(언급 몫이 0에서 잘린 경우) 소수부가 작은 항목부터 1점씩 덜어 낸다.
-  for (let j = order.length - 1; diff < 0 && j >= 0; j -= 1) {
-    const i = order[j]!.i
-    if (floors[i]! > 0) {
-      floors[i]! -= 1
-      diff += 1
-    }
-  }
-  return floors
-}
 
 /** 「점수 풀이」의 숫자 — 보고서 문장(explainScore)과 개요 화면의 구성 · 몰림 막대 · 계단이 같은 계산을 쓴다. */
 export interface ScoreExplainData {
@@ -149,15 +134,13 @@ function explainCore(input: ExplainInput): { data: ScoreExplainData; usable: Usa
   const breakdown = scoreBreakdown(card)
   const base = scoreInputsOf(card)
 
-  // 구성 — 지금 점수 식으로 카드 점수가 나올 때만(옛 가중치로 낸 카드 — 웹 데모 등 — 는 항목 몫이 맞지 않는다). 합이 점수와 같게 나눈다.
+  // 구성 — 지금 점수 식으로 카드 점수가 나올 때만(옛 가중치로 낸 카드 — 웹 데모 등 — 는 항목 몫이 맞지 않는다). 합이 점수와 같게
+  // 소수 한 자리로 나눈다 — 정기진단 보고서 숫자 칸의 Brand 구성 줄(src/lib/reportTiles.ts roundedPoints)과 같은 숫자(2026-11-12 「소수 한 자리로 맞추기」).
   let parts: ScoreExplainData['parts'] = null
   if (aeoScoreOf(base) === score) {
     const counted = breakdown.filter((p) => p.points !== null).sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
-    const ints = apportion(
-      counted.map((p) => p.points ?? 0),
-      score,
-    )
-    parts = counted.map((p, i) => ({ key: p.key, label: PART_LABEL[p.key], points: ints[i]! }))
+    const tenths = roundedPoints(counted, score)
+    parts = counted.map((p) => ({ key: p.key, label: PART_LABEL[p.key], points: tenths.get(p.key) ?? 0 }))
   }
   const rankDropped = breakdown.some((p) => p.key === 'avgRecommendationRank' && p.points === null)
 
@@ -235,7 +218,7 @@ export function explainScore(input: ExplainInput & { history: WeeklyScorecard[] 
     lines.push({
       key: 'parts',
       label: '구성',
-      text: `${score}점 = ${data.parts.map((p) => `${p.label} 약 ${p.points}점`).join(' + ')}${
+      text: `${score}점 = ${data.parts.map((p) => `${p.label} 약 ${p.points.toFixed(1)}점`).join(' + ')}${
         data.rankDropped ? ' (순위가 매겨진 답이 없어 추천 순위는 점수에서 빠졌습니다)' : ''
       }.`,
     })

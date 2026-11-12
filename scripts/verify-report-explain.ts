@@ -103,7 +103,8 @@ const card44 = cardOf('2026-W44', w44, 27 / 1113)
 const lines44 = explainScore({ card: card44, history: [card44], analyses: w44, bank })
 const text = (key: string) => lines44.find((l) => l.key === key)?.text ?? ''
 ok('W44 꼴: 점수 12점', card44.aeoScore.current === 12)
-ok('구성: 순위 약 10 + 언급 약 1 + 자사 약 1', text('parts') === '12점 = 추천 순위 약 10점 + 언급률 약 1점 + 자사 출처 인용 약 1점.')
+// 2026-11-12 사용자 「소수 한 자리로 맞추기」 — 구성은 보고서 숫자 칸의 Brand 구성 줄과 같은 소수 한 자리(합 = 점수).
+ok('구성: 순위 약 10.0 + 언급 약 1.0 + 자사 약 1.0', text('parts') === '12점 = 추천 순위 약 10.0점 + 언급률 약 1.0점 + 자사 출처 인용 약 1.0점.')
 ok('비중: 2건이라 25% → 10%', text('weights').includes('이번 주는 2건이라 추천 순위 비중이 25% → 10%로'))
 ok('몰림: 12점 중 약 11점 · 답 2건 · 질문 1개 원문', text('concentration').startsWith('12점 가운데 약 11점은 이름 없이 물은 질문의 답 2건(질문 1개 — 「가상 일반 질문 14」)'))
 ok('몰림: 없었다면 1점', text('concentration').endsWith('이 2건이 없었다면 1점입니다.'))
@@ -177,8 +178,8 @@ for (const owned of [0.0326, 0.05, 0.13]) {
   const a = records({ ranked: [{ q: 15, engine: 'openai', rank: 1 }], extraMentions: 1, namedHits: 30 })
   const c = cardOf('2026-W40', a, owned)
   const parts = explainScore({ card: c, history: [c], analyses: a, bank }).find((l) => l.key === 'parts')?.text ?? ''
-  const nums = [...parts.matchAll(/약 (\d+)점/g)].map((m) => Number(m[1]))
-  ok(`구성 합 = 점수(자사 ${owned})`, nums.reduce((s, x) => s + x, 0) === c.aeoScore.current)
+  const nums = [...parts.matchAll(/약 (\d+\.\d)점/g)].map((m) => Number(m[1]))
+  ok(`구성 합 = 점수(자사 ${owned}) · 소수 한 자리`, nums.length >= 2 && Math.round(nums.reduce((s, x) => s + x, 0) * 10) / 10 === c.aeoScore.current)
 }
 // 감성 계수는 판정 기록의 언급 문장에서 센다 — 카드 점수에서 거꾸로 풀면 언급 한두 건인 주에 0.7~0.8로 틀어진다.
 const one = records({ ranked: [], extraMentions: 2, namedHits: 10 })
