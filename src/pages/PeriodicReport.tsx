@@ -25,6 +25,7 @@ import {
   loadSiteScores,
   type ActionStateMap,
   type HistoryCell,
+  type PublishedPost,
   type SiteScoreRecord,
 } from '../lib/api'
 import { citationTop, cohortRows, selfReview, trustChecks } from '../lib/reviewReport'
@@ -38,9 +39,9 @@ import {
   freshNoCiteNote,
   monthDay,
   postWeekOf,
-  runTallyText,
   summarizePost,
-  TIER_LABEL,
+  type PostSummary,
+  type PostTier,
 } from '../lib/publishTracking'
 import { isoWeekOf, kstDate } from '../lib/publishedUrl'
 import { buildRecommendationEvidence } from '../lib/recommendationEvidence'
@@ -58,6 +59,7 @@ import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
 import { buildPeriodicReport, PRIORITY_LABEL, scoreBreakdown, STATUS_LABEL, weightTagText, type ScorePartKey } from '../lib/b9-report'
+import { citationDetail, mentionDetail, pct1, reportTileCounts, shareDetail } from '../lib/reportTiles'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 
 const EMPTY_EEAT: EeatAnalysis = {
@@ -83,21 +85,136 @@ function Delta({ now, prev }: { now: number; prev: number | null }) {
   )
 }
 
-/** 집행 표 칸 — 올린 뒤 측정 한 주. 숫자는 그 주소를 정확히 인용한 응답 수, 여러 번 잰 주는 회차 수(성과 표와 같은 문구). */
-function afterWeekText(weekOf: string, cell: HistoryCell | null): string {
-  const w = weekOf.slice(5)
-  if (!cell) return `${w} 확인 불가`
-  if (cell.timing === 'during' || cell.timing === 'ambiguous') return `${w} 전후 불명`
-  const runs = runTallyText(cell)
-  if (runs) return `${w} ${runs.main}`
-  if (cell.tally) return `${w} 인용 ${cell.tally.all.cited}`
+/**
+ * 집행 표 주별 칸 — 올린 뒤 측정 한 주를 짧게(2026-11-12 사용자 「판단이 아래로 길게 늘어져 직관적이지 않음」). 숫자는 그 주소를 정확히
+ * 인용한 응답 수, 여러 번 잰 주는 「인용된 회차/잰 회차」. 판단 규칙(summarizePost)은 그대로 — 보여 주는 모양만 바꾼다.
+ */
+function execWeekCell(cell: HistoryCell | null): { main: string; sub: string | null; tone: 'cited' | 'none' | 'muted' } {
+  if (!cell) return { main: '확인 불가', sub: null, tone: 'muted' }
+  if (cell.timing === 'during' || cell.timing === 'ambiguous') return { main: '전후 불명', sub: null, tone: 'muted' }
+  const r = cell.runs
+  if (r && r.measured > 0 && cell.timing === 'after' && !cell.afterRemoval) {
+    if (r.cited > 0) return { main: `${r.cited}/${r.measured}회`, sub: r.citedDays.length ? `D+${r.citedDays.join('·')}` : null, tone: 'cited' }
+    return { main: '인용 없음', sub: freshNoCiteNote(cell) ? `${r.measured}회 · 올린 지 ${cell.daysAfterPublish}일` : `${r.measured}회`, tone: 'none' }
+  }
+  if (cell.tally) return { main: `인용 ${cell.tally.all.cited}`, sub: cell.daysAfterPublish !== undefined ? `D+${cell.daysAfterPublish}` : null, tone: 'cited' }
   // 갓 올린 글의 「인용 없음」은 판단에 넣지 않는다 — 같은 줄 판단 칸의 「색인 대기」와 맞춘다(성과 표와 같은 꼬리).
-  const fresh = freshNoCiteNote(cell)
-  return fresh ? `${w} 인용 없음(${fresh})` : `${w} 인용 없음`
+  return { main: '인용 없음', sub: freshNoCiteNote(cell) ? `올린 지 ${cell.daysAfterPublish}일` : null, tone: 'none' }
 }
 
-/** 집행 표에 보이는 올린 뒤 측정 주 수 — 최근 것부터. */
+/** 집행 표에 보이는 주 수 — 최근 것부터. */
 const EXEC_WEEKS = 6
+
+/** 판단 칩 — 짧은 이름(긴 설명은 칩 아래 줄과 표 아래 안내에). 색은 성과 표와 같다(여러 주 · 한 주만 색). */
+const EXEC_TIER_SHORT: Record<PostTier, string> = {
+  repeated: '여러 주 인용',
+  once: '한 주 인용',
+  none: '인용 없음',
+  indexing: '색인 대기',
+  waiting: '측정 대기',
+  removed: '내림',
+  undated: '올린 날 모름',
+}
+const EXEC_TIER_CLASS: Record<PostTier, string> = {
+  repeated: 'st-good',
+  once: 'st-info',
+  none: 'st-unknown',
+  indexing: 'st-unknown',
+  waiting: 'st-unknown',
+  removed: 'st-unknown',
+  undated: 'st-unknown',
+}
+/** 판단이 나온 글을 위로 — 기다리면 풀리는 색인 대기 · 측정 대기는 따로 접는다. */
+const EXEC_TIER_ORDER: PostTier[] = ['repeated', 'once', 'none', 'removed', 'undated', 'indexing', 'waiting']
+const execPending = (t: PostTier) => t === 'indexing' || t === 'waiting'
+
+interface ExecRow {
+  post: PublishedPost
+  places: string[]
+  summary: PostSummary
+  after: { weekOf: string; cell: HistoryCell | null }[]
+  removedOn: string | null
+  editedOn: string[]
+}
+
+/** 판단 칩 아래 한 줄 — 「4주 중 3주 · 회차 10/18 · 첫 인용 D+9」. */
+function execTierDetail(s: PostSummary): string | null {
+  if (s.tier === 'indexing') return '올린 지 14일 안 측정만'
+  if (s.measuredAfter === 0) return null
+  return (
+    `${s.measuredAfter}주 중 ${s.citedWeeks}주` +
+    (s.measuredRuns !== s.measuredAfter ? ` · 회차 ${s.citedRuns}/${s.measuredRuns}` : '') +
+    (s.firstCitedDays !== null ? ` · 첫 인용 D+${s.firstCitedDays}` : '') +
+    (s.tier === 'once' ? ' · 판단 보류' : '')
+  )
+}
+
+/** 집행 표 — 판단 · 글 · 주별 칸. weeks는 보이는 주(열 머리), changed는 직전 측정과 조건이 달랐던 주(◆). */
+function ExecTable({ rows, weeks, changed }: { rows: ExecRow[]; weeks: string[]; changed: ReadonlySet<string> }) {
+  return (
+    <div className="table-wrap">
+      <table className="exec-table">
+        <thead>
+          <tr>
+            <th className="cell-text exec-tier">판단</th>
+            <th className="cell-text">올린 글</th>
+            {weeks.map((w) => (
+              <th key={w} className="exec-week" title={changed.has(w) ? '직전 측정과 측정 조건이 다르거나 확인할 수 없음' : undefined}>
+                {changed.has(w) && '◆ '}
+                {w.slice(5)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            const published = r.post.publishedOn ? isoWeekOf(r.post.publishedOn) : null
+            const removed = r.removedOn ? isoWeekOf(r.removedOn) : null
+            const byWeek = new Map(r.after.map((a) => [a.weekOf, a.cell]))
+            const detail = execTierDetail(r.summary)
+            return (
+              <tr key={r.post.id}>
+                <td className="exec-tier">
+                  <span className={`status-pill ${EXEC_TIER_CLASS[r.summary.tier]}`}>{EXEC_TIER_SHORT[r.summary.tier]}</span>
+                  {detail && <div className="doc-meta">{detail}</div>}
+                  {r.summary.citedBeforePublish && <div className="doc-meta">올리기 전 측정에서 이미 인용됨 — 올린 날 확인</div>}
+                </td>
+                <td className="cell-text exec-post">
+                  <b>{r.post.articleTitle ?? r.post.articleId}</b>
+                  <div className="doc-meta">
+                    <UrlLink url={r.post.url} max={48} />
+                    {' · '}
+                    {r.post.publishedOn ? `${monthDay(r.post.publishedOn)} 올림` : '올린 날 모름'}
+                    {r.editedOn.length > 0 && ` · ${r.editedOn.map(monthDay).join(' · ')} 고침`}
+                    {r.removedOn && ` · ${monthDay(r.removedOn)} 내림`}
+                    {r.places.length > 0 && ` · ${r.places.join(' · ')}`}
+                  </div>
+                </td>
+                {weeks.map((w) => {
+                  if (byWeek.has(w)) {
+                    const v = execWeekCell(byWeek.get(w) ?? null)
+                    return (
+                      <td key={w} className={`exec-week ew-${v.tone}`}>
+                        {v.main}
+                        {v.sub && <div className="doc-meta">{v.sub}</div>}
+                      </td>
+                    )
+                  }
+                  const label = published && w < published ? '올리기 전' : removed && w > removed ? '내린 뒤' : '—'
+                  return (
+                    <td key={w} className="exec-week ew-muted" title={label === '—' ? '이 주 판정 기록이 없거나 전후가 분명하지 않음' : undefined}>
+                      {label}
+                    </td>
+                  )
+                })}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
 /** 파일 이름에 못 쓰는 글자와 띄어쓰기 · 쉼표를 뺀다 — 「스테이,머뭄」 → 「스테이머뭄」. */
 const fileSafe = (s: string) => s.replace(/[\\/:*?"<>|,.\s]+/g, '')
@@ -259,50 +376,28 @@ export default function PeriodicReport() {
   }, [siteScores, siteWeeks, siteNow])
 
   /*
-   * 인용 건수는 스코어카드에 없다(비율만 있다). 그 주차 인용 분석에서 총계를 읽어 온다(기본 보기 — 실증 질문의 인용은 빠진다).
-   * 월간이면 그 달 주차들의 **합계**다 — 인용은 건수라 더하는 것이 자연스럽고, 평균을 내면
-   * "한 주에 몇 건이었나"가 되어 달 단위 활동량을 말해 주지 못한다.
+   * 월간 「자사 인용률」 칸 아래 전체 인용 건수 — 스코어카드에는 비율만 있어 그 달 주차들의 인용 분석에서 총계를 더한다(기본 보기 —
+   * 실증 질문의 인용은 빠진다). 인용은 건수라 합계가 자연스럽다. 주간 보기는 판정 기록에서 센 건수(tileCounts)를 쓴다.
    */
   // 목록을 memo로 잡아 effect 의존성에 그대로 넣는다 — 렌더마다 새 배열이면 effect가 끝없이 돈다.
-  const nowWeeks = useMemo(
-    () => (period === 'month' ? weeksInMonth.map((h) => h.weekOf) : weekOf ? [weekOf] : []),
-    [period, weeksInMonth, weekOf],
-  )
-  const prevWeeks = useMemo(
-    () =>
-      period === 'month'
-        ? weeksInPrevMonth.map((h) => h.weekOf)
-        : comparison?.previousWeekOf
-          ? [comparison.previousWeekOf]
-          : [],
-    [period, weeksInPrevMonth, comparison],
-  )
-  const [citations, setCitations] = useState<{ key: string; now: number | null; prev: number | null }>({
-    key: '',
-    now: null,
-    prev: null,
-  })
-  const citationKey = tenant ? `${tenant.tenantId}|${nowWeeks.join(',')}|${prevWeeks.join(',')}` : ''
+  const nowWeeks = useMemo(() => (period === 'month' ? weeksInMonth.map((h) => h.weekOf) : []), [period, weeksInMonth])
+  const [citations, setCitations] = useState<{ key: string; now: number | null }>({ key: '', now: null })
+  const citationKey = tenant ? `${tenant.tenantId}|${nowWeeks.join(',')}` : ''
   useEffect(() => {
     const id = tenant?.tenantId
     if (!id || nowWeeks.length === 0) return
     let alive = true
-    const key = `${id}|${nowWeeks.join(',')}|${prevWeeks.join(',')}`
-    const sum = async (weeks: string[]) => {
-      if (weeks.length === 0) return null
-      const rows = await Promise.all(weeks.map((w) => loadCitationSources(id, w)))
+    const key = `${id}|${nowWeeks.join(',')}`
+    void Promise.all(nowWeeks.map((w) => loadCitationSources(id, w))).then((rows) => {
       // 한 주라도 읽지 못하면 합계를 만들지 않는다 — 빠진 주를 0으로 치면 달이 작아 보인다.
-      if (rows.some((r) => r === null)) return null
-      return rows.reduce((a, r) => a + (r?.totalCitations ?? 0), 0)
-    }
-    void Promise.all([sum(nowWeeks), sum(prevWeeks)]).then(([now, prev]) => {
-      if (alive) setCitations({ key, now, prev })
+      const now = rows.some((r) => r === null) ? null : rows.reduce((a, r) => a + (r?.totalCitations ?? 0), 0)
+      if (alive) setCitations({ key, now })
     })
     return () => {
       alive = false
     }
-  }, [tenant?.tenantId, citationKey, nowWeeks, prevWeeks])
-  const cite = citations.key === citationKey ? citations : { key: '', now: null, prev: null }
+  }, [tenant?.tenantId, nowWeeks])
+  const cite = citations.key === citationKey ? citations : { key: '', now: null }
 
   /*
    * 월간 타일 값.
@@ -316,6 +411,12 @@ export default function PeriodicReport() {
   // 언급률도 평균(%) — 점수와 같은 이유로 한 주가 그 달을 대표하지 못한다.
   const monthMention = mean(weeksInMonth.map((h) => h.mentionRate * 100))
   const prevMonthMention = mean(weeksInPrevMonth.map((h) => h.mentionRate * 100))
+  // 언급 점유율 · 자사 인용률도 평균(%). 점유율을 판정하지 않은 주(경쟁사 없음 · 언급 표본 부족)는 0으로 치지 않고 뺀다 — 모두 빠지면 확인 불가.
+  const shareOf = (h: WeeklyScorecard) => (h.shareOfMention === null ? [] : [h.shareOfMention * 100])
+  const monthShare = mean(weeksInMonth.flatMap(shareOf))
+  const prevMonthShare = mean(weeksInPrevMonth.flatMap(shareOf))
+  const monthOwned = mean(weeksInMonth.map((h) => h.brandOwnedCitationRate * 100))
+  const prevMonthOwned = mean(weeksInPrevMonth.map((h) => h.brandOwnedCitationRate * 100))
 
   /*
    * 개선제안의 「이번 주 데이터로 본 실행 항목」과 불린 질문 · 출처 · 사실성 절이 함께 쓰는 측정 기록 — 판정 주차의
@@ -357,6 +458,12 @@ export default function PeriodicReport() {
     }
   }, [card])
   const evidence = evidenceData?.key === evidenceKey ? evidenceData : null
+  // 숫자 칸의 「n건 중 m건」 — 그 주 판정 기록에서 서버 점수와 같은 규칙으로 센다(src/lib/reportTiles.ts). 주간 보기에만 쓴다.
+  // 점유율의 경쟁사 유무는 카드의 표본 기록으로 본다(경쟁사가 있던 주에만 shareOfMentionMentions가 있다).
+  const tileCounts = useMemo(
+    () => (evidence && card ? reportTileCounts(evidence.analyses, evidence.bank?.questions ?? null, card.shareOfMentionMentions !== undefined) : null),
+    [evidence, card],
+  )
 
   /*
    * 같은 주 코호트 기록 — 다른 브랜드의 그 주 카드와 질문 은행. 브랜드마다 이력을 받아야 해서 무겁다 — 본문과 따로 뒤에서 불러오고,
@@ -469,7 +576,24 @@ export default function PeriodicReport() {
       }
     })
     if (rows.length === 0) return null
-    return { rows, line: executionSummaryLine(rows.map((r) => r.summary), weekLabel(until)) }
+    // 판단 순서대로(같은 판단 안에서는 원래 순서) — 판단이 나온 글과 기다리는 글을 나눈다.
+    const ordered = [...rows].sort((a, b) => EXEC_TIER_ORDER.indexOf(a.summary.tier) - EXEC_TIER_ORDER.indexOf(b.summary.tier))
+    const decided = ordered.filter((r) => !execPending(r.summary.tier))
+    const pending = ordered.filter((r) => execPending(r.summary.tier))
+    const indexing = pending.filter((r) => r.summary.tier === 'indexing').length
+    const waiting = pending.length - indexing
+    const pendingLabel = [indexing > 0 ? `색인 대기 ${indexing}편` : '', waiting > 0 ? `측정 대기 ${waiting}편` : ''].filter(Boolean).join(' · ')
+    // 주별 열 — 가장 이른 올린 주부터 최근 EXEC_WEEKS주까지(모든 글이 「올리기 전」인 앞 주는 열을 만들지 않는다).
+    const firstWeek = rows
+      .map((r) => (r.post.publishedOn ? isoWeekOf(r.post.publishedOn) : null))
+      .filter((w): w is string => Boolean(w))
+      .sort()[0]
+    const shownWeeks = weeks
+      .map((w) => w.weekOf)
+      .filter((w) => !firstWeek || w >= firstWeek)
+      .slice(-EXEC_WEEKS)
+    const changed = new Set(weeks.filter((w) => w.changes.length > 0).map((w) => w.weekOf))
+    return { rows, decided, pending, pendingLabel, shownWeeks, changed, line: executionSummaryLine(rows.map((r) => r.summary), weekLabel(until)) }
   }, [published.history, judgedWeek, card?.weekOf])
 
   // 보고 주 칸(그 주 회차를 합친 값)에서 올린 뒤 인용된 기록 — 개선제안의 「인용됨」이 집행 표와 같은 칸을 보게 한다.
@@ -542,15 +666,14 @@ export default function PeriodicReport() {
   }, [weeksInMonth])
 
   /*
-   * 월간 증감 — 앞 달과 이 달의 모든 측정이 같은 조건 연속 구간 하나에 들 때만 견준다. 인용 합계는 잰 주 수까지 같아야 한다
-   * (주 수가 다르면 합계 차이는 측정 횟수 차이다). 견줄 수 없으면 이유 한 줄을 화면과 종이에 함께 적는다.
+   * 월간 증감 — 앞 달과 이 달의 모든 측정이 같은 조건 연속 구간 하나에 들 때만 견준다(월 평균끼리). 견줄 수 없으면 이유 한 줄을
+   * 화면과 종이에 함께 적는다.
    */
   const monthCompare = useMemo(() => {
     if (period !== 'month' || weeksInPrevMonth.length === 0 || weeksInMonth.length === 0) return null
     const span = [...weeksInPrevMonth, ...weeksInMonth].sort((a, b) => a.weekOf.localeCompare(b.weekOf))
     const inRun = new Set(comparableRun(history, span.at(-1)!.weekOf).map((c) => c.weekOf))
-    if (span.every((c) => inRun.has(c.weekOf)))
-      return { comparable: true, reason: '', reasonPlain: '', sameWeeks: weeksInPrevMonth.length === weeksInMonth.length }
+    if (span.every((c) => inRun.has(c.weekOf))) return { comparable: true, reason: '', reasonPlain: '' }
     let reason = ''
     let reasonPlain = ''
     for (let i = 1; i < span.length && !reason; i++) {
@@ -560,7 +683,7 @@ export default function PeriodicReport() {
         reasonPlain = `${weekLabel(span[i]!.weekOf)}: ${conditionSummary(diffs)}`
       }
     }
-    return { comparable: false, reason, reasonPlain, sameWeeks: false }
+    return { comparable: false, reason, reasonPlain }
   }, [period, history, weeksInMonth, weeksInPrevMonth])
 
   /*
@@ -805,7 +928,76 @@ export default function PeriodicReport() {
                 )
               })()}
               {/* 응답 단위다 — 표지 문장(「질문 N개 중 M개」)은 질문 단위라 이름으로 가른다. */}
-              <p className="tile-note">이름 없이 물은 질문의 AI 응답 중 불린 비율 · 증감은 %p</p>
+              {period === 'week' && mentionDetail(tileCounts) && <p className="tile-detail">{mentionDetail(tileCounts)}</p>}
+              <p className="tile-note">
+                이름 없이 물은 질문의 AI 응답 중 불린 비율 · 증감은 %p{period === 'month' && ` · ${weeksInMonth.length}주 평균`}
+              </p>
+            </article>
+            {/*
+              언급 점유율 — 이름 없는 질문 답에서 우리 · 경쟁사가 불린 횟수 중 우리 몫(점수에는 들어가지 않는다, b8-report.ts). 판정하지
+              않은 주는 0이 아니라 확인 불가로, 까닭은 작은 줄에 적는다.
+            */}
+            <article>
+              <p className="tile-label">언급 점유율{period === 'month' && ' 월 평균'}</p>
+              {(() => {
+                const now = period === 'month' ? monthShare : card.shareOfMention === null ? null : pct1(card.shareOfMention)
+                const prev =
+                  period === 'month'
+                    ? monthCompare?.comparable
+                      ? prevMonthShare
+                      : null
+                    : comparison?.comparable && prevCard && prevCard.shareOfMention !== null
+                      ? pct1(prevCard.shareOfMention)
+                      : null
+                return (
+                  <p className="tile-value">
+                    {now === null ? (
+                      <span className="muted">확인 불가</span>
+                    ) : (
+                      <>
+                        {now.toFixed(1)}%
+                        <Delta now={now} prev={prev} />
+                      </>
+                    )}
+                  </p>
+                )
+              })()}
+              {period === 'week' && shareDetail(tileCounts) && <p className="tile-detail">{shareDetail(tileCounts)}</p>}
+              <p className="tile-note">
+                이름 없이 물은 질문의 답에 나온 브랜드 언급 중 우리 몫 · 증감은 %p
+                {period === 'month' && ` · 판정한 주 ${weeksInMonth.filter((h) => h.shareOfMention !== null).length}/${weeksInMonth.length}주 평균`}
+              </p>
+            </article>
+            {/* 자사 인용률 — 점수에 드는 지표(인용 단위). 작은 줄에 전체 인용 건수를 함께 적어 「인용 건수」 칸을 대신한다. */}
+            <article>
+              <p className="tile-label">자사 인용률{period === 'month' && ' 월 평균'}</p>
+              {(() => {
+                const now = period === 'month' ? monthOwned : pct1(card.brandOwnedCitationRate)
+                const prev =
+                  period === 'month'
+                    ? monthCompare?.comparable
+                      ? prevMonthOwned
+                      : null
+                    : comparison?.comparable && prevCard
+                      ? pct1(prevCard.brandOwnedCitationRate)
+                      : null
+                return (
+                  <p className="tile-value">
+                    {now === null ? (
+                      <span className="muted">—</span>
+                    ) : (
+                      <>
+                        {now.toFixed(1)}%
+                        <Delta now={now} prev={prev} />
+                      </>
+                    )}
+                  </p>
+                )
+              })()}
+              {period === 'week'
+                ? citationDetail(tileCounts) && <p className="tile-detail">{citationDetail(tileCounts)}</p>
+                : cite.now !== null && <p className="tile-detail">{`인용 ${cite.now.toLocaleString()}건 · ${weeksInMonth.length}주 합계`}</p>}
+              <p className="tile-note">엔진이 근거로 끌어온 출처 중 자사 사이트 몫 · 증감은 %p</p>
             </article>
             <article>
               <p className="tile-label">Site AEO Score</p>
@@ -845,29 +1037,6 @@ export default function PeriodicReport() {
                 )
               })()}
             </article>
-            <article>
-              <p className="tile-label">인용 건수{period === 'month' && ' 합계'}</p>
-              <p className="tile-value">
-                {cite.now === null ? <span className="muted">—</span> : cite.now.toLocaleString()}
-                {cite.now !== null && (
-                  <Delta
-                    now={cite.now}
-                    prev={
-                      period === 'month'
-                        ? monthCompare?.comparable && monthCompare.sameWeeks
-                          ? cite.prev
-                          : null
-                        : comparison?.comparable
-                          ? cite.prev
-                          : null
-                    }
-                  />
-                )}
-              </p>
-              <p className="tile-note">
-                엔진이 근거로 끌어온 출처 수{period === 'month' && ` · ${weeksInMonth.length}주 합계`}
-              </p>
-            </article>
           </section>
           {/*
             증감을 적지 않은 이유 · 떨어진 비교는 종이에도 싣는다 — 표지 · 숫자 칸 · 지표별 진단이 같은 판정을 쓰므로 이제 같은 문서
@@ -878,7 +1047,7 @@ export default function PeriodicReport() {
               ※ 직전 측정({weekLabel(comparison.previousWeekOf)})과{' '}
               {comparison.diffs.some((d) => d.state === 'changed') ? '측정 조건이 달라' : '견줄 측정 조건 기록이 한쪽에 없어'}(
               <ReasonText full={conditionReason(comparison.diffs)} plain={conditionSummary(comparison.diffs)} />) 표지 · Brand AEO Score · 언급률 ·
-              인용 건수 칸 · 지표별 진단에 증감을 적지 않았습니다.
+              언급 점유율 · 자사 인용률 칸 · 지표별 진단에 증감을 적지 않았습니다.
               같은 조건으로 다시 재면 증감이 다시 나옵니다.
             </p>
           )}
@@ -890,11 +1059,8 @@ export default function PeriodicReport() {
           {period === 'month' && monthCompare && !monthCompare.comparable && (
             <p className="hint">
               ※ 앞 달({monthLabel(prevMonth)})과 측정 조건이 같지 않아(
-              <ReasonText full={monthCompare.reason} plain={monthCompare.reasonPlain} />) 월 평균 · 합계에 증감을 적지 않았습니다.
+              <ReasonText full={monthCompare.reason} plain={monthCompare.reasonPlain} />) 월 평균에 증감을 적지 않았습니다.
             </p>
-          )}
-          {period === 'month' && monthCompare?.comparable && !monthCompare.sameWeeks && (
-            <p className="hint">※ 앞 달과 잰 주 수가 달라 인용 건수 합계에는 증감을 적지 않았습니다.</p>
           )}
 
           {explainLines.length > 0 && <ScoreExplainSection lines={explainLines} weekOf={card.weekOf} data={explainData} />}
@@ -942,61 +1108,28 @@ export default function PeriodicReport() {
             <section className="report-exec">
               <h3>집행한 글과 인용</h3>
               {execution.line && <p className="report-exec-line">{execution.line}</p>}
-              <div className="table-wrap">
-                <table className="exec-table">
-                  <thead>
-                    <tr>
-                      <th>올린 글</th>
-                      <th>올린 날 · 올린 곳</th>
-                      <th className="cell-text">올린 뒤 측정(최근 {EXEC_WEEKS}주까지)</th>
-                      <th className="cell-text">판단</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {execution.rows.map((r) => (
-                      <tr key={r.post.id}>
-                        <td className="cell-text">
-                          <b>{r.post.articleTitle ?? r.post.articleId}</b>
-                          <div>
-                            <UrlLink url={r.post.url} max={200} />
-                          </div>
-                        </td>
-                        <td className="cell-text">
-                          {r.post.publishedOn ? `${monthDay(r.post.publishedOn)} 올림` : '올린 날 모름'}
-                          {r.editedOn.length > 0 && ` · ${r.editedOn.map(monthDay).join(' · ')} 고침`}
-                          {r.removedOn && ` · ${monthDay(r.removedOn)} 내림`}
-                          <div className="doc-meta">{r.places.join(' · ')}</div>
-                        </td>
-                        <td className="cell-text">
-                          {r.after.length === 0
-                            ? '—'
-                            : r.after
-                                .slice(-EXEC_WEEKS)
-                                .map((a) => afterWeekText(a.weekOf, a.cell))
-                                .join(' · ')}
-                        </td>
-                        <td className="cell-text">
-                          {TIER_LABEL[r.summary.tier]}
-                          {r.summary.measuredAfter > 0 && (
-                            <div className="doc-meta">
-                              올린 뒤 측정한 {r.summary.measuredAfter}주 중 {r.summary.citedWeeks}주 인용
-                              {r.summary.measuredRuns !== r.summary.measuredAfter && ` (회차 ${r.summary.citedRuns}/${r.summary.measuredRuns})`}
-                              {r.summary.firstCitedDays !== null && ` · 첫 인용 확인 D+${r.summary.firstCitedDays}`}
-                            </div>
-                          )}
-                          {/* 성과 화면과 같은 표식 — 올린 뒤 측정 사이에 측정 조건이 바뀌었거나 확인할 수 없으면 주별 인용을 같은 조건의 반복으로 읽지 않는다. */}
-                          {r.summary.conditionMixed && <div className="doc-meta">◆ 그사이 측정 조건이 바뀌었거나 확인할 수 없음</div>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {/* 판단이 나온 글 먼저 — 기다리면 풀리는 색인 대기 · 측정 대기는 화면에서 접고 종이에는 편수만 적는다. */}
+              {execution.decided.length > 0 && <ExecTable rows={execution.decided} weeks={execution.shownWeeks} changed={execution.changed} />}
+              {execution.pending.length > 0 && (
+                <>
+                  <details className="exec-pending no-print" open={execution.decided.length === 0 || undefined}>
+                    <summary>{execution.pendingLabel} 보기</summary>
+                    <ExecTable rows={execution.pending} weeks={execution.shownWeeks} changed={execution.changed} />
+                  </details>
+                  <p className="hint print-only">{execution.pendingLabel} — 올린 지 14일이 안 됐거나 올린 뒤 측정이 아직 없어 목록은 생략했습니다.</p>
+                </>
+              )}
+              {execution.shownWeeks.some((w) => execution.changed.has(w)) && (
+                <p className="hint">
+                  ◆ 표시한 주는 직전 측정과 측정 조건(엔진 · 판정 · 모델 · 질문지 · 반복)이 다르거나 확인할 수 없는 주입니다 — 주별 인용을 같은
+                  조건의 반복으로 읽지 않습니다.
+                </p>
+              )}
               <p className="hint">
-                숫자는 그 주소를 정확히 인용한 AI 응답 수입니다. 같은 주에 여러 번 잰 주는 「3회 중 1회」처럼 회차 단위로 적습니다(한 회차라도
-                인용되면 그 주는 인용). 「여러 주 인용」은 올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 붙입니다 — 자주 잴수록 한 주가 인용으로
-                잡힐 기회가 늘어 회차 수를 함께 적습니다. 인용은 측정 조건과 다른 글에도 달려 있어, 점수 변화의 원인으로 읽지 않습니다. 「확인
-                불가」는 그 주 판정 기록이 없다는 뜻입니다.
+                주별 칸의 「인용 n」은 그 주소를 정확히 인용한 AI 응답 수이고, 같은 주에 여러 번 잰 주는 「3/7회」(7회 잰 중 3회 인용)처럼 회차
+                단위로 적습니다(한 회차라도 인용되면 그 주는 인용). 「D+9」는 올린 날로부터 9일째 측정에서 인용됐다는 뜻입니다. 「여러 주 인용」은
+                올린 뒤 서로 다른 2주 이상에서 인용됐을 때만 붙입니다 — 자주 잴수록 한 주가 인용으로 잡힐 기회가 늘어 회차 수를 함께 적습니다.
+                인용은 측정 조건과 다른 글에도 달려 있어, 점수 변화의 원인으로 읽지 않습니다. 「확인 불가」는 그 주 판정 기록이 없다는 뜻입니다.
               </p>
             </section>
           )}

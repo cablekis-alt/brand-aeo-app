@@ -2549,6 +2549,40 @@ p.hint {
 .exec-table {
   font-size: 13px;
 }
+/* 집행 표 — 판단을 맨 앞 고정 폭으로, 주별 칸은 가운데 짧게(2026-11-12 「판단이 아래로 길게 늘어져 직관적이지 않음」). */
+.exec-table .exec-tier {
+  width: 170px;
+  min-width: 150px;
+  white-space: normal;
+}
+.exec-table .exec-post {
+  min-width: 260px;
+}
+.exec-table .exec-week {
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.exec-table td.ew-cited {
+  font-weight: 700;
+  color: var(--good);
+}
+.exec-table td.ew-none {
+  color: var(--ink-2);
+}
+.exec-table td.ew-muted {
+  color: var(--muted);
+}
+.exec-pending {
+  margin: 10px 0 6px;
+}
+.exec-pending > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+  padding: 6px 0;
+}
 .report-trend h3 {
   margin: 24px 0 10px;
 }
@@ -3882,13 +3916,14 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
 .report-tiles > article:first-child .tile-value .delta.flat {
   color: var(--ink);
 }
-/* 종이에서는 넷이 한 줄 — 종이 폭에서 auto-fit이 3 + 1로 갈렸다(상용화 UI 3차 U29). */
+/* 종이에서는 다섯이 한 줄 — 종이 폭에서 auto-fit이 3 + 1로 갈렸다(상용화 UI 3차 U29). 칸이 좁아 숫자를 조금 줄인다. */
 @media print {
-  .report-tiles { grid-template-columns: repeat(4, 1fr); gap: 0; background: none; }
-  .report-tiles > article { padding: 10px 14px 12px; border-left: 1px solid var(--line); background: none; }
+  .report-tiles { grid-template-columns: repeat(5, 1fr); gap: 0; background: none; }
+  .report-tiles > article { padding: 10px 12px 12px; border-left: 1px solid var(--line); background: none; }
   .report-tiles > article:first-child { padding-left: 0; border-left: 0; }
+  .report-tiles .tile-value { font-size: 28px; }
   /* 좁은 칸에서 「월 평 / 균」처럼 낱말 가운데서 줄을 바꾸지 않게. */
-  .report-tiles :is(.tile-label, .tile-note) { word-break: keep-all; }
+  .report-tiles :is(.tile-label, .tile-note, .tile-detail) { word-break: keep-all; }
 }
 
 .tile-label {
@@ -3916,6 +3951,13 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   margin: 6px 0 0;
   font-size: 12px;
   color: var(--muted);
+}
+/* 숫자 바로 아래 「n건 중 m건」 — 설명(tile-note)보다 한 단계 진하게. */
+.tile-detail {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 720px) {
