@@ -6,7 +6,7 @@
  */
 import { aggregateWeeklyMetrics } from '../server/aggregate'
 import type { QuestionSpec } from '../src/prompts/types'
-import { citationDetail, mentionDetail, pct1, reportTileCounts, shareDetail } from '../src/lib/reportTiles'
+import { citationDetail, mentionDetail, pct1, reportTileCounts, roundedPoints, shareDetail } from '../src/lib/reportTiles'
 import type { QuestionRepeatAnalysis } from '../src/lib/types'
 
 const checks: [string, boolean][] = []
@@ -80,6 +80,17 @@ ok('건수를 모르면 작은 줄 없음', mentionDetail(null) === null && shar
 ok('작은 줄 글자', mentionDetail(c) === '이름 없는 질문 응답 4건 중 2건' && shareDetail(c) === '브랜드 언급 14회 중 우리 3회' && citationDetail(c) === '인용 24건 중 자사 9건')
 ok('천 단위 쉼표', citationDetail({ ...c, citations: { owned: 120, total: 1739 } }) === '인용 1,739건 중 자사 120건')
 ok('비율 → % 소수 한 자리', pct1(0.069) === 6.9 && pct1(0.0076) === 0.8 && pct1(0.027) === 2.7 && pct1(0) === 0)
+
+// 점수 몫 — 합이 총점과 정확히 같게(W46 실측 세 브랜드의 몫).
+const sumOf = (m: Map<string, number | null>) => Math.round([...m.values()].reduce((n: number, v) => n + (v ?? 0), 0) * 10) / 10
+const stay = roundedPoints([{ key: 'mention', points: 1.27 }, { key: 'rank', points: 15.45 }, { key: 'owned', points: 0.28 }], 17)
+ok('점수 몫 — 1.27 · 15.45 · 0.28 → 합 17(가장 큰 몫에서 맞춤)', sumOf(stay) === 17 && stay.get('mention') === 1.3 && stay.get('owned') === 0.3 && stay.get('rank') === 15.4)
+const gun = roundedPoints([{ key: 'mention', points: 0 }, { key: 'rank', points: null }, { key: 'owned', points: 3.07 }], 3)
+ok('점수 몫 — 순위 없는 주는 null 그대로, 합 3', sumOf(gun) === 3 && gun.get('rank') === null && gun.get('mention') === 0 && gun.get('owned') === 3)
+const o2o = roundedPoints([{ key: 'mention', points: 0.95 }, { key: 'rank', points: 20.87 }, { key: 'owned', points: 3.18 }], 25)
+ok('점수 몫 — 0.95 · 20.87 · 3.18 → 합 25', sumOf(o2o) === 25)
+const zero = roundedPoints([{ key: 'mention', points: 0 }, { key: 'rank', points: null }, { key: 'owned', points: 0 }], 0)
+ok('점수 몫 — 0점이면 모두 0', sumOf(zero) === 0 && zero.get('owned') === 0)
 
 let failed = 0
 for (const [label, pass] of checks) {

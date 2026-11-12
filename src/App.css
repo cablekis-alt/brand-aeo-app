@@ -3959,6 +3959,14 @@ table.facts button.ghost:hover { color: var(--bad); border-color: var(--bad); }
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
+/* 「점수 1.3점 · 비중 45%」 — Brand 칸 구성 줄과 같은 숫자를 칸마다. */
+.tile-points {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
 
 @media (max-width: 720px) {
   .tile-value {

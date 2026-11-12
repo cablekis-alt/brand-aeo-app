@@ -59,7 +59,7 @@ import { useScorecards } from '../lib/useScorecards'
 import { useWeekSelection } from '../lib/useWeekSelection'
 import { useWeeklyData } from '../lib/useWeeklyData'
 import { buildPeriodicReport, PRIORITY_LABEL, scoreBreakdown, STATUS_LABEL, weightTagText, type ScorePartKey } from '../lib/b9-report'
-import { citationDetail, mentionDetail, pct1, reportTileCounts, shareDetail } from '../lib/reportTiles'
+import { citationDetail, mentionDetail, pct1, reportTileCounts, roundedPoints, shareDetail } from '../lib/reportTiles'
 import type { EeatAnalysis } from '../prompts/b6-eeat'
 
 const EMPTY_EEAT: EeatAnalysis = {
@@ -464,6 +464,18 @@ export default function PeriodicReport() {
     () => (evidence && card ? reportTileCounts(evidence.analyses, evidence.bank?.questions ?? null, card.shareOfMentionMentions !== undefined) : null),
     [evidence, card],
   )
+  // 점수 몫 — Brand 칸의 「= 언급률 + 추천 순위 + 자사 인용」과 칸마다 「점수 n점 · 비중 m%」(합이 총점과 같게 소수 한 자리). 주간 보기에만 쓴다.
+  const tileParts = useMemo(() => {
+    if (!card) return null
+    const parts = scoreBreakdown(card)
+    const pts = roundedPoints(parts, card.aeoScore.current)
+    const weightOf = (k: ScorePartKey) => parts.find((p) => p.key === k)?.weight ?? 0
+    return { pts, weightOf }
+  }, [card])
+  const pointsLine = (k: ScorePartKey) => {
+    const p = tileParts?.pts.get(k)
+    return p === null || p === undefined ? null : `점수 ${p.toFixed(1)}점 · 비중 ${Math.round((tileParts?.weightOf(k) ?? 0) * 100)}%`
+  }
 
   /*
    * 같은 주 코호트 기록 — 다른 브랜드의 그 주 카드와 질문 은행. 브랜드마다 이력을 받아야 해서 무겁다 — 본문과 따로 뒤에서 불러오고,
@@ -895,10 +907,24 @@ export default function PeriodicReport() {
                   </>
                 )}
               </p>
+              {/* 점수 구성 — 「= 언급률 1.3 + 추천 순위 15.4 + 자사 인용 0.3」(합이 총점과 같게). 순위가 없는 주는 순위 몫을 빼고 그렇게 적는다. */}
+              {period === 'week' && tileParts && (
+                <p className="tile-detail">
+                  {(() => {
+                    const m = tileParts.pts.get('mentionRate')
+                    const r = tileParts.pts.get('avgRecommendationRank')
+                    const o = tileParts.pts.get('brandOwnedCitationRate')
+                    const fmt = (v: number | null | undefined) => (v ?? 0).toFixed(1)
+                    return r === null || r === undefined
+                      ? `= 언급률 ${fmt(m)} + 자사 인용 ${fmt(o)} · 추천 순위 없음`
+                      : `= 언급률 ${fmt(m)} + 추천 순위 ${fmt(r)} + 자사 인용 ${fmt(o)}`
+                  })()}
+                </p>
+              )}
               <p className="tile-note">
                 {period === 'month'
                   ? `100점 만점 · 답변에 얼마나 나오는가 · ${weeksInMonth.length}주 평균${prevMonth && monthCompare?.comparable ? ` · ${monthLabel(prevMonth)} 대비` : ''}`
-                  : '100점 만점 · 답변에 얼마나 나오는가'}
+                  : '100점 만점 · 답변에 얼마나 나오는가 · 구성은 아래 「점수 풀이」'}
               </p>
             </article>
             <article>
@@ -929,6 +955,7 @@ export default function PeriodicReport() {
               })()}
               {/* 응답 단위다 — 표지 문장(「질문 N개 중 M개」)은 질문 단위라 이름으로 가른다. */}
               {period === 'week' && mentionDetail(tileCounts) && <p className="tile-detail">{mentionDetail(tileCounts)}</p>}
+              {period === 'week' && pointsLine('mentionRate') && <p className="tile-points">{pointsLine('mentionRate')}</p>}
               <p className="tile-note">
                 이름 없이 물은 질문의 AI 응답 중 불린 비율 · 증감은 %p{period === 'month' && ` · ${weeksInMonth.length}주 평균`}
               </p>
@@ -963,6 +990,7 @@ export default function PeriodicReport() {
                 )
               })()}
               {period === 'week' && shareDetail(tileCounts) && <p className="tile-detail">{shareDetail(tileCounts)}</p>}
+              {period === 'week' && <p className="tile-points">점수에 들어가지 않음(참고 지표)</p>}
               <p className="tile-note">
                 이름 없이 물은 질문의 답에 나온 브랜드 언급 중 우리 몫 · 증감은 %p
                 {period === 'month' && ` · 판정한 주 ${weeksInMonth.filter((h) => h.shareOfMention !== null).length}/${weeksInMonth.length}주 평균`}
@@ -997,6 +1025,7 @@ export default function PeriodicReport() {
               {period === 'week'
                 ? citationDetail(tileCounts) && <p className="tile-detail">{citationDetail(tileCounts)}</p>
                 : cite.now !== null && <p className="tile-detail">{`인용 ${cite.now.toLocaleString()}건 · ${weeksInMonth.length}주 합계`}</p>}
+              {period === 'week' && pointsLine('brandOwnedCitationRate') && <p className="tile-points">{pointsLine('brandOwnedCitationRate')}</p>}
               <p className="tile-note">엔진이 근거로 끌어온 출처 중 자사 사이트 몫 · 증감은 %p</p>
             </article>
             <article>
