@@ -8913,9 +8913,14 @@ tr.ms-run-child td:nth-child(2) {
  * ── 발행 현황(src/pages/PublishStatus.tsx) ───────────────────────────────
  * 요약 칸 · 작성자별 진행 · 거르기 · 한 표. 표는 열이 많아 좁은 창에서는 표 안에서만 옆으로 민다(.table-wrap).
  */
+/*
+ * 요약 칸 6개는 6칸 격자에 놓고, 칸 너비로 차지할 칸 수만 바꾼다 — 넓으면 한 줄 6칸, 780px 밑이면 3칸씩 두 줄, 390px 밑이면 2칸씩 세 줄.
+ * 흘려 감기(flex-wrap)는 5칸 + 1칸처럼 한 칸만 혼자 내려가 줄 전체로 늘어났다. 칸 수를 바꾸면 6을 나누는 수인지 다시 볼 것(남은 자리는 선 색으로 보인다).
+ */
 .ps-summary {
-  display: flex;
-  flex-wrap: wrap;
+  container: ps-summary / inline-size;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1px;
   margin: 0 0 14px;
   border-top: 1px solid var(--ink);
@@ -8923,7 +8928,7 @@ tr.ms-run-child td:nth-child(2) {
   background: var(--line);
 }
 .ps-sum {
-  flex: 1 1 130px;
+  grid-column: span 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -8945,6 +8950,12 @@ tr.ms-run-child td:nth-child(2) {
 }
 .ps-sum.good .ps-sum-value { color: var(--good); }
 .ps-sum.warn .ps-sum-value { color: var(--warn); }
+@container ps-summary (max-width: 779px) {
+  .ps-sum { grid-column: span 2; }
+}
+@container ps-summary (max-width: 389px) {
+  .ps-sum { grid-column: span 3; }
+}
 .ps-sum-sub {
   font-size: 12px;
   color: var(--muted);
