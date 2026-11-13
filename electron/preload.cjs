@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld('electron', {
   },
   // 자동 업데이트
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  // 지금 업데이트 상태(창이 늦게 떠 놓친 시작 확인 결과 · 지난번 설치가 끝나지 않음). 없으면 null.
+  getUpdateStatus: () => ipcRenderer.invoke('update:getStatus'),
   quitAndInstall: () => ipcRenderer.invoke('update:quitAndInstall'),
   openReleases: () => ipcRenderer.invoke('update:openReleases'),
   onUpdateStatus: (cb) => {

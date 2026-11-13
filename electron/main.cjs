@@ -16,6 +16,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const net = require('node:net')
 const { registerMapScheme, disposeMapRender } = require('./mapRender.cjs')
+const updateLog = require('./updateLog.cjs')
 
 // 지도 그리기(electron/mapRender.cjs)의 osmmap:// 스킴은 app ready 전에 특권 스킴으로 등록해야 한다(capture.cjs는 ready 뒤에 읽혀 늦다).
 // 처리기는 지도 전용 partition에만 걸리므로 본 창(기본 세션)은 osmmap://을 열 수 없다.
@@ -409,36 +410,161 @@ async function createWindow() {
         ),
     )
   }
-  initAutoUpdater()
 }
 
 /**
- * 자동 업데이트 — GitHub Releases의 latest.yml을 확인해 새 버전을 내려받고, 다음 실행 시 설치한다.
- * 패키징 빌드에서만 동작(app-update.yml 필요). 상태는 렌더러(update:status)로 통지해 UI가 표시한다.
+ * 자동 업데이트 — GitHub Releases의 latest.yml을 확인해 새 버전을 내려받아 두고, **앱을 정상 종료할 때** 설치한다
+ * (electron-updater autoInstallOnAppQuit — 다음 실행 때가 아니다). 패키징 빌드에서만 동작(app-update.yml 필요).
+ * 상태는 렌더러(update:status)로 보내고 마지막 상태를 기억해 둔다 — 창이 늦게 떠도 update:getStatus로 받아 간다.
+ *
+ * 2026-11-13 원인 분석으로 바꾼 것(판정은 electron/updateLog.cjs):
+ * - 확인이 시작 때 1번뿐이라 켜 둔 동안 나온 릴리스를 못 봤다 → 1시간마다 다시 확인한다.
+ * - 릴리스 공개 직후 latest.yml이 아직 없으면 확인이 실패한 채 끝났다 → 5분 뒤 다시(최대 6번).
+ * - 종료 때 설치가 Windows 스마트 앱 컨트롤 등에 막혀도 흔적이 없었다 → 시도를 userData/update-log.json에 적고, 다음 시작 때
+ *   버전이 그대로면 「설치가 끝나지 않음」을 화면에 알린다.
+ * - 시작 확인이 창 만들기 끝에 있어 서버 기동이 실패하면 확인도 건너뛰었다 → app ready에서 한 번만 건다.
  */
 let autoUpdater = null
+let lastUpdateStatus = null
+let lastInstallFailure = null // 지난번 종료 때 시도한 설치가 끝나지 않았으면 { version, fromVersion, attemptedAt, via }
+let downloadedVersion = null // 이번 세션에 받아 둔(종료 때 설치될) 버전
+let checkInFlight = false
+let retryCount = 0
+let retryTimer = null
+
+const updateLogPath = () => path.join(app.getPath('userData'), 'update-log.json')
+
+function readUpdateLog() {
+  let text = null
+  try {
+    text = fs.readFileSync(updateLogPath(), 'utf8')
+  } catch (err) {
+    if (err?.code !== 'ENOENT') console.warn('[update] update-log.json을 읽지 못했습니다', err)
+  }
+  const { log, problem } = updateLog.parseLog(text)
+  if (problem) console.warn(`[update] ${problem}`)
+  return log
+}
+
+function writeUpdateLog(log) {
+  const file = updateLogPath()
+  const tmp = `${file}.tmp`
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(log, null, 2))
+    fs.renameSync(tmp, file)
+  } catch (err) {
+    console.error('[update] update-log.json을 쓰지 못했습니다', err)
+  }
+}
+
+function noteUpdateEvent(event) {
+  writeUpdateLog(updateLog.recordEvent(readUpdateLog(), { at: new Date().toISOString(), ...event }))
+}
+
+/** 지난번 설치가 끝나지 않았으면 그 버전을 상태에 붙인다 — 화면이 지금 상태와 함께 알린다. */
+function withInstallFailure(status) {
+  return lastInstallFailure ? { ...status, failedVersion: lastInstallFailure.version } : status
+}
 
 function sendUpdateStatus(status) {
-  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update:status', status)
+  lastUpdateStatus = status
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update:status', withInstallFailure(status))
+}
+
+/**
+ * 확인 하나. 이미 도는 중이거나 이번 세션에 받아 둔 업데이트가 있으면(종료 때 설치된다) 정기 · 재확인은 건너뛴다. 손으로 누른 확인은
+ * 늘 돈다(electron-updater가 도는 확인을 함께 쓴다).
+ */
+function checkForUpdate(reason) {
+  if (!autoUpdater) return
+  if (reason !== 'manual' && (checkInFlight || downloadedVersion)) return
+  checkInFlight = true
+  autoUpdater
+    .checkForUpdates()
+    .catch((err) => console.warn(`[update] 확인 실패(${reason})`, err instanceof Error ? err.message : err))
+    .finally(() => {
+      checkInFlight = false
+    })
+}
+
+/** latest.yml이 아직 없으면 몇 분 뒤 다시 — 정해진 횟수까지, 그다음은 정기 확인에 맡긴다. */
+function scheduleRetry() {
+  if (retryTimer) return
+  const delay = updateLog.retryDelay(retryCount + 1)
+  if (delay === null) return
+  retryCount += 1
+  retryTimer = setTimeout(() => {
+    retryTimer = null
+    checkForUpdate('retry')
+  }, delay)
+  retryTimer.unref?.()
+}
+
+/**
+ * 이번 세션에 받아 둔 업데이트를 설치하러 나간다고 적는다(정상 종료 · 「재시작하여 설치」 단추). 설치 파일이 실제로 남아 있을 때만 —
+ * 더 새 버전을 받기 시작하면 electron-updater가 받아 둔 파일을 지우므로, 그때 적으면 돌지도 않은 설치를 「끝나지 않음」으로 알린다.
+ */
+function noteInstallAttempt(via) {
+  if (!downloadedVersion) return
+  const installer = autoUpdater?.installerPath
+  if (!installer || !fs.existsSync(installer)) {
+    noteUpdateEvent({ type: 'install-skipped', version: downloadedVersion, via, message: '받아 둔 설치 파일이 없어 종료 때 설치가 돌지 않습니다.' })
+    return
+  }
+  writeUpdateLog(
+    updateLog.recordAttempt(readUpdateLog(), { version: downloadedVersion, fromVersion: app.getVersion(), at: new Date().toISOString(), via }),
+  )
 }
 
 function initAutoUpdater() {
   if (!app.isPackaged) return
   try {
     ;({ autoUpdater } = require('electron-updater'))
-  } catch {
+  } catch (err) {
     autoUpdater = null
-    return // 의존성 없음 — 무시
+    console.warn('[update] electron-updater를 불러오지 못해 자동 업데이트를 끕니다', err)
+    return
   }
+  // 지난번 종료 때 설치를 시도했는지 — 어떤 길로든 지금 버전이 그 버전 이상이면 설치된 것, 그대로면 끝나지 않은 것이다.
+  const judged = updateLog.judgeOnStart(readUpdateLog(), app.getVersion(), new Date().toISOString())
+  if (judged.changed) writeUpdateLog(judged.log)
+  lastInstallFailure = judged.failure
+  if (lastInstallFailure) console.warn(`[update] 지난번 v${lastInstallFailure.version} 설치가 끝나지 않았습니다(지금 v${app.getVersion()}).`)
+
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.on('checking-for-update', () => sendUpdateStatus({ state: 'checking' }))
-  autoUpdater.on('update-available', (info) => sendUpdateStatus({ state: 'available', version: info?.version }))
-  autoUpdater.on('update-not-available', (info) => sendUpdateStatus({ state: 'not-available', version: info?.version }))
+  autoUpdater.on('update-available', (info) => {
+    retryCount = 0
+    // 받아 둔 것과 다른(더 새) 버전이면 electron-updater가 받아 둔 파일을 지우고 새로 받는다 — 받기가 끝나 update-downloaded가 올 때까지
+    // 「받아 둔 버전」은 없는 것으로 둔다(정기 확인도 다시 돈다).
+    if (info?.version && info.version !== downloadedVersion) downloadedVersion = null
+    sendUpdateStatus({ state: 'available', version: info?.version })
+  })
+  autoUpdater.on('update-not-available', (info) => {
+    retryCount = 0
+    sendUpdateStatus({ state: 'not-available', version: info?.version })
+  })
   autoUpdater.on('download-progress', (p) => sendUpdateStatus({ state: 'downloading', percent: Math.round(p?.percent || 0) }))
-  autoUpdater.on('update-downloaded', (info) => sendUpdateStatus({ state: 'downloaded', version: info?.version }))
-  autoUpdater.on('error', (err) => sendUpdateStatus({ state: 'error', message: err instanceof Error ? err.message : String(err) }))
-  autoUpdater.checkForUpdates().catch(() => {}) // 시작 시 1회(조용히)
+  // 새로 받았거나 지난번 받은 파일을 다시 확인하면 electron-updater가 종료 때 설치를 건다(BaseUpdater addQuitHandler) — 같은 때 기억한다.
+  autoUpdater.on('update-downloaded', (info) => {
+    downloadedVersion = info?.version ?? null
+    noteUpdateEvent({ type: 'downloaded', version: downloadedVersion })
+    sendUpdateStatus({ state: 'downloaded', version: info?.version })
+  })
+  autoUpdater.on('error', (err) => {
+    const message = err instanceof Error ? err.message : String(err)
+    noteUpdateEvent({ type: 'error', code: err?.code ?? null, message })
+    if (updateLog.isMissingChannelFile(err)) scheduleRetry()
+    sendUpdateStatus({ state: 'error', message })
+  })
+  // electron-updater와 같은 조건(정상 종료 · exit code 0)일 때만 설치가 돈다 — 그때만 시도를 적는다.
+  app.on('quit', (_event, exitCode) => {
+    if (exitCode === 0) noteInstallAttempt('quit')
+  })
+  checkForUpdate('start')
+  const timer = setInterval(() => checkForUpdate('interval'), updateLog.CHECK_INTERVAL_MS)
+  timer.unref?.()
 }
 
 /** "1.2.3" 형식 비교 — a가 b보다 높으면 true. */
@@ -452,8 +578,8 @@ function isNewerVersion(a, b) {
   return false
 }
 
-// 렌더러의 "업데이트 확인" — GitHub API로 최신 릴리스를 직접 조회한다(electron-updater의 캐싱/판정
-// 이슈로 새 버전을 못 잡는 경우가 있어, 감지는 API로 확실히 하고 다운로드만 electron-updater/수동에 맡긴다).
+// 렌더러의 "업데이트 확인" — GitHub API로 최신 릴리스를 직접 보고 app.getVersion()과 비교한다. 새 버전이면 electron-updater
+// 확인도 바로 돌려 받아 두게 한다(받으면 종료 때 설치, 화면에는 '재시작하여 설치'). 안 되면 수동 링크.
 ipcMain.handle('update:check', async () => {
   const version = app.getVersion()
   if (!app.isPackaged) return { state: 'dev', version }
@@ -465,14 +591,20 @@ ipcMain.handle('update:check', async () => {
     const data = await res.json()
     const latest = String(data.tag_name || '').replace(/^v/, '')
     if (latest && isNewerVersion(latest, version)) {
-      // 새 버전 있음 — electron-updater 자동 다운로드도 시도(되면 '재시작하여 설치'까지). 안 되면 수동 링크.
-      if (autoUpdater) autoUpdater.checkForUpdates().catch(() => {})
-      return { state: 'available', version: latest }
+      checkForUpdate('manual')
+      return withInstallFailure({ state: 'available', version: latest })
     }
-    return { state: 'not-available', version, latest }
+    return withInstallFailure({ state: 'not-available', version, latest })
   } catch (err) {
-    return { state: 'error', version, message: err instanceof Error ? err.message : String(err) }
+    return withInstallFailure({ state: 'error', version, message: err instanceof Error ? err.message : String(err) })
   }
+})
+
+// 지금 업데이트 상태 — 창이 늦게 떠서 놓친 상태(시작 확인 결과 · 지난번 설치가 끝나지 않음)를 화면이 켤 때 받아 간다.
+ipcMain.handle('update:getStatus', () => {
+  if (!app.isPackaged) return { state: 'dev', version: app.getVersion() }
+  if (lastUpdateStatus) return withInstallFailure(lastUpdateStatus)
+  return lastInstallFailure ? { state: 'install-failed', version: lastInstallFailure.version, failedVersion: lastInstallFailure.version } : null
 })
 
 // 자동 업데이트가 불안정할 때의 수동 폴백 — 릴리스 페이지를 기본 브라우저로 연다.
@@ -481,7 +613,9 @@ ipcMain.handle('update:openReleases', () => {
 })
 
 ipcMain.handle('update:quitAndInstall', () => {
-  if (app.isPackaged && autoUpdater) autoUpdater.quitAndInstall()
+  if (!app.isPackaged || !autoUpdater) return
+  noteInstallAttempt('button')
+  autoUpdater.quitAndInstall()
 })
 
 // ── API 키 설정(앱 내 입력) ──────────────────────────────────────────────
@@ -641,6 +775,8 @@ app.whenReady().then(() => {
   // Windows 알림은 앱 사용자 모델 ID로 앱을 찾는다 — 설치본은 electron-builder.yml appId(시작 메뉴 바로가기와 같은 값), 개발은 실행 파일 경로.
   if (process.platform === 'win32') app.setAppUserModelId(app.isPackaged ? 'kr.o2o.web4ai.brandaeo' : process.execPath)
   void createWindow()
+  // 창 만들기(서버 기동 · 화면 읽기)와 떼어 한 번만 건다 — 서버가 실패해도 새 버전은 확인하고, activate로 창을 다시 만들어도 두 번 걸지 않는다.
+  initAutoUpdater()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) void createWindow()
   })

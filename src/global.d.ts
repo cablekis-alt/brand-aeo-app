@@ -11,6 +11,8 @@ type UpdateState =
   | 'downloaded'
   | 'error'
   | 'dev'
+  /** 지난번 종료 때 설치를 시도했는데 버전이 그대로 — 아직 다른 확인 결과가 없을 때만 이 상태로 온다. */
+  | 'install-failed'
 
 interface UpdateStatus {
   state: UpdateState
@@ -18,6 +20,8 @@ interface UpdateStatus {
   latest?: string
   percent?: number
   message?: string
+  /** 지난번 종료 때 설치가 끝나지 않은 버전(electron/updateLog.cjs) — 어느 상태에든 붙어 함께 알린다. */
+  failedVersion?: string
 }
 
 interface ElectronBridge {
@@ -26,6 +30,8 @@ interface ElectronBridge {
   versions: { electron: string; node: string; chrome: string }
   /** 수동 업데이트 확인 → 현재 상태를 반환(이후 진행은 onUpdateStatus로 통지). */
   checkForUpdates: () => Promise<UpdateStatus>
+  /** 지금 업데이트 상태(창이 늦게 떠 놓친 상태 포함). 없으면 null. 옛 preload에는 없다. */
+  getUpdateStatus?: () => Promise<UpdateStatus | null>
   /** 다운로드된 업데이트를 지금 설치(앱 재시작). */
   quitAndInstall: () => Promise<void>
   /** 업데이트 상태 변화 구독. 해제 함수를 반환. */
