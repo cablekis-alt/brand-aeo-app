@@ -6,7 +6,16 @@
 import type { ExternalHistory, HistoryCell, HistoryWeek, PostHistory, PublishedHistory, PublishedPost } from '../src/lib/api'
 import { publishStatusCsv, type PublishStatusRow } from '../src/lib/publishStatus'
 import { summarizePost, TIER_LABEL } from '../src/lib/publishTracking'
-import { CITATION_LABEL, citationCellOf, citationTargets, type TenantCitationSource } from '../src/lib/statusCitation'
+import {
+  CITATION_FILTER_OPTIONS,
+  CITATION_LABEL,
+  citationCellOf,
+  citationFilterMatches,
+  citationTargets,
+  summarizeCitation,
+  type CitationKind,
+  type TenantCitationSource,
+} from '../src/lib/statusCitation'
 
 const checks: [string, boolean][] = []
 const ok = (label: string, cond: boolean) => checks.push([label, cond])
@@ -154,6 +163,54 @@ ok(
     plain.slice(-2).join(',') === '네이버 확인 방법,구글 확인 방법' &&
     withCite.split('\r\n')[1]!.includes(',여러 주 인용 (3/3주),'),
 )
+
+// ── 거르기 — 표 위 「AI 인용」 선택 ──
+const ALL_KINDS: CitationKind[] = ['na', 'loading', 'unknown', 'moved', 'repeated', 'once', 'none', 'indexing', 'waiting', 'undated', 'removed']
+const matching = (f: Parameters<typeof citationFilterMatches>[0]) => ALL_KINDS.filter((k) => citationFilterMatches(f, k)).join(',')
+ok(
+  '거르기 — 인용됨은 여러 주 · 한 주, 아직 판단 전은 판단 전 · 올린 뒤 측정 없음 · 올린 날 모름, 나머지는 그 단계만, 전체는 모두',
+  matching('cited') === 'repeated,once' &&
+    matching('repeated') === 'repeated' &&
+    matching('once') === 'once' &&
+    matching('none') === 'none' &&
+    matching('pending') === 'indexing,waiting,undated' &&
+    matching('unknown') === 'unknown' &&
+    matching('') === ALL_KINDS.join(','),
+)
+ok('거르기 — 읽는 중인 줄은 「확인 불가」에도 들지 않음(읽고 나서 제 단계로)', !CITATION_FILTER_OPTIONS.some((o) => o.value !== '' && citationFilterMatches(o.value, 'loading')))
+ok(
+  '거르기 선택지 — 전체가 먼저 · 값이 겹치지 않음 · 단계 이름은 칸과 같은 말',
+  CITATION_FILTER_OPTIONS[0]!.value === '' &&
+    new Set(CITATION_FILTER_OPTIONS.map((o) => o.value)).size === CITATION_FILTER_OPTIONS.length &&
+    CITATION_FILTER_OPTIONS.find((o) => o.value === 'repeated')!.label === CITATION_LABEL.repeated &&
+    CITATION_FILTER_OPTIONS.find((o) => o.value === 'none')!.label === CITATION_LABEL.none,
+)
+
+// ── 맨 위 요약 칸 — 살아 있는 올린 글을 서로 다른 주소로 ──
+const sumOf = (rows: PublishStatusRow[], source: TenantCitationSource | undefined = ready) => summarizeCitation(rows, (r) => citationCellOf(r, source))
+const s1 = sumOf([row('rep'), row('once'), row('none'), row('fresh'), row('wait'), row('ghost'), row(null, { kind: 'unposted' })])
+ok(
+  '요약 — 인용된 글 = 여러 주 + 한 주, 확인 불가는 따로(0으로 세지 않음), 안 올린 줄은 세지 않음',
+  s1.posts === 6 && s1.cited === 2 && s1.repeated === 1 && s1.once === 1 && s1.unknown === 1 && !s1.loading,
+)
+const s2 = sumOf([row('rep'), row('once', { removed: { reason: 'taken-down', at: '2026-11-01T00:00:00Z' } }), row('none', { removed: { reason: 'mistake', at: '2026-11-01T00:00:00Z' } })])
+ok('요약 — 내린 글 · 잘못 적은 주소로 뺀 줄은 세지 않음(올린 글 칸과 같은 범위)', s2.posts === 1 && s2.cited === 1)
+// 범위 변형 두 브랜드에 같은 주소 — 한 브랜드에서라도 여러 주면 여러 주 한 편.
+const twin = [row('once', { key: 'blog.example/same' }), row('rep', { key: 'blog.example/same', rowKey: 'vstay2|rep', tenantId: 'vstay2' })]
+const s3 = sumOf(twin)
+ok('요약 — 같은 주소의 두 줄은 한 편, 더 높은 단계(여러 주)로', s3.posts === 1 && s3.repeated === 1 && s3.once === 0 && s3.cited === 1)
+ok(
+  '요약 — 같은 주소에 인용된 줄이 있으면 다른 줄을 못 읽어도 확인 불가로 세지 않음',
+  (() => {
+    const s = sumOf([row('once', { key: 'blog.example/same' }), row('ghost', { key: 'blog.example/same', rowKey: 'vstay2|ghost' })])
+    return s.posts === 1 && s.once === 1 && s.unknown === 0
+  })(),
+)
+const s4 = sumOf([row('rep'), row('once')], { ...ready, app: { state: 'loading' } })
+ok('요약 — 읽는 중인 줄이 있으면 loading(화면은 숫자 대신 「…」)', s4.loading && s4.cited === 0)
+const s5 = sumOf([row('rep'), row('once')], { ...ready, app: { state: 'error', error: 'HTTP 500' } })
+ok('요약 — 모두 못 읽으면 인용 0이 아니라 확인 불가 전부(화면은 「확인 불가」)', !s5.loading && s5.cited === 0 && s5.unknown === s5.posts && s5.posts === 2)
+ok('요약 — 줄이 없으면 모두 0', JSON.stringify(sumOf([])) === JSON.stringify({ posts: 0, cited: 0, repeated: 0, once: 0, unknown: 0, loading: false }))
 
 let failed = 0
 for (const [label, pass] of checks) {

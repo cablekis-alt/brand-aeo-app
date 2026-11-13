@@ -763,6 +763,11 @@ export function summarizeStatus(rows: PublishStatusRow[], today: string): Status
 }
 
 export type StateFilter = '' | IndexState | 'unknown'
+/**
+ * 「AI 인용」 거르기 — '' = 전체, cited = 인용됨(여러 주 · 한 주), pending = 아직 판단 전(판단 전 · 올린 뒤 측정 없음 · 올린 날 모름),
+ * unknown = 확인 불가. 판정은 src/lib/statusCitation.ts citationFilterMatches — 이 파일은 서버도 읽어 그 모듈(화면 훅을 끌어온다)을 불러오지 않는다.
+ */
+export type CitationFilter = '' | 'cited' | 'repeated' | 'once' | 'none' | 'pending' | 'unknown'
 export interface StatusFilter {
   /** '' = 모든 브랜드. */
   tenantId: string
@@ -770,6 +775,7 @@ export interface StatusFilter {
   writer: string
   naver: StateFilter
   google: StateFilter
+  citation: CitationFilter
   dueOnly: boolean
   showUnposted: boolean
   showRemoved: boolean
@@ -784,15 +790,24 @@ export function writerFilterValue(row: WriterCell): string {
 
 const stateMatches = (f: StateFilter, check: IndexCheck | null) => !f || (f === 'unknown' ? check === null : check?.state === f)
 
-/** 거르기 — 엔진 상태 · 오늘 다시 볼 글은 올린 글에만 뜻이 있어 그 거르기를 켜면 아직 안 올린 글은 빠진다. */
-export function filterRows(rows: PublishStatusRow[], f: StatusFilter, today: string): PublishStatusRow[] {
-  const byState = Boolean(f.naver || f.google || f.dueOnly)
+/**
+ * 거르기 — 엔진 상태 · AI 인용 · 오늘 다시 볼 글은 올린 글에만 뜻이 있어 그 거르기를 켜면 아직 안 올린 글은 빠진다. AI 인용 거르기는
+ * citationMatches(화면이 읽은 인용 이력으로 그 줄이 고른 값에 맞는지)로 본다 — 주지 않으면 인용 거르기를 켠 표는 비어 있다.
+ */
+export function filterRows(
+  rows: PublishStatusRow[],
+  f: StatusFilter,
+  today: string,
+  citationMatches?: (row: PublishStatusRow) => boolean,
+): PublishStatusRow[] {
+  const byState = Boolean(f.naver || f.google || f.citation || f.dueOnly)
   return rows.filter((r) => {
     if (f.tenantId && r.tenantId !== f.tenantId) return false
     if (f.writer && writerFilterValue(r) !== f.writer) return false
     if (r.kind === 'unposted') return f.showUnposted && !byState
     if (r.removed && !f.showRemoved) return false
     if (!stateMatches(f.naver, r.naver) || !stateMatches(f.google, r.google)) return false
+    if (f.citation && !citationMatches?.(r)) return false
     return !f.dueOnly || rowRecheck(r, today).due
   })
 }

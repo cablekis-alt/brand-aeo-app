@@ -331,12 +331,25 @@ const sumRows = [
 ]
 const sum = summarizeStatus(sumRows, '2026-11-09')
 ok('요약 — 올린 글 · 네이버 노출 · 구글 색인 · 미확인(한 엔진이라도) · 오늘 다시 볼(내린 글 · 안 올린 글은 세지 않는다)', sum.posted === 3 && sum.naverShown === 1 && sum.googleShown === 1 && sum.unknown === 2 && sum.due === 1)
-const base: StatusFilter = { tenantId: '', writer: '', naver: '', google: '', dueOnly: false, showUnposted: true, showRemoved: false }
+const base: StatusFilter = { tenantId: '', writer: '', naver: '', google: '', citation: '', dueOnly: false, showUnposted: true, showRemoved: false }
 const keys = (f: Partial<StatusFilter>) => filterRows(sumRows, { ...base, ...f }, '2026-11-09').map((r) => r.rowKey).join(',')
 ok(
   '거르기 — 기본은 내린 글을 숨기고 안 올린 글을 보인다 · 상태 거르기는 올린 글만 · 오늘 다시 볼 글 · 작성자',
   keys({}) === 'a,b,c,e' && keys({ showRemoved: true }) === 'a,b,c,d,e' && keys({ showUnposted: false }) === 'a,b,c' && keys({ naver: 'unknown' }) === 'c' &&
     keys({ naver: 'not-yet' }) === 'b' && keys({ google: 'shown' }) === 'a' && keys({ dueOnly: true }) === 'b' && keys({ writer: 'w1\n김가상' }) === 'e' && keys({ writer: 'none' }) === 'a,b,c',
+)
+// AI 인용 거르기 — 판정은 화면이 넘기는 함수(statusCitation.ts)가 하고, 여기서는 켜면 올린 글만 · 다른 거르기와 함께 · 판정 함수가 없으면 비는지만 본다.
+const citedKeys = (f: Partial<StatusFilter>, cited: string[] | null) =>
+  filterRows(sumRows, { ...base, ...f }, '2026-11-09', cited === null ? undefined : (r) => cited.includes(r.rowKey))
+    .map((r) => r.rowKey)
+    .join(',')
+ok(
+  '거르기 — AI 인용을 켜면 그 판정에 맞는 올린 글만(안 올린 글 · 내린 글은 빠짐), 다른 거르기와 함께, 판정 함수가 없으면 빈 표 · 끄면 그대로',
+  citedKeys({ citation: 'cited' }, ['a', 'c', 'd', 'e']) === 'a,c' &&
+    citedKeys({ citation: 'cited', showRemoved: true }, ['a', 'd']) === 'a,d' &&
+    citedKeys({ citation: 'cited', naver: 'unknown' }, ['a', 'c']) === 'c' &&
+    citedKeys({ citation: 'none' }, null) === '' &&
+    citedKeys({}, []) === 'a,b,c,e',
 )
 
 // ── 7) CSV ───────────────────────────────────────────────────────────────────

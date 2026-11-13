@@ -47,6 +47,7 @@ import {
   WRITER_UNKNOWN_NOTE,
   writerFilterValue,
   writerLabel,
+  type CitationFilter,
   type IndexEngine,
   type IndexState,
   type PublishStatus as PublishStatusData,
@@ -54,9 +55,26 @@ import {
   type StateFilter,
   type StatusFilter,
 } from '../lib/publishStatus'
-import { citationCellOf, citationTargets, type CitationCell, type TenantCitationSource } from '../lib/statusCitation'
+import {
+  CITATION_FILTER_OPTIONS,
+  citationCellOf,
+  citationFilterMatches,
+  citationTargets,
+  summarizeCitation,
+  type CitationCell,
+  type TenantCitationSource,
+} from '../lib/statusCitation'
 
-const DEFAULT_FILTER: StatusFilter = { tenantId: '', writer: '', naver: '', google: '', dueOnly: false, showUnposted: true, showRemoved: false }
+const DEFAULT_FILTER: StatusFilter = {
+  tenantId: '',
+  writer: '',
+  naver: '',
+  google: '',
+  citation: '',
+  dueOnly: false,
+  showUnposted: true,
+  showRemoved: false,
+}
 
 /** 주소 칸에 보일 글자 — http(s)://를 뗀다(누르면 전체 주소로 연다). */
 const shortUrl = (url: string) => url.replace(/^https?:\/\//i, '').replace(/\/+$/, '')
@@ -548,7 +566,11 @@ export default function PublishStatus() {
   const writerOptions = [...new Map(inBrand.map((r) => [writerFilterValue(r), writerLabel(r)])).entries()].sort((a, b) => a[1].localeCompare(b[1], 'ko'))
   const scope = inBrand.filter((r) => !filter.writer || writerFilterValue(r) === filter.writer)
   const sum = summarizeStatus(scope, today)
-  const shown = filterRows(rows, filter, today)
+  const citeSum = summarizeCitation(scope, citationOf)
+  const citeMatches = (r: PublishStatusRow) => citationFilterMatches(filter.citation, citationOf(r).kind)
+  const shown = filterRows(rows, filter, today, citeMatches)
+  // AI 인용 거르기를 켰는데 아직 이력을 읽는 줄이 있다 — 빈 표를 「맞는 글 없음」으로 말하지 않고, 덜 찬 표에는 그렇다고 밝힌다.
+  const citeLoading = filter.citation !== '' && filterRows(rows, { ...filter, citation: '' }, today).some((r) => citationOf(r).kind === 'loading')
   const writers = (data?.writers ?? []).filter((w) => !filter.tenantId || w.tenantId === filter.tenantId)
   const writerBrands = [...new Set(writers.map((w) => w.tenantId))]
   const sameUrl = sameUrlBrands(rows)
@@ -593,6 +615,18 @@ export default function PublishStatus() {
       tone: 'good',
     },
     { label: '미확인', value: sum.unknown, sub: '한 엔진이라도 아직 안 본 글', tone: '' },
+    // 측정한 AI 답변에 인용된 글(표 「AI 인용」 칸과 같은 판단) — 읽는 중이면 숫자를 보이지 않고, 못 읽은 글은 0으로 세지 않고 따로 밝힌다.
+    // 숫자가 아닐 때(읽는 중 · 모두 못 읽음)는 「좋음」 색을 쓰지 않는다.
+    citeSum.loading
+      ? { label: 'AI 인용', value: '…', sub: '인용 이력을 읽는 중', tone: '' }
+      : citeSum.posts > 0 && citeSum.unknown === citeSum.posts
+        ? { label: 'AI 인용', value: '확인 불가', sub: `인용 이력을 읽지 못한 글 ${citeSum.unknown}편`, tone: '' }
+        : {
+            label: 'AI 인용',
+            value: citeSum.cited,
+            sub: `여러 주 ${citeSum.repeated} · 한 주 ${citeSum.once}${citeSum.unknown > 0 ? ` · 확인 불가 ${citeSum.unknown}` : ''}`,
+            tone: 'good',
+          },
     { label: '오늘 다시 볼', value: sum.due, sub: '올린 뒤 3 · 7 · 14일째', tone: 'warn' },
   ]
 
@@ -610,7 +644,14 @@ export default function PublishStatus() {
               {headLabel}
             </button>
           )}
-          <button type="button" className="btn" onClick={exportCsv} disabled={!data || shown.length === 0}>
+          {/* AI 인용 거르기를 켠 채 이력을 읽는 중이면 아직 표에 들지 않은 글이 빠진 파일이 된다 — 다 읽은 뒤 받는다. */}
+          <button
+            type="button"
+            className="btn"
+            onClick={exportCsv}
+            disabled={!data || shown.length === 0 || citeLoading}
+            title={citeLoading ? 'AI 인용 이력을 다 읽은 뒤 받을 수 있습니다' : undefined}
+          >
             CSV로 받기
           </button>
           <button type="button" className="btn" onClick={reload}>
@@ -779,6 +820,16 @@ export default function PublishStatus() {
                     </select>
                   </label>
                 ))}
+                <label className="ps-field">
+                  <span>AI 인용</span>
+                  <select value={filter.citation} onChange={(e) => patchFilter({ citation: e.target.value as CitationFilter })}>
+                    {CITATION_FILTER_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <button
                   type="button"
                   className={`ps-due${filter.dueOnly ? ' on' : ''}`}
@@ -797,8 +848,15 @@ export default function PublishStatus() {
                 </label>
               </div>
 
+              {citeLoading && shown.length > 0 && (
+                <p className="muted" role="status">
+                  AI 인용 이력을 읽는 중이라 아직 표에 들지 않은 글이 있습니다.
+                </p>
+              )}
               {shown.length === 0 ? (
-                <p className="muted">고른 조건에 맞는 글이 없습니다.</p>
+                <p className="muted" role="status">
+                  {citeLoading ? 'AI 인용 이력을 읽는 중입니다…' : '고른 조건에 맞는 글이 없습니다.'}
+                </p>
               ) : (
                 <div className="table-wrap ps-table-wrap">
                   <table className="ps-table">

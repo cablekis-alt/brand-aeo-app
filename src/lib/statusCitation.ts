@@ -1,6 +1,6 @@
 import type { ExternalHistory, PostHistory, PublishedHistory } from './api'
 import { kstDate } from './publishedUrl'
-import type { PublishStatusRow } from './publishStatus'
+import type { CitationFilter, PublishStatusRow } from './publishStatus'
 import { INDEXING_GRACE_DAYS, summarizePost, type PostSummary, type PostTier } from './publishTracking'
 import { externalMovedOf } from './useExternalHistory'
 
@@ -104,6 +104,70 @@ export function citationCellOf(row: PublishStatusRow, source: TenantCitationSour
     csv: summary.measuredAfter > 0 ? `${label} (${summary.citedWeeks}/${summary.measuredAfter}주)` : label,
     summary,
   }
+}
+
+/** 「AI 인용」 거르기 선택지 — 칸 단계 이름과 같은 말(아직 판단 전은 판단 전 · 올린 뒤 측정 없음 · 올린 날 모름을 묶는다). */
+export const CITATION_FILTER_OPTIONS: readonly { value: CitationFilter; label: string }[] = [
+  { value: '', label: '전체' },
+  { value: 'cited', label: '인용됨(여러 주 · 한 주)' },
+  { value: 'repeated', label: CITATION_LABEL.repeated },
+  { value: 'once', label: '한 주 인용' },
+  { value: 'none', label: CITATION_LABEL.none },
+  { value: 'pending', label: '아직 판단 전' },
+  { value: 'unknown', label: '확인 불가' },
+]
+
+/**
+ * 그 칸이 고른 거르기에 맞는가. 읽는 중 · 「-」 · 앱 글 줄에서 셈 · 내림은 전체 밖의 어느 값에도 맞지 않는다 — 읽는 중인 줄을 「확인 불가」로
+ * 세지 않는다(읽고 나면 제 단계로 들어간다).
+ */
+export function citationFilterMatches(f: CitationFilter, kind: CitationKind): boolean {
+  switch (f) {
+    case '':
+      return true
+    case 'cited':
+      return kind === 'repeated' || kind === 'once'
+    case 'pending':
+      return kind === 'indexing' || kind === 'waiting' || kind === 'undated'
+    default:
+      return kind === f
+  }
+}
+
+export interface CitationSummary {
+  /** 센 글(살아 있는 올린 글, 서로 다른 주소). */
+  posts: number
+  /** 인용된 글 = repeated + once. */
+  cited: number
+  repeated: number
+  once: number
+  /** 인용되지 않았고 이력을 못 읽은 글 — 0으로 세지 않고 따로 밝힌다. */
+  unknown: number
+  /** 아직 읽는 중인 줄이 있다 — 숫자를 보이지 않는다(읽다 만 수를 보이지 않게). */
+  loading: boolean
+}
+
+/**
+ * 맨 위 「AI 인용」 칸 — 살아 있는 올린 글을 서로 다른 주소로 센다(summarizeStatus와 같은 묶음: 범위 변형 두 브랜드에 같은 주소면 한 편).
+ * 같은 주소의 줄 가운데 하나라도 여러 주 인용이면 여러 주, 아니고 한 주 인용이 있으면 한 주로 센다. 인용된 줄이 없고 못 읽은 줄이 있으면
+ * 확인 불가로 센다.
+ */
+export function summarizeCitation(rows: readonly PublishStatusRow[], cellOf: (row: PublishStatusRow) => CitationCell): CitationSummary {
+  const pages = new Map<string, CitationKind[]>()
+  for (const r of rows) {
+    if (r.kind !== 'posted' || r.removed) continue
+    const k = r.key ?? r.rowKey
+    pages.set(k, [...(pages.get(k) ?? []), cellOf(r).kind])
+  }
+  const sum: CitationSummary = { posts: pages.size, cited: 0, repeated: 0, once: 0, unknown: 0, loading: false }
+  for (const kinds of pages.values()) {
+    if (kinds.includes('loading')) sum.loading = true
+    if (kinds.includes('repeated')) sum.repeated += 1
+    else if (kinds.includes('once')) sum.once += 1
+    else if (kinds.includes('unknown')) sum.unknown += 1
+  }
+  sum.cited = sum.repeated + sum.once
+  return sum
 }
 
 /** 인용 이력을 읽어야 하는 브랜드 — 올린 줄이 있는 브랜드마다 앱 글 · 앱 밖 글 가운데 줄이 있는 쪽만. */
