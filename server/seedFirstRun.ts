@@ -48,7 +48,7 @@ export function seedFirstRunIfEmpty(): void {
   // 2) live-<id>-question-analyses.json → data/<id>/<weekOf>/question-analyses.json (진단/인용/EEAT 소스)
   // 3) live-<id>-question-bank.json    → data/<id>/question-bank/<version>.json (질문 빌더 소스)
   // 코호트에 실제로 있는 테넌트(스코어카드 보유)만 시드해 고아 데이터를 만들지 않는다.
-  let files: string[] = [];
+  let files: string[];
   try {
     files = readdirSync(seedDir);
   } catch {

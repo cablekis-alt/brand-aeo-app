@@ -219,10 +219,14 @@ export default function BrandDiagnosis() {
     const set = new Set(analyses.map((a) => a.engine))
     return [...order.filter((e) => set.has(e)), ...[...set].filter((e) => !order.includes(e))] as Engine[]
   }, [analyses])
-  const [engineFilter, setEngineFilter] = useState<Engine[]>([])
-  useEffect(() => {
+  // 엔진 목록이 바뀌면(주차 · 브랜드 변경) 체크를 전부 켠 상태로 되돌린다. 이펙트로 하면 한 박자 늦게
+  // 따라와 옛 필터로 한 번 그려지므로, 렌더 중에 직전 목록과 견줘 바로 맞춘다.
+  const [engineFilter, setEngineFilter] = useState<Engine[]>(presentEngines)
+  const [filterEngines, setFilterEngines] = useState(presentEngines)
+  if (filterEngines !== presentEngines) {
+    setFilterEngines(presentEngines)
     setEngineFilter(presentEngines)
-  }, [presentEngines])
+  }
 
   /*
    * 실증 질문(점수 밖 실험 질문 — lib/questionScope.ts)의 답. 집계(경쟁사 언급 비교 · AI 인지 상태)에는 넣지 않고, 문장 목록 ·

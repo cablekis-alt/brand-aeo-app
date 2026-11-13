@@ -114,7 +114,7 @@ export async function getUsageStats(weeksBack = 4): Promise<UsageStats> {
   const wantedCount = Math.max(1, Math.min(weeksBack, 12));
   const wanted = allWeeks.slice(0, wantedCount);
   const scanned = allWeeks.slice(0, wantedCount + SEARCH_LOOKBACK_WEEKS);
-  let tenants: string[] = [];
+  let tenants: string[];
   try {
     tenants = await readdir(PIPELINE_DATA_DIR);
   } catch {

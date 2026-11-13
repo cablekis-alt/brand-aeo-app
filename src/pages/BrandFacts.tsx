@@ -8,6 +8,7 @@ import {
   fetchFactCandidates,
   type FactCandidate,
   saveBrandPageUrl,
+  type TenantSummary,
 } from '../lib/api'
 
 /**
@@ -144,14 +145,23 @@ export default function BrandFacts() {
   const [savingUrl, setSavingUrl] = useState(false)
   const hints = hintsFor(tenant?.industry ?? '')
 
+  // 브랜드(테넌트 객체)가 바뀌면 그리는 중에 화면 상태를 되돌린다 — 이펙트 본문에서 setState를 부르면 렌더가 한 번 더
+  // 돈다(react-hooks/set-state-in-effect). 처음 그릴 때와 reloadTenants로 새 객체가 와도 되돌리는 것은 전과 같다.
+  const [shownFor, setShownFor] = useState<TenantSummary | undefined>(undefined)
+  if (shownFor !== tenant) {
+    setShownFor(tenant)
+    if (tenant) {
+      setLoading(true)
+      setNotice(null)
+      setError(null)
+      setCands(null)
+      setPageUrl(tenant.brandPageUrl ?? defaultPageUrl(tenant.ownedDomains))
+    }
+  }
+
   useEffect(() => {
     if (!tenant) return
     let alive = true
-    setLoading(true)
-    setNotice(null)
-    setError(null)
-    setCands(null)
-    setPageUrl(tenant.brandPageUrl ?? defaultPageUrl(tenant.ownedDomains))
     void loadFactGraph(tenant.tenantId).then((r) => {
       if (!alive) return
       if (r) {

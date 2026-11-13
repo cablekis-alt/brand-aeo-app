@@ -50,6 +50,13 @@ export function useGapActionPlan(tenantId: string) {
   // 불러온 은행의 판 — 추가 글은 이 주를 잰 판을 알아야 질문을 다시 찾는다. 예시 은행(demo)의 판 번호는 실제 측정 은행의 것이 아니다.
   const [loadedBank, setLoadedBank] = useState<{ version: string; demo: boolean } | null>(null)
   const [citations, setCitations] = useState<CitationSourceAnalysis | null>(null)
+  // 브랜드 · 주차가 바뀌면 새 인용 출처를 받기 전까지 비운다. 렌더 중에 앞 값과 견줘 비운다 — 이펙트 본문에서 비우면 앞 값으로
+  // 한 번 더 그린다(react-hooks/set-state-in-effect). 브랜드나 주차가 빈 값(주차 목록을 받는 중)으로 바뀔 때는 예전처럼 그대로 둔다.
+  const [citationsFor, setCitationsFor] = useState({ tenantId, weekOf })
+  if (citationsFor.tenantId !== tenantId || citationsFor.weekOf !== weekOf) {
+    setCitationsFor({ tenantId, weekOf })
+    if (tenantId && weekOf) setCitations(null)
+  }
 
   useEffect(() => {
     if (!tenantId) return
@@ -67,7 +74,6 @@ export function useGapActionPlan(tenantId: string) {
   useEffect(() => {
     if (!tenantId || !weekOf) return
     let alive = true
-    setCitations(null)
     void loadCitationSources(tenantId, weekOf).then((data) => {
       if (alive) setCitations(data)
     })
@@ -80,10 +86,16 @@ export function useGapActionPlan(tenantId: string) {
   // 없다). 그 구분을 그대로 넘겨서 화면이 저장되지 않는 버튼을 띄우지 않게 한다.
   const [states, setStates] = useState<ActionStateMap | null>(null)
   const [statesReady, setStatesReady] = useState(false)
+  // 브랜드가 바뀌면 새 상태를 받기 전까지 저장 컨트롤을 숨긴다 — 렌더 중에 앞 브랜드와 견줘 내린다(인용 출처와 같은 까닭).
+  // 상태 맵 자체는 예전처럼 받을 때까지 그대로 둔다.
+  const [statesFor, setStatesFor] = useState(tenantId)
+  if (statesFor !== tenantId) {
+    setStatesFor(tenantId)
+    if (tenantId) setStatesReady(false)
+  }
   useEffect(() => {
     if (!tenantId) return
     let alive = true
-    setStatesReady(false)
     void loadActionStates(tenantId).then((map) => {
       if (!alive) return
       setStates(map)

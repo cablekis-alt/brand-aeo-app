@@ -10,7 +10,7 @@ import { useScorecards } from '../lib/useScorecards'
 import AppVersion from './AppVersion'
 import BrandSwitcher from './BrandSwitcher'
 import { MENU, type MenuItem } from '../lib/menu'
-import { measureStageLabel } from './MeasureProgress'
+import { measureStageLabel } from '../lib/measureStage'
 import NavIcon from './NavIcon'
 import ThemeToggle from './ThemeToggle'
 

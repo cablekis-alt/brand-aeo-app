@@ -1179,7 +1179,6 @@ export default function GapActions() {
   useEffect(() => {
     if (!tenant?.tenantId) return
     let alive = true
-    setBriefs(null)
     void loadContentBriefs(tenant.tenantId).then((m) => {
       if (alive) setBriefs(m)
     })
@@ -1190,6 +1189,16 @@ export default function GapActions() {
   const onBrief = (s: StoredBrief) => setBriefs((m) => ({ ...(m ?? {}), [s.actionId]: s }))
   // 저장된 초안 — 브리프와 같은 방식. 라우트가 없는 환경(웹)이면 null로 남아 패널이 숨는다.
   const [drafts, setDrafts] = useState<Record<string, StoredDraft> | null>(null)
+  // 브랜드가 바뀌면 브리프 · 초안을 받기 전까지 비운다(카드가 버튼을 숨긴다). 렌더 중에 앞 브랜드와 견줘 비운다 — 이펙트 본문에서
+  // 비우면 앞 브랜드 것으로 한 번 더 그린다(react-hooks/set-state-in-effect). 브랜드가 빈 값으로 바뀔 때는 예전처럼 그대로 둔다.
+  const [briefsDraftsFor, setBriefsDraftsFor] = useState(tenant?.tenantId ?? '')
+  if (briefsDraftsFor !== (tenant?.tenantId ?? '')) {
+    setBriefsDraftsFor(tenant?.tenantId ?? '')
+    if (tenant?.tenantId) {
+      setBriefs(null)
+      setDrafts(null)
+    }
+  }
   // 채널별 다듬은 글(콘텐츠 생성 2단계). 키가 맞을 때만 쓴다 — 브랜드를 바꾸면 앞 브랜드 것이 잠깐 보이지 않게.
   const [adaptState, setAdaptState] = useState<{ key: string; value: ChannelAdaptationMap | null }>({ key: '', value: null })
   useEffect(() => {
@@ -1248,7 +1257,6 @@ export default function GapActions() {
   useEffect(() => {
     if (!tenant?.tenantId) return
     let alive = true
-    setDrafts(null)
     void loadContentDrafts(tenant.tenantId).then((m) => {
       if (alive) setDrafts(m)
     })

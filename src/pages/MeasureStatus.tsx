@@ -263,19 +263,26 @@ export default function MeasureStatus() {
   const [costOpen, setCostOpen] = useState(readCostOpen)
 
   // GitHub Actions 실행 목록(배포 토큰 필요). 로컬 측정 상태는 공용 저장소가 따로 읽는다.
-  const load = useCallback(async () => {
-    try {
-      const data = await loadMeasureRuns()
-      setEnabled(data.enabled)
-      setRunsKnown(true)
-      setRuns(data.runs)
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '상태를 불러오지 못했습니다.')
-    }
-    setUpdatedAt(new Date())
-    setLoading(false)
-  }, [])
+  // setState는 응답 콜백에서만 부른다 — 처음 읽기 효과가 이 함수를 불러도 효과 안에서 바로 상태를 바꾸지 않게.
+  const load = useCallback(
+    () =>
+      loadMeasureRuns().then(
+        (data) => {
+          setEnabled(data.enabled)
+          setRunsKnown(true)
+          setRuns(data.runs)
+          setError(null)
+          setUpdatedAt(new Date())
+          setLoading(false)
+        },
+        (err: unknown) => {
+          setError(err instanceof Error ? err.message : '상태를 불러오지 못했습니다.')
+          setUpdatedAt(new Date())
+          setLoading(false)
+        },
+      ),
+    [],
+  )
 
   useEffect(() => {
     void load()

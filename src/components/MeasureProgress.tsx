@@ -73,16 +73,6 @@ function useMeasureClock(active: ActiveMeasure[]): { now: number; eta: EtaView }
 }
 
 /**
- * 한 줄로 줄인 진행 상태 — 버튼·표 칸처럼 자리가 좁은 곳에 쓴다.
- * 건수가 없는 단계(인용 정리·집계·리포트)는 단계 이름만 낸다.
- */
-export function measureStageLabel(a: ActiveMeasure): string {
-  if (a.cancelling) return '중단 중'
-  const stage = a.stage ?? '준비'
-  return a.total ? `${stage} ${a.done ?? 0}/${a.total}` : stage
-}
-
-/**
  * 진행 중인 로컬 측정 전체를 멈추는 버튼.
  *
  * 수집 단계까지인 브랜드는 곧 멈추고 이번 주 데이터를 쓰지 않는다. 이미 저장을 시작한 브랜드

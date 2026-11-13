@@ -31,6 +31,19 @@ interface BrandRow {
   engines?: Engine[]
 }
 
+/** 등록한 브랜드 목록(이름순). 못 읽으면 빈 목록 — 처음 읽기와 되살린 뒤 다시 읽기가 함께 쓴다. */
+async function fetchBrandRows(): Promise<BrandRow[]> {
+  try {
+    // all=1을 빼면 서버가 cohortOnly(자동 생성 코호트 경쟁사)를 제외하고 내가 등록한 브랜드만 준다.
+    const res = await fetch('/api/tenants')
+    const list = res.ok ? ((await res.json()) as BrandRow[]) : []
+    list.sort((a, b) => a.brandName.localeCompare(b.brandName))
+    return list
+  } catch {
+    return []
+  }
+}
+
 function fmtElapsed(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000))
   const m = Math.floor(s / 60)
@@ -141,24 +154,21 @@ export default function BrandManageList() {
     navigate('/measure-tenant', { state: { pick: row.tenantId } })
   }
 
+  // 되살린 뒤 다시 읽기 — 「불러오는 중…」을 켰다가 응답이 오면 끈다.
   const load = useCallback(async () => {
     setLoading(true)
-    try {
-      // all=1을 빼면 서버가 cohortOnly(자동 생성 코호트 경쟁사)를 제외하고 내가 등록한 브랜드만 준다.
-      const res = await fetch('/api/tenants')
-      const list = res.ok ? ((await res.json()) as BrandRow[]) : []
-      list.sort((a, b) => a.brandName.localeCompare(b.brandName))
-      setRows(list)
-    } catch {
-      setRows([])
-    } finally {
-      setLoading(false)
-    }
+    const list = await fetchBrandRows()
+    setRows(list)
+    setLoading(false)
   }, [])
 
+  // 처음 읽기 — loading은 처음부터 true라 다시 켤 필요가 없다. setState는 응답 콜백에서만 부른다(효과 안 연쇄 렌더 방지).
   useEffect(() => {
-    void load()
-  }, [load])
+    void fetchBrandRows().then((list) => {
+      setRows(list)
+      setLoading(false)
+    })
+  }, [])
 
   const loadRemoved = useCallback(() => {
     loadRemovedTenants().then(setRemoved, (err: unknown) => console.error('[BrandManageList] 지운 브랜드를 읽지 못했습니다', err))

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import EntityMatchPanel from '../components/EntityMatchPanel'
 import SiteReportView from '../components/SiteReportView'
@@ -52,7 +52,7 @@ export default function SiteDiagnosis() {
   // 상호 추론은 데스크톱에서만 — Vercel 리전에서는 한국 사업체 회상이 신뢰할 수 없다.
   const isElectron = typeof window !== 'undefined' && Boolean(window.electron?.isElectron)
 
-  const [url, setUrl] = useState('')
+  const [url, setUrl] = useState(() => brandSiteUrl(tenant))
   const [topic, setTopic] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -85,7 +85,11 @@ export default function SiteDiagnosis() {
   const preview = typed && !looksLikeUrl(typed) ? resolveWithoutNetwork(typed, tenants, tenant) : null
 
   // 브랜드를 바꾸면 그 브랜드의 소유 도메인으로 분석 URL을 채우고, 이전 진단 결과는 비운다.
-  useEffect(() => {
+  // 이펙트로 하면 새 브랜드 화면에 옛 주소 · 결과가 한 번 그려진다 — 렌더 중에 직전 브랜드와 견줘 바로 비운다.
+  const tenantKey = tenant?.tenantId
+  const [urlTenantKey, setUrlTenantKey] = useState(tenantKey)
+  if (urlTenantKey !== tenantKey) {
+    setUrlTenantKey(tenantKey)
     setUrl(brandSiteUrl(tenant))
     setReport(null)
     setEntity(null)
@@ -93,7 +97,7 @@ export default function SiteDiagnosis() {
     setError(null)
     setSaveNote(null)
     setRobots(null)
-  }, [tenant?.tenantId])
+  }
 
   /**
    * 이 진단을 어느 브랜드의 이번 주 Site AEO Score로 남길지 정하고 기록한다.

@@ -121,10 +121,16 @@ export default function QuestionBankPage() {
     }
   }, [tenant?.tenantId])
 
+  // 브랜드나 reloadKey가 바뀌면 그리는 중에 「불러오는 중」으로 돌린다 — 이펙트 본문에서 setLoading(true)를 부르면
+  // 렌더가 한 번 더 돈다(react-hooks/set-state-in-effect). 조건은 아래 이펙트가 다시 도는 때와 같다.
+  const [loadFor, setLoadFor] = useState({ tenant, reloadKey })
+  if (loadFor.tenant !== tenant || loadFor.reloadKey !== reloadKey) {
+    setLoadFor({ tenant, reloadKey })
+    if (tenant) setLoading(true)
+  }
   useEffect(() => {
     if (!tenant) return
     let cancelled = false
-    setLoading(true)
     loadQuestionBank(tenant.tenantId)
       .then((next) => {
         if (!cancelled) setBank(next)
@@ -135,7 +141,6 @@ export default function QuestionBankPage() {
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant, reloadKey])
 
   useEffect(() => {
