@@ -3076,8 +3076,63 @@ p.hint {
   box-shadow: 0 0 0 1px var(--line);
   font-size: 12px;
 }
-/* 띠가 떠 있는 동안 본문 아래를 비워 둔다 — 띠가 마지막 줄(브랜드 현황의 「측정」 · ⋯)을 가려 스크롤로도 닿지 못했다. */
+/*
+ * 접은 성공 줄 — 오른쪽 아래 작은 알림 한 줄(결과 · 닫기). 펼친 띠는 본문 아래쪽을 640px 폭으로 덮어 그 자리의 선택 상자가 눌리지
+ * 않았다(2026-11-14). 누르면 다시 펼친다.
+ */
+.mr-item.mr-mini {
+  align-self: flex-end;
+  width: auto;
+  max-width: min(420px, 100%);
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 4px 3px 10px;
+  border-left-width: 3px;
+}
+.mr-mini-open,
+.mr-mini-close {
+  font: inherit;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: var(--r-ctl);
+}
+.mr-mini-open {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+}
+.mr-mini-close {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--muted);
+}
+.mr-mini-open:hover {
+  text-decoration: underline;
+}
+.mr-mini-close:hover {
+  color: var(--ink);
+}
+.mr-mini-open:focus-visible,
+.mr-mini-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+/* 띠가 떠 있는 동안 본문 아래를 비워 둔다 — 띠가 마지막 줄(브랜드 현황의 「측정」 · ⋯)을 가려 스크롤로도 닿지 못했다. 접은 알림만 남으면 한 줄만큼만. */
 .shell:has(.mr-band) .content {
+  padding-bottom: 64px;
+}
+.shell:has(.mr-item:not(.mr-mini)) .content {
   padding-bottom: 260px;
 }
 @media (max-width: 760px) {
