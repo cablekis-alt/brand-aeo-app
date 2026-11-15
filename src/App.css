@@ -3128,11 +3128,18 @@ p.hint {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
-/* 띠가 떠 있는 동안 본문 아래를 비워 둔다 — 띠가 마지막 줄(브랜드 현황의 「측정」 · ⋯)을 가려 스크롤로도 닿지 못했다. 접은 알림만 남으면 한 줄만큼만. */
-.shell:has(.mr-band) .content {
-  padding-bottom: 64px;
+/*
+ * 오른쪽 서랍(경쟁사 · 기본 정보 편집, 글 서랍)이 열려 있으면 접은 알림을 예전 띠 자리(왼쪽 아래)로 옮긴다 — 오른쪽 아래에 두면 서랍
+ * 맨 아래의 「저장」 · 「취소」 · 「다음 글」을 덮었다(알림 z-index 92 > 서랍 90 · 50). 글 서랍은 body에 붙으므로 :root에서 찾는다.
+ */
+:root:has(.ce-drawer, .article-drawer-layer) .mr-item.mr-mini {
+  align-self: flex-start;
 }
-.shell:has(.mr-item:not(.mr-mini)) .content {
+/*
+ * 띠가 떠 있는 동안 본문 아래를 비워 둔다 — 띠가 마지막 줄(브랜드 현황의 「측정」 · ⋯)을 가려 스크롤로도 닿지 못했다. 접은 알림만
+ * 남아도 줄이지 않는다: 줄이면 접히는 순간 맨 아래를 보던 화면이 튀고, 접은 알림이 여러 줄 쌓이면 모자랐다.
+ */
+.shell:has(.mr-band) .content {
   padding-bottom: 260px;
 }
 @media (max-width: 760px) {

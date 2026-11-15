@@ -86,7 +86,7 @@ export default function MeasureResultBand({ onRefresh }: { onRefresh: () => void
     }
   }, [])
 
-  // 성공 줄 접기 — 줄마다 처음 뜬 때부터 센다(한 번 건 줄은 다시 걸지 않는다 — 손으로 펼친 줄이 다시 접히지 않게).
+  // 성공 줄 접기 — 줄마다 화면에 처음 보인 때부터 센다(한 번 건 줄은 다시 걸지 않는다 — 손으로 펼친 줄이 다시 접히지 않게).
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set())
   const collapseTimers = useRef(new Map<string, number>())
   const itemEls = useRef(new Map<string, HTMLDivElement>())
@@ -98,10 +98,12 @@ export default function MeasureResultBand({ onRefresh }: { onRefresh: () => void
         collapseTimers.current.delete(id)
       }
     }
-    for (const r of band) {
+    // 보이는 줄만 센다 — 셋 밖에 있던 줄이 화면에 나오기도 전에 접히지 않게.
+    for (const r of band.slice(0, MAX_SHOWN)) {
       if (collapseTimers.current.has(r.id) || !collapsible(outcomeMessage(r, tenants), r)) continue
       const tryCollapse = () => {
-        const el = itemEls.current.get(r.id)
+        // 띠 전체를 본다 — 아래 줄이 접히면 그 위 줄이 내려앉아, 누르려던 다른 줄의 단추가 비켜 갈 수 있다.
+        const el = itemEls.current.get(r.id)?.closest('.mr-band')
         if (el && (el.matches(':hover') || el.contains(document.activeElement))) {
           collapseTimers.current.set(r.id, window.setTimeout(tryCollapse, COLLAPSE_RECHECK_MS))
           return
