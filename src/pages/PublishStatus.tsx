@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import IndexAutoPanel, { type IndexAutoLoad } from '../components/IndexAutoPanel'
 import PostImportPanel from '../components/PostImportPanel'
@@ -23,13 +23,16 @@ import { monthDay } from '../lib/publishTracking'
 import {
   addDays,
   appHolderBrands,
+  brandCards,
   emptyStateOf,
   ENGINE_NAME,
   externalTakedowns,
   filterRows,
+  livePages,
   googleSearchUrl,
   indexStateLabel,
   markLabel,
+  publishTimeline,
   naverSearchUrl,
   publishStatusCsv,
   publishStatusFileName,
@@ -39,6 +42,7 @@ import {
   sameUrlBrands,
   searchLabel,
   SHOWN_WORD,
+  summarizeDue,
   summarizeStatus,
   toggleWriterChip,
   unpostedLabel,
@@ -46,8 +50,10 @@ import {
   withIndexRecord,
   WRITER_UNKNOWN_NOTE,
   writerFilterValue,
+  writerGrid,
   writerLabel,
   type CitationFilter,
+  type DueStage,
   type IndexEngine,
   type IndexState,
   type PublishStatus as PublishStatusData,
@@ -78,6 +84,28 @@ const DEFAULT_FILTER: StatusFilter = {
 
 /** 주소 칸에 보일 글자 — http(s)://를 뗀다(누르면 전체 주소로 연다). */
 const shortUrl = (url: string) => url.replace(/^https?:\/\//i, '').replace(/\/+$/, '')
+
+/** 맨 위 숫자 칸 — onClick이 있으면 누르면 표를 거르는 단추로 그린다. */
+interface Tile {
+  label: string
+  value: number | string
+  /** 숫자 뒤 작은 글자(「 / 8 확인」). */
+  unit?: string
+  sub: string
+  tone: '' | 'good' | 'warn'
+  pressed?: boolean
+  onClick?: () => void
+}
+
+/** 올린 시기 막대에서 가장 긴 막대의 높이(px). */
+const TIMELINE_BAR_PX = 110
+
+/** 오늘 할 일 줄의 세 단계 — 이름과 풀이. */
+const DUE_STAGES: readonly { stage: DueStage; label: string; title: string }[] = [
+  { stage: 'today', label: '오늘 차례', title: '오늘이 올린 뒤 3 · 7 · 14일째인 글' },
+  { stage: 'late', label: '밀린 확인', title: '지난 다시 볼 날을 놓친 글 — 14일째 전' },
+  { stage: 'over', label: '14일 지남', title: '14일째도 지났는데 아직 안 본 글' },
+]
 
 type MarkFn = (row: PublishStatusRow, engine: IndexEngine, state: IndexState | null) => void
 
@@ -571,8 +599,6 @@ export default function PublishStatus() {
   const shown = filterRows(rows, filter, today, citeMatches)
   // AI 인용 거르기를 켰는데 아직 이력을 읽는 줄이 있다 — 빈 표를 「맞는 글 없음」으로 말하지 않고, 덜 찬 표에는 그렇다고 밝힌다.
   const citeLoading = filter.citation !== '' && filterRows(rows, { ...filter, citation: '' }, today).some((r) => citationOf(r).kind === 'loading')
-  const writers = (data?.writers ?? []).filter((w) => !filter.tenantId || w.tenantId === filter.tenantId)
-  const writerBrands = [...new Set(writers.map((w) => w.tenantId))]
   const sameUrl = sameUrlBrands(rows)
   const empty = data ? emptyStateOf(data) : null
 
@@ -604,17 +630,23 @@ export default function PublishStatus() {
   // 「다시 볼 날」 뒤에 「AI 인용」(확인 방법 두 열은 끝 그대로) — 이력을 읽는 중인 줄은 빈칸.
   const exportCsv = () =>
     downloadCsv(safeFileName(publishStatusFileName(today)), publishStatusCsv(shown, today, { checkMethods: true, citation: (r) => citationOf(r).csv }))
-  const tiles = [
+  // 숫자 칸 — 누르면 아래 표가 그 조건으로 걸러진다(다시 누르면 푼다). 네이버 노출 · 미확인 칸은 뺐다(2026-11-16): 네이버를 누르지 않으면
+  // 늘 0 · 올린 글 전체와 같아 알려 주는 게 없었다. 네이버 칸 · 거르기는 표에 그대로 있다.
+  // 「판단 전」 — 올린 지 14일 안 측정만 있거나 올린 뒤 측정이 없는 글. 인용이 아직 붙을 수 있는 글이라 「인용 없음」과 가른다.
+  const pendingCount = citeSum.loading ? null : livePages(scope).filter((same) => same.some((r) => citationFilterMatches('pending', citationOf(r).kind))).length
+  const googleChecked = livePages(scope).filter((same) => same.some((r) => r.google !== null)).length
+  const tiles: Tile[] = [
     // 앱 밖 글이 있으면 올린 글을 앱 글 · 앱 밖 글로 나눠 보인다(같은 주소가 한 브랜드에서라도 앱 글이면 앱 글 — 합이 올린 글).
     { label: '올린 글', value: sum.posted, sub: sum.external > 0 ? `앱 글 ${sum.app} · 앱 밖 ${sum.external}` : '뺀 글 · 안 올린 글 제외', tone: '' },
-    { label: '네이버 노출', value: sum.naverShown, sub: '노출됨으로 표시한 글', tone: 'good' },
     {
       label: '구글 색인',
       value: sum.googleShown,
+      unit: ` / ${googleChecked} 확인`,
       sub: autoOn || rows.some((r) => r.google?.source === 'auto') ? '색인됨인 글(자동 확인 포함)' : '색인됨으로 표시한 글',
       tone: 'good',
+      pressed: filter.google === 'shown',
+      onClick: () => patchFilter({ google: filter.google === 'shown' ? '' : 'shown' }),
     },
-    { label: '미확인', value: sum.unknown, sub: '한 엔진이라도 아직 안 본 글', tone: '' },
     // 측정한 AI 답변에 인용된 글(표 「AI 인용」 칸과 같은 판단) — 읽는 중이면 숫자를 보이지 않고, 못 읽은 글은 0으로 세지 않고 따로 밝힌다.
     // 숫자가 아닐 때(읽는 중 · 모두 못 읽음)는 「좋음」 색을 쓰지 않는다.
     citeSum.loading
@@ -626,9 +658,47 @@ export default function PublishStatus() {
             value: citeSum.cited,
             sub: `여러 주 ${citeSum.repeated} · 한 주 ${citeSum.once}${citeSum.unknown > 0 ? ` · 확인 불가 ${citeSum.unknown}` : ''}`,
             tone: 'good',
+            pressed: filter.citation === 'cited',
+            onClick: () => patchFilter({ citation: filter.citation === 'cited' ? '' : 'cited' }),
           },
-    { label: '오늘 다시 볼', value: sum.due, sub: '올린 뒤 3 · 7 · 14일째', tone: 'warn' },
+    pendingCount === null
+      ? { label: '인용 판단 전', value: '…', sub: '인용 이력을 읽는 중', tone: '' }
+      : {
+          label: '인용 판단 전',
+          value: pendingCount,
+          sub: '올린 지 얼마 안 됐거나 올린 뒤 측정 없음',
+          tone: '',
+          pressed: filter.citation === 'pending',
+          onClick: () => patchFilter({ citation: filter.citation === 'pending' ? '' : 'pending' }),
+        },
   ]
+
+  // 오늘 할 일 — 다시 볼 글을 오늘 차례 · 밀림 · 14일 지남으로 나눈다(누르면 그 단계만 표에).
+  const dueSum = summarizeDue(scope, today)
+  const pickDue = (stage: DueStage | 'all') => {
+    if (stage === 'all') patchFilter({ dueOnly: !(filter.dueOnly && !filter.dueStage), dueStage: '' })
+    else patchFilter(filter.dueStage === stage ? { dueStage: '', dueOnly: false } : { dueStage: stage, dueOnly: true })
+  }
+
+  // 브랜드 카드 · 작성자 격자 · 올린 시기 막대 — 카드와 격자는 브랜드 거르기와 상관없이 모든 브랜드를 보인다(고른 카드만 강조).
+  const cards = brandCards(rows, data?.writers ?? [])
+  const cardCite = (tenantId: string) => (citeSum.loading ? null : summarizeCitation(rows.filter((r) => r.tenantId === tenantId), citationOf))
+  const grid = writerGrid(data?.writers ?? [], cards.map((c) => c.tenantId))
+  const pageCited = (same: readonly PublishStatusRow[]): boolean | null => {
+    const kinds = same.map((r) => citationOf(r).kind)
+    if (kinds.includes('repeated') || kinds.includes('once')) return true
+    return kinds.includes('loading') ? null : false
+  }
+  const timeline = publishTimeline(scope, pageCited)
+  const timelineMax = Math.max(1, ...timeline.bars.map((b) => b.posted))
+  const filtered =
+    Boolean(filter.tenantId || filter.writer || filter.naver || filter.google || filter.citation || filter.dueOnly || filter.dueStage || filter.period) ||
+    !filter.showUnposted ||
+    filter.showRemoved
+  const clearFilter = () => {
+    setFilter(DEFAULT_FILTER)
+    setChipBefore(null)
+  }
 
   return (
     <>
@@ -659,6 +729,9 @@ export default function PublishStatus() {
           </button>
         </div>
       </header>
+      {/* 풀이는 접어 둔다(2026-11-16 대시보드) — 길게 펼쳐 두면 숫자 칸 · 표가 화면 아래로 밀렸다. */}
+      <details className="ps-howto">
+        <summary>이 화면 보는 법</summary>
       {autoOn ? (
         <p className="page-lead">
           고객 브랜드에 올린 글을 한 표로 봅니다. 네이버는 직접 검색해 확인합니다 — 「네이버에서 확인」으로 검색 창을 연 뒤 본 결과대로 「노출됨」 또는
@@ -673,6 +746,7 @@ export default function PublishStatus() {
           앱에서 만들지 않은 글입니다 — 작성자 진행 · 점수 · 보고서에는 넣지 않고, 다시 볼 날은 추적을 시작한 날부터 셉니다.
         </p>
       )}
+      </details>
       <IndexAutoPanel load={autoLoad} open={autoOpen} onOpenChange={setAutoOpen} onStatus={setAutoStatus} onRunEnd={reload} onRetry={reload} onPlan={setAutoPlan} />
       {/* 작성자들이 보낸 주소를 한꺼번에 적는다 — 적으면 이 표를 다시 읽는다. 오늘은 서버가 센 날(읽기 전이면 이 PC의 한국 날짜). */}
       <PostImportPanel
@@ -734,51 +808,181 @@ export default function PublishStatus() {
             </p>
           ) : (
             <>
-              <section className="ps-summary" aria-label="요약">
-                {tiles.map((t) => (
-                  <div key={t.label} className={`ps-sum${t.tone ? ` ${t.tone}` : ''}`}>
-                    <span className="ps-sum-label">{t.label}</span>
-                    <span className="ps-sum-value">{t.value}</span>
-                    <span className="ps-sum-sub">{t.sub}</span>
-                  </div>
-                ))}
+              {/* 오늘 할 일 — 다시 볼 글을 세 단계로. 누르면 그 단계만 표에 남는다. */}
+              <section className="ps-todo" aria-label="오늘 할 일">
+                <span className="ps-todo-head">오늘 할 일</span>
+                {sum.due === 0 ? (
+                  <span className="muted">오늘 다시 볼 글이 없습니다.</span>
+                ) : (
+                  <>
+                    {DUE_STAGES.map(({ stage, label, title }) => (
+                      <button
+                        key={stage}
+                        type="button"
+                        className={`ps-todo-item ps-todo-${stage}${filter.dueStage === stage ? ' on' : ''}`}
+                        aria-pressed={filter.dueStage === stage}
+                        title={title}
+                        disabled={dueSum[stage] === 0}
+                        onClick={() => pickDue(stage)}
+                      >
+                        {label} <b>{dueSum[stage]}</b>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className={`ps-todo-item${filter.dueOnly && !filter.dueStage ? ' on' : ''}`}
+                      aria-pressed={filter.dueOnly && !filter.dueStage}
+                      onClick={() => pickDue('all')}
+                    >
+                      모두 <b>{sum.due}</b>
+                    </button>
+                  </>
+                )}
               </section>
 
-              {writers.length > 0 && (
-                <section className="ps-writers" aria-label="작성자별 진행">
-                  {writerBrands.map((tenantId) => (
-                    <div key={tenantId} className="ps-writer-row">
-                      <span className="ps-writer-brand">{writers.find((w) => w.tenantId === tenantId)?.brand}</span>
-                      {writers
-                        .filter((w) => w.tenantId === tenantId)
-                        .map((w) => {
-                          const value = `${w.key}\n${w.name}`
-                          const on = filter.writer === value && filter.tenantId === tenantId
-                          return (
-                            <button
-                              key={w.key}
-                              type="button"
-                              className={`ps-writer${on ? ' on' : ''}${w.posted >= w.assigned ? ' done' : ''}`}
-                              aria-pressed={on}
-                              title={`${w.key} · ${w.name} — 배정 ${w.assigned}편 중 ${w.posted}편 올림${w.unsure ? ` · ${w.unsure}편은 올렸는지 미확인(글을 쓴 질문지 판을 모름)` : ''}`}
-                              onClick={() => {
-                                const next = toggleWriterChip(filter, { tenantId, writer: value }, chipBefore)
-                                setFilter(next.filter)
-                                setChipBefore(next.before)
-                              }}
-                            >
-                              {w.key} · {w.name}
-                              <span className="ps-writer-n">
-                                올림 {w.posted}/{w.assigned}
-                                {w.unsure ? ` · 미확인 ${w.unsure}` : ''}
-                              </span>
-                            </button>
-                          )
-                        })}
+              <section className="ps-summary" aria-label="요약">
+                {tiles.map((t) => {
+                  const body = (
+                    <>
+                      <span className="ps-sum-label">{t.label}</span>
+                      <span className="ps-sum-value">
+                        {t.value}
+                        {t.unit && <span className="ps-sum-unit">{t.unit}</span>}
+                      </span>
+                      <span className="ps-sum-sub">{t.sub}</span>
+                    </>
+                  )
+                  const cls = `ps-sum${t.tone ? ` ${t.tone}` : ''}`
+                  return t.onClick ? (
+                    <button key={t.label} type="button" className={`${cls} ps-sum-btn${t.pressed ? ' on' : ''}`} aria-pressed={Boolean(t.pressed)} onClick={t.onClick}>
+                      {body}
+                    </button>
+                  ) : (
+                    <div key={t.label} className={cls}>
+                      {body}
                     </div>
-                  ))}
+                  )
+                })}
+              </section>
+
+              {/* 브랜드 카드 — 누르면 그 브랜드로 거른다(다시 누르면 모든 브랜드). 플랫폼 막대로 어디에 올렸는지 본다. */}
+              {cards.length > 0 && (
+                <section className="ps-brands" aria-label="브랜드별">
+                  {cards.map((c) => {
+                    const on = filter.tenantId === c.tenantId
+                    const cs = cardCite(c.tenantId)
+                    return (
+                      <button
+                        key={c.tenantId}
+                        type="button"
+                        className={`ps-brand${on ? ' on' : ''}`}
+                        aria-pressed={on}
+                        onClick={() => pickFilter({ tenantId: on ? '' : c.tenantId, writer: '' })}
+                      >
+                        <span className="ps-brand-name">{c.brand}</span>
+                        <span className="ps-brand-count">
+                          올린 글 <b>{c.posted}</b>
+                          {c.assigned > 0 && ` · 배정 ${c.assignedPosted}/${c.assigned}`}
+                        </span>
+                        {c.posted > 0 && (
+                          <span className="ps-plat-bar" aria-hidden="true">
+                            {c.platforms.map((p, i) => (
+                              <span key={`${p.key}|${p.label}`} className={`ps-plat ps-plat-${i < 3 ? i : 3}`} style={{ flexGrow: p.n }} />
+                            ))}
+                          </span>
+                        )}
+                        <span className="ps-brand-plats">{c.platforms.map((p) => `${p.label} ${p.n}`).join(' · ') || '올린 글 없음'}</span>
+                        <span className="ps-brand-stats">
+                          AI 인용 <b>{cs === null ? '…' : cs.posts > 0 && cs.unknown === cs.posts ? '확인 불가' : cs.cited}</b>
+                          {' · '}구글 색인 {c.googleChecked > 0 ? `${c.googleShown}/${c.googleChecked}` : '확인 전'}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </section>
               )}
+
+              <div className="ps-dash-row">
+                {/* 작성자 × 브랜드 — 칸을 누르면 그 작성자 글로 거른다(지금까지의 작성자 칩과 같은 동작). */}
+                {grid.keys.length > 0 && (
+                  <section className="ps-panel" aria-label="작성자별 진행">
+                    <h2 className="ps-panel-title">작성자 × 브랜드</h2>
+                    <div className="ps-grid" style={{ gridTemplateColumns: `auto repeat(${grid.brands.length}, minmax(0, 1fr))` }}>
+                      <span />
+                      {grid.brands.map((b) => (
+                        <span key={b.tenantId} className="ps-grid-head" title={b.brand}>
+                          {b.brand}
+                        </span>
+                      ))}
+                      {grid.keys.map((key) => (
+                        <Fragment key={key}>
+                          <span className="ps-grid-key">{key}</span>
+                          {grid.brands.map((b) => {
+                            const w = grid.cell(b.tenantId, key)
+                            if (!w) return <span key={b.tenantId} className="ps-grid-cell none" aria-hidden="true">—</span>
+                            const value = `${w.key}\n${w.name}`
+                            const on = filter.writer === value && filter.tenantId === b.tenantId
+                            const state = w.posted >= w.assigned ? 'done' : w.posted === 0 ? 'zero' : 'part'
+                            return (
+                              <button
+                                key={b.tenantId}
+                                type="button"
+                                className={`ps-grid-cell ${state}${on ? ' on' : ''}`}
+                                aria-pressed={on}
+                                aria-label={`${b.brand} ${w.key} · ${w.name} — 배정 ${w.assigned}편 중 ${w.posted}편 올림`}
+                                title={`${w.key} · ${w.name} — 배정 ${w.assigned}편 중 ${w.posted}편 올림${w.unsure ? ` · ${w.unsure}편은 올렸는지 미확인(글을 쓴 질문지 판을 모름)` : ''}`}
+                                onClick={() => {
+                                  const next = toggleWriterChip(filter, { tenantId: b.tenantId, writer: value }, chipBefore)
+                                  setFilter(next.filter)
+                                  setChipBefore(next.before)
+                                }}
+                              >
+                                {w.posted}/{w.assigned}
+                                {w.unsure ? '?' : ''}
+                              </button>
+                            )
+                          })}
+                        </Fragment>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* 올린 시기 — 열흘 묶음마다 올린 글(막대)과 그 가운데 AI 인용된 글(진한 부분). 누르면 그 묶음으로 거른다. */}
+                {timeline.bars.length > 0 && (
+                  <section className="ps-panel" aria-label="올린 시기">
+                    <h2 className="ps-panel-title">올린 시기</h2>
+                    <div className="ps-tl">
+                      {timeline.bars.map((b) => {
+                        const on = filter.period === b.period
+                        return (
+                          <button
+                            key={b.period}
+                            type="button"
+                            className={`ps-tl-col${on ? ' on' : ''}`}
+                            aria-pressed={on}
+                            aria-label={`${b.label} 올린 글 ${b.posted}편${b.cited === null ? '' : ` · AI 인용 ${b.cited}편`}`}
+                            onClick={() => patchFilter({ period: on ? '' : b.period })}
+                          >
+                            <span className="ps-tl-n">
+                              {b.posted}
+                              <span className="ps-tl-cite">{b.cited === null ? ' · …' : b.cited > 0 ? ` · 인용 ${b.cited}` : ''}</span>
+                            </span>
+                            <span className="ps-tl-bar" style={{ height: `${Math.max(4, Math.round((b.posted / timelineMax) * TIMELINE_BAR_PX))}px` }}>
+                              {b.cited !== null && b.cited > 0 && <span className="ps-tl-cited" style={{ height: `${Math.round((b.cited / b.posted) * 100)}%` }} />}
+                            </span>
+                            <span className="ps-tl-label">{b.label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <p className="ps-panel-note">
+                      <span className="ps-tl-key" /> 올린 글 <span className="ps-tl-key cited" /> 그 가운데 AI 인용
+                      {timeline.undated > 0 && ` · 올린 날 모름 ${timeline.undated}편 빠짐`}
+                    </p>
+                  </section>
+                )}
+              </div>
 
               <div className="ps-tools">
                 <label className="ps-field">
@@ -830,14 +1034,6 @@ export default function PublishStatus() {
                     ))}
                   </select>
                 </label>
-                <button
-                  type="button"
-                  className={`ps-due${filter.dueOnly ? ' on' : ''}`}
-                  aria-pressed={filter.dueOnly}
-                  onClick={() => patchFilter({ dueOnly: !filter.dueOnly })}
-                >
-                  오늘 다시 볼 글 <span className="ps-writer-n">{sum.due}</span>
-                </button>
                 <label className="ps-toggle">
                   <input type="checkbox" checked={filter.showUnposted} onChange={(e) => patchFilter({ showUnposted: e.target.checked })} />
                   아직 안 올린 글
@@ -846,6 +1042,11 @@ export default function PublishStatus() {
                   <input type="checkbox" checked={filter.showRemoved} onChange={(e) => patchFilter({ showRemoved: e.target.checked })} />
                   내린 · 뺀 글
                 </label>
+                {filtered && (
+                  <button type="button" className="ghost ps-clear-filter" onClick={clearFilter}>
+                    거르기 모두 풀기
+                  </button>
+                )}
               </div>
 
               {citeLoading && shown.length > 0 && (

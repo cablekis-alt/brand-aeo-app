@@ -24,6 +24,8 @@ import { parseWriterPlan } from '../src/lib/probePlan'
 import { todayKst, trackingKey } from '../src/lib/publishedUrl'
 import {
   addDays,
+  brandCards,
+  dueStageOf,
   appHolderBrands,
   applyIndexCheck,
   buildTenantStatus,
@@ -40,21 +42,26 @@ import {
   ownedUrl,
   parseIndexCheckInput,
   parseIndexChecksFile,
+  periodLabel,
+  periodOf,
   platformOf,
   postingsOf,
   publishStatusCsv,
   publishStatusFileName,
+  publishTimeline,
   recheckCell,
   recheckOf,
   rowRecheck,
   sameUrlBrands,
   searchLabel,
+  summarizeDue,
   summarizeStatus,
   toggleWriterChip,
   unpostedLabel,
   validFilter,
   withIndexRecord,
   writerFilterValue,
+  writerGrid,
   writerLabel,
   type IndexCheck,
   type IndexCheckRecord,
@@ -350,6 +357,88 @@ ok(
     citedKeys({ citation: 'cited', naver: 'unknown' }, ['a', 'c']) === 'c' &&
     citedKeys({ citation: 'none' }, null) === '' &&
     citedKeys({}, []) === 'a,b,c,e',
+)
+
+// ── 6b) 대시보드(2026-11-16) — 오늘 할 일 세 단계 · 브랜드 카드 · 올린 시기 · 작성자 격자 ─────────────────
+// PUB 2026-11-01 → 다시 볼 날 11-04 · 11-08 · 11-15.
+ok(
+  '오늘 할 일 — 오늘이 다시 볼 날이면 오늘 차례, 놓쳤으면 밀림, 14일째도 지났으면 14일 지남, 둘 다 나왔거나 안 올린 글은 없음',
+  dueStageOf(row(), '2026-11-04') === 'today' &&
+    dueStageOf(row(), '2026-11-06') === 'late' &&
+    dueStageOf(row(), '2026-11-16') === 'over' &&
+    dueStageOf(row({ naver: notYet('2026-11-08') }), '2026-11-08') === 'today' &&
+    dueStageOf(row({ naver: shown('2026-11-04'), google: shown('2026-11-04') }), '2026-11-16') === null &&
+    dueStageOf(row({ kind: 'unposted', postId: null, url: null, platform: null, publishedOn: null }), '2026-11-16') === null &&
+    dueStageOf(row({ removed: { reason: 'taken-down', at: '2026-11-03T00:00:00.000Z' } }), '2026-11-16') === null,
+)
+ok(
+  '오늘 할 일 — 엔진이 서로 다르면 더 급한 쪽(네이버 밀림 + 구글 14일 지남 = 14일 지남)',
+  dueStageOf(row({ google: notYet('2026-11-04'), naver: notYet('2026-11-08') }), '2026-11-16') === 'over',
+)
+const dueRows = [
+  row({ rowKey: 'd1', key: 'fake.tistory.com/d1' }),
+  row({ rowKey: 'd2', key: 'fake.tistory.com/d1', tenantId: 'vpub-other', publishedOn: '2026-10-20' }),
+  row({ rowKey: 'd3', key: 'fake.tistory.com/d3', publishedOn: '2026-11-03' }),
+  row({ rowKey: 'd4', key: 'fake.tistory.com/d4', publishedOn: '2026-11-02' }),
+]
+const dueSum = summarizeDue(dueRows, '2026-11-06')
+ok('오늘 할 일 — 같은 주소는 한 번, 가장 급한 단계로(요약 「오늘 다시 볼」 합과 같다)', dueSum.over === 1 && dueSum.today === 1 && dueSum.late === 1 && summarizeStatus(dueRows, '2026-11-06').due === 3)
+ok(
+  '거르기 — 오늘 할 일 단계 · 올린 시기(켜면 안 올린 글은 빠진다)',
+  keys({ dueStage: 'late' }) === 'b' && keys({ dueStage: 'today' }) === '' && keys({ period: '2026-11-1' }) === 'a,b,c' && keys({ period: '2026-11-2' }) === '',
+)
+ok(
+  '올린 시기 — 상순(1~10일) · 중순(11~20일) · 하순(21일~)',
+  periodOf('2026-11-10') === '2026-11-1' && periodOf('2026-11-11') === '2026-11-2' && periodOf('2026-10-31') === '2026-10-3' && periodLabel('2026-11-2') === '11월 중순',
+)
+const tlRows = [
+  row({ rowKey: 't1', key: 'fake.tistory.com/t1', publishedOn: '2026-10-25' }),
+  row({ rowKey: 't2', key: 'fake.tistory.com/t2', publishedOn: '2026-11-02' }),
+  row({ rowKey: 't3', key: 'fake.tistory.com/t2', tenantId: 'vpub-other', publishedOn: '2026-11-02' }),
+  row({ rowKey: 't4', key: 'fake.tistory.com/t4', publishedOn: '2026-11-05' }),
+  row({ rowKey: 't5', key: 'fake.tistory.com/t5', publishedOn: null }),
+  row({ rowKey: 't6', key: 'fake.tistory.com/t6', publishedOn: '2026-11-05', removed: { reason: 'taken-down', at: '2026-11-06T00:00:00.000Z' } }),
+]
+const tl = publishTimeline(tlRows, (same) => (same.some((r) => r.rowKey === 't4') ? null : same.some((r) => r.rowKey === 't3')))
+ok(
+  '올린 시기 막대 — 주소마다 한 번 · 내린 글 빼고 · 올린 날 모름은 따로 · 읽는 중인 묶음은 인용 수를 비운다',
+  tl.undated === 1 &&
+    tl.bars.map((b) => `${b.period}:${b.posted}:${b.cited}`).join() === '2026-10-3:1:0,2026-11-1:2:null' &&
+    publishTimeline(tlRows.filter((r) => r.rowKey !== 't4'), (same) => same.some((r) => r.rowKey === 't3')).bars[1]?.cited === 1,
+)
+const cardWriters = [
+  { tenantId: 'vpub-a', brand: '가상A', key: 'w1', name: '김가상', assigned: 10, posted: 10, unsure: 0 },
+  { tenantId: 'vpub-a', brand: '가상A', key: 'w2', name: '이가상', assigned: 10, posted: 3, unsure: 0 },
+  { tenantId: 'vpub-b', brand: '가상B', key: 'w10', name: '박가상', assigned: 4, posted: 5, unsure: 0 },
+  { tenantId: 'vpub-b', brand: '가상B', key: 'w9', name: '최가상', assigned: 2, posted: 0, unsure: 0 },
+]
+const cardRows = [
+  row({ rowKey: 'k1', tenantId: 'vpub-a', brand: '가상A', key: 'fake.tistory.com/k1', google: shown('2026-11-15') }),
+  row({ rowKey: 'k2', tenantId: 'vpub-a', brand: '가상A', key: 'fake.tistory.com/k2', google: notYet('2026-11-15') }),
+  row({ rowKey: 'k3', tenantId: 'vpub-a', brand: '가상A', key: 'blog.naver.com/fake/1', platform: { key: 'naver-blog', label: '네이버 블로그' } }),
+  row({ rowKey: 'k4', tenantId: 'vpub-a', brand: '가상A', key: 'fake.tistory.com/k4' }),
+  row({ rowKey: 'k5', tenantId: 'vpub-b', brand: '가상B', key: null, kind: 'unposted', postId: null, url: null, platform: null, publishedOn: null }),
+]
+const cards = brandCards(cardRows, cardWriters)
+ok(
+  '브랜드 카드 — 올린 글 · 배정 진행(배정보다 많이 올려도 배정까지) · 플랫폼 많은 순 · 구글 색인/확인',
+  cards.length === 2 &&
+    cards[0]!.posted === 4 &&
+    cards[0]!.assigned === 20 &&
+    cards[0]!.assignedPosted === 13 &&
+    cards[0]!.platforms.map((p) => `${p.label}${p.n}`).join() === '티스토리3,네이버 블로그1' &&
+    cards[0]!.googleShown === 1 &&
+    cards[0]!.googleChecked === 2 &&
+    cards[1]!.posted === 0 &&
+    cards[1]!.assignedPosted === 4,
+)
+const grid = writerGrid(cardWriters, ['vpub-b', 'vpub-a'])
+ok(
+  '작성자 격자 — 열은 카드 순서, 줄은 w1 … w9 · w10(숫자 순), 없는 칸은 null',
+  grid.brands.map((b) => b.tenantId).join() === 'vpub-b,vpub-a' &&
+    grid.keys.join() === 'w1,w2,w9,w10' &&
+    grid.cell('vpub-a', 'w9') === null &&
+    grid.cell('vpub-b', 'w10')?.name === '박가상',
 )
 
 // ── 7) CSV ───────────────────────────────────────────────────────────────────

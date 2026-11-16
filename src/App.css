@@ -8973,16 +8973,68 @@ tr.ms-run-child td:nth-child(2) {
 
 /*
  * ── 발행 현황(src/pages/PublishStatus.tsx) ───────────────────────────────
- * 요약 칸 · 작성자별 진행 · 거르기 · 한 표. 표는 열이 많아 좁은 창에서는 표 안에서만 옆으로 민다(.table-wrap).
+ * 오늘 할 일 · 요약 칸 · 브랜드 카드 · 작성자 격자 · 올린 시기 · 거르기 · 한 표. 표는 열이 많아 좁은 창에서는 표 안에서만 옆으로 민다(.table-wrap).
  */
 /*
- * 요약 칸 6개는 6칸 격자에 놓고, 칸 너비로 차지할 칸 수만 바꾼다 — 넓으면 한 줄 6칸, 780px 밑이면 3칸씩 두 줄, 390px 밑이면 2칸씩 세 줄.
- * 흘려 감기(flex-wrap)는 5칸 + 1칸처럼 한 칸만 혼자 내려가 줄 전체로 늘어났다. 칸 수를 바꾸면 6을 나누는 수인지 다시 볼 것(남은 자리는 선 색으로 보인다).
+ * 2026-11-16 대시보드: 풀이 접기 · 오늘 할 일 줄 · 숫자 칸 4개 · 브랜드 카드 · 작성자 × 브랜드 격자 · 올린 시기 막대 → 거르기 · 표.
+ * 숫자 칸 · 카드 · 격자 칸 · 막대는 누르면 표를 거르는 단추다(.on = 지금 거르는 중).
  */
+.ps-howto {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.ps-howto > summary {
+  width: fit-content;
+  cursor: pointer;
+}
+.ps-howto .page-lead {
+  margin: 8px 0 0;
+}
+.ps-todo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card, 10px);
+  background: var(--card);
+}
+.ps-todo-head {
+  margin-right: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.ps-todo-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--card);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.ps-todo-item b {
+  font-family: var(--mono);
+  color: var(--ink);
+}
+.ps-todo-late b { color: var(--warn); }
+.ps-todo-over b { color: var(--bad); }
+.ps-todo-item:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+/* 요약 칸 4개 — 넓으면 한 줄 4칸, 640px 밑이면 2칸씩 두 줄. */
 .ps-summary {
   container: ps-summary / inline-size;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   margin: 0 0 14px;
   border-top: 1px solid var(--ink);
@@ -8998,6 +9050,17 @@ tr.ms-run-child td:nth-child(2) {
   padding: 12px 18px 14px;
   background: var(--paper);
 }
+.ps-sum-btn {
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ps-sum-btn:hover {
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--paper));
+}
 .ps-sum-label {
   font-size: 12px;
   font-weight: 700;
@@ -9010,13 +9073,17 @@ tr.ms-run-child td:nth-child(2) {
   line-height: 1.15;
   letter-spacing: -0.03em;
 }
+.ps-sum-unit {
+  margin-left: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+}
 .ps-sum.good .ps-sum-value { color: var(--good); }
 .ps-sum.warn .ps-sum-value { color: var(--warn); }
-@container ps-summary (max-width: 779px) {
+@container ps-summary (max-width: 639px) {
   .ps-sum { grid-column: span 2; }
-}
-@container ps-summary (max-width: 389px) {
-  .ps-sum { grid-column: span 3; }
 }
 .ps-sum-sub {
   font-size: 12px;
@@ -9025,60 +9092,208 @@ tr.ms-run-child td:nth-child(2) {
 .ps-issue {
   margin: 0 0 6px;
 }
-.ps-writers {
+.ps-brands {
   display: grid;
-  gap: 8px;
-  margin: 0 0 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
 }
-.ps-writer-row {
+.ps-brand {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
-}
-.ps-writer-brand {
-  min-width: 110px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.ps-writer,
-.ps-due {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-ctl);
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card, 10px);
   background: var(--card);
-  color: var(--ink-2);
+  color: inherit;
   font: inherit;
-  font-size: 12.5px;
+  text-align: left;
   cursor: pointer;
 }
-.ps-writer:hover,
-.ps-due:hover {
+.ps-brand:hover {
   border-color: var(--ink-2);
 }
-.ps-writer.done {
-  border-color: color-mix(in srgb, var(--good) 45%, var(--line));
-}
-.ps-writer.on,
-.ps-due.on {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent-ink);
+.ps-brand-name {
+  font-size: 14px;
   font-weight: 700;
 }
-.ps-writer:focus-visible,
-.ps-due:focus-visible,
+.ps-brand-count,
+.ps-brand-stats {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.ps-brand-count b,
+.ps-brand-stats b {
+  font-family: var(--mono);
+  color: var(--ink);
+}
+.ps-brand-plats {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.ps-plat-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--line);
+}
+.ps-plat { min-width: 3px; }
+.ps-plat-0 { background: var(--accent); }
+.ps-plat-1 { background: var(--info); }
+.ps-plat-2 { background: color-mix(in srgb, var(--info) 45%, var(--line)); }
+.ps-plat-3 { background: var(--line-strong); }
+.ps-dash-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.ps-panel {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card, 10px);
+  background: var(--card);
+}
+.ps-panel-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.ps-panel-note {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.ps-grid {
+  display: grid;
+  gap: 4px;
+  align-items: center;
+}
+.ps-grid-head {
+  overflow: hidden;
+  font-size: 11.5px;
+  color: var(--muted);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ps-grid-key {
+  padding-right: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.ps-grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: var(--r-ctl);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+button.ps-grid-cell { cursor: pointer; }
+.ps-grid-cell.done { background: var(--good-soft); color: var(--good); }
+.ps-grid-cell.part { background: var(--warn-soft); color: var(--warn); }
+.ps-grid-cell.zero { background: var(--bad-soft); color: var(--bad); }
+.ps-grid-cell.none { color: var(--muted); }
+button.ps-grid-cell:hover { border-color: var(--ink-2); }
+.ps-tl {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  height: 170px;
+}
+.ps-tl-col {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px 2px 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-ctl);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.ps-tl-col:hover { border-color: var(--line-strong); }
+.ps-tl-n {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+.ps-tl-cite {
+  font-weight: 400;
+  color: var(--good);
+}
+.ps-tl-bar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+.ps-tl-cited { background: var(--good); }
+.ps-tl-label {
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ps-tl-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin: 0 2px 0 6px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 35%, var(--line));
+  vertical-align: -1px;
+}
+.ps-tl-key:first-child { margin-left: 0; }
+.ps-tl-key.cited { background: var(--good); }
+.ps-todo-item.on,
+.ps-sum-btn.on,
+.ps-brand.on,
+.ps-grid-cell.on,
+.ps-tl-col.on {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.ps-todo-item.on {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.ps-todo-item:focus-visible,
+.ps-sum-btn:focus-visible,
+.ps-brand:focus-visible,
+.ps-grid-cell:focus-visible,
+.ps-tl-col:focus-visible,
 .ps-mark:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
-.ps-writer-n {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--muted);
+.ps-clear-filter {
+  align-self: center;
 }
 .ps-tools {
   display: flex;

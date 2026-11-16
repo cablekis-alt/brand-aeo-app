@@ -762,6 +762,172 @@ export function summarizeStatus(rows: PublishStatusRow[], today: string): Status
   }
 }
 
+/**
+ * 오늘 다시 볼 글을 셋으로 가른다(2026-11-16 대시보드) — 228편을 한 숫자로 보이면 오늘 할 양인지 밀린 양인지 몰랐다.
+ * today = 오늘이 3 · 7 · 14일째인 글, late = 지난 다시 볼 날을 놓친 글, over = 14일째도 지났는데 아직 안 본 글.
+ * 두 엔진이 다르면 더 급한 쪽(over > late > today)으로 센다.
+ */
+export type DueStage = 'today' | 'late' | 'over'
+
+export function dueStageOf(
+  row: Pick<PublishStatusRow, 'kind' | 'removed' | 'publishedOn' | 'naver' | 'google'> & { recheckFrom?: string | null },
+  today: string,
+): DueStage | null {
+  if (row.kind !== 'posted' || row.removed) return null
+  const from = row.recheckFrom === undefined ? row.publishedOn : row.recheckFrom
+  let stage: DueStage | null = null
+  for (const engine of INDEX_ENGINES) {
+    const r = recheckOf(from, row[engine], today)
+    if (r.kind !== 'due') continue
+    if (r.over) return 'over'
+    if (r.since < today) stage = 'late'
+    else if (!stage) stage = 'today'
+  }
+  return stage
+}
+
+/** 오늘 할 일 줄 — 서로 다른 주소로 센다(summarizeStatus와 같은 묶음). 같은 주소의 줄 가운데 가장 급한 단계로 한 번. */
+export function summarizeDue(rows: readonly PublishStatusRow[], today: string): Record<DueStage, number> {
+  const rank: Record<DueStage, number> = { today: 1, late: 2, over: 3 }
+  const pages = new Map<string, DueStage>()
+  for (const r of rows) {
+    const s = dueStageOf(r, today)
+    if (!s) continue
+    const k = r.key ?? r.rowKey
+    const prev = pages.get(k)
+    if (!prev || rank[s] > rank[prev]) pages.set(k, s)
+  }
+  const sum: Record<DueStage, number> = { today: 0, late: 0, over: 0 }
+  for (const s of pages.values()) sum[s] += 1
+  return sum
+}
+
+// ── 대시보드 묶음 ───────────────────────────────────────────────────────────
+
+/** 올린 시기 — 한 달을 상순(1~10일) · 중순(11~20일) · 하순(21일~)으로 나눈 열흘 묶음. 키는 「2026-11-2」처럼 정렬된다. */
+export function periodOf(day: string): string {
+  const d = Number(day.slice(8, 10))
+  return `${day.slice(0, 7)}-${d <= 10 ? 1 : d <= 20 ? 2 : 3}`
+}
+
+export function periodLabel(period: string): string {
+  const [, m, part] = period.split('-')
+  return `${Number(m)}월 ${['상순', '중순', '하순'][Number(part) - 1] ?? ''}`
+}
+
+/** 살아 있는 올린 글을 주소마다 한 묶음으로 — 요약 · 브랜드 카드 · 시기 막대가 같은 셈을 쓴다. */
+export function livePages(rows: readonly PublishStatusRow[]): PublishStatusRow[][] {
+  const pages = new Map<string, PublishStatusRow[]>()
+  for (const r of rows) {
+    if (r.kind !== 'posted' || r.removed) continue
+    const k = r.key ?? r.rowKey
+    pages.set(k, [...(pages.get(k) ?? []), r])
+  }
+  return [...pages.values()]
+}
+
+export interface BrandCard {
+  tenantId: string
+  brand: string
+  /** 살아 있는 올린 글(앱 글 + 앱 밖 글). */
+  posted: number
+  /** 작성자 배정 — 배정이 없으면 assigned 0. */
+  assigned: number
+  assignedPosted: number
+  /** 플랫폼별 편 수 — 많은 순. */
+  platforms: { key: string; label: string; n: number }[]
+  googleShown: number
+  /** 구글 칸을 한 번이라도 본 글(직접 · 자동). */
+  googleChecked: number
+}
+
+/** 브랜드 카드 — 브랜드마다 올린 수 · 배정 진행 · 플랫폼 구성 · 구글 색인. 브랜드 순서는 줄에 나온 순서. */
+export function brandCards(rows: readonly PublishStatusRow[], writers: readonly WriterSummary[]): BrandCard[] {
+  const order = [...new Map(rows.map((r) => [r.tenantId, r.brand])).entries()]
+  return order.map(([tenantId, brand]) => {
+    const pages = livePages(rows.filter((r) => r.tenantId === tenantId))
+    const plat = new Map<string, { key: string; label: string; n: number }>()
+    for (const same of pages) {
+      const p = same[0]!.platform
+      const key = p?.key ?? 'other'
+      const label = p?.label ?? '기타'
+      const cur = plat.get(`${key}|${label}`) ?? { key, label, n: 0 }
+      cur.n += 1
+      plat.set(`${key}|${label}`, cur)
+    }
+    const ws = writers.filter((w) => w.tenantId === tenantId)
+    return {
+      tenantId,
+      brand,
+      posted: pages.length,
+      assigned: ws.reduce((s, w) => s + w.assigned, 0),
+      assignedPosted: ws.reduce((s, w) => s + Math.min(w.posted, w.assigned), 0),
+      platforms: [...plat.values()].sort((a, b) => b.n - a.n),
+      googleShown: pages.filter((same) => same.some((r) => r.google?.state === 'shown')).length,
+      googleChecked: pages.filter((same) => same.some((r) => r.google !== null)).length,
+    }
+  })
+}
+
+export interface TimelineBar {
+  period: string
+  label: string
+  posted: number
+  /** 인용된 글 — 이력을 읽는 중이면 null(숫자를 보이지 않는다). */
+  cited: number | null
+}
+
+/**
+ * 올린 시기 막대 — 열흘 묶음마다 올린 글과 그 가운데 AI 인용된 글. 올린 날을 모르는 글은 빠진다(막대 밑에 따로 밝힌다).
+ * citedOf는 주소 묶음 하나가 인용됐는지(true · false), 아직 읽는 중이면 null.
+ */
+export function publishTimeline(
+  rows: readonly PublishStatusRow[],
+  citedOf: (same: readonly PublishStatusRow[]) => boolean | null,
+): { bars: TimelineBar[]; undated: number } {
+  const by = new Map<string, { posted: number; cited: number; loading: boolean }>()
+  let undated = 0
+  for (const same of livePages(rows)) {
+    const day = same.map((r) => r.publishedOn).filter((d): d is string => Boolean(d)).sort()[0]
+    if (!day) {
+      undated += 1
+      continue
+    }
+    const p = periodOf(day)
+    const cur = by.get(p) ?? { posted: 0, cited: 0, loading: false }
+    cur.posted += 1
+    const c = citedOf(same)
+    if (c === null) cur.loading = true
+    else if (c) cur.cited += 1
+    by.set(p, cur)
+  }
+  const bars = [...by.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([period, v]) => ({ period, label: periodLabel(period), posted: v.posted, cited: v.loading ? null : v.cited }))
+  return { bars, undated }
+}
+
+/**
+ * 작성자 × 브랜드 격자 — 열은 배정이 있는 브랜드(order가 있으면 그 순서 — 브랜드 카드와 같게), 줄은 작성자 키(w1, w2 … w10 순).
+ * 칸은 그 브랜드의 그 작성자(없으면 null).
+ */
+export function writerGrid(
+  writers: readonly WriterSummary[],
+  order: readonly string[] = [],
+): {
+  brands: { tenantId: string; brand: string }[]
+  keys: string[]
+  cell: (tenantId: string, key: string) => WriterSummary | null
+} {
+  const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
+  const brands = [...new Map(writers.map((w) => [w.tenantId, w.brand])).entries()]
+    .map(([tenantId, brand]) => ({ tenantId, brand }))
+    .sort((a, b) => rank(a.tenantId) - rank(b.tenantId))
+  const keys = [...new Set(writers.map((w) => w.key))].sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
+  const at = new Map(writers.map((w) => [`${w.tenantId}|${w.key}`, w]))
+  return { brands, keys, cell: (tenantId, key) => at.get(`${tenantId}|${key}`) ?? null }
+}
+
 export type StateFilter = '' | IndexState | 'unknown'
 /**
  * 「AI 인용」 거르기 — '' = 전체, cited = 인용됨(여러 주 · 한 주), pending = 아직 판단 전(판단 전 · 올린 뒤 측정 없음 · 올린 날 모름),
@@ -777,6 +943,10 @@ export interface StatusFilter {
   google: StateFilter
   citation: CitationFilter
   dueOnly: boolean
+  /** 오늘 할 일 줄에서 고른 단계 — dueOnly보다 좁다. 없거나 ''면 거르지 않는다. */
+  dueStage?: DueStage | ''
+  /** 올린 시기 막대에서 고른 열흘 묶음(periodOf). 없거나 ''면 거르지 않는다. */
+  period?: string
   showUnposted: boolean
   showRemoved: boolean
 }
@@ -800,7 +970,7 @@ export function filterRows(
   today: string,
   citationMatches?: (row: PublishStatusRow) => boolean,
 ): PublishStatusRow[] {
-  const byState = Boolean(f.naver || f.google || f.citation || f.dueOnly)
+  const byState = Boolean(f.naver || f.google || f.citation || f.dueOnly || f.dueStage || f.period)
   return rows.filter((r) => {
     if (f.tenantId && r.tenantId !== f.tenantId) return false
     if (f.writer && writerFilterValue(r) !== f.writer) return false
@@ -808,6 +978,8 @@ export function filterRows(
     if (r.removed && !f.showRemoved) return false
     if (!stateMatches(f.naver, r.naver) || !stateMatches(f.google, r.google)) return false
     if (f.citation && !citationMatches?.(r)) return false
+    if (f.period && (!r.publishedOn || periodOf(r.publishedOn) !== f.period)) return false
+    if (f.dueStage && dueStageOf(r, today) !== f.dueStage) return false
     return !f.dueOnly || rowRecheck(r, today).due
   })
 }
