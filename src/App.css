@@ -9026,6 +9026,9 @@ tr.ms-run-child td:nth-child(2) {
 }
 .ps-todo-late b { color: var(--warn); }
 .ps-todo-over b { color: var(--bad); }
+.ps-todo-naver {
+  margin-left: auto;
+}
 .ps-todo-item:disabled {
   cursor: default;
   opacity: 0.55;

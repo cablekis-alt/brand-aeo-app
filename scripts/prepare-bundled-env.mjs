@@ -12,7 +12,17 @@ import { dirname, join } from 'node:path'
 
 // TOURAPI_SERVICE_KEY: 한국관광공사 TourAPI(data.go.kr) — 글 사진 자리의 관광공사 사진(3단계).
 // SERPAPI_API_KEY: SerpAPI(구글 · 네이버 검색 결과) — 색인 자동 확인 · 구글 AI 개요 측정에 쓸 키.
-const WHITELIST = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PERPLEXITY_API_KEY', 'TOURAPI_SERVICE_KEY', 'SERPAPI_API_KEY']
+// NAVER_API_HUB_CLIENT_ID · NAVER_API_HUB_CLIENT_SECRET: NAVER API HUB 검색(블로그 · 웹문서) — 발행 현황 네이버 자동 확인.
+const WHITELIST = [
+  'GEMINI_API_KEY',
+  'OPENAI_API_KEY',
+  'ANTHROPIC_API_KEY',
+  'PERPLEXITY_API_KEY',
+  'TOURAPI_SERVICE_KEY',
+  'SERPAPI_API_KEY',
+  'NAVER_API_HUB_CLIENT_ID',
+  'NAVER_API_HUB_CLIENT_SECRET',
+]
 // 비밀값이 아닌 운영 설정 — 설치본이 빌드 머신과 같은 엔진 구성으로 측정하도록 함께 굽는다.
 // COLLECT_ENGINES: 수집 엔진 전역 지정, JUDGE_ENGINE: 판단(심판) 엔진 고정(측정 비교가능성 유지),
 // GA4_PROPERTY_ID / GOOGLE_SERVICE_ACCOUNT_JSON: AI 리퍼럴 트래픽(GA4) 연동.

@@ -176,6 +176,7 @@ import { queueTenantWrite } from './tenantWriteQueue.js';
 import { getPublishedHistory } from './publishedHistory.js';
 import { IndexChecksError, setIndexCheck } from './indexChecks.js';
 import { IndexAutoError, indexAutoStatus, planIndexAuto, saveIndexAutoSettings, startIndexAuto } from './indexAuto.js';
+import { NaverIndexError, naverIndexStatus, startNaverIndex } from './naverIndex.js';
 import {
   cancelGoogleAio,
   GoogleAioError,
@@ -2823,6 +2824,26 @@ app.put('/api/index-auto/settings', async (req, res) => {
     res.json(await saveIndexAutoSettings(req.body));
   } catch (err) {
     sendIndexAutoError(res, err);
+  }
+});
+
+// 네이버 자동 확인(server/naverIndex.ts) — 발행 현황 네이버 노출 칸을 NAVER API HUB 검색으로 대신 본다. 무료라 계획 · 몫 없이 단추로 바로 돈다.
+// 구글 자동 확인과 같은 Host · Origin 검사 뒤에 둔다.
+app.get('/api/naver-index', (_req, res) => {
+  res.json(naverIndexStatus());
+});
+
+app.post('/api/naver-index/run', async (req, res) => {
+  if (!requireJson(req, res)) return;
+  try {
+    res.status(202).json(await startNaverIndex(await loadRuntimeTenants()));
+  } catch (err) {
+    if (err instanceof NaverIndexError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    console.error('[naverIndex] 시작하지 못했습니다:', err);
+    res.status(500).json({ error: `네이버 자동 확인을 시작하지 못했어요 — ${err instanceof Error ? err.message : String(err)}` });
   }
 });
 

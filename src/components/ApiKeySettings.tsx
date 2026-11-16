@@ -21,7 +21,10 @@ const KEY_LABEL: Record<string, string> = {
   PERPLEXITY_API_KEY: 'PERPLEXITY',
 }
 // 측정 엔진이 아닌 키 — 상태 배지만 보인다(수집 엔진 고르기와 상관없다).
-const OTHER_KEYS = [{ key: 'SERPAPI_API_KEY', label: 'SERPAPI (검색 결과)' }] as const
+const OTHER_KEYS = [
+  { key: 'SERPAPI_API_KEY', label: 'SERPAPI (검색 결과)' },
+  { key: 'NAVER_API_HUB_CLIENT_ID', label: 'NAVER 검색 (API HUB)' },
+] as const
 const JUDGE_LABEL: Record<string, string> = { gemini: 'Gemini', claude: 'Claude', openai: 'ChatGPT' }
 const ENGINE_LABEL: Record<string, string> = Object.fromEntries(ENGINES.map((e) => [e.id, e.label]))
 

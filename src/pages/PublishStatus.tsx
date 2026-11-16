@@ -6,12 +6,15 @@ import {
   commitPostImport,
   loadExternalHistory,
   loadIndexAuto,
+  loadNaverIndex,
   loadPublishedHistory,
   loadPublishStatus,
   patchExternalPost,
+  runNaverIndex,
   saveIndexCheck,
   type IndexAutoPlan,
   type IndexAutoStatus,
+  type NaverIndexStatus,
 } from '../lib/api'
 import { downloadCsv } from '../lib/fileDownload'
 import { safeFileName } from '../lib/markdownFile'
@@ -37,6 +40,7 @@ import {
   publishStatusCsv,
   publishStatusFileName,
   recheckCell,
+  recheckOf,
   rowName,
   rowRecheck,
   sameUrlBrands,
@@ -524,6 +528,49 @@ export default function PublishStatus() {
     }
   }, [reloadKey])
 
+  // 네이버 자동 확인(NAVER API HUB) — 키가 있으면 오늘 할 일 줄에 단추를 보인다. 도는 동안 1.5초마다 진행을 묻고, 끝나면 표를 다시 읽는다.
+  const [naver, setNaver] = useState<NaverIndexStatus | null>(null)
+  const [naverError, setNaverError] = useState<string | null>(null)
+  // 이 화면에서 시작한 실행만 결과 문구를 보인다(앱을 켠 뒤 다른 때 돌린 실행은 보이지 않는다).
+  const [naverShowResult, setNaverShowResult] = useState(false)
+  useEffect(() => {
+    let alive = true
+    loadNaverIndex().then(
+      (s) => {
+        if (alive) setNaver(s)
+      },
+      (err: unknown) => {
+        if (alive) setNaverError(message(err))
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [reloadKey])
+  const naverRunning = naver?.running ?? false
+  useEffect(() => {
+    if (!naverRunning) return
+    const timer = setInterval(() => {
+      loadNaverIndex().then(
+        (s) => {
+          setNaver(s)
+          // 끝났다 — 적은 칸을 보이게 표를 다시 읽는다.
+          if (s && !s.running) setReloadKey((k) => k + 1)
+        },
+        (err: unknown) => setNaverError(message(err)),
+      )
+    }, 1500)
+    return () => clearInterval(timer)
+  }, [naverRunning])
+  const startNaver = () => {
+    setNaverError(null)
+    setNaverShowResult(true)
+    runNaverIndex().then(
+      () => loadNaverIndex().then((s) => setNaver(s)),
+      (err: unknown) => setNaverError(message(err)),
+    )
+  }
+
   const data = state.value
   const today = data?.today ?? ''
   const rows = data?.rows ?? []
@@ -679,6 +726,15 @@ export default function PublishStatus() {
     if (stage === 'all') patchFilter({ dueOnly: !(filter.dueOnly && !filter.dueStage), dueStage: '' })
     else patchFilter(filter.dueStage === stage ? { dueStage: '', dueOnly: false } : { dueStage: stage, dueOnly: true })
   }
+
+  // 네이버 자동 확인 대상 — 모든 브랜드에서 오늘 네이버 차례인 주소(서버 planNaverTargets와 같은 셈, 제목 없는 글은 서버가 뺀다).
+  const naverDue = new Set(
+    rows
+      .filter((r) => r.kind === 'posted' && !r.removed && r.key && r.postId && recheckOf(r.recheckFrom === undefined ? r.publishedOn : r.recheckFrom, r.naver, today).kind === 'due')
+      .map((r) => r.key),
+  ).size
+  const naverRun = naver?.run ?? null
+  const naverLabel = naverRunning && naverRun ? `네이버 확인하는 중… ${naverRun.done}/${naverRun.total}` : `네이버 자동 확인(${naverDue}편)`
 
   // 브랜드 카드 · 작성자 격자 · 올린 시기 막대 — 카드와 격자는 브랜드 거르기와 상관없이 모든 브랜드를 보인다(고른 카드만 강조).
   const cards = brandCards(rows, data?.writers ?? [])
@@ -838,7 +894,27 @@ export default function PublishStatus() {
                     </button>
                   </>
                 )}
+                {naver?.configured && (
+                  <button type="button" className="btn ps-todo-naver" disabled={naverRunning || naverDue === 0} onClick={startNaver}>
+                    {naverLabel}
+                  </button>
+                )}
               </section>
+              {naverError && (
+                <p className="error" role="alert">
+                  네이버 자동 확인: {naverError}
+                </p>
+              )}
+              {naverShowResult && naverRun && naverRun.endedAt && (
+                <p className={naverRun.stoppedBy ? 'error' : 'pi-note'} role={naverRun.stoppedBy ? 'alert' : 'status'}>
+                  네이버 자동 확인 {naverRun.stoppedBy ? '멈춤' : '끝'} — 노출됨 {naverRun.shown} · 아직 {naverRun.notYet}
+                  {naverRun.skipped > 0 && ` · 건너뜀 ${naverRun.skipped}`}
+                  {naverRun.unknown > 0 && ` · 못 가림 ${naverRun.unknown}`}
+                  {naverRun.untitled > 0 && ` · 제목 몰라 직접 볼 글 ${naverRun.untitled}`}
+                  {naverRun.stoppedBy && ` · ${naverRun.stoppedBy}`}
+                  {naverRun.notYet > 0 && ' (「아직 · 자동」은 확정이 아니에요 — 다음 다시 볼 날에 또 찾아요)'}
+                </p>
+              )}
 
               <section className="ps-summary" aria-label="요약">
                 {tiles.map((t) => {

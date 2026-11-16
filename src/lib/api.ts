@@ -930,6 +930,53 @@ export async function runIndexAuto(planId: string): Promise<{ runId: string; tot
   return body
 }
 
+// ── 네이버 자동 확인(server/naverIndex.ts) ──────────────────────────────────
+
+export interface NaverRunItem {
+  key: string
+  tenantId: string
+  postId: string
+  rowName: string
+  outcome: 'shown' | 'not-yet' | 'skipped' | 'unknown'
+  reason?: string
+}
+
+export interface NaverRun {
+  startedAt: string
+  endedAt: string | null
+  total: number
+  done: number
+  shown: number
+  notYet: number
+  skipped: number
+  unknown: number
+  untitled: number
+  stoppedBy: string | null
+  items: NaverRunItem[]
+}
+
+export interface NaverIndexStatus {
+  configured: boolean
+  configMessage: string | null
+  run: NaverRun | null
+  running: boolean
+}
+
+/** 네이버 자동 확인 상태 — 진행을 묻는 데도 쓴다. **null은 이 환경에 기능이 없다(웹 — 404)**. */
+export async function loadNaverIndex(): Promise<NaverIndexStatus | null> {
+  const { status, body } = await indexAutoRequest<NaverIndexStatus>('/api/naver-index', undefined, '네이버 자동 확인 상태를 읽지 못했습니다')
+  if (status === 404) return null
+  if (!body || typeof body.configured !== 'boolean' || typeof body.running !== 'boolean') throw new IndexAutoRequestError('네이버 자동 확인 상태를 읽지 못했습니다(응답 모양).', status)
+  return body
+}
+
+/** 실행 — 서버는 202로 바로 돌려주고 뒤에서 하나씩 검색한다(진행은 loadNaverIndex). */
+export async function runNaverIndex(): Promise<{ total: number }> {
+  const { status, body } = await indexAutoRequest<{ total: number }>('/api/naver-index/run', jsonInit('POST', {}), '네이버 자동 확인을 시작하지 못했습니다')
+  if (status === 404 || !body || typeof body.total !== 'number') throw new IndexAutoRequestError(body?.error || `네이버 자동 확인을 시작하지 못했습니다 (HTTP ${status})`, status)
+  return body
+}
+
 /** 설정 저장 — 바꾼 칸만. 서버가 저장한 설정을 돌려준다. */
 export async function saveIndexAutoSettings(patch: Partial<IndexAutoSettings>): Promise<IndexAutoSettings> {
   const { status, body } = await indexAutoRequest<{ settings: IndexAutoSettings }>('/api/index-auto/settings', jsonInit('PUT', patch), '자동 확인 설정을 저장하지 못했습니다')
