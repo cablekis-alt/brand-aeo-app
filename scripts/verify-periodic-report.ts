@@ -150,6 +150,25 @@ const top = citationTop([...Array.from({ length: 7 }, (_, i) => crow(`d${i}.exam
 ok('출처: 상위 6개 + 자사 1개', top.top.length === 7 && top.top.at(-1)!.domain === 'me.example' && top.top.at(-1)!.isOwned)
 ok('출처: 합계 · 자사 건수', top.total === 10 + 9 + 8 + 7 + 6 + 5 + 4 + 1 && top.owned === 1)
 ok('출처 성격: 업계 약어(UGC) 대신 「이용자 글」', top.top[0]!.owner === '이용자 글')
+// 판정이 자사로 본 인용이 남의 도메인 줄에 섞였으면 떼어 낸다(군산각 W47 — 숫자 칸 127 · 표 자사 100, 2026-11-17)
+const mixedRow = {
+  domain: 'blog.naver.com',
+  ownerType: 'third-party-ugc',
+  ownerTypeCounts: { 'third-party-ugc': 90, 'brand-owned': 27, unknown: 6 },
+  citationCount: 123,
+  supportingBrandMentionCount: 0,
+  urls: [
+    { url: 'https://blog.naver.com/fakebrand', citationCount: 12, engines: [], supportingBrandMentionCount: 0 },
+    { url: 'https://blog.naver.com/fakebrand/1', citationCount: 11, engines: [], supportingBrandMentionCount: 0 },
+    { url: 'https://blog.naver.com/other/9', citationCount: 15, engines: [], supportingBrandMentionCount: 0 },
+  ],
+} as CitationBreakdownRow
+const split = citationTop([crow('gov.example', 400, 'third-party-authority'), mixedRow, crow('me.example', 79, 'brand-owned')])
+const splitOwned = split.top.find((r) => r.domain === 'blog.naver.com/fakebrand')
+ok(
+  '출처: 남의 도메인 줄 속 자사 판정 인용은 「도메인/아이디 · 자사」 줄로 떼고 원래 줄에서 뺀다 · 자사 합 = 판정 합',
+  splitOwned?.count === 27 && splitOwned.isOwned && split.top.find((r) => r.domain === 'blog.naver.com')?.count === 96 && split.owned === 79 + 27 && split.total === 400 + 123 + 79,
+)
 
 // 6b) 불린 질문 유형별 줄은 이름을 넣어 물은 질문만 · 우리 글 인용(2026-11-16 — 보고서에서 이름 없는 질문과 섞여 읽히던 것)
 const mixedBank = {

@@ -231,7 +231,8 @@ export function MentionSection({ self, weekOf }: { self: SelfReview; weekOf: str
 
 /** 출처 칸 — 아는 플랫폼은 이름과 주소를 함께(「여기어때 yeogi.com」), 모르는 주소는 주소만. 블로그를 묶었으면 몇 곳인지(「블로그 17곳」). */
 function SourceName({ domain, hosts = 1 }: { domain: string; hosts?: number }) {
-  const name = hostName(domain)
+  // 자사로 판정돼 떼어 낸 줄은 「blog.naver.com/아이디」처럼 경로가 붙는다 — 이름은 도메인으로 찾는다.
+  const name = hostName(domain.split('/')[0]!)
   return (
     <>
       {name && <>{name} </>}

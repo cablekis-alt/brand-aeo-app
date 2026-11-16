@@ -264,21 +264,51 @@ export function ownPostsInDomain(own: OwnPostCitations | null, domain: string): 
   return own.unnamedByHost.filter((h) => h.host === domain || h.host.endsWith(`.${domain}`)).reduce((s, h) => s + h.count, 0)
 }
 
-/** 그 주 인용 상위 출처 — 상위 6개와 그 밖의 자사 출처. 건수는 인용 분석(/api/citations)의 도메인별 인용 수 그대로다. */
-export function citationTop(rows: CitationBreakdownRow[]): { total: number; owned: number; top: CitationRow[] } {
-  const sorted = [...rows].sort((a, b) => b.citationCount - a.citationCount)
-  const top: CitationRow[] = sorted.slice(0, 6).map((r) => ({
-    domain: r.domain,
-    owner: OWNER_TYPE_LABEL[r.ownerType] ?? r.ownerType,
-    count: r.citationCount,
-    isOwned: r.ownerType === 'brand-owned',
-  }))
-  for (const r of sorted.filter((r) => r.ownerType === 'brand-owned' && !top.some((t) => t.domain === r.domain))) {
-    top.push({ domain: r.domain, owner: OWNER_TYPE_LABEL[r.ownerType] ?? r.ownerType, count: r.citationCount, isOwned: true })
+/**
+ * 판정이 자사로 본 인용이 남의 도메인 줄에 섞였을 때 붙일 이름 — 그 도메인의 주소 가운데 인용이 가장 많은 첫 경로 칸(블로그 아이디)을
+ * 붙인다(「blog.naver.com」 → 「blog.naver.com/gunsangak」). 주소 목록이 없으면 도메인 그대로.
+ */
+function ownedSplitName(r: CitationBreakdownRow): string {
+  const bySeg = new Map<string, number>()
+  for (const u of r.urls ?? []) {
+    let seg: string | undefined
+    try {
+      seg = new URL(u.url).pathname.split('/').filter(Boolean)[0]
+    } catch {
+      continue
+    }
+    if (seg) bySeg.set(seg, (bySeg.get(seg) ?? 0) + u.citationCount)
   }
+  const top = [...bySeg].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]
+  return top ? `${r.domain}/${top[0]}` : r.domain
+}
+
+/**
+ * 그 주 인용 상위 출처 — 상위 6개와 그 밖의 자사 출처. 건수는 인용 분석(/api/citations)의 도메인별 인용 수 그대로다.
+ *
+ * 도메인 줄의 성격은 그 도메인 인용 가운데 가장 많은 성격이라, 판정이 자사로 본 인용이 남의 글과 같은 도메인(네이버 블로그 등)에 있으면
+ * 「이용자 글」 줄 안에 묻혔다 — 숫자 칸 「자사 인용률」(인용 하나하나의 판정)은 127건인데 표의 자사 합은 100건(군산각 W47, 2026-11-17).
+ * 그런 인용은 「blog.naver.com/gunsangak · 자사」 줄로 떼어 내고 원래 줄에서 뺀다 — 표의 자사 합이 숫자 칸과 같아진다.
+ */
+export function citationTop(rows: CitationBreakdownRow[]): { total: number; owned: number; top: CitationRow[] } {
+  const ownedLabel = OWNER_TYPE_LABEL['brand-owned'] ?? 'brand-owned'
+  const expanded: CitationRow[] = []
+  for (const r of rows) {
+    const label = OWNER_TYPE_LABEL[r.ownerType] ?? r.ownerType
+    if (r.ownerType === 'brand-owned') {
+      expanded.push({ domain: r.domain, owner: label, count: r.citationCount, isOwned: true })
+      continue
+    }
+    const ownedN = Math.min(r.ownerTypeCounts?.['brand-owned'] ?? 0, r.citationCount)
+    if (r.citationCount - ownedN > 0) expanded.push({ domain: r.domain, owner: label, count: r.citationCount - ownedN, isOwned: false })
+    if (ownedN > 0) expanded.push({ domain: ownedSplitName(r), owner: ownedLabel, count: ownedN, isOwned: true })
+  }
+  const sorted = expanded.sort((a, b) => b.count - a.count || a.domain.localeCompare(b.domain))
+  const top = sorted.slice(0, 6)
+  for (const r of sorted.filter((r) => r.isOwned && !top.includes(r))) top.push(r)
   return {
     total: rows.reduce((s, r) => s + r.citationCount, 0),
-    owned: rows.filter((r) => r.ownerType === 'brand-owned').reduce((s, r) => s + r.citationCount, 0),
+    owned: expanded.filter((r) => r.isOwned).reduce((s, r) => s + r.count, 0),
     top,
   }
 }
