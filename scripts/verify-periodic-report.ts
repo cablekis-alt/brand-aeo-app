@@ -11,7 +11,7 @@
 import { buildPeriodicReport } from '../src/lib/b9-report'
 import { measureConditionParts, measureConditionPlain } from '../src/lib/format'
 import { buildRecommendationEvidence } from '../src/lib/recommendationEvidence'
-import { citationTop, cohortRows, selfReview, trustChecks } from '../src/lib/reviewReport'
+import { citationTop, cohortRows, ownPostCitations, ownPostsInDomain, selfReview, trustChecks } from '../src/lib/reviewReport'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../src/lib/types'
 import type { WeeklyScorecard } from '../src/prompts/b8-report'
 
@@ -150,6 +150,54 @@ const top = citationTop([...Array.from({ length: 7 }, (_, i) => crow(`d${i}.exam
 ok('출처: 상위 6개 + 자사 1개', top.top.length === 7 && top.top.at(-1)!.domain === 'me.example' && top.top.at(-1)!.isOwned)
 ok('출처: 합계 · 자사 건수', top.total === 10 + 9 + 8 + 7 + 6 + 5 + 4 + 1 && top.owned === 1)
 ok('출처 성격: 업계 약어(UGC) 대신 「이용자 글」', top.top[0]!.owner === '이용자 글')
+
+// 6b) 불린 질문 유형별 줄은 이름을 넣어 물은 질문만 · 우리 글 인용(2026-11-16 — 보고서에서 이름 없는 질문과 섞여 읽히던 것)
+const mixedBank = {
+  questions: [
+    { questionId: 'g1', text: '일반', category: 'category-agnostic', containsBrandName: false },
+    { questionId: 'd1', text: '나는 어떤 곳?', category: 'brand-direct', containsBrandName: true },
+    { questionId: 'd2', text: '이름 없는 직접 유형', category: 'brand-direct', containsBrandName: false },
+  ],
+} as unknown as QuestionBank
+const mixed = [
+  { questionId: 'g1', engine: 'openai', mentioned: false, clarifying: false, factualityClaims: [] },
+  { questionId: 'd1', engine: 'openai', mentioned: true, clarifying: false, factualityClaims: [] },
+  { questionId: 'd2', engine: 'openai', mentioned: true, clarifying: false, factualityClaims: [] },
+] as unknown as QuestionRepeatAnalysis[]
+const mr = selfReview(mixed, mixedBank)!
+ok('불린 질문: 유형별 줄은 이름을 넣어 물은 질문만 센다(이름 없는 질문은 빼고)', mr.categories.length === 1 && mr.categories[0]!.total === 1 && mr.categories[0]!.mentioned === 1)
+const tally = (all: number, named: number | null, unnamed: number | null) => ({
+  all: { cited: all, supporting: 0, mentioned: 0 },
+  named: named === null ? null : { cited: named, supporting: 0, mentioned: 0 },
+  unnamed: unnamed === null ? null : { cited: unnamed, supporting: 0, mentioned: 0 },
+  probe: null,
+  unknown: { cited: 0, supporting: 0, mentioned: 0 },
+  forms: [],
+})
+const hpost = (key: string, url: string, cells: unknown[]) => ({ post: { id: key, key, url }, cells })
+const history = {
+  weeks: [{ weekOf: '2026-W46' }, { weekOf: '2026-W47' }],
+  posts: [
+    hpost('a.tistory.com/1', 'https://a.tistory.com/1', [null, { tally: tally(5, 4, 1) }]),
+    hpost('a.tistory.com/1', 'https://a.tistory.com/m/1', [null, { tally: tally(2, 2, 0) }]),
+    hpost('m.blog.naver.com/x/1', 'https://m.blog.naver.com/x/1', [null, { tally: tally(3, 1, 2) }]),
+    hpost('b.tistory.com/2', 'https://b.tistory.com/2', [{ tally: tally(9, 9, 0) }, { tally: tally(0, 0, 0) }]),
+  ],
+} as unknown as Parameters<typeof ownPostCitations>[0]
+const own = ownPostCitations(history, '2026-W47')!
+ok(
+  '우리 글 인용: 그 주만 · 같은 주소는 한 편(인용 많은 줄) · 갈래별 합 · 인용된 편 수',
+  own.all === 8 && own.named === 5 && own.unnamed === 3 && own.posts === 2,
+)
+ok(
+  '우리 글 인용: 이름 없는 질문은 호스트별(m. 뗌) · 출처 도메인 줄에 그 아래 호스트를 더한다',
+  ownPostsInDomain(own, 'tistory.com') === 1 && ownPostsInDomain(own, 'blog.naver.com') === 2 && ownPostsInDomain(own, 'naver.com') === 2 && ownPostsInDomain(own, 'gunsan.go.kr') === 0,
+)
+ok('우리 글 인용: 기록에 없는 주 · 기록 없음은 null', ownPostCitations(history, '2026-W40') === null && ownPostCitations(null, '2026-W47') === null)
+ok(
+  '우리 글 인용: 질문 은행을 못 읽은 칸이 있으면 갈래는 확인 불가(null)',
+  ownPostCitations({ ...history, posts: [hpost('c.tistory.com/1', 'https://c.tistory.com/1', [null, { tally: tally(1, null, null) }])] } as typeof history, '2026-W47')!.unnamed === null,
+)
 
 // 7) 고객 종이 문구(상용화 UI 3차 U5, 2026-10-26) — 내부 용어 · 의료 업종 말 · 해라체가 고객 PDF에 찍혔다(펜션 · KT 보고서에 「원장 · 시술」).
 //    모든 지표가 약하면 개선제안이 모두 나온다 — 그 문장 전체를 본다.

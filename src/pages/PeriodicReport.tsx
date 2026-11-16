@@ -28,7 +28,7 @@ import {
   type PublishedPost,
   type SiteScoreRecord,
 } from '../lib/api'
-import { citationTop, cohortRows, selfReview, trustChecks } from '../lib/reviewReport'
+import { citationTop, cohortRows, ownPostCitations, selfReview, trustChecks } from '../lib/reviewReport'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { resolveBankVersion } from '../lib/bankVersion'
 import {
@@ -548,6 +548,8 @@ export default function PeriodicReport() {
    * 「집행한 글과 인용」 절 · 개선제안의 재권고 방지에 함께 쓴다. 경쟁사 보기에서는 쓰지 않는다 — 우리 집행 기록이다.
    */
   const published = usePublishedHistory(viewing ? '' : (tenant?.tenantId ?? ''))
+  // 우리가 올린 글의 그 주 출처 인용 — published(올린 글 기록)를 쓴다. 경쟁사 보기 · 웹에서는 null.
+  const ownPosts = useMemo(() => (card ? ownPostCitations(published.history ?? null, card.weekOf) : null), [published.history, card])
   const [actionStates, setActionStates] = useState<{ key: string; value: ActionStateMap | null }>({ key: '', value: null })
   useEffect(() => {
     const id = viewing ? '' : tenant?.tenantId
@@ -1297,6 +1299,7 @@ export default function PeriodicReport() {
               weekOf={card.weekOf}
               unnamedTop={unnamedTop}
               homepage={homepage}
+              ownPosts={ownPosts}
             />
           )}
           {siteNow && siteNow.categories.length > 0 && <SiteBreakdownSection site={siteNow} />}

@@ -2239,6 +2239,22 @@ tbody tr.selected {
 .explain-steps .ov-step.current .ov-step-bar > .mono {
   font-size: 14px;
 }
+/* 「AI 답에서 브랜드가 불린 질문」 — 이름 없이 물은 질문(점수) · 이름을 넣어 물은 질문(참고) 두 갈래의 소제목과 머리 숫자. */
+.mention-section h4 {
+  margin: 14px 0 6px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.mention-section h4:first-of-type {
+  margin-top: 4px;
+}
+.mention-headline {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.mention-headline strong {
+  font-family: var(--mono);
+}
 .mention-list,
 .contradicted-list {
   margin: 0 0 8px;
@@ -2823,7 +2839,7 @@ p.hint {
   .crawler-panel, .site-report .hero-card, .site-report tr, .issue-list li { break-inside: avoid; }
   .site-report h3, .crawler-panel h3 { break-after: avoid; }
   /* 정기진단 보고서의 비교 · 근거 절: 절 제목이 쪽 끝에 홀로 남지 않게, 표 행은 자르지 않게. 짧은 Site 영역 표는 통째로 넘긴다. */
-  :is(.cohort-compare, .mention-section, .citation-top, .site-breakdown, .score-explain, .runs-section) h3,
+  :is(.cohort-compare, .mention-section, .citation-top, .site-breakdown, .score-explain, .runs-section) :is(h3, h4),
   section:has(> ol.rec-list) > h3 { break-after: avoid; }
   /* 점수 풀이는 줄마다 붙들고(문장이 쪽 사이에서 갈리지 않게) 절은 길이대로 흐르게 둔다. */
   .explain-list > div { break-inside: avoid; }

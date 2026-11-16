@@ -2,6 +2,7 @@ import type { WeeklyScorecard } from '../prompts/b8-report'
 import { comparableRun, compareConditions, runCountText, type ConditionChange } from './comparability'
 import { ENGINE_LABEL, OWNER_TYPE_LABEL, weekLabel } from './format'
 import { isScoredAgnostic, withoutProbes } from './questionScope'
+import type { PublishedHistory } from './api'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from './types'
 
 /**
@@ -174,7 +175,12 @@ export function selfReview(analyses: QuestionRepeatAnalysis[], bank: QuestionBan
   }
   const categories: CategoryRow[] = Object.entries(CATEGORY_LABEL)
     .map(([category, label]) => {
-      const rows = scored.filter((a) => bankById.get(a.questionId)?.category === category)
+      // 이름을 넣어 물은 질문만 — 이 유형들은 브랜드 이름을 넣은 질문이다(보고서는 「이름을 넣어 물은 질문 — 유형별」로 이름 없는 질문과 갈라
+      // 보인다, 2026-11-16). 이름 없는 질문이 섞여 들어오면 그 질문은 위 「이름 없이 물은 질문」 쪽에 센다.
+      const rows = scored.filter((a) => {
+        const q = bankById.get(a.questionId)
+        return q?.category === category && q.containsBrandName !== false
+      })
       return { category, label, mentioned: rows.filter((a) => a.mentioned).length, total: rows.length }
     })
     .filter((r) => r.total > 0)
@@ -198,6 +204,64 @@ export function selfReview(analyses: QuestionRepeatAnalysis[], bank: QuestionBan
         })),
     ),
   }
+}
+
+/** 그 주 우리가 올린 글(올린 글 기록)이 AI 답에 출처로 붙은 횟수 — 질문 갈래별 · 이름 없는 질문은 글 주소의 호스트별. */
+export interface OwnPostCitations {
+  /** 그 주 인용된 우리 글 편 수(주소 기준). */
+  posts: number
+  all: number
+  /** 질문 은행을 못 읽은 주는 null — 0이 아니라 확인 불가. */
+  named: number | null
+  unnamed: number | null
+  /** 이름 없는 질문 인용 — 글 주소의 호스트별(「cablekis.tistory.com」). */
+  unnamedByHost: { host: string; count: number }[]
+}
+
+/**
+ * 정기진단 보고서 「AI가 근거로 쓴 출처」의 우리 글 줄(2026-11-16) — 블로그(티스토리 등)에 올린 글은 자사 주소가 아니라 「자사」 칸에
+ * 들어가지 않고, 「티스토리 · 블로그 N곳」 묶음에도 남의 글과 섞여 있었다. 셈은 발행 현황 · 퍼포먼스와 같은 올린 글 인용 기록
+ * (server/publishedHistory.ts)이다. 같은 주소를 여러 줄에 적은 기록은 한 편으로(그 주 인용이 가장 많은 줄). 그 주가 기록에 없으면 null.
+ */
+export function ownPostCitations(history: PublishedHistory | null, weekOf: string): OwnPostCitations | null {
+  if (!history) return null
+  const i = history.weeks.findIndex((w) => w.weekOf === weekOf)
+  if (i < 0) return null
+  const byKey = new Map<string, { url: string; tally: NonNullable<NonNullable<PublishedHistory['posts'][number]['cells'][number]>['tally']> }>()
+  for (const p of history.posts) {
+    const tally = p.cells[i]?.tally
+    if (!tally) continue
+    const key = p.post.key ?? p.post.url
+    const cur = byKey.get(key)
+    if (!cur || tally.all.cited > cur.tally.all.cited) byKey.set(key, { url: p.post.url, tally })
+  }
+  const rows = [...byKey.values()]
+  const known = rows.every((r) => r.tally.named !== null && r.tally.unnamed !== null)
+  const hosts = new Map<string, number>()
+  for (const r of rows) {
+    const n = r.tally.unnamed?.cited ?? 0
+    if (n === 0) continue
+    let host: string
+    try {
+      host = new URL(r.url).hostname.replace(/^(www|m)\./, '')
+    } catch {
+      continue
+    }
+    hosts.set(host, (hosts.get(host) ?? 0) + n)
+  }
+  return {
+    posts: rows.filter((r) => r.tally.all.cited > 0).length,
+    all: rows.reduce((s, r) => s + r.tally.all.cited, 0),
+    named: known ? rows.reduce((s, r) => s + (r.tally.named?.cited ?? 0), 0) : null,
+    unnamed: known ? rows.reduce((s, r) => s + (r.tally.unnamed?.cited ?? 0), 0) : null,
+    unnamedByHost: [...hosts].map(([host, count]) => ({ host, count })).sort((a, b) => b.count - a.count || a.host.localeCompare(b.host)),
+  }
+}
+
+/** 출처 줄(도메인)에 들어가는 우리 글 인용 — 호스트가 그 도메인이거나 그 아래(「cablekis.tistory.com」 → 「tistory.com」). */
+export function ownPostsInDomain(own: OwnPostCitations | null, domain: string): number {
+  if (!own) return 0
+  return own.unnamedByHost.filter((h) => h.host === domain || h.host.endsWith(`.${domain}`)).reduce((s, h) => s + h.count, 0)
 }
 
 /** 그 주 인용 상위 출처 — 상위 6개와 그 밖의 자사 출처. 건수는 인용 분석(/api/citations)의 도메인별 인용 수 그대로다. */

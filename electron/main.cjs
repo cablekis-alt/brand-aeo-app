@@ -295,6 +295,22 @@ async function createWindow() {
   // 측정 실패로 깜빡이던 작업 표시줄 단추는 창을 보면 끈다(window:flash).
   win.on('focus', () => win.flashFrame(false))
 
+  // 확대 — 기본 메뉴의 「확대」는 Ctrl+Plus뿐이라 한국어 · 영어 키보드에서 보통 누르는 Ctrl+=(Shift 없이)가 먹지 않았다(2026-11-16
+  // 사용자). Ctrl+=를 확대로 받고, Ctrl+마우스 휠로도 확대 · 축소한다. 단계는 기본 메뉴와 같은 0.5.
+  const ZOOM_STEP = 0.5
+  const zoomBy = (delta) => {
+    const level = win.webContents.getZoomLevel() + delta
+    win.webContents.setZoomLevel(Math.max(-3, Math.min(5, level)))
+  }
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown' || !(input.control || input.meta) || input.alt) return
+    if (input.key === '=' && !input.shift) {
+      event.preventDefault()
+      zoomBy(ZOOM_STEP)
+    }
+  })
+  win.webContents.on('zoom-changed', (_event, direction) => zoomBy(direction === 'in' ? ZOOM_STEP : -ZOOM_STEP))
+
   // 렌더러 안의 외부 링크(GitHub Actions 로그 등)는 기본 브라우저로 연다.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http')) {

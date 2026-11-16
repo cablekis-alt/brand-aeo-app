@@ -2,7 +2,7 @@ import type { SiteScoreRecord } from '../lib/api'
 import { ENGINE_LABEL, formatRankWithCount, weekLabel } from '../lib/format'
 import { hostName } from '../lib/hostNames'
 import { runLabel, stepScaleTop, type ExplainLine, type RecentRuns, type ScoreExplainData } from '../lib/reportExplain'
-import type { CheckStatus, CitationRow, CohortRow, SelfReview, TrustCheck } from '../lib/reviewReport'
+import { ownPostsInDomain, type CheckStatus, type CitationRow, type CohortRow, type OwnPostCitations, type SelfReview, type TrustCheck } from '../lib/reviewReport'
 
 /*
  * 정기진단 보고서의 점검 · 비교 절 — 예전 「검토 리포트」 상자와 HTML 파일에 있던 내용을 보고서 본문 자리로 나눠 둔다
@@ -170,14 +170,19 @@ export function RunsSection({ recent, weekOf }: { recent: RecentRuns; weekOf: st
 }
 
 /**
- * 브랜드 이름 없이 물었을 때 불린 질문 — 표지의 「N개 중 M개에서 불렸습니다」가 어느 질문인지 보인다. 질문 유형별 언급은 응답
- * 단위다(표지 문장은 질문 단위 — 두 단위를 이름으로 가른다).
+ * AI 답에서 브랜드가 불린 질문 — 이름 없이 물은 질문(점수에 들어감)과 이름을 넣어 물은 질문(유형별 · 참고)을 갈라 보인다. 예전에는 제목이
+ * 「이름 없이 물었을 때」인데 표에 이름 넣은 질문 유형(브랜드 직접 9/9 · 비교 12/12 …)이 섞여 「이름 없는 질문에서도 다 불렸나」로
+ * 읽혔다(군산각 W47, 2026-11-16). 응답 단위다(표지 문장은 질문 단위 — 두 단위를 이름으로 가른다).
  */
 export function MentionSection({ self, weekOf }: { self: SelfReview; weekOf: string }) {
   const g = self.general
   return (
     <section className="mention-section">
-      <h3>브랜드 이름 없이 물었을 때 불린 질문</h3>
+      <h3>AI 답에서 브랜드가 불린 질문</h3>
+      <h4>이름 없이 물은 질문 — 점수에 들어갑니다</h4>
+      <p className="mention-headline">
+        AI 응답 <strong>{g.responses}건</strong> 중 <strong>{g.mentioned}건</strong>에서 불림
+      </p>
       {self.mentionedQuestions.length > 0 ? (
         <ul className="mention-list">
           {self.mentionedQuestions.map((q) => (
@@ -194,37 +199,31 @@ export function MentionSection({ self, weekOf }: { self: SelfReview; weekOf: str
         되물은 응답 {g.clarifying}건
       </p>
       {self.categories.length > 0 && (
-        <div className="table-wrap">
-          <table>
-            <caption className="muted">질문 유형별 언급 — 응답 수 기준</caption>
-            <thead>
-              <tr>
-                <th>질문 유형</th>
-                <th>불린 응답 / 응답</th>
-              </tr>
-            </thead>
-            <tbody>
-              {self.categories.map((c) => (
-                <tr key={c.category}>
-                  <td>{c.label}</td>
-                  <td className="num">
-                    {c.mentioned}/{c.total}
-                  </td>
+        <>
+          <h4>이름을 넣어 물은 질문 — 참고</h4>
+          <p className="hint">질문에 브랜드 이름이 들어 있어 불리는 것이 보통입니다. 점수에는 넣지 않고, 답 내용이 맞는지 볼 때 씁니다.</p>
+          <div className="table-wrap">
+            <table>
+              <caption className="muted">이름을 넣어 물은 질문 — 유형별 · 응답 수 기준</caption>
+              <thead>
+                <tr>
+                  <th>질문 유형</th>
+                  <th>불린 응답 / 응답</th>
                 </tr>
-              ))}
-              <tr className="self">
-                <td>
-                  <strong>이름 없이 물은 질문</strong>
-                </td>
-                <td className="num">
-                  <strong>
-                    {g.mentioned}/{g.responses}
-                  </strong>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {self.categories.map((c) => (
+                  <tr key={c.category}>
+                    <td>{c.label}</td>
+                    <td className="num">
+                      {c.mentioned}/{c.total}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
   )
@@ -257,6 +256,7 @@ export function CitationSourcesSection({
   weekOf,
   unnamedTop,
   homepage,
+  ownPosts,
 }: {
   top: CitationRow[]
   total: number
@@ -264,6 +264,8 @@ export function CitationSourcesSection({
   weekOf: string
   unnamedTop?: { domain: string; count: number; engines: string[]; hosts: number }[]
   homepage?: { domain: string; named: number; unnamed: number; total: number }[] | null
+  /** 우리가 올린 글(블로그 등)이 그 주 출처로 쓰인 횟수 — 기록을 못 읽었거나 웹이면 null(줄을 싣지 않는다). */
+  ownPosts?: OwnPostCitations | null
 }) {
   return (
     <section className="citation-top">
@@ -276,6 +278,7 @@ export function CitationSourcesSection({
               <tr>
                 <th>출처</th>
                 <th>인용</th>
+                {ownPosts && <th>그 가운데 우리 글</th>}
                 <th>인용한 AI</th>
               </tr>
             </thead>
@@ -286,6 +289,7 @@ export function CitationSourcesSection({
                     <SourceName domain={c.domain} hosts={c.hosts} />
                   </td>
                   <td className="num">{c.count.toLocaleString()}</td>
+                  {ownPosts && <td className="num">{ownPostsInDomain(ownPosts, c.domain) || '—'}</td>}
                   <td>{c.engines.map((e) => ENGINE_LABEL[e] ?? e).join(' · ')}</td>
                 </tr>
               ))}
@@ -318,6 +322,13 @@ export function CitationSourcesSection({
           </tbody>
         </table>
       </div>
+      {ownPosts && (
+        <p className="hint">
+          우리가 올린 글이 출처로 쓰인 인용: {ownPosts.all.toLocaleString()}건
+          {ownPosts.named !== null && ownPosts.unnamed !== null && `(이름을 넣어 물은 질문 ${ownPosts.named} · 이름 없이 물은 질문 ${ownPosts.unnamed})`}
+          {ownPosts.posts > 0 && ` · 글 ${ownPosts.posts}편`} — 블로그 등에 올린 글은 자사 주소가 아니라 위 「자사」 칸에는 들어가지 않습니다.
+        </p>
+      )}
       {homepage && homepage.length > 0 && (
         <p className="hint">
           등록된 자사 주소로 연결된 인용:{' '}
