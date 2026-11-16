@@ -682,9 +682,20 @@ export default function PublishStatus() {
   // 「판단 전」 — 올린 지 14일 안 측정만 있거나 올린 뒤 측정이 없는 글. 인용이 아직 붙을 수 있는 글이라 「인용 없음」과 가른다.
   const pendingCount = citeSum.loading ? null : livePages(scope).filter((same) => same.some((r) => citationFilterMatches('pending', citationOf(r).kind))).length
   const googleChecked = livePages(scope).filter((same) => same.some((r) => r.google !== null)).length
+  // 네이버 노출 칸 — v0.4.78에서 뺐다가(늘 0) v0.4.79 네이버 자동 확인으로 숫자가 생겨 다시 넣었다(2026-11-16).
+  const naverChecked = livePages(scope).filter((same) => same.some((r) => r.naver !== null)).length
   const tiles: Tile[] = [
     // 앱 밖 글이 있으면 올린 글을 앱 글 · 앱 밖 글로 나눠 보인다(같은 주소가 한 브랜드에서라도 앱 글이면 앱 글 — 합이 올린 글).
     { label: '올린 글', value: sum.posted, sub: sum.external > 0 ? `앱 글 ${sum.app} · 앱 밖 ${sum.external}` : '뺀 글 · 안 올린 글 제외', tone: '' },
+    {
+      label: '네이버 노출',
+      value: sum.naverShown,
+      unit: ` / ${naverChecked} 확인`,
+      sub: rows.some((r) => r.naver?.source === 'auto') ? '노출됨인 글(자동 확인 포함)' : '노출됨으로 표시한 글',
+      tone: 'good',
+      pressed: filter.naver === 'shown',
+      onClick: () => patchFilter({ naver: filter.naver === 'shown' ? '' : 'shown' }),
+    },
     {
       label: '구글 색인',
       value: sum.googleShown,
@@ -970,7 +981,8 @@ export default function PublishStatus() {
                         <span className="ps-brand-plats">{c.platforms.map((p) => `${p.label} ${p.n}`).join(' · ') || '올린 글 없음'}</span>
                         <span className="ps-brand-stats">
                           AI 인용 <b>{cs === null ? '…' : cs.posts > 0 && cs.unknown === cs.posts ? '확인 불가' : cs.cited}</b>
-                          {' · '}구글 색인 {c.googleChecked > 0 ? `${c.googleShown}/${c.googleChecked}` : '확인 전'}
+                          {' · '}네이버 {c.naverChecked > 0 ? `${c.naverShown}/${c.naverChecked}` : '확인 전'}
+                          {' · '}구글 {c.googleChecked > 0 ? `${c.googleShown}/${c.googleChecked}` : '확인 전'}
                         </span>
                       </button>
                     )

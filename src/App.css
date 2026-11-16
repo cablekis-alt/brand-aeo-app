@@ -9033,11 +9033,14 @@ tr.ms-run-child td:nth-child(2) {
   cursor: default;
   opacity: 0.55;
 }
-/* 요약 칸 4개 — 넓으면 한 줄 4칸, 640px 밑이면 2칸씩 두 줄. */
+/*
+ * 요약 칸 5개 — 30칸 격자에 칸 너비만 바꾼다(컨테이너 질의는 자기 자신의 격자를 못 바꾼다): 넓으면 6씩 한 줄 5칸, 700px 밑이면
+ * 10씩 3칸 + 15씩 2칸 두 줄(남는 자리 없이 — 남으면 선 색이 보인다).
+ */
 .ps-summary {
   container: ps-summary / inline-size;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(30, minmax(0, 1fr));
   gap: 1px;
   margin: 0 0 14px;
   border-top: 1px solid var(--ink);
@@ -9045,7 +9048,7 @@ tr.ms-run-child td:nth-child(2) {
   background: var(--line);
 }
 .ps-sum {
-  grid-column: span 1;
+  grid-column: span 6;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -9078,15 +9081,17 @@ tr.ms-run-child td:nth-child(2) {
 }
 .ps-sum-unit {
   margin-left: 2px;
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
   font-weight: 400;
   letter-spacing: 0;
   color: var(--muted);
 }
 .ps-sum.good .ps-sum-value { color: var(--good); }
 .ps-sum.warn .ps-sum-value { color: var(--warn); }
-@container ps-summary (max-width: 639px) {
-  .ps-sum { grid-column: span 2; }
+@container ps-summary (max-width: 699px) {
+  .ps-sum { grid-column: span 10; }
+  .ps-sum:nth-child(n + 4) { grid-column: span 15; }
 }
 .ps-sum-sub {
   font-size: 12px;

@@ -415,13 +415,13 @@ const cardWriters = [
 const cardRows = [
   row({ rowKey: 'k1', tenantId: 'vpub-a', brand: '가상A', key: 'fake.tistory.com/k1', google: shown('2026-11-15') }),
   row({ rowKey: 'k2', tenantId: 'vpub-a', brand: '가상A', key: 'fake.tistory.com/k2', google: notYet('2026-11-15') }),
-  row({ rowKey: 'k3', tenantId: 'vpub-a', brand: '가상A', key: 'blog.naver.com/fake/1', platform: { key: 'naver-blog', label: '네이버 블로그' } }),
+  row({ rowKey: 'k3', tenantId: 'vpub-a', brand: '가상A', key: 'blog.naver.com/fake/1', platform: { key: 'naver-blog', label: '네이버 블로그' }, naver: shown('2026-11-16', 'auto') }),
   row({ rowKey: 'k4', tenantId: 'vpub-a', brand: '가상A', key: 'fake.tistory.com/k4' }),
   row({ rowKey: 'k5', tenantId: 'vpub-b', brand: '가상B', key: null, kind: 'unposted', postId: null, url: null, platform: null, publishedOn: null }),
 ]
 const cards = brandCards(cardRows, cardWriters)
 ok(
-  '브랜드 카드 — 올린 글 · 배정 진행(배정보다 많이 올려도 배정까지) · 플랫폼 많은 순 · 구글 색인/확인',
+  '브랜드 카드 — 올린 글 · 배정 진행(배정보다 많이 올려도 배정까지) · 플랫폼 많은 순 · 네이버 노출/확인 · 구글 색인/확인',
   cards.length === 2 &&
     cards[0]!.posted === 4 &&
     cards[0]!.assigned === 20 &&
@@ -429,6 +429,8 @@ ok(
     cards[0]!.platforms.map((p) => `${p.label}${p.n}`).join() === '티스토리3,네이버 블로그1' &&
     cards[0]!.googleShown === 1 &&
     cards[0]!.googleChecked === 2 &&
+    cards[0]!.naverShown === 1 &&
+    cards[0]!.naverChecked === 1 &&
     cards[1]!.posted === 0 &&
     cards[1]!.assignedPosted === 4,
 )

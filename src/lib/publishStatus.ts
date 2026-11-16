@@ -836,6 +836,9 @@ export interface BrandCard {
   assignedPosted: number
   /** 플랫폼별 편 수 — 많은 순. */
   platforms: { key: string; label: string; n: number }[]
+  naverShown: number
+  /** 네이버 칸을 한 번이라도 본 글(직접 · 자동). */
+  naverChecked: number
   googleShown: number
   /** 구글 칸을 한 번이라도 본 글(직접 · 자동). */
   googleChecked: number
@@ -863,6 +866,8 @@ export function brandCards(rows: readonly PublishStatusRow[], writers: readonly 
       assigned: ws.reduce((s, w) => s + w.assigned, 0),
       assignedPosted: ws.reduce((s, w) => s + Math.min(w.posted, w.assigned), 0),
       platforms: [...plat.values()].sort((a, b) => b.n - a.n),
+      naverShown: pages.filter((same) => same.some((r) => r.naver?.state === 'shown')).length,
+      naverChecked: pages.filter((same) => same.some((r) => r.naver !== null)).length,
       googleShown: pages.filter((same) => same.some((r) => r.google?.state === 'shown')).length,
       googleChecked: pages.filter((same) => same.some((r) => r.google !== null)).length,
     }
