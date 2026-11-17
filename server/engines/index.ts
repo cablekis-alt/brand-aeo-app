@@ -5,7 +5,7 @@ import { MODEL as CLAUDE_MODEL } from './claudeEngineClient.js';
 import type { Engine } from '../../src/prompts/types.js';
 import { withLlmSlot, type LlmPool } from '../concurrency.js';
 import { ClaudeEngineClient } from './claudeEngineClient.js';
-import { ClaudeJudgeClient, DEFAULT_CLAUDE_MODEL } from './claudeJudgeClient.js';
+import { ClaudeJudgeClient, DEFAULT_CLAUDE_MODEL, JUDGE_TIMEOUT_MS } from './claudeJudgeClient.js';
 import { GeminiEngineClient } from './geminiEngineClient.js';
 import { GeminiJudgeClient } from './geminiJudgeClient.js';
 import { MockEngineClient } from './mockEngineClient.js';
@@ -165,7 +165,7 @@ export function getJudgeClient(): EngineClient {
     const id = resolveJudgeEngineId();
     // 키 없는 클라이언트는 생성자가 throw한다 — 그때는 id도 기록하지 않는다.
     // guarded가 안쪽 — 슬롯을 잡은 뒤의 실제 응답을 본다.
-    if (id === 'claude') judgeClient = limited(guarded(new ClaudeJudgeClient()), 'judge');
+    if (id === 'claude') judgeClient = limited(guarded(new ClaudeJudgeClient(undefined, { timeoutMs: JUDGE_TIMEOUT_MS })), 'judge');
     else if (id === 'openai') judgeClient = limited(guarded(new OpenAiJudgeClient()), 'judge');
     else judgeClient = limited(guarded(new GeminiJudgeClient()), 'judge');
     judgeEngineId = id;

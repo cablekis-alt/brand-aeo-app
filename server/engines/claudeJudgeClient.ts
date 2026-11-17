@@ -31,23 +31,34 @@ const SUPPORTS_EFFORT_AND_FALLBACK = /^claude-(opus-5|fable-5|sonnet-5-5)/;
  * 실패는 빈 텍스트로 강등한다(Gemini 판정과 같다) — 한 건 실패가 측정 전체를 멈추지 않게 하고, 빈 응답이
  * 줄줄이 쌓이면 engines/index.ts의 guarded가 측정을 멈춘다. 대신 이유는 반드시 로그에 남긴다.
  */
+/**
+ * 판정 호출 한 번의 대기 상한 — 넘으면 끊고 한 번 더 보낸다(두 번 다 넘으면 빈 결과 = 실패 한 건).
+ * 판정에만 건다: 글쓰기(초안 · 다듬기)는 같은 클라이언트를 쓰지만 몇 분씩 걸리는 게 정상이라 상한이 없다(getWriterClient).
+ * 실측 Claude 판정 2,280건(2026-W47 세 브랜드): 중앙 1.9초 · p99 17.7초 · 가장 긴 정상 26.5초. 상한이 없을 때 API가 잠깐 멈춘
+ * 두 건이 160초씩 붙잡아 스테이,머뭄 측정이 106초 → 350초로 늘었다(2026-11-17).
+ */
+export const JUDGE_TIMEOUT_MS = Number(process.env.JUDGE_TIMEOUT_MS) || 60_000;
+
 export class ClaudeJudgeClient implements EngineClient {
   private client: Anthropic;
   private readonly model: string;
+  /** 없으면 상한 없음(글쓰기). */
+  private readonly timeoutMs: number | undefined;
 
-  constructor(model: string = process.env.JUDGE_MODEL ?? DEFAULT_CLAUDE_MODEL) {
+  constructor(model: string = process.env.JUDGE_MODEL ?? DEFAULT_CLAUDE_MODEL, options: { timeoutMs?: number } = {}) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error('ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다.');
     this.client = new Anthropic({ apiKey });
     this.model = model;
+    this.timeoutMs = options.timeoutMs;
   }
 
-  async call(prompt: PromptMessage): Promise<EngineCallResult> {
-    const start = performance.now();
+  /** 요청 한 번 — signal로 끊을 수 있다. 시험(scripts/verify-judge-timeout.ts)이 이것만 바꿔 끼운다. */
+  protected send(prompt: PromptMessage, signal: AbortSignal | undefined): Promise<Anthropic.Beta.BetaMessage> {
     const modern = SUPPORTS_EFFORT_AND_FALLBACK.test(this.model);
-    try {
-      const response = await this.client.beta.messages
-        .stream({
+    return this.client.beta.messages
+      .stream(
+        {
           model: this.model,
           max_tokens: MAX_TOKENS,
           system: prompt.system,
@@ -57,8 +68,35 @@ export class ClaudeJudgeClient implements EngineClient {
           ...(modern
             ? { output_config: { effort: EFFORT }, fallbacks: 'default' as const, betas: ['server-side-fallback-2026-07-01'] }
             : {}),
-        })
-        .finalMessage();
+        },
+        signal ? { signal } : undefined,
+      )
+      .finalMessage();
+  }
+
+  /** 상한이 있으면 넘을 때 끊고 한 번 더 보낸다. 다른 오류는 그대로 던진다(SDK가 이미 재시도했다). */
+  private async sendWithTimeout(prompt: PromptMessage): Promise<Anthropic.Beta.BetaMessage> {
+    const limit = this.timeoutMs;
+    if (!limit) return this.send(prompt, undefined);
+    for (let attempt = 1; ; attempt += 1) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), limit);
+      try {
+        return await this.send(prompt, controller.signal);
+      } catch (err) {
+        if (!controller.signal.aborted) throw err;
+        if (attempt >= 2) throw new Error(`판정이 ${limit / 1000}초 안에 끝나지 않았습니다(2번 시도)`, { cause: err });
+        console.warn(`[claude] ${this.model} 판정이 ${limit / 1000}초를 넘어 끊고 한 번 더 보냅니다`);
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+  }
+
+  async call(prompt: PromptMessage): Promise<EngineCallResult> {
+    const start = performance.now();
+    try {
+      const response = await this.sendWithTimeout(prompt);
 
       const base = {
         citations: [] as string[],
