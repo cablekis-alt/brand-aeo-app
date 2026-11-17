@@ -64,14 +64,14 @@ ok('고친 글 본문 HTML이 그대로', markdownToHtml(publishMarkdownOf(edite
 // 2) 글 끝 — 공식 사이트 링크는 발행본에만
 const article = publishArticleOf(legacy, { brand })
 ok('공식 사이트 주소', brandSiteUrl(brand) === 'https://vtravel.example/' && brandSiteUrl({ ...brand, ownedDomains: ['https://www.vtravel.example/about'] }) === 'https://www.vtravel.example/')
-ok('발행본 끝에 공식 사이트 링크', article.endsWith('---\n\n[가상 여행 공식 사이트](https://vtravel.example/)\n'))
+ok('발행본 끝에 공식 사이트 링크', article.endsWith('---\n\n[가상 여행 바로가기](https://vtravel.example/)\n'))
 ok('발행본 앞부분은 본문 그대로', article.startsWith(publishMarkdownOf(legacy).trimEnd()))
-ok('본문 · 지문에는 글 끝이 없다', !publishMarkdownOf(legacy).includes('공식 사이트') && sourceKeyOf(publishMarkdownOf(legacy)) === "6e-1nsk2go")
+ok('본문 · 지문에는 글 끝이 없다', !publishMarkdownOf(legacy).includes('바로가기') && sourceKeyOf(publishMarkdownOf(legacy)) === "6e-1nsk2go")
 ok('본문에 이미 그 사이트 링크가 있으면 또 붙이지 않는다', articleTailMarkdown('[홈](https://www.vtravel.example/courses/1)', { brand }) === '')
 ok('도메인이 없으면 글 끝도 없다', publishArticleOf(legacy, { brand: { ...brand, ownedDomains: [] } }) === publishMarkdownOf(legacy))
-ok('고친 글에도 발행할 때만 붙는다', publishArticleOf(edited, { brand }).endsWith('[가상 여행 공식 사이트](https://vtravel.example/)\n') && !(edited.editedMarkdown ?? '').includes('공식 사이트'))
+ok('고친 글에도 발행할 때만 붙는다', publishArticleOf(edited, { brand }).endsWith('[가상 여행 바로가기](https://vtravel.example/)\n') && !(edited.editedMarkdown ?? '').includes('바로가기'))
 const doc = buildPublishHtml({ stored: legacy, brand, facts: [] })
-ok('자사 사이트용 .html 본문에 링크', doc.includes('<a href="https://vtravel.example/" rel="noopener">가상 여행 공식 사이트</a>'))
+ok('자사 사이트용 .html 본문에 링크', doc.includes('<a href="https://vtravel.example/" rel="noopener">가상 여행 바로가기</a>'))
 
 // 3) 이미지 · 사진 자리 · 캡션
 const slot = markdownToHtml('![군산 시간여행마을 골목 사진](#image-slot)\n*골목 입구에서 본 모습*')
@@ -116,7 +116,7 @@ ok('사진을 고르지 않은 글은 발행본 · .html이 그대로', publishA
 ok('사진을 골라도 본문 · 지문은 그대로', publishMarkdownOf(withPhoto) === publishMarkdownOf(articleDraft) && sourceKeyOf(publishMarkdownOf(withPhoto)) === sourceKeyOf(publishMarkdownOf(articleDraft)))
 const photoArticle = publishArticleOf(withPhoto, { brand, settings: rights })
 ok('발행본의 사진 자리가 사진으로(괄호 · 공백 · 한글 인코딩)', photoArticle.includes('![밤에 창 너머로 본 정원 나무와 석등](https://vtravel.example/img/garden%201%28%EB%B0%A4%29.jpg)\n*A동과 B동 모두 독채입니다.*') && photoArticle.includes('![가상 골목 풍경](#image-slot)'))
-ok('브랜드 사이트 사진이 있어도 공식 사이트 링크는 붙는다', photoArticle.endsWith('[가상 여행 공식 사이트](https://vtravel.example/)\n'))
+ok('브랜드 사이트 사진이 있어도 공식 사이트 링크는 붙는다', photoArticle.endsWith('[가상 여행 바로가기](https://vtravel.example/)\n'))
 ok('확인하지 않은 사진은 넣지 않는다', publishArticleOf({ ...articleDraft, photos: [photo({ confirmedAt: '' })] }, { brand, settings: rights }) === publishArticleOf(articleDraft, { brand, settings: rights }))
 ok('https가 아닌 사진은 넣지 않는다', publishArticleOf({ ...articleDraft, photos: [photo({ src: 'http://vtravel.example/a.jpg' })] }, { brand, settings: rights }) === publishArticleOf(articleDraft, { brand, settings: rights }))
 const photoHtml = buildPublishHtml({ stored: withPhoto, brand, facts: [], settings: rights })

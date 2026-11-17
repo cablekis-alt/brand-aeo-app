@@ -43,7 +43,7 @@ function linksTo(markdown: string, url: string): boolean {
 
 /**
  * 글 끝 — 코드가 붙이는 부분(마크다운). 붙일 것이 없으면 빈 문자열.
- * 순서: 상담 안내 → 문의 링크 → 공식 사이트 링크. 문단마다 빈 줄로 나눈다(한 문단으로 붙지 않게).
+ * 순서: 상담 안내 → 문의 링크 → 사이트 바로가기 링크(「○○ 바로가기」 — 지자체 · 기관 공식 사이트로 읽히지 않게). 문단마다 빈 줄로 나눈다(한 문단으로 붙지 않게).
  */
 export function articleTailMarkdown(body: string, ctx: ArticleContext): string {
   const paras: string[] = []
@@ -51,7 +51,7 @@ export function articleTailMarkdown(body: string, ctx: ArticleContext): string {
   if (s?.ctaText) paras.push(s.ctaText)
   if (s?.inquiryUrl && !linksTo(body, s.inquiryUrl)) paras.push(`[문의하기](${s.inquiryUrl})`)
   const site = brandSiteUrl(ctx.brand, s)
-  if (site && !linksTo(body, site) && site !== s?.inquiryUrl) paras.push(`[${ctx.brand.brandName} 공식 사이트](${site})`)
+  if (site && !linksTo(body, site) && site !== s?.inquiryUrl) paras.push(`[${ctx.brand.brandName} 바로가기](${site})`)
   return paras.length ? ['---', ...paras].join('\n\n') : ''
 }
 

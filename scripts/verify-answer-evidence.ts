@@ -212,7 +212,7 @@ try {
   const brand = { tenantId: 'vtravel', brandName: '가상 여행', aliases: ['가상 여행'], ownedDomains: ['vtravel.example'], industry: '관광안내', region: '가상시', engines: [], questionBankSize: 36, competitors: [] }
   const article = publishArticleOf({ ...stored, evidence: confirmed }, { brand })
   const iEvidence = article.indexOf('## 실제로 AI에 물어본 결과')
-  const iSite = article.indexOf('[가상 여행 공식 사이트]')
+  const iSite = article.indexOf('[가상 여행 바로가기]')
   ok('사례는 본문 뒤, 공식 사이트 링크 앞', article.startsWith(publishMarkdownOf(stored).trimEnd()) && iEvidence > 0 && iSite > iEvidence)
   ok('사례를 붙여도 본문 · 지문은 그대로', publishMarkdownOf({ ...stored, evidence: confirmed }) === publishMarkdownOf(stored) && sourceKeyOf(publishMarkdownOf({ ...stored, evidence: confirmed })) === sourceKeyOf(publishMarkdownOf(stored)))
   ok('확인 전 사례는 발행본에 없다', publishArticleOf({ ...stored, evidence: built }, { brand }) === publishArticleOf(stored, { brand }))

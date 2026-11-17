@@ -105,10 +105,10 @@ try {
   const tail = articleTailMarkdown(publishMarkdownOf(stored), { brand, settings: s })
   ok(
     '글 끝 순서',
-    tail === '---\n\n사이트 주소와 자주 받는 질문을 준비해 문의해 주세요.\n\n[문의하기](https://vtravel.example/contact)\n\n[가상 여행 공식 사이트](https://vtravel.example/)',
+    tail === '---\n\n사이트 주소와 자주 받는 질문을 준비해 문의해 주세요.\n\n[문의하기](https://vtravel.example/contact)\n\n[가상 여행 바로가기](https://vtravel.example/)',
   )
-  ok('문의 링크가 공식 사이트와 같으면 한 번만', !articleTailMarkdown('', { brand, settings: { inquiryUrl: 'https://vtravel.example/' } }).includes('공식 사이트'))
-  ok('설정이 없으면 공식 사이트만', articleTailMarkdown('', { brand, settings: null }) === '---\n\n[가상 여행 공식 사이트](https://vtravel.example/)')
+  ok('문의 링크가 공식 사이트와 같으면 한 번만', !articleTailMarkdown('', { brand, settings: { inquiryUrl: 'https://vtravel.example/' } }).includes('바로가기'))
+  ok('설정이 없으면 공식 사이트만', articleTailMarkdown('', { brand, settings: null }) === '---\n\n[가상 여행 바로가기](https://vtravel.example/)')
   const before = sourceKeyOf(publishMarkdownOf(stored))
   ok('설정을 붙여도 본문 · 지문은 그대로', publishArticleOf(stored, { brand, settings: s }).startsWith(publishMarkdownOf(stored).trimEnd()) && sourceKeyOf(publishMarkdownOf(stored)) === before)
   const doc = buildPublishHtml({ stored, brand, facts: [], settings: s })
@@ -121,7 +121,7 @@ try {
   ok('공식 사이트 주소 — 맨 주소에 https를 붙인다', normalizePublishSettings({ siteUrl: 'vtravel.example/s/stay' }).siteUrl === 'https://vtravel.example/s/stay')
   ok('공식 사이트 주소 — javascript:는 거절', throws(() => normalizePublishSettings({ siteUrl: 'javascript:alert(1)' }), 'http · https'))
   const site = { siteUrl: 'https://vtravel.example/s/stay' }
-  ok('글 끝 공식 사이트 링크는 적어 둔 주소', articleTailMarkdown('', { brand, settings: site }) === '---\n\n[가상 여행 공식 사이트](https://vtravel.example/s/stay)')
+  ok('글 끝 공식 사이트 링크는 적어 둔 주소', articleTailMarkdown('', { brand, settings: site }) === '---\n\n[가상 여행 바로가기](https://vtravel.example/s/stay)')
   ok('본문이 이미 그 주소로 링크하면 또 붙이지 않는다', articleTailMarkdown('[여기](https://vtravel.example/s/stay)', { brand, settings: site }) === '')
   ok('같은 도메인의 다른 브랜드 주소로 링크했어도 우리 주소는 붙인다', articleTailMarkdown('[다른 곳](https://vtravel.example/s/other)', { brand, settings: site }).includes('(https://vtravel.example/s/stay)'))
   const siteDoc = buildPublishHtml({ stored, brand, facts: [], settings: site })

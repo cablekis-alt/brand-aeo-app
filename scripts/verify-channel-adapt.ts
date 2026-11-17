@@ -191,7 +191,7 @@ try {
   const brand = { brandName: '가상 여행', ownedDomains: ['vtravel.example'] }
   const settings = { ctaText: '가상 여행 사이트에서 코스를 비교해 보세요.' }
   const blogCopy = channelCopyOf({ markdown: out, style: 'blog' }, { brand, settings })
-  ok('블로그 채널 — 다듬은 글 뒤에 글 끝(상담 안내 · 공식 사이트)', blogCopy.startsWith(out.trimEnd()) && blogCopy.includes('가상 여행 사이트에서 코스를 비교해 보세요.') && blogCopy.includes('[가상 여행 공식 사이트](https://vtravel.example/)'))
+  ok('블로그 채널 — 다듬은 글 뒤에 글 끝(상담 안내 · 공식 사이트)', blogCopy.startsWith(out.trimEnd()) && blogCopy.includes('가상 여행 사이트에서 코스를 비교해 보세요.') && blogCopy.includes('[가상 여행 바로가기](https://vtravel.example/)'))
   ok('위키 · 커뮤니티는 그대로', channelCopyOf({ markdown: out, style: 'wiki' }, { brand, settings }) === out && channelCopyOf({ markdown: out, style: 'community' }, { brand, settings }) === out)
 
   // 4) 블로그 채널 줄에도 고른 홈페이지 사진 — 2026-10-29 티스토리 채널 줄 글에 「[사진 넣을 자리]」 글자만 남았다.
@@ -214,7 +214,7 @@ try {
     '블로그 채널 — 사진 자리에 고른 사진, 설명 줄 · 글 끝은 그대로',
     withPick.markdown.includes('![가상역 2번 출구 앞 광장](https://vtravel.example/img/exit2.webp)\n*출발 전 모이는 곳*') &&
       !withPick.markdown.includes('](#image-slot)\n*출발 전 모이는 곳*') &&
-      withPick.markdown.includes('[가상 여행 공식 사이트](https://vtravel.example/)'),
+      withPick.markdown.includes('[가상 여행 바로가기](https://vtravel.example/)'),
   )
   ok('블로그 채널 — 들어간 사진을 돌려준다(사진 받기)', withPick.photos.length === 1 && withPick.photos[0]!.place.slot === pick.slot && withPick.photos[0]!.place.heading === pick.heading)
   ok('고른 사진이 없으면 채널 복사본은 예전과 같다', channelCopyOf(blog, { brand, settings: rights }) === channelArticleParts(blog, { brand, settings: rights }, from([])).markdown)

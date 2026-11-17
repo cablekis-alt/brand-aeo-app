@@ -107,7 +107,7 @@ export default function PublishSettingsPanel({
         </label>
         <label>
           공식 사이트 주소{' '}
-          <span className="muted">(글 끝 「공식 사이트」 링크 — 한 도메인을 여러 브랜드가 나눠 쓰면 그 브랜드 페이지 주소를 적으세요)</span>
+          <span className="muted">(글 끝 「브랜드 바로가기」 링크 — 한 도메인을 여러 브랜드가 나눠 쓰면 그 브랜드 페이지 주소를 적으세요)</span>
           <input
             value={siteUrl}
             onChange={edit(setSiteUrl)}
