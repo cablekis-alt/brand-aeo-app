@@ -81,6 +81,7 @@ function finish(
       evidence: d.evidence,
       aiImpact: d.aiImpact,
       quote: d.quote,
+      fix: d.rec ?? null,
     })),
   }
 }
@@ -500,6 +501,49 @@ function isHomePage(s: PageSignals): boolean {
   }
 }
 
+/**
+ * 해결 가이드용 JSON-LD 초안. 페이지에서 확인한 값(사이트 이름 · 주소)만 채우고,
+ * 수집기가 값을 뽑지 않는 전화 · 주소는 꺾쇠 자리로 남긴다 — 없는 사실을 지어내지 않는다.
+ */
+function siteOrigin(s: PageSignals): string {
+  try {
+    return new URL(s.finalUrl || s.requestedUrl).origin
+  } catch {
+    return s.finalUrl || s.requestedUrl
+  }
+}
+
+function orgJsonLdDraft(s: PageSignals): string {
+  const name = s.ogSiteName || s.orgCandidates[0] || '<상호 · 브랜드 이름>'
+  const local = s.pageType === 'local_business' || s.addressLike
+  const draft: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': local ? 'LocalBusiness' : 'Organization',
+    name,
+    url: `${siteOrigin(s)}/`,
+    telephone: s.phoneOrEmail ? '<푸터의 대표 전화번호>' : '<대표 전화번호 — 페이지에 없으면 이 줄 삭제>',
+  }
+  if (local) draft.address = { '@type': 'PostalAddress', streetAddress: '<푸터의 주소>', addressCountry: 'KR' }
+  return `<script type="application/ld+json">
+${JSON.stringify(draft, null, 2)}
+</script>`
+}
+
+function breadcrumbJsonLdDraft(s: PageSignals): string {
+  const url = s.canonical || s.finalUrl || s.requestedUrl
+  const draft = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '홈', item: `${siteOrigin(s)}/` },
+      { '@type': 'ListItem', position: 2, name: clip(s.h1s[0] || s.title, 60) || '<이 페이지 제목>', item: url },
+    ],
+  }
+  return `<script type="application/ld+json">
+${JSON.stringify(draft, null, 2)}
+</script>`
+}
+
 function scoreStructure(
   s: PageSignals,
   recs: RecBag,
@@ -542,7 +586,7 @@ function scoreStructure(
         expectedEffect: '발행 주체가 엔터티로 식별되고 구조화 신호가 생깁니다.',
         difficulty: '낮음',
         before: 'JSON-LD 없음',
-        after: null,
+        after: orgJsonLdDraft(s),
       },
     })
   } else {
@@ -582,7 +626,7 @@ function scoreStructure(
           expectedEffect: '발행 주체가 엔터티로 식별됩니다.',
           difficulty: '낮음',
           before: s.jsonLdTypes.join(', ') || 'Organization 없음',
-          after: null,
+          after: orgJsonLdDraft(s),
         },
       })
     }
@@ -600,7 +644,7 @@ function scoreStructure(
           expectedEffect: '사이트 계층과 페이지 맥락이 기계에 전달됩니다.',
           difficulty: '낮음',
           before: 'Breadcrumb 없음',
-          after: null,
+          after: breadcrumbJsonLdDraft(s),
         },
       })
     }

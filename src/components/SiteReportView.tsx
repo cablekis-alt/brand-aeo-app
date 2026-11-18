@@ -1,3 +1,4 @@
+import { Fragment, useState } from 'react'
 import type { AeoReport, CategoryResult, CollectionMode, Severity } from '../lib/aeo/types'
 import { PAGE_TYPE_KO } from '../lib/aeo/pageType'
 import { SEVERITY_KO } from '../lib/aeo/scoreMeta'
@@ -14,7 +15,63 @@ function sevClass(s: Severity): string {
   return `sev sev-${s}`
 }
 
+/** 「미흡」 · 「매우 미흡」(만점의 60% 미만)이고 감점 근거가 있는 영역만 해결 가이드를 단다. */
+function needsGuide(c: CategoryResult): boolean {
+  return typeof c.score === 'number' && c.maxScore > 0 && c.score / c.maxScore < 0.6 && c.issues.length > 0
+}
+
+function FixGuide({ c }: { c: CategoryResult }) {
+  return (
+    <div className="fix-guide">
+      <p className="fix-guide-head">
+        <b>{c.name}</b> 해결 가이드 — 감점 {c.issues.length}건
+      </p>
+      <ol>
+        {c.issues.map((i) => (
+          <li key={i.title}>
+            <div className="fix-guide-title">
+              <span className={sevClass(i.severity)}>{SEVERITY_KO[i.severity]}</span>
+              <strong>{i.title}</strong>
+            </div>
+            <p className="muted">무엇이 빠졌나: {i.evidence}</p>
+            {i.fix ? (
+              <>
+                <p>
+                  <span className="work-tag">{i.fix.workType === 'dev' ? '개발' : '콘텐츠'}</span> 어떻게 고치나:{' '}
+                  {i.fix.task}
+                </p>
+                <p className="muted">
+                  기대 효과: {i.fix.expectedEffect} · 난이도 {i.fix.difficulty}
+                </p>
+                {i.fix.after ? (
+                  <>
+                    <p className="muted">예시{/<[가-힣]/.test(i.fix.after) ? ' (꺾쇠 < > 자리는 실제 값으로 바꾸세요)' : ''}:</p>
+                    <pre className="fix-guide-code">{i.fix.after}</pre>
+                  </>
+                ) : null}
+              </>
+            ) : (
+              <p className="muted">AI 답변엔진 관점: {i.aiImpact}</p>
+            )}
+          </li>
+        ))}
+      </ol>
+      {c.issues.some((i) => i.fix === undefined) && (
+        <p className="muted">예전에 저장된 진단이라 고치는 방법이 빠져 있습니다. 다시 진단하면 함께 나옵니다.</p>
+      )}
+    </div>
+  )
+}
+
 export default function SiteReportView({ report }: { report: AeoReport }) {
+  const [open, setOpen] = useState<Set<string>>(() => new Set())
+  const toggle = (id: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   return (
     <article className="site-report">
       <section className="hero-card">
@@ -86,14 +143,40 @@ export default function SiteReportView({ report }: { report: AeoReport }) {
               </tr>
             </thead>
             <tbody>
-              {report.categories.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.name}</td>
-                  <td>{scoreText(c)}</td>
-                  <td>{c.maxScore}</td>
-                  <td className="judgment">{c.judgment}</td>
-                </tr>
-              ))}
+              {report.categories.map((c) => {
+                const guide = needsGuide(c)
+                const isOpen = open.has(c.id)
+                return (
+                  <Fragment key={c.id}>
+                    <tr className={guide ? 'has-guide' : undefined}>
+                      <td>{c.name}</td>
+                      <td>{scoreText(c)}</td>
+                      <td>{c.maxScore}</td>
+                      <td className="judgment">
+                        {c.judgment}
+                        {guide && (
+                          <button
+                            type="button"
+                            className="fix-guide-toggle"
+                            aria-expanded={isOpen}
+                            aria-controls={`fix-guide-${c.id}`}
+                            onClick={() => toggle(c.id)}
+                          >
+                            {isOpen ? '해결 가이드 접기' : '해결 가이드 보기'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {guide && (
+                      <tr id={`fix-guide-${c.id}`} className="fix-guide-row" data-open={isOpen ? 'true' : 'false'}>
+                        <td colSpan={4} className="cell-text">
+                          <FixGuide c={c} />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
               <tr className="selected">
                 <td>합계</td>
                 <td>{report.overallScore ?? '—'}</td>

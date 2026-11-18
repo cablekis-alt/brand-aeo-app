@@ -1378,6 +1378,93 @@ td.judgment {
   margin-right: 4px;
 }
 
+/* 영역별 해결 가이드 — 「미흡」 · 「매우 미흡」 영역 아래에 펼치는 행. 인쇄에서는 늘 펼친다. */
+.fix-guide-toggle {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fix-guide-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.fix-guide-row[data-open='false'] {
+  display: none;
+}
+
+.site-report tbody tr.fix-guide-row {
+  cursor: default;
+  background: var(--surface-2);
+}
+
+.fix-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 6px 8px;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.fix-guide-head {
+  margin: 0;
+  color: var(--ink);
+}
+
+.fix-guide ol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.fix-guide li p {
+  margin: 4px 0 0;
+  line-height: 1.55;
+}
+
+.fix-guide-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+
+.fix-guide-code {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  max-width: 100%;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+@media print {
+  .fix-guide-row[data-open='false'] { display: table-row; }
+  .fix-guide-toggle { display: none; }
+  .site-report tbody tr.fix-guide-row { background: none; }
+  .site-report tr.fix-guide-row { break-inside: auto; }
+  .fix-guide li { break-inside: avoid; }
+  .fix-guide-code { white-space: pre-wrap; overflow-wrap: anywhere; }
+}
+
 .site-report .disclaimer {
   margin-top: 20px;
   padding-top: 12px;

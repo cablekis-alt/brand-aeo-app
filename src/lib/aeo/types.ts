@@ -42,6 +42,8 @@ export interface Finding {
 export interface IssueFinding extends Finding {
   severity: Severity
   aiImpact: string
+  /** 이 감점을 푸는 작업 — 영역별 해결 가이드에 쓴다. 예전에 저장된 결과에는 없다. */
+  fix?: Omit<Recommendation, 'priority'> | null
 }
 
 export interface CategoryResult {
@@ -165,7 +167,8 @@ export interface PageSignals {
   tableCount: number
   faqLike: boolean
   internalLinkCount: number
-  externalLinkCount: number  aboutOrContactLinks: string[]
+  externalLinkCount: number
+  aboutOrContactLinks: string[]
   /**
    * 에이전트 조작성 신호 — AI 에이전트가 페이지를 "읽고 조작"할 수 있는지.
    * 폼 입력에 라벨이 붙어 있는지, 버튼·링크에 접근 가능한 이름이 있는지, 본문 랜드마크가 있는지.
