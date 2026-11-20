@@ -9317,6 +9317,7 @@ button.ps-grid-cell { cursor: pointer; }
 .ps-grid-cell.part { background: var(--warn-soft); color: var(--warn); }
 .ps-grid-cell.zero { background: var(--bad-soft); color: var(--bad); }
 .ps-grid-cell.none { color: var(--muted); }
+.ps-grid-cell.ext { background: var(--surface-2); color: var(--ink-2); }
 button.ps-grid-cell:hover { border-color: var(--ink-2); }
 .ps-tl {
   display: flex;

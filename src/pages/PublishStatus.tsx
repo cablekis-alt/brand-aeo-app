@@ -751,6 +751,13 @@ export default function PublishStatus() {
   const cards = brandCards(rows, data?.writers ?? [])
   const cardCite = (tenantId: string) => (citeSum.loading ? null : summarizeCitation(rows.filter((r) => r.tenantId === tenantId), citationOf))
   const grid = writerGrid(data?.writers ?? [], cards.map((c) => c.tenantId))
+  // 격자의 「앱 밖」 줄 — 브랜드마다 살아 있는 앱 밖 글 수(배정이 없어 「올린/배정」 대신 편 수만). 인용은 AI 인용 칸과 같은 판정.
+  const externalOf = (tenantId: string) => {
+    const ext = rows.filter((r) => r.tenantId === tenantId && r.origin === 'external' && r.kind === 'posted' && !r.removed)
+    const cited = citeSum.loading ? null : ext.filter((r) => ['repeated', 'once'].includes(citationOf(r).kind)).length
+    return { n: ext.length, cited }
+  }
+  const hasExternal = grid.brands.some((b) => externalOf(b.tenantId).n > 0)
   const pageCited = (same: readonly PublishStatusRow[]): boolean | null => {
     const kinds = same.map((r) => citationOf(r).kind)
     if (kinds.includes('repeated') || kinds.includes('once')) return true
@@ -1032,6 +1039,34 @@ export default function PublishStatus() {
                           })}
                         </Fragment>
                       ))}
+                      {hasExternal && (
+                        <>
+                          <span className="ps-grid-key">앱 밖</span>
+                          {grid.brands.map((b) => {
+                            const e = externalOf(b.tenantId)
+                            if (e.n === 0) return <span key={b.tenantId} className="ps-grid-cell none" aria-hidden="true">—</span>
+                            const on = filter.writer === 'external' && filter.tenantId === b.tenantId
+                            const cited = e.cited === null ? '' : ` · AI 인용 ${e.cited}편`
+                            return (
+                              <button
+                                key={b.tenantId}
+                                type="button"
+                                className={`ps-grid-cell ext${on ? ' on' : ''}`}
+                                aria-pressed={on}
+                                aria-label={`${b.brand} 앱 밖 글 ${e.n}편${cited}`}
+                                title={`앱에서 만들지 않은 글 ${e.n}편(배정 없음)${cited}`}
+                                onClick={() => {
+                                  const next = toggleWriterChip(filter, { tenantId: b.tenantId, writer: 'external' }, chipBefore)
+                                  setFilter(next.filter)
+                                  setChipBefore(next.before)
+                                }}
+                              >
+                                {e.n}편
+                              </button>
+                            )
+                          })}
+                        </>
+                      )}
                     </div>
                   </section>
                 )}
