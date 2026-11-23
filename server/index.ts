@@ -182,7 +182,9 @@ import {
   GoogleAioError,
   googleAioRunDetail,
   googleAioStatus,
+  GOOGLE_SURFACE,
   isAioRunId,
+  NAVER_SURFACE,
   planGoogleAio,
   rejudgeGoogleAio,
   saveGoogleAioSettings,
@@ -2753,7 +2755,7 @@ app.put('/api/index-checks/:tenantId/:postId', async (req, res) => {
 // [::1]이고 Origin이 있으면 그것도 같아야 한다(server/serpApi.ts localRequestProblem). DNS 리바인딩 페이지는 브라우저가 보기에 같은 출처라 CORS
 // 사전 요청으로는 막히지 않는다 — Host · Origin에 남는 그 페이지 이름으로 막는다(403, 계정 · 검색 0). dev는 vite 프록시가 Host를 localhost:5173
 // 그대로 넘기고, 설치본 창은 http://localhost:<포트>에서 연다.
-app.use(['/api/serpapi', '/api/index-auto', '/api/google-aio'], (req, res, next) => {
+app.use(['/api/serpapi', '/api/index-auto', '/api/google-aio', '/api/naver-aib'], (req, res, next) => {
   const problem = localRequestProblem(req.headers.host, typeof req.headers.origin === 'string' ? req.headers.origin : undefined);
   if (problem) {
     res.status(403).json({ error: problem });
@@ -2878,101 +2880,106 @@ function googleAioRunParam(req: import('express').Request, res: import('express'
   return null;
 }
 
-app.put('/api/google-aio/settings', async (req, res) => {
-  if (!requireJson(req, res)) return;
-  try {
-    res.json(await saveGoogleAioSettings(req.body));
-  } catch (err) {
-    sendGoogleAioError(res, err);
-  }
-});
+// 검색 면마다 같은 라우트 — /api/google-aio(구글 AI 개요) · /api/naver-aib(네이버 AI 브리핑, 2026-11-23). 면은 마지막 인자로 넘긴다.
+for (const sf of [GOOGLE_SURFACE, NAVER_SURFACE]) {
+  const base = `/api/${sf.apiPath}`;
 
-app.get('/api/google-aio/:tenantId', async (req, res) => {
-  const tenant = await googleAioTenant(req, res);
-  if (!tenant) return;
-  try {
-    res.json(await googleAioStatus(tenant, { view: req.query.view === '1' }));
-  } catch (err) {
-    sendGoogleAioError(res, err);
-  }
-});
+  app.put(`${base}/settings`, async (req, res) => {
+    if (!requireJson(req, res)) return;
+    try {
+      res.json(await saveGoogleAioSettings(req.body, sf));
+    } catch (err) {
+      sendGoogleAioError(res, err);
+    }
+  });
 
-app.get('/api/google-aio/:tenantId/runs/:runId', async (req, res) => {
-  const runId = googleAioRunParam(req, res);
-  if (!runId) return;
-  const tenant = await googleAioTenant(req, res);
-  if (!tenant) return;
-  try {
-    res.json(await googleAioRunDetail(tenant, runId));
-  } catch (err) {
-    sendGoogleAioError(res, err);
-  }
-});
+  app.get(`${base}/:tenantId`, async (req, res) => {
+    const tenant = await googleAioTenant(req, res);
+    if (!tenant) return;
+    try {
+      res.json(await googleAioStatus(tenant, { view: req.query.view === '1' }, sf));
+    } catch (err) {
+      sendGoogleAioError(res, err);
+    }
+  });
 
-app.post('/api/google-aio/:tenantId/plan', async (req, res) => {
-  if (!requireJson(req, res)) return;
-  const tenant = await googleAioTenant(req, res);
-  if (!tenant) return;
-  try {
-    res.json(await planGoogleAio(tenant, req.body));
-  } catch (err) {
-    sendGoogleAioError(res, err);
-  }
-});
+  app.get(`${base}/:tenantId/runs/:runId`, async (req, res) => {
+    const runId = googleAioRunParam(req, res);
+    if (!runId) return;
+    const tenant = await googleAioTenant(req, res);
+    if (!tenant) return;
+    try {
+      res.json(await googleAioRunDetail(tenant, runId, sf));
+    } catch (err) {
+      sendGoogleAioError(res, err);
+    }
+  });
 
-app.post('/api/google-aio/:tenantId/run', async (req, res) => {
-  if (!requireJson(req, res)) return;
-  const tenant = await googleAioTenant(req, res);
-  if (!tenant) return;
-  try {
-    res.status(202).json(await startGoogleAio(tenant, req.body));
-  } catch (err) {
-    sendGoogleAioError(res, err);
-  }
-});
+  app.post(`${base}/:tenantId/plan`, async (req, res) => {
+    if (!requireJson(req, res)) return;
+    const tenant = await googleAioTenant(req, res);
+    if (!tenant) return;
+    try {
+      res.json(await planGoogleAio(tenant, req.body, sf));
+    } catch (err) {
+      sendGoogleAioError(res, err);
+    }
+  });
 
-app.post('/api/google-aio/:tenantId/runs/:runId/cancel', async (req, res) => {
-  if (!requireJson(req, res)) return;
-  const runId = googleAioRunParam(req, res);
-  if (!runId) return;
-  const tenant = await googleAioTenant(req, res);
-  if (!tenant) return;
-  try {
-    res.json(await cancelGoogleAio(tenant, runId));
-  } catch (err) {
-    sendGoogleAioError(res, err);
-  }
-});
+  app.post(`${base}/:tenantId/run`, async (req, res) => {
+    if (!requireJson(req, res)) return;
+    const tenant = await googleAioTenant(req, res);
+    if (!tenant) return;
+    try {
+      res.status(202).json(await startGoogleAio(tenant, req.body, sf));
+    } catch (err) {
+      sendGoogleAioError(res, err);
+    }
+  });
 
-app.post('/api/google-aio/:tenantId/runs/:runId/rejudge', async (req, res) => {
-  if (!requireJson(req, res)) return;
-  const runId = googleAioRunParam(req, res);
-  if (!runId) return;
-  const tenant = await googleAioTenant(req, res);
-  if (!tenant) return;
-  try {
-    res.status(202).json(await rejudgeGoogleAio(tenant, runId, req.body));
-  } catch (err) {
-    sendGoogleAioError(res, err);
-  }
-});
+  app.post(`${base}/:tenantId/runs/:runId/cancel`, async (req, res) => {
+    if (!requireJson(req, res)) return;
+    const runId = googleAioRunParam(req, res);
+    if (!runId) return;
+    const tenant = await googleAioTenant(req, res);
+    if (!tenant) return;
+    try {
+      res.json(await cancelGoogleAio(tenant, runId, sf));
+    } catch (err) {
+      sendGoogleAioError(res, err);
+    }
+  });
 
-// 본문 JSON이 깨졌으면 express.json()이 Host · Origin 검사보다 먼저 실패하고, Express 기본 처리기는 스택(설치 경로가 든 HTML)을 싣는다 — 이
-// 접두어는 Host · Origin을 먼저 보고(403) 아니면 400 { error }만 준다(스택 없음 · 검색 0). 다른 접두어의 같은 동작은 이 기능 전부터 있던 것이라 그대로 둔다.
-app.use('/api/google-aio', (err: unknown, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
-  if (res.headersSent) {
-    next(err);
-    return;
-  }
-  const problem = localRequestProblem(req.headers.host, typeof req.headers.origin === 'string' ? req.headers.origin : undefined);
-  if (problem) {
-    res.status(403).json({ error: problem });
-    return;
-  }
-  const status = typeof err === 'object' && err !== null && 'status' in err && typeof err.status === 'number' && err.status >= 400 && err.status < 500 ? err.status : 500;
-  if (status === 500) console.error('[google-aio]', scrubSerpKey(err instanceof Error ? (err.stack ?? err.message) : String(err)));
-  res.status(status).json({ error: status === 500 ? '앱 오류로 요청을 처리하지 못했어요.' : status === 413 ? '본문이 너무 커요.' : '본문 JSON을 읽지 못했어요.' });
-});
+  app.post(`${base}/:tenantId/runs/:runId/rejudge`, async (req, res) => {
+    if (!requireJson(req, res)) return;
+    const runId = googleAioRunParam(req, res);
+    if (!runId) return;
+    const tenant = await googleAioTenant(req, res);
+    if (!tenant) return;
+    try {
+      res.status(202).json(await rejudgeGoogleAio(tenant, runId, req.body, sf));
+    } catch (err) {
+      sendGoogleAioError(res, err);
+    }
+  });
+
+  // 본문 JSON이 깨졌으면 express.json()이 Host · Origin 검사보다 먼저 실패하고, Express 기본 처리기는 스택(설치 경로가 든 HTML)을 싣는다 — 이
+  // 접두어는 Host · Origin을 먼저 보고(403) 아니면 400 { error }만 준다(스택 없음 · 검색 0). 다른 접두어의 같은 동작은 이 기능 전부터 있던 것이라 그대로 둔다.
+  app.use(base, (err: unknown, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
+    if (res.headersSent) {
+      next(err);
+      return;
+    }
+    const problem = localRequestProblem(req.headers.host, typeof req.headers.origin === 'string' ? req.headers.origin : undefined);
+    if (problem) {
+      res.status(403).json({ error: problem });
+      return;
+    }
+    const status = typeof err === 'object' && err !== null && 'status' in err && typeof err.status === 'number' && err.status >= 400 && err.status < 500 ? err.status : 500;
+    if (status === 500) console.error('[google-aio]', scrubSerpKey(err instanceof Error ? (err.stack ?? err.message) : String(err)));
+    res.status(status).json({ error: status === 500 ? '앱 오류로 요청을 처리하지 못했어요.' : status === 413 ? '본문이 너무 커요.' : '본문 JSON을 읽지 못했어요.' });
+  });
+}
 
 // 앱 밖 글(server/externalPosts.ts) — 앱에서 만들지 않은 글의 주소를 브랜드마다 따로 적어 인용을 추적한다(data/<tenant>/external-posts.json).
 // 원장 · 집행 상태는 읽기만 한다. 데스크톱·로컬 전용이다(Vercel 함수는 12/12 — 웹은 404를 「이 환경에는 없음」으로 읽고 절을 숨긴다). 쓰기는

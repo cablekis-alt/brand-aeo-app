@@ -1131,56 +1131,58 @@ async function googleAioRequest<T>(path: string, init: RequestInit | undefined, 
   return { status: res.status, body }
 }
 
-const aioPath = (tenantId: string, rest = '') => `/api/google-aio/${encodeURIComponent(tenantId)}${rest}`
+/** 검색 면의 서버 길 조각 — 'google-aio'(구글 AI 개요) · 'naver-aib'(네이버 AI 브리핑, 2026-11-23). 함수마다 마지막 인자로 받고, 주지 않으면 구글. */
+const aioPath = (tenantId: string, rest = '', api: string = 'google-aio') => `/api/${api}/${encodeURIComponent(tenantId)}${rest}`
+const aioName = (api: string) => (api === 'naver-aib' ? '네이버 AI 브리핑' : '구글 AI 개요')
 
 /**
  * 시범 상태 · 회차 · 지표(검색 · 계정 읽기 없음 — 진행을 2초마다 묻는 데 쓴다). **null은 이 환경에 기능이 없다(웹 — 404)**. opts.view는 도는
  * 동안에도 회차 · 지표를 한 번 읽는다(화면을 새로 열었는데 앞서 받은 결과가 없을 때만 — 2초마다 쓰지 않는다).
  */
-export async function loadGoogleAio(tenantId: string, opts: { view?: boolean } = {}): Promise<GoogleAioStatus | null> {
-  const { status, body } = await googleAioRequest<GoogleAioStatus>(aioPath(tenantId, opts.view ? '?view=1' : ''), undefined, '구글 AI 개요 시범 상태를 읽지 못했습니다')
+export async function loadGoogleAio(tenantId: string, opts: { view?: boolean } = {}, api: string = 'google-aio'): Promise<GoogleAioStatus | null> {
+  const { status, body } = await googleAioRequest<GoogleAioStatus>(aioPath(tenantId, opts.view ? '?view=1' : '', api), undefined, `${aioName(api)} 시범 상태를 읽지 못했습니다`)
   if (status === 404) return null
-  if (!body || typeof body.enabled !== 'boolean' || typeof body.configured !== 'boolean' || !body.judge) throw new GoogleAioRequestError('구글 AI 개요 시범 상태를 읽지 못했습니다(응답 모양).', status)
+  if (!body || typeof body.enabled !== 'boolean' || typeof body.configured !== 'boolean' || !body.judge) throw new GoogleAioRequestError(`${aioName(api)} 시범 상태를 읽지 못했습니다(응답 모양).`, status)
   return body
 }
 
 /** 회차 하나 — 문항마다 본문 앞부분 · 출처(자사 · 올린 글 표시는 서버가 읽을 때 계산). */
-export async function loadGoogleAioRun(tenantId: string, runId: string): Promise<GoogleAioRunDetail> {
-  const { status, body } = await googleAioRequest<GoogleAioRunDetail>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}`), undefined, '회차를 읽지 못했습니다')
+export async function loadGoogleAioRun(tenantId: string, runId: string, api: string = 'google-aio'): Promise<GoogleAioRunDetail> {
+  const { status, body } = await googleAioRequest<GoogleAioRunDetail>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}`, api), undefined, '회차를 읽지 못했습니다')
   if (status === 404 || !body || !body.run || !Array.isArray(body.items)) throw new GoogleAioRequestError(body?.error || `회차를 읽지 못했습니다 (HTTP ${status})`, status)
   return body
 }
 
 /** 계획 — 검색은 하지 않는다(서버가 SerpAPI 계정만 무료로 읽는다). 시작할 수 있으면 planId를 준다. resume은 이어 잴 회차 id. */
-export async function planGoogleAio(tenantId: string, resume: string | null = null): Promise<GoogleAioPlan> {
-  const { status, body } = await googleAioRequest<GoogleAioPlan>(aioPath(tenantId, '/plan'), jsonInit('POST', resume ? { resume } : {}), '계획을 받지 못했습니다')
+export async function planGoogleAio(tenantId: string, resume: string | null = null, api: string = 'google-aio'): Promise<GoogleAioPlan> {
+  const { status, body } = await googleAioRequest<GoogleAioPlan>(aioPath(tenantId, '/plan', api), jsonInit('POST', resume ? { resume } : {}), '계획을 받지 못했습니다')
   if (status === 404 || !body || typeof body.maxSearches !== 'number') throw new GoogleAioRequestError(body?.error || `계획을 받지 못했습니다 (HTTP ${status})`, status)
   return body
 }
 
 /** 실행 — 계획 id로만(검색이 든다). 서버는 202로 바로 돌려주고 뒤에서 하나씩 잰다(진행은 loadGoogleAio). */
-export async function runGoogleAio(tenantId: string, planId: string): Promise<{ runId: string; planned: number; maxSearches: number; resumed: boolean }> {
-  const { status, body } = await googleAioRequest<{ runId: string; planned: number; maxSearches: number; resumed: boolean }>(aioPath(tenantId, '/run'), jsonInit('POST', { planId }), '시작하지 못했습니다')
+export async function runGoogleAio(tenantId: string, planId: string, api: string = 'google-aio'): Promise<{ runId: string; planned: number; maxSearches: number; resumed: boolean }> {
+  const { status, body } = await googleAioRequest<{ runId: string; planned: number; maxSearches: number; resumed: boolean }>(aioPath(tenantId, '/run', api), jsonInit('POST', { planId }), '시작하지 못했습니다')
   if (status === 404 || !body || typeof body.runId !== 'string') throw new GoogleAioRequestError(body?.error || `시작하지 못했습니다 (HTTP ${status})`, status)
   return body
 }
 
 /** 중단 — 다음 검색 전에 멈춘다(지금 날아가는 요청 하나는 끝까지 받는다). */
-export async function cancelGoogleAio(tenantId: string, runId: string): Promise<void> {
-  const { status, body } = await googleAioRequest<{ cancelling: boolean }>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}/cancel`), jsonInit('POST', {}), '중단하지 못했습니다')
+export async function cancelGoogleAio(tenantId: string, runId: string, api: string = 'google-aio'): Promise<void> {
+  const { status, body } = await googleAioRequest<{ cancelling: boolean }>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}/cancel`, api), jsonInit('POST', {}), '중단하지 못했습니다')
   if (status === 404 || !body?.cancelling) throw new GoogleAioRequestError(body?.error || `중단하지 못했습니다 (HTTP ${status})`, status)
 }
 
 /** 다시 판정(검색 0) — unknown은 판정 불가만, all은 본문이 있는 있음 모두. 202로 바로 돌려준다(진행은 loadGoogleAio). */
-export async function rejudgeGoogleAio(tenantId: string, runId: string, scope: 'unknown' | 'all'): Promise<{ runId: string; total: number }> {
-  const { status, body } = await googleAioRequest<{ runId: string; total: number }>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}/rejudge`), jsonInit('POST', { scope }), '다시 판정을 시작하지 못했습니다')
+export async function rejudgeGoogleAio(tenantId: string, runId: string, scope: 'unknown' | 'all', api: string = 'google-aio'): Promise<{ runId: string; total: number }> {
+  const { status, body } = await googleAioRequest<{ runId: string; total: number }>(aioPath(tenantId, `/runs/${encodeURIComponent(runId)}/rejudge`, api), jsonInit('POST', { scope }), '다시 판정을 시작하지 못했습니다')
   if (status === 404 || !body || typeof body.total !== 'number') throw new GoogleAioRequestError(body?.error || `다시 판정을 시작하지 못했습니다 (HTTP ${status})`, status)
   return body
 }
 
 /** 이 PC 켜기 · 끄기 — 본문은 { enabled }만. */
-export async function saveGoogleAioSettings(enabled: boolean): Promise<{ enabled: boolean }> {
-  const { status, body } = await googleAioRequest<{ settings: { enabled: boolean } }>('/api/google-aio/settings', jsonInit('PUT', { enabled }), '이 PC 설정을 저장하지 못했습니다')
+export async function saveGoogleAioSettings(enabled: boolean, api: string = 'google-aio'): Promise<{ enabled: boolean }> {
+  const { status, body } = await googleAioRequest<{ settings: { enabled: boolean } }>(`/api/${api}/settings`, jsonInit('PUT', { enabled }), '이 PC 설정을 저장하지 못했습니다')
   if (status === 404 || typeof body?.settings?.enabled !== 'boolean') throw new GoogleAioRequestError(body?.error || `이 PC 설정을 저장하지 못했습니다 (HTTP ${status})`, status)
   return body.settings
 }

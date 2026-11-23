@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { useTenant } from '../context/useTenant'
 import {
@@ -25,8 +25,11 @@ import {
   AIO_DROP_FROM,
   AIO_REASON_TEXT,
   AIO_STATUS_LABEL,
+  AIO_SURFACES,
+  GOOGLE_SURFACE,
   aioDayText,
   aioJudgeLabel,
+  forSurface,
   judgeCostOf,
   pctText,
   ratioText,
@@ -37,6 +40,8 @@ import {
   type AioRunState,
   type AioRunSummary,
   type AioSourceReason,
+  type AioSurface,
+  type AioSurfaceId,
   type AioTrendPoint,
   type AioView,
 } from '../lib/googleAio'
@@ -57,7 +62,24 @@ import { kstStamp } from '../lib/runTrend'
  *
  * 키보드: 누른 단추가 사라질 때(시작 · 끝 · 켜기 · 끄기) 포커스를 남는 곳(진행 글자 · 지금 재기 · 켜기)으로 옮긴다. 확인창은 Esc로 닫히고 연
  * 단추로 포커스를 돌려준다(components/ConfirmDialog.tsx). 웹(라우트 404)에서는 「데스크톱 앱에서 볼 수 있습니다」만 보인다.
+ *
+ * 검색 면(2026-11-23): 같은 화면이 구글 AI 개요(/google-aio)와 네이버 AI 브리핑(/naver-aib)을 보인다. 면은 SurfaceContext로 내려가고, 구글
+ * 면의 글은 useSay()가 면의 이름으로 바꾼다(「AI 개요」 → 「AI 브리핑」 · 「구글」 → 「네이버」). 서버 길도 면마다 다르다(sf.apiPath).
  */
+
+const SurfaceContext = createContext<AioSurface>(GOOGLE_SURFACE)
+/** 이 화면의 검색 면. */
+const useSurface = () => useContext(SurfaceContext)
+/** 구글 면의 글을 이 화면의 면 이름으로. */
+function useSay(): (text: string) => string {
+  const sf = useSurface()
+  return useCallback((text: string) => forSurface(text, sf), [sf])
+}
+/** 검색 위치 글 — 네이버는 위치 칸이 없다(지역은 질문 문장에서 읽는다). */
+const locationText = (sf: AioSurface, location: string | null) => (sf.usesLocation ? (location ?? '없음(나라 전체)') : '없음(지역은 질문 문장에서)')
+/** 질문을 그 검색 면에서 직접 보는 주소. */
+const searchUrl = (sf: AioSurface, query: string) =>
+  sf.id === 'naver' ? `https://search.naver.com/search.naver?query=${encodeURIComponent(query)}` : `https://www.google.co.kr/search?q=${encodeURIComponent(query)}&hl=ko&gl=kr`
 
 const POLL_MS = 2000
 const NO_KEY =
@@ -80,7 +102,6 @@ const SOURCE_REASON: Record<AioSourceReason, string> = {
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err))
 const n = (v: number) => v.toLocaleString('ko-KR')
 const isHttp = (url: string) => /^https?:\/\//i.test(url)
-const googleUrl = (query: string) => `https://www.google.co.kr/search?q=${encodeURIComponent(query)}&hl=ko&gl=kr`
 const excerpt = (text: string, max = 280) => (text.length > max ? `${text.slice(0, max)}…` : text)
 const minutesText = ([lo, hi]: [number, number]) => (lo === hi ? `약 ${lo}분` : `약 ${lo}~${hi}분`)
 /** 「50%(3/6)」 — 확인 불가면 「확인 불가」 한 번만(「확인 불가(확인 불가)」로 쓰지 않는다). */
@@ -99,8 +120,8 @@ function aioDiffText(diffs: ConditionDiff[]): string {
   return [changed.length ? `${changed.join(' · ')} 바뀜` : '', unknown.length ? `${unknown.join(' · ')} 기록 없음` : ''].filter(Boolean).join(' · ')
 }
 
-function quotaLine(q: GoogleAioQuota): string {
-  return `이번 결제 주기(${aioDayText(q.planRenewalDate ?? q.cycle)} 갱신까지) 구글 AI 개요 몫 남은 ${n(q.left)}회 / ${n(q.cap)}회 · 계정 남은 검색 ${n(q.accountLeft)}회(바닥 ${n(q.floor)}회 아래로는 쓰지 않아요) · 이번 시간 남은 검색 ${n(q.hourLeft)}회`
+function quotaLine(q: GoogleAioQuota, sf: AioSurface): string {
+  return `이번 결제 주기(${aioDayText(q.planRenewalDate ?? q.cycle)} 갱신까지) ${sf.label} 몫 남은 ${n(q.left)}회 / ${n(q.cap)}회 · 계정 남은 검색 ${n(q.accountLeft)}회(바닥 ${n(q.floor)}회 아래로는 쓰지 않아요) · 이번 시간 남은 검색 ${n(q.hourLeft)}회`
 }
 
 /** 판정 비용 — 회차의 판정 엔진 단가로(생각 토큰은 출력 단가). 엔진이 섞였거나 단가가 없으면 null(0 아님). */
@@ -118,31 +139,34 @@ function mentionText(m: boolean | null | undefined): string {
 // ── 결과 ─────────────────────────────────────────────────────────────────────
 
 function SummaryTiles({ summary }: { summary: AioRunSummary }) {
+  const say = useSay()
   const own = summary.ownSource
   const post = summary.postSource
   const tiles = [
     {
-      label: 'AI 개요가 뜬 질문',
+      label: say('AI 개요가 뜬 질문'),
       value: pctText(summary.exposure),
       sub:
         summary.exposure.rate === null
           ? '잰 질문(있음 · 없음)이 없어요'
-          : `${ratioText(summary.exposure)} · AI 개요 없음 ${summary.absent}${summary.unreadable + summary.failed > 0 ? ` · 못 읽음 ${summary.unreadable}개 · 오류 ${summary.failed}개는 분모에서 뺐어요` : ''}`,
+          : `${ratioText(summary.exposure)} · ${say('AI 개요 없음')} ${summary.absent}${summary.unreadable + summary.failed > 0 ? ` · 못 읽음 ${summary.unreadable}개 · 오류 ${summary.failed}개는 분모에서 뺐어요` : ''}`,
     },
     {
-      label: 'AI 개요 속 언급',
+      label: say('AI 개요 속 언급'),
       value: pctText(summary.mention),
-      sub: `${summary.mention.rate === null ? '판정된 개요가 없어요' : ratioText(summary.mention)}${summary.judgeUnknown - summary.noText > 0 ? ` · 판정 불가 ${summary.judgeUnknown - summary.noText}` : ''}${summary.noText > 0 ? ` · 본문 없는 개요 ${summary.noText}(판정 안 함)` : ''}`,
+      sub: say(
+        `${summary.mention.rate === null ? '판정된 개요가 없어요' : ratioText(summary.mention)}${summary.judgeUnknown - summary.noText > 0 ? ` · 판정 불가 ${summary.judgeUnknown - summary.noText}` : ''}${summary.noText > 0 ? ` · 본문 없는 개요 ${summary.noText}(판정 안 함)` : ''}`,
+      ),
     },
     {
       label: '자사 사이트 출처',
       value: pctText(own),
-      sub: own.rate === null ? SOURCE_REASON[own.reason] : `${ratioText(own)} 개요(출처 목록이 온 개요 중)`,
+      sub: own.rate === null ? say(SOURCE_REASON[own.reason]) : `${ratioText(own)} 개요(출처 목록이 온 개요 중)`,
     },
     {
       label: '올린 글 출처',
       value: pctText(post),
-      sub: post.rate === null ? SOURCE_REASON[post.reason] : `${ratioText(post)} 개요 · 그때 올라가 있던 글 ${post.posts}편`,
+      sub: post.rate === null ? say(SOURCE_REASON[post.reason]) : `${ratioText(post)} 개요 · 그때 올라가 있던 글 ${post.posts}편`,
     },
   ]
   return (
@@ -163,6 +187,7 @@ const TREND_H = 150
 const TREND_PAD = { left: 40, right: 14, top: 12, bottom: 26 }
 
 function Trend({ points }: { points: AioTrendPoint[] }) {
+  const say = useSay()
   const labels = runLabels(points.map((p) => p.startedAt))
   const span = TREND_W - TREND_PAD.left - TREND_PAD.right
   const x = (i: number) => TREND_PAD.left + (points.length > 1 ? (i * span) / (points.length - 1) : span / 2)
@@ -176,7 +201,7 @@ function Trend({ points }: { points: AioTrendPoint[] }) {
     })
   return (
     <div className="gaio-trend">
-      <svg viewBox={`0 0 ${TREND_W} ${TREND_H}`} role="img" aria-label="같은 조건 회차의 AI 개요 노출 · 언급 추이(아래 목록과 같은 숫자)">
+      <svg viewBox={`0 0 ${TREND_W} ${TREND_H}`} role="img" aria-label={say('같은 조건 회차의 AI 개요 노출 · 언급 추이(아래 목록과 같은 숫자)')}>
         {[0, 0.5, 1].map((r) => (
           <g key={r}>
             <line className="gaio-grid" x1={TREND_PAD.left} x2={TREND_W - TREND_PAD.right} y1={y(r)} y2={y(r)} />
@@ -195,7 +220,7 @@ function Trend({ points }: { points: AioTrendPoint[] }) {
           <g key={p.runId}>
             {p.exposure.rate !== null && (
               <circle className={`gaio-dot-exposure${p.dropped ? ' gaio-dot-drop' : ''}`} cx={x(i)} cy={y(p.exposure.rate)} r={4}>
-                <title>{`${kstStamp(p.startedAt)} AI 개요 노출 ${pctRatio(p.exposure)}${p.dropped ? ' · 급락' : ''}`}</title>
+                <title>{`${kstStamp(p.startedAt)} ${say('AI 개요')} 노출 ${pctRatio(p.exposure)}${p.dropped ? ' · 급락' : ''}`}</title>
               </circle>
             )}
             {p.mention.rate !== null && (
@@ -210,7 +235,7 @@ function Trend({ points }: { points: AioTrendPoint[] }) {
         ))}
       </svg>
       <p className="gaio-legend-line">
-        <span className="gaio-key gaio-key-exposure" aria-hidden="true" /> AI 개요 노출 <span className="gaio-key gaio-key-mention" aria-hidden="true" /> 개요 속 언급 — 급락한 회차와는 선을 잇지 않아요.
+        <span className="gaio-key gaio-key-exposure" aria-hidden="true" /> {say('AI 개요')} 노출 <span className="gaio-key gaio-key-mention" aria-hidden="true" /> 개요 속 언급 — 급락한 회차와는 선을 잇지 않아요.
       </p>
       <ol className="gaio-trend-list">
         {points.map((p) => (
@@ -225,6 +250,7 @@ function Trend({ points }: { points: AioTrendPoint[] }) {
 }
 
 function QuestionTable({ view }: { view: AioView }) {
+  const say = useSay()
   const { runIds, rows, otherConditionRuns } = view.questions
   const startOf = new Map(view.runs.map((r) => [r.runId, r.startedAt]))
   const starts = runIds.map((id) => startOf.get(id) ?? '')
@@ -233,8 +259,10 @@ function QuestionTable({ view }: { view: AioView }) {
     <section className="gaio-section" aria-labelledby="gaio-q-head">
       <h2 id="gaio-q-head">질문별</h2>
       <p className="gaio-fine">
-        최신 회차와 같은 조건인 회차만 묶어요(회차 {runIds.length}개). 노출 k/N의 N은 AI 개요가 있었거나 없었던 회차(못 읽음 · 오류 빼고), 언급 k/N의 N은 판정된
-        개요예요.{otherConditionRuns > 0 ? ` 조건이 다른 회차 ${otherConditionRuns}개는 이 표 · 추이에서 뺐어요(회차 목록에는 흐리게 보여요).` : ''}
+        {say(
+          `최신 회차와 같은 조건인 회차만 묶어요(회차 ${runIds.length}개). 노출 k/N의 N은 AI 개요가 있었거나 없었던 회차(못 읽음 · 오류 빼고), 언급 k/N의 N은 판정된 개요예요.`,
+        )}
+        {otherConditionRuns > 0 ? ` 조건이 다른 회차 ${otherConditionRuns}개는 이 표 · 추이에서 뺐어요(회차 목록에는 흐리게 보여요).` : ''}
       </p>
       <ul className="gaio-legend" aria-label="칸 기호">
         {Object.values(AIO_CELL).map((c) => (
@@ -242,7 +270,7 @@ function QuestionTable({ view }: { view: AioView }) {
             <span className="gaio-legend-sym" aria-hidden="true">
               {c.symbol}
             </span>
-            {c.label}
+            {say(c.label)}
           </li>
         ))}
         <li>
@@ -297,6 +325,7 @@ function QuestionTable({ view }: { view: AioView }) {
 }
 
 function PostTable({ posts }: { posts: AioPostTableRow[] | null }) {
+  const say = useSay()
   if (posts === null) {
     return (
       <section className="gaio-section gaio-posts" aria-labelledby="gaio-p-head">
@@ -315,7 +344,7 @@ function PostTable({ posts }: { posts: AioPostTableRow[] | null }) {
     <section className="gaio-section gaio-posts" aria-labelledby="gaio-p-head">
       <h2 id="gaio-p-head">올린 글이 출처로 나온 회차</h2>
       <p className="gaio-fine">
-        그 글을 올린 뒤 · 올라가 있던 회차만 N에 넣어요(올리기 전 · 내린 뒤 회차를 「안 나옴」으로 세지 않아요). 출처 목록이 온 개요가 있던 회차만이에요.
+        {say('그 글을 올린 뒤 · 올라가 있던 회차만 N에 넣어요(올리기 전 · 내린 뒤 회차를 「안 나옴」으로 세지 않아요). 출처 목록이 온 개요가 있던 회차만이에요.')}
         {waiting > 0 ? ` 아직 올린 뒤 잰 회차가 없는 글 ${waiting}편은 표에 넣지 않았어요.` : ''}
       </p>
       {measured.length === 0 ? (
@@ -360,17 +389,19 @@ function PostTable({ posts }: { posts: AioPostTableRow[] | null }) {
 }
 
 function DetailItem({ item }: { item: GoogleAioDetailItem }) {
-  const reason = item.reason ? (AIO_REASON_TEXT[item.reason as AioReason] ?? item.reason) : null
+  const sf = useSurface()
+  const say = useSay()
+  const reason = item.reason ? say(AIO_REASON_TEXT[item.reason as AioReason] ?? item.reason) : null
   return (
     <li className="gaio-item">
       <p className="gaio-item-q">
         <b>{item.query}</b>{' '}
-        <a href={googleUrl(item.query)} target="_blank" rel="noreferrer" aria-label={`「${item.query}」 구글에서 보기(새 창)`}>
-          구글에서 보기
+        <a href={searchUrl(sf, item.query)} target="_blank" rel="noreferrer" aria-label={`「${item.query}」 ${say('구글에서 보기(새 창)')}`}>
+          {say('구글에서 보기')}
         </a>
       </p>
       <p className="gaio-item-status">
-        {AIO_STATUS_LABEL[item.status]}
+        {say(AIO_STATUS_LABEL[item.status])}
         {reason ? ` — ${reason}` : ''}
         {item.status === 'shown' ? ` · ${mentionText(item.mentioned)}` : ''}
         {item.sourceOnly === true ? ' · 출처로만 보임(본문엔 이름 없음)' : ''}
@@ -410,6 +441,7 @@ function DetailItem({ item }: { item: GoogleAioDetailItem }) {
 }
 
 function RunDetail({ detail, loading, error }: { detail: GoogleAioRunDetail | null; loading: boolean; error: string | null }) {
+  const sf = useSurface()
   const run = detail?.run
   return (
     <section id="gaio-detail" className="gaio-detail" aria-label="회차 자세히">
@@ -424,11 +456,11 @@ function RunDetail({ detail, loading, error }: { detail: GoogleAioRunDetail | nu
           <h3>{kstStamp(run.startedAt)} 회차 자세히</h3>
           {run.stopMessage && <p className="gaio-fine">멈춘 까닭 — {run.stopMessage}</p>}
           <p className="gaio-fine">
-            검색 위치 {run.conditions.location ?? '없음(나라 전체)'} · 질문지 {run.conditions.questionBankVersion} · 판정 {aioJudgeLabel(run.conditions.judgeEngine)}
+            검색 위치 {locationText(sf, run.conditions.location)} · 질문지 {run.conditions.questionBankVersion} · 판정 {aioJudgeLabel(run.conditions.judgeEngine)}
             {run.conditions.judgeModel ? `(${run.conditions.judgeModel})` : ''}
           </p>
           <p className="gaio-fine">
-            검색 {n(run.usage.searches)}/{n(run.maxSearches)}회(늦게 오는 개요 받기 {n(run.usage.followUps)} · 다시 검색 {n(run.usage.reSearches)}) · 판정 {n(run.usage.judgeCalls)}회 · 판정
+            검색 {n(run.usage.searches)}/{n(run.maxSearches)}회({sf.searchesPerQuestion > 1 ? `늦게 오는 개요 받기 ${n(run.usage.followUps)} · ` : ''}다시 검색 {n(run.usage.reSearches)}) · 판정 {n(run.usage.judgeCalls)}회 · 판정
             토큰 입력 {n(run.usage.judgeTokens.input)} · 출력 {n(run.usage.judgeTokens.output)} · 생각 {n(run.usage.judgeTokens.thought)}
           </p>
           {detail.postsUnreadable && <p className="gaio-fine">원장 · 앱 밖 글을 읽지 못해 올린 글 표시는 확인 불가예요.</p>}
@@ -533,6 +565,7 @@ function RunList({ view, pricing, openRun, onToggle, onRejudge }: RunListProps) 
 }
 
 function Results({ view, unreadableRuns, pricing, openRun, onToggle, onRejudge, detail }: RunListProps & { unreadableRuns: number; detail: { data: GoogleAioRunDetail | null; loading: boolean; error: string | null } | null }) {
+  const say = useSay()
   const s = view.summary
   const prev = view.previous
   const dropRuns = view.trend.points.filter((p) => p.dropped).map((p) => kstStamp(p.startedAt))
@@ -552,20 +585,20 @@ function Results({ view, unreadableRuns, pricing, openRun, onToggle, onRejudge, 
           </p>
           <SummaryTiles summary={s} />
           <ul className="gaio-facts">
-            {s.noSourceList > 0 && <li>출처 없는 개요 {s.noSourceList} — 출처 목록 없이 온 개요는 출처 지표 분모에서 뺐어요.</li>}
-            {s.sourceOnly > 0 && <li>출처로만 보임 {s.sourceOnly} — 본문엔 이름이 없고 출처 제목 · 이름에만 나온 개요예요.</li>}
-            {s.variantSource > 0 && <li>올린 글 주소 뒤에 ?…만 다른 주소가 출처인 개요 {s.variantSource} — 올린 글 출처로 세지 않고 따로 보여요.</li>}
+            {s.noSourceList > 0 && <li>{say(`출처 없는 개요 ${s.noSourceList} — 출처 목록 없이 온 개요는 출처 지표 분모에서 뺐어요.`)}</li>}
+            {s.sourceOnly > 0 && <li>{say(`출처로만 보임 ${s.sourceOnly} — 본문엔 이름이 없고 출처 제목 · 이름에만 나온 개요예요.`)}</li>}
+            {s.variantSource > 0 && <li>{say(`올린 글 주소 뒤에 ?…만 다른 주소가 출처인 개요 ${s.variantSource} — 올린 글 출처로 세지 않고 따로 보여요.`)}</li>}
             <li>
               함께 나온 경쟁사:{' '}
               {s.competitors === null
-                ? '확인 불가(경쟁사 목록이 없거나 판정된 개요가 없어요)'
+                ? say('확인 불가(경쟁사 목록이 없거나 판정된 개요가 없어요)')
                 : s.competitors.length === 0
-                  ? '판정된 개요에는 없었어요'
+                  ? say('판정된 개요에는 없었어요')
                   : s.competitors.map((c) => `${c.name} ${c.count}`).join(' · ')}
             </li>
             {prev && (
               <li>
-                직전 같은 조건 회차와(두 회차 모두 잰 질문 {prev.common}개): AI 개요 노출 {pctText(prev.exposure[0])} → {pctText(prev.exposure[1])} · 언급(두 회차 모두 판정된{' '}
+                직전 같은 조건 회차와(두 회차 모두 잰 질문 {prev.common}개): {say('AI 개요')} 노출 {pctText(prev.exposure[0])} → {pctText(prev.exposure[1])} · 언급(두 회차 모두 판정된{' '}
                 {prev.mentionCommon}개) {pctText(prev.mention[0])} → {pctText(prev.mention[1])}
               </li>
             )}
@@ -576,8 +609,9 @@ function Results({ view, unreadableRuns, pricing, openRun, onToggle, onRejudge, 
       )}
       {dropRuns.length > 0 && (
         <p className="gaio-warn">
-          AI 개요가 한 번도 안 떴어요({dropRuns.join(' · ')} 회차) — 구글 · SerpAPI 쪽 변화일 수 있어요(앞 회차들은 {Math.round(AIO_DROP_FROM * 100)}%를 넘었어요). 추이 선은 그
-          회차에서 잇지 않았어요. 회차 자세히에서 응답을 확인해 주세요.
+          {say(
+            `AI 개요가 한 번도 안 떴어요(${dropRuns.join(' · ')} 회차) — 구글 · SerpAPI 쪽 변화일 수 있어요(앞 회차들은 ${Math.round(AIO_DROP_FROM * 100)}%를 넘었어요). 추이 선은 그 회차에서 잇지 않았어요. 회차 자세히에서 응답을 확인해 주세요.`,
+          )}
         </p>
       )}
       {view.trend.points.length >= 2 && (
@@ -599,6 +633,10 @@ function Results({ view, unreadableRuns, pricing, openRun, onToggle, onRejudge, 
 type Note = { text: string; alert: boolean; extra?: string | null }
 
 function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName: string }) {
+  const sf = useSurface()
+  const say = useSay()
+  /** 서버 길 조각 — 면마다 다르다(/api/google-aio · /api/naver-aib). */
+  const api = sf.apiPath
   // 상태 — null은 아직 읽는 중. status null + error null은 웹(404 — 기능 없음).
   const [res, setRes] = useState<{ status: GoogleAioStatus | null; error: string | null } | null>(null)
   // 앞서 받은 회차 · 지표 — 도는 동안은 서버가 비워 보내므로 이것을 둔다.
@@ -629,7 +667,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
 
   const refresh = useCallback(
     (): Promise<GoogleAioStatus | null> =>
-      loadGoogleAio(tenantId).then(
+      loadGoogleAio(tenantId, {}, api).then(
         (next) => {
           apply(next)
           return next
@@ -639,12 +677,12 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
           return null
         },
       ),
-    [tenantId, apply],
+    [tenantId, apply, api],
   )
 
   useEffect(() => {
     let alive = true
-    loadGoogleAio(tenantId).then(
+    loadGoogleAio(tenantId, {}, api).then(
       (next) => {
         if (alive) apply(next)
       },
@@ -657,7 +695,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
     return () => {
       alive = false
     }
-  }, [tenantId, reloadKey, apply])
+  }, [tenantId, reloadKey, apply, api])
 
   const st = res?.status ?? null
   const live = Boolean(st && (st.running || st.rejudging || st.runningElsewhere))
@@ -667,7 +705,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
     if (!live || kept !== null || viewAsked.current) return
     viewAsked.current = true
     let alive = true
-    loadGoogleAio(tenantId, { view: true }).then(
+    loadGoogleAio(tenantId, { view: true }, api).then(
       (next) => {
         if (alive && next) setKept((cur) => cur ?? { view: next.view, unreadableRuns: next.unreadableRuns })
       },
@@ -678,14 +716,14 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
     return () => {
       alive = false
     }
-  }, [live, kept, tenantId])
+  }, [live, kept, tenantId, api])
 
   // 도는 동안만 2초마다 묻는다(서버 메모리의 진행 — 검색 · 계정 · 원장 읽기 없음).
   useEffect(() => {
     if (!live) return
     let alive = true
     const timer = window.setInterval(() => {
-      loadGoogleAio(tenantId).then(
+      loadGoogleAio(tenantId, {}, api).then(
         (next) => {
           if (!alive) return
           setPollError(null)
@@ -700,7 +738,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
       alive = false
       window.clearInterval(timer)
     }
-  }, [live, tenantId, apply])
+  }, [live, tenantId, apply, api])
 
   // 누른 단추가 사라졌으면 포커스를 남는 곳으로 — 시작하면 진행 글자, 끝나면 「지금 재기」.
   useEffect(() => {
@@ -732,7 +770,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
   useEffect(() => {
     if (!openRun) return
     let alive = true
-    loadGoogleAioRun(tenantId, openRun).then(
+    loadGoogleAioRun(tenantId, openRun, api).then(
       (data) => {
         if (alive) setDetail({ runId: openRun, data, error: null })
       },
@@ -743,17 +781,17 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
     return () => {
       alive = false
     }
-  }, [tenantId, openRun])
+  }, [tenantId, openRun, api])
 
   const askPlan = (resume: string | null) => {
     if (planning || starting) return
     setPlanning(true)
     setNote(null)
-    planGoogleAio(tenantId, resume)
+    planGoogleAio(tenantId, resume, api)
       .then(
         (p) => {
           if (p.planId && !p.blocked) setPlan(p)
-          else setNote({ text: p.blocked?.message ?? '지금은 시작할 수 없어요.', alert: true, extra: p.quota ? quotaLine(p.quota) : null })
+          else setNote({ text: p.blocked?.message ?? '지금은 시작할 수 없어요.', alert: true, extra: p.quota ? quotaLine(p.quota, sf) : null })
         },
         (err: unknown) => {
           const conflict = err instanceof GoogleAioRequestError && err.status === 409
@@ -771,7 +809,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
     const planId = plan.planId
     setStarting(true)
     focusNext.current = 'gaio-progress'
-    runGoogleAio(tenantId, planId)
+    runGoogleAio(tenantId, planId, api)
       .then(
         async () => {
           setPlan(null)
@@ -797,7 +835,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
   }
 
   const cancelRun = (runId: string) => {
-    cancelGoogleAio(tenantId, runId).then(
+    cancelGoogleAio(tenantId, runId, api).then(
       () => refresh(),
       (err: unknown) => {
         setNote({ text: `중단하지 못했어요 — ${message(err)}`, alert: true })
@@ -811,7 +849,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
     const { runId } = rejudgeAsk
     setRejudgeStarting(true)
     focusNext.current = 'gaio-progress'
-    rejudgeGoogleAio(tenantId, runId, 'unknown')
+    rejudgeGoogleAio(tenantId, runId, 'unknown', api)
       .then(
         async () => {
           setRejudgeAsk(null)
@@ -831,7 +869,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
   const saveSwitch = (enabled: boolean) => {
     if (savingSwitch) return
     setSavingSwitch(true)
-    saveGoogleAioSettings(enabled)
+    saveGoogleAioSettings(enabled, api)
       .then(
         async () => {
           setEnableAsk(false)
@@ -868,7 +906,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
       <header className="page-head">
         <div className="page-title">
           <p className="page-eyebrow">{brandName}</p>
-          <h1>구글 AI 개요(시범)</h1>
+          <h1>{sf.label}(시범)</h1>
         </div>
         <div className="page-actions">
           <button type="button" className="btn" onClick={reload}>
@@ -877,21 +915,21 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
         </div>
       </header>
       <p className="page-lead">
-        구글 검색의 AI 개요에 이 브랜드가 나오는지 따로 재는 시범 측정입니다. 점수에 세는 이름 없는 질문을 질문 그대로 구글에 검색해, AI 개요가 떴는지 · 그
-        안에 이 브랜드가 나오는지 · 어떤 출처를 댔는지 봅니다. 점수 · 정기진단 보고서 · 전주 비교에는 넣지 않습니다. 검색 한 번마다 SerpAPI 사용량이 들어,
-        「지금 재기」를 누르고 확인해야만 잽니다.
+        {say(
+          '구글 검색의 AI 개요에 이 브랜드가 나오는지 따로 재는 시범 측정입니다. 점수에 세는 이름 없는 질문을 질문 그대로 구글에 검색해, AI 개요가 떴는지 · 그 안에 이 브랜드가 나오는지 · 어떤 출처를 댔는지 봅니다. 점수 · 정기진단 보고서 · 전주 비교에는 넣지 않습니다. 검색 한 번마다 SerpAPI 사용량이 들어, 「지금 재기」를 누르고 확인해야만 잽니다.',
+        )}
       </p>
 
       {res === null && <p className="muted">불러오는 중…</p>}
       {res?.error && (
         <p className="error" role="alert">
-          구글 AI 개요 시범 상태를 읽지 못했어요 — {res.error}{' '}
+          {sf.label} 시범 상태를 읽지 못했어요 — {res.error}{' '}
           <button type="button" className="ghost" onClick={reload}>
             다시 시도
           </button>
         </p>
       )}
-      {res && !res.error && st === null && <p className="muted">구글 AI 개요 시범은 데스크톱 앱에서 볼 수 있습니다(웹에는 이 기능이 없습니다).</p>}
+      {res && !res.error && st === null && <p className="muted">{sf.label} 시범은 데스크톱 앱에서 볼 수 있습니다(웹에는 이 기능이 없습니다).</p>}
 
       {st && (
         <section className="gaio-control" aria-label="이 PC · 지금 재기">
@@ -973,7 +1011,7 @@ function GoogleAioScreen({ tenantId, brandName }: { tenantId: string; brandName:
           onCancel={() => setRejudgeAsk(null)}
         >
           <p>
-            {kstStamp(rejudgeAsk.startedAt)} 회차에서 판정 불가로 남은 개요를 저장된 본문으로 다시 판정해요 — <b>판정 최대 {rejudgeAsk.max}회</b>({st.judge.label}) · <b>검색 0회</b>.
+            {kstStamp(rejudgeAsk.startedAt)} 회차에서 판정 불가로 남은 {say('개요를')} 저장된 본문으로 다시 판정해요 — <b>판정 최대 {rejudgeAsk.max}회</b>({st.judge.label}) · <b>검색 0회</b>.
           </p>
           <p>SerpAPI 검색은 하지 않아요. 판정 엔진 사용량만 들어요. 다시 판정이 실패해도 앞선 판정은 지우지 않아요.</p>
         </ConfirmDialog>
@@ -999,6 +1037,8 @@ function Control({
   onPlan: (resume: string | null) => void
   onCancel: (runId: string) => void
 }) {
+  const say = useSay()
+  const sf = useSurface()
   if (st.settingsError) {
     return (
       <p className="error" role="alert">
@@ -1014,9 +1054,9 @@ function Control({
         <p id="gaio-progress" className="gaio-progress" role="status" tabIndex={-1}>
           {run.cancelling ? '멈추는 중… 지금 받는 검색 하나는 끝까지 받아요. ' : run.resumed ? '이어 재는 중… 이번에 ' : '재는 중… '}
           {run.done}/{run.planned}
-          {run.resumed ? '문항' : ''} · 검색 {n(run.searches)}/{n(run.maxSearches)}회 · 있음 {run.shown} · AI 개요 없음 {run.absent} · 못 읽음 {run.unreadable} · 오류 {run.failed} · 판정 불가{' '}
+          {run.resumed ? '문항' : ''} · 검색 {n(run.searches)}/{n(run.maxSearches)}회 · 있음 {run.shown} · {say('AI 개요 없음')} {run.absent} · 못 읽음 {run.unreadable} · 오류 {run.failed} · 판정 불가{' '}
           {run.judgeUnknown}
-          {(run.noText ?? 0) > 0 ? ` · 본문 없는 개요 ${run.noText}` : ''}
+          {(run.noText ?? 0) > 0 ? say(` · 본문 없는 개요 ${run.noText}`) : ''}
         </p>
         <p className="gaio-fine">앱을 켜 두세요 — 끄면 멈추고 받은 검색만 셉니다. 도는 동안 아래 결과는 지난 회차까지예요.</p>
         {!run.cancelling && (
@@ -1044,11 +1084,11 @@ function Control({
     )
   }
   if (!st.configured) return <p className="gaio-plain">{NO_KEY}</p>
-  if (st.configError) return <p className="error">구글 AI 개요 시범: {st.configError}</p>
+  if (st.configError) return <p className="error">{sf.label} 시범: {st.configError}</p>
   if (!st.enabled) {
     return (
       <>
-        <p className="gaio-plain">{OFF_TEXT}</p>
+        <p className="gaio-plain">{say(OFF_TEXT)}</p>
         <div className="gaio-actions">
           <button id="gaio-enable" type="button" className="btn" aria-disabled={savingSwitch || undefined} onClick={() => !savingSwitch && onEnable()}>
             이 PC에서 켜기
@@ -1057,12 +1097,12 @@ function Control({
       </>
     )
   }
-  if (st.runningElsewhere) return <p className="gaio-plain">{ELSEWHERE_NOTE}</p>
+  if (st.runningElsewhere) return <p className="gaio-plain">{say(ELSEWHERE_NOTE)}</p>
   const blocked = st.measuring ? MEASURING_NOTE : !st.judge.ready ? (st.judge.problem ?? '판정 엔진을 쓸 수 없어요.') : st.busy
   return (
     <>
       <p className="gaio-state">
-        이 PC: 켜짐 · 판정 엔진 {st.judge.label} · 검색 위치 {st.location ?? '없음(나라 전체)'} · 질문: 점수에 세는 이름 없는 질문{' '}
+        이 PC: 켜짐 · 판정 엔진 {st.judge.label} · 검색 위치 {locationText(sf, st.location)} · 질문: 점수에 세는 이름 없는 질문{' '}
         <button type="button" className="ghost" aria-disabled={savingSwitch || undefined} onClick={() => !savingSwitch && onDisable()}>
           이 PC에서 끄기
         </button>
@@ -1096,12 +1136,14 @@ function Control({
 }
 
 function RunConfirm({ plan, busy, onConfirm, onCancel }: { plan: GoogleAioPlan; busy: boolean; onConfirm: () => void; onCancel: () => void }) {
+  const sf = useSurface()
+  const say = useSay()
   const q = plan.quota
   const M = plan.maxSearches
   const resume = plan.resume
   return (
     <ConfirmDialog
-      title={resume ? '멈춘 회차를 이어 잴까요?' : '구글 AI 개요를 지금 잴까요?'}
+      title={resume ? '멈춘 회차를 이어 잴까요?' : say('구글 AI 개요를 지금 잴까요?')}
       confirmLabel={`${resume ? '이어 재기' : '지금 재기'}(검색 최대 ${n(M)}회)`}
       busy={busy}
       onConfirm={onConfirm}
@@ -1114,13 +1156,14 @@ function RunConfirm({ plan, busy, onConfirm, onCancel }: { plan: GoogleAioPlan; 
             : `점수에 세는 이름 없는 질문 ${plan.questions}개${plan.bankLabel ? `(${plan.bankLabel})` : ''}`}
         </li>
         <li>
-          <b>검색 최대 {n(M)}회</b> — 늦게 오는 개요는 질문당 2회, 못 읽은 질문 다시 검색 몫까지예요. 보통은 이보다 적어요.
+          <b>검색 최대 {n(M)}회</b> —{' '}
+          {sf.searchesPerQuestion > 1 ? '늦게 오는 개요는 질문당 2회, 못 읽은 질문 다시 검색 몫까지예요. 보통은 이보다 적어요.' : '질문당 1회에 못 읽은 질문 다시 검색 몫까지예요. 보통은 이보다 적어요.'}
         </li>
         <li>
-          판정({plan.judge.label}) 최대 {n(plan.maxJudgeCalls)}회 — AI 개요가 뜬 질문만 판정해요(판정 엔진 사용량이 들어요).
+          판정({plan.judge.label}) 최대 {n(plan.maxJudgeCalls)}회 — {say('AI 개요가 뜬 질문만 판정해요')}(판정 엔진 사용량이 들어요).
         </li>
-        {q && <li>{quotaLine(q)}</li>}
-        <li>검색 위치: {plan.location ?? '없음(나라 전체 · gl=kr)'}</li>
+        {q && <li>{quotaLine(q, sf)}</li>}
+        <li>검색 위치: {sf.usesLocation ? (plan.location ?? '없음(나라 전체 · gl=kr)') : locationText(sf, null)}</li>
         <li>
           걸리는 시간 {minutesText(plan.expectedMinutes)} — 앱을 켜 두세요 — 끄면 멈추고 받은 검색만 셉니다.
         </li>
@@ -1142,9 +1185,13 @@ function RunConfirm({ plan, busy, onConfirm, onCancel }: { plan: GoogleAioPlan; 
   )
 }
 
-export default function GoogleAio() {
+export default function GoogleAio({ surface = 'google' }: { surface?: AioSurfaceId }) {
   const { tenant } = useTenant()
   if (!tenant) return null
-  // 브랜드를 바꾸면 화면 상태(받은 계획 · 펼친 회차 · 진행)를 모두 새로 시작한다.
-  return <GoogleAioScreen key={tenant.tenantId} tenantId={tenant.tenantId} brandName={tenant.brandName} />
+  // 브랜드 · 면을 바꾸면 화면 상태(받은 계획 · 펼친 회차 · 진행)를 모두 새로 시작한다.
+  return (
+    <SurfaceContext.Provider value={AIO_SURFACES[surface]}>
+      <GoogleAioScreen key={`${surface}:${tenant.tenantId}`} tenantId={tenant.tenantId} brandName={tenant.brandName} />
+    </SurfaceContext.Provider>
+  )
 }

@@ -61,6 +61,7 @@ export default function App() {
             <Route path="measure-tenant" element={<MeasureTenant />} />
             <Route path="measure-status" element={<MeasureStatus />} />
             <Route path="google-aio" element={<GoogleAio />} />
+            <Route path="naver-aib" element={<GoogleAio surface="naver" />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -42,6 +42,115 @@ export const GOOGLE_AIO_FORMAT = 'google-aio/1'
 export const GOOGLE_AIO_SETTINGS_FORMAT = 'google-aio-settings/1'
 /** 이 PC 설정 파일이 없을 때의 시범 브랜드(스테이,머뭄). 다른 브랜드는 설정 파일 tenants에 더한다. */
 export const AIO_DEFAULT_TENANTS: readonly string[] = ['web4ai']
+/** 네이버 AI 브리핑 시범(2026-11-23 승인 — 검색 면만 다르고 실행기 · 규칙 · 화면은 구글 AI 개요와 같은 것을 쓴다). */
+export const NAVER_AIB_FORMAT = 'naver-aib/1'
+export const NAVER_AIB_SETTINGS_FORMAT = 'naver-aib-settings/1'
+/** 네이버 시범 브랜드(군산각 — D3). 다른 브랜드는 설정 파일 tenants에 더한다. */
+export const AIB_DEFAULT_TENANTS: readonly string[] = ['gunsan']
+/**
+ * 네이버 AI 브리핑 검색 조건 — 브리핑 전용 엔진(engine=naver_ai_overview)에 질문 원문을 바로 보낸다(질문당 1회, D4). 일반 네이버 검색
+ * (engine=naver)은 2026-11-23 시험에서 브리핑이 뜨는 질문인데도 ai_briefing을 싣지 않아 쓰지 않는다. 위치 · 기기 칸은 없다.
+ */
+export const AIB_SEARCH_PARAMS = { engine: 'naver_ai_overview', no_cache: 'true' } as const
+/** SerpAPI가 결과 0건일 때 HTTP 200 + error로 주는 문구(「Naver hasn't returned any results …」) — 「없음」으로 센다. */
+const NO_RESULTS = /hasn't returned any results/i
+
+export type AioSurfaceId = 'google' | 'naver'
+/** 검색 면 — 같은 실행기 · 규칙 · 화면을 쓰고 이 칸만 다르다. */
+export interface AioSurface {
+  id: AioSurfaceId
+  /** SerpAPI 몫 · 장부 · 실행 잠금의 기능 이름 — 회차 조건의 수집 엔진 이름이기도 하다(두 면의 회차는 「같은 조건」으로 묶이지 않는다). */
+  feature: 'aio' | 'naver'
+  runFormat: typeof GOOGLE_AIO_FORMAT | typeof NAVER_AIB_FORMAT
+  settingsFormat: typeof GOOGLE_AIO_SETTINGS_FORMAT | typeof NAVER_AIB_SETTINGS_FORMAT
+  /** 이 PC 설정 파일 이름(stateFilePath) · 브랜드 폴더 아래 회차 폴더 · API 경로 조각 · 화면 경로. */
+  settingsFile: string
+  runDir: string
+  apiPath: string
+  defaultTenants: readonly string[]
+  /** 「구글 AI 개요」 · 「네이버 AI 브리핑」 / 「AI 개요」 · 「AI 브리핑」 / 「구글」 · 「네이버」. */
+  label: string
+  short: string
+  site: string
+  /** 질문 하나에 드는 최대 검색(구글은 늦게 오는 개요 후속까지 2). */
+  searchesPerQuestion: number
+  /** 검색 위치를 쓰는가(네이버 브리핑 엔진은 위치 칸이 없다 — 지역은 질문 문장에서 읽는다). */
+  usesLocation: boolean
+}
+export const AIO_SURFACES: Readonly<Record<AioSurfaceId, AioSurface>> = {
+  google: {
+    id: 'google',
+    feature: 'aio',
+    runFormat: GOOGLE_AIO_FORMAT,
+    settingsFormat: GOOGLE_AIO_SETTINGS_FORMAT,
+    settingsFile: 'google-aio-settings.json',
+    runDir: 'google-aio',
+    apiPath: 'google-aio',
+    defaultTenants: AIO_DEFAULT_TENANTS,
+    label: '구글 AI 개요',
+    short: 'AI 개요',
+    site: '구글',
+    searchesPerQuestion: 2,
+    usesLocation: true,
+  },
+  naver: {
+    id: 'naver',
+    feature: 'naver',
+    runFormat: NAVER_AIB_FORMAT,
+    settingsFormat: NAVER_AIB_SETTINGS_FORMAT,
+    settingsFile: 'naver-aib-settings.json',
+    runDir: 'naver-aib',
+    apiPath: 'naver-aib',
+    defaultTenants: AIB_DEFAULT_TENANTS,
+    label: '네이버 AI 브리핑',
+    short: 'AI 브리핑',
+    site: '네이버',
+    searchesPerQuestion: 1,
+    usesLocation: false,
+  },
+}
+export const GOOGLE_SURFACE = AIO_SURFACES.google
+export const NAVER_SURFACE = AIO_SURFACES.naver
+/** 회차 파일 형식 → 검색 면(모르는 형식은 parseAioRun이 먼저 거른다). */
+export function surfaceOfRun(run: { format: string }): AioSurface {
+  return run.format === NAVER_AIB_FORMAT ? NAVER_SURFACE : GOOGLE_SURFACE
+}
+/** 낱말 끝 글자에 받침이 있는가(한글 음절이 아니면 없음으로 본다) · 그 받침이 ㄹ인가. */
+function finalOf(word: string): { batchim: boolean; rieul: boolean } {
+  const code = word.charCodeAt(word.length - 1) - 0xac00
+  if (code < 0 || code > 11171) return { batchim: false, rieul: false }
+  const jong = code % 28
+  return { batchim: jong !== 0, rieul: jong === 8 }
+}
+/** 바로 뒤에 붙는 조사를 새 낱말의 받침에 맞춘다(이/가 · 은/는 · 을/를 · 과/와 · 으로/로). */
+const PARTICLES: readonly [string, string][] = [
+  ['이', '가'],
+  ['은', '는'],
+  ['을', '를'],
+  ['과', '와'],
+  ['으로', '로'],
+]
+function particleFor(word: string, particle: string): string {
+  const pair = PARTICLES.find((p) => p.includes(particle))
+  if (!pair) return particle
+  const { batchim, rieul } = finalOf(word)
+  if (pair[1] === '로') return batchim && !rieul ? '으로' : '로'
+  return batchim ? pair[0] : pair[1]
+}
+const SWAP = /(구글|AI 개요|개요)(으로|이|가|은|는|을|를|과|와|로)?/g
+
+/**
+ * 구글 면의 화면 글을 다른 면의 이름으로 — 「AI 개요」 → 「AI 브리핑」, 「개요」 → 「브리핑」, 「구글」 → 「네이버」, 뒤에 붙은 조사는 새 낱말의
+ * 받침에 맞춘다(「AI 개요가」 → 「AI 브리핑이」). 구글 면은 그대로 돌려준다.
+ */
+export function forSurface(text: string, sf: AioSurface): string {
+  if (sf.id === 'google') return text
+  const noun = sf.short.replace(/^AI /, '')
+  return text.replace(SWAP, (_m, word: string, particle: string | undefined) => {
+    const next = word === '구글' ? sf.site : word === 'AI 개요' ? sf.short : noun
+    return `${next}${particle ? particleFor(next, particle) : ''}`
+  })
+}
 
 /** 고정 검색 조건(D4 · D7). 키는 공용 연결(server/serpApi.ts)이 붙인다 — 여기에 넣지 않는다. */
 export const AIO_SEARCH_PARAMS = { engine: 'google', google_domain: 'google.co.kr', gl: 'kr', hl: 'ko', device: 'desktop', no_cache: 'true' } as const
@@ -235,7 +344,7 @@ export interface AioInFlight {
 }
 
 export interface AioRun {
-  format: typeof GOOGLE_AIO_FORMAT
+  format: typeof GOOGLE_AIO_FORMAT | typeof NAVER_AIB_FORMAT
   runId: string
   tenantId: string
   startedAt: string
@@ -259,7 +368,7 @@ export interface AioRun {
 }
 
 export interface AioSettings {
-  format: typeof GOOGLE_AIO_SETTINGS_FORMAT
+  format: typeof GOOGLE_AIO_SETTINGS_FORMAT | typeof NAVER_AIB_SETTINGS_FORMAT
   enabled: boolean
   tenants: string[]
   locations: Record<string, string>
@@ -284,6 +393,22 @@ export function aioParamsFit(params: Readonly<Record<string, string>>): boolean 
 /** 늦게 오는 개요 후속 — 응답 안의 serpapi_link를 따라가지 않고 고정 엔진 + page_token으로 직접 만든다. */
 export function aioFollowUpParams(pageToken: string): Record<string, string> {
   return { engine: AIO_FOLLOW_UP_ENGINE, page_token: pageToken, no_cache: AIO_SEARCH_PARAMS.no_cache }
+}
+
+/** 네이버 AI 브리핑 검색 매개변수 — 검색어는 질문 원문 그대로(앞뒤 공백만 뗀다). 위치 칸은 없다. */
+export function aibSearchParams(query: string): Record<string, string> {
+  const { engine, ...fixed } = AIB_SEARCH_PARAMS
+  return { engine, query: query.trim(), ...fixed }
+}
+
+/** 검색 면의 첫 검색 매개변수와 그 검색어(문항 query 칸에 적는 글자). */
+export function surfaceSearch(sf: AioSurface, query: string, location: string | null): { params: Record<string, string>; query: string } {
+  if (sf.id === 'naver') {
+    const params = aibSearchParams(query)
+    return { params, query: params.query }
+  }
+  const params = aioSearchParams(query, location)
+  return { params, query: params.q }
 }
 
 /** 위치 값으로 받는 글자 — 비지 않고 · 200자까지 · 제어 문자 없음. */
@@ -316,6 +441,12 @@ export function aioLocationFor(
 
 /** 조건 서명 — 회차 conditions.modelsUsed.aio. 위치 · 기기 · 캐시가 바뀌면 「같은 조건」 비교가 끊긴다. 검색어는 들지 않는다. */
 export function aioConditionSignature(location: string | null): string {
+  return surfaceSignature(location, GOOGLE_SURFACE)
+}
+
+/** 면의 조건 서명 — 구글은 위치 · 기기 · 캐시, 네이버는 엔진 · 캐시(위치 없음). */
+export function surfaceSignature(location: string | null, sf: AioSurface): string {
+  if (sf.id === 'naver') return `naver-aib serpapi engine=${AIB_SEARCH_PARAMS.engine} cache=${AIB_SEARCH_PARAMS.no_cache === 'true' ? 'off' : 'on'}`
   const p = AIO_SEARCH_PARAMS
   return `google-aio serpapi hl=${p.hl} gl=${p.gl} dom=${p.google_domain} loc=${location ?? '없음'} dev=${p.device} cache=${p.no_cache === 'true' ? 'off' : 'on'}`
 }
@@ -359,8 +490,13 @@ export function aioReSearchCap(questions: number): number {
  * + 다시 검색이라 50문항이면 50~110회다. 시작 조건은 남은 몫이 M 이상일 때만이고, 회차를 줄여 시작하지 않는다.
  */
 export function aioMaxSearches(questions: number): number {
+  return surfaceMaxSearches(questions, GOOGLE_SURFACE)
+}
+
+/** 면의 최대 검색 수 — 질문당 검색(구글 2 · 네이버 1) × (n + 못 읽음 다시 검색 ⌈0.1n⌉). 네이버 50문항이면 55회. */
+export function surfaceMaxSearches(questions: number, sf: AioSurface): number {
   const n = Math.max(0, Math.floor(questions))
-  return 2 * n + 2 * aioReSearchCap(n)
+  return sf.searchesPerQuestion * (n + aioReSearchCap(n))
 }
 
 /** 회차 조건 칸. weekOf는 시작 시각의 한국 날짜 ISO 주. 판정 모델은 판정 결과가 실어 온 값만 쓴다(없으면 null). */
@@ -371,12 +507,14 @@ export function aioConditions(input: {
   questionSet: AioQuestionSet
   judgeEngine: string | null
   judgeModel: string | null
+  surface?: AioSurface
 }): AioConditions {
   const day = kstDate(input.startedAt)
+  const sf = input.surface ?? GOOGLE_SURFACE
   return {
     weekOf: (day ? isoWeekOf(day) : null) ?? '',
-    enginesUsed: ['aio'],
-    modelsUsed: { aio: aioConditionSignature(input.location) },
+    enginesUsed: [sf.feature],
+    modelsUsed: { [sf.feature]: surfaceSignature(input.location, sf) },
     judgeEngine: input.judgeEngine,
     judgeModel: input.judgeModel,
     questionBankVersion: aioBankLabel(input.bankVersion, input.questionSet.ids.length, input.questionSet.hash),
@@ -612,6 +750,37 @@ export function readAioFollowUp(json: unknown): AioReadResult {
   return { status: 'unreadable', reason: aio.error !== undefined || json.error !== undefined ? 'follow-up-error' : 'follow-up-empty', topKeys, searchId, ...rawOf(aio) }
 }
 
+/** 브리핑 응답에서 브리핑 칸만(검색 메타 · 매개변수는 원문 블록에 싣지 않는다). */
+const AIB_KEYS = ['markdown', 'text_blocks', 'references', 'media'] as const
+
+/**
+ * 네이버 AI 브리핑(engine=naver_ai_overview · HTTP 200) 한 건 읽기 — 늘 끝난다(후속 없음). 위에서부터: 메타 없음 → 오류(shape), Success
+ * 아님 → 오류, 브리핑 칸(markdown · text_blocks · references)이 하나도 없음 → 없음(결과 0건 문구면 noResults, 다른 error면 오류), 칸은 있는데
+ * 글자도 출처도 없음 → 못 읽음(error가 있으면 overview-error). text_blocks를 펼친 글이 비면 markdown을 본문으로 쓴다.
+ */
+export function readAibFirst(json: unknown): AioFirstRead {
+  const done = (read: AioReadResult): AioFirstRead => ({ step: 'done', read })
+  if (!isObj(json) || !isObj(json.search_metadata)) return done({ status: 'failed', reason: 'shape', topKeys: isObj(json) ? topKeysOf(json) : [], searchId: null })
+  const topKeys = topKeysOf(json)
+  const searchId = searchIdOf(json)
+  if (json.search_metadata.status !== 'Success') return done({ status: 'failed', reason: 'not-success', topKeys, searchId })
+  const present = AIB_KEYS.filter((k) => json[k] !== undefined)
+  if (!present.some((k) => k !== 'media')) {
+    if (json.error === undefined) return done({ status: 'absent', noResults: false, topKeys, searchId })
+    return done(isStr(json.error) && NO_RESULTS.test(json.error) ? { status: 'absent', noResults: true, topKeys, searchId } : { status: 'failed', reason: 'upstream-error', topKeys, searchId })
+  }
+  const block: Record<string, unknown> = Object.fromEntries(present.map((k) => [k, json[k]]))
+  const overview = overviewOf(block)
+  if (!overview.text && isStr(json.markdown) && clean(json.markdown)) overview.text = json.markdown.trim()
+  if (hasContent(overview)) return done({ status: 'shown', kind: 'inline', overview, searchId })
+  return done({ status: 'unreadable', reason: json.error !== undefined ? 'overview-error' : 'overview-empty', topKeys, searchId, ...rawOf(block) })
+}
+
+/** 검색 면의 첫 검색 읽기. */
+export function readSurfaceFirst(sf: AioSurface, json: unknown): AioFirstRead {
+  return sf.id === 'naver' ? readAibFirst(json) : readAioFirst(json)
+}
+
 /** 저장용 본문 — 16,000자까지. */
 export function clipAioText(text: string): { text: string; truncated: boolean } {
   return text.length > AIO_TEXT_MAX ? { text: text.slice(0, AIO_TEXT_MAX), truncated: true } : { text, truncated: false }
@@ -707,10 +876,15 @@ type ParseError = { ok: false; error: string }
 
 /** 이 PC 설정(stateFilePath('google-aio-settings.json')) — 파일이 없으면(undefined) 기본(꺼짐). 모양이 틀리면 오류(켜짐으로 짐작하지 않는다). */
 export function parseAioSettings(raw: unknown): Parsed<{ settings: AioSettings }> | ParseError {
-  const base: AioSettings = { format: GOOGLE_AIO_SETTINGS_FORMAT, enabled: false, tenants: [...AIO_DEFAULT_TENANTS], locations: {} }
+  return parseSurfaceSettings(raw, GOOGLE_SURFACE)
+}
+
+/** 면의 이 PC 설정 읽기 — 형식 · 기본 시범 브랜드만 면마다 다르다. */
+export function parseSurfaceSettings(raw: unknown, sf: AioSurface): Parsed<{ settings: AioSettings }> | ParseError {
+  const base: AioSettings = { format: sf.settingsFormat, enabled: false, tenants: [...sf.defaultTenants], locations: {} }
   if (raw === undefined) return { ok: true, settings: base }
   if (!isObj(raw)) return { ok: false, error: '설정 파일이 객체가 아닙니다' }
-  if (raw.format !== undefined && raw.format !== GOOGLE_AIO_SETTINGS_FORMAT) return { ok: false, error: '설정 파일 형식이 다릅니다' }
+  if (raw.format !== undefined && raw.format !== sf.settingsFormat) return { ok: false, error: '설정 파일 형식이 다릅니다' }
   if (raw.enabled !== undefined && typeof raw.enabled !== 'boolean') return { ok: false, error: 'enabled는 참 · 거짓이어야 합니다' }
   let tenants = base.tenants
   if (raw.tenants !== undefined) {
@@ -725,7 +899,7 @@ export function parseAioSettings(raw: unknown): Parsed<{ settings: AioSettings }
       locations[k] = v
     }
   }
-  return { ok: true, settings: { format: GOOGLE_AIO_SETTINGS_FORMAT, enabled: raw.enabled === true, tenants, locations } }
+  return { ok: true, settings: { format: sf.settingsFormat, enabled: raw.enabled === true, tenants, locations } }
 }
 
 const isTime = (v: unknown): v is string => isStr(v) && !Number.isNaN(Date.parse(v))
@@ -762,7 +936,7 @@ function itemProblem(i: unknown): string | null {
 export function parseAioRun(raw: unknown): Parsed<{ run: AioRun }> | ParseError {
   const bad = (error: string): ParseError => ({ ok: false, error })
   if (!isObj(raw)) return bad('회차 파일이 객체가 아닙니다')
-  if (raw.format !== GOOGLE_AIO_FORMAT) return bad('회차 파일 형식이 다릅니다')
+  if (raw.format !== GOOGLE_AIO_FORMAT && raw.format !== NAVER_AIB_FORMAT) return bad('회차 파일 형식이 다릅니다')
   if (!isStr(raw.runId) || !AIO_RUN_ID.test(raw.runId)) return bad('회차 id가 올바르지 않습니다')
   if (!isStr(raw.tenantId) || !TENANT_ID.test(raw.tenantId)) return bad('브랜드 id가 올바르지 않습니다')
   if (!isTime(raw.startedAt) || (raw.finishedAt !== null && !isTime(raw.finishedAt))) return bad('시각이 올바르지 않습니다')

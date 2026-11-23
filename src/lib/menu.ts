@@ -79,6 +79,8 @@ export const MENU: MenuGroup[] = [
       { label: '측정 상태', to: '/measure-status', badge: 'measuring', icon: 'status', customerOnly: true },
       // 점수 밖 시범 — 구글 검색 AI 개요에 이 브랜드가 나오는지 SerpAPI로 따로 잰다(src/pages/GoogleAio.tsx). 시범 브랜드가 아니면 화면이 그렇게 알린다.
       { label: '구글 AI 개요(시범)', to: '/google-aio', icon: 'aio', customerOnly: true },
+      // 같은 화면의 네이버 면 — 네이버 검색 AI 브리핑에 이 브랜드가 나오는지(2026-11-23, 시범 브랜드 군산각).
+      { label: '네이버 AI 브리핑(시범)', to: '/naver-aib', icon: 'aio', customerOnly: true },
     ],
   },
   {

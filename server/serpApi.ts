@@ -24,21 +24,28 @@ import { queueTenantWrite, writeJsonAtomic } from './tenantWriteQueue.js';
  *   pending을 적고(앱이 죽어도 덜 세지 않게), 응답(성공 · 오류 · 시간 초과 모두) 뒤 pending만 지운다. 끊긴 프로세스의 pending은 다음에
  *   읽을 때 지운다(이미 sent에 들어 있다). 깨졌으면 부르지 않고 덮어쓰지 않는다. 모르는 칸(다른 기능 · 나중 판의 칸)은 버리지 않는다.
  *   이 장부는 이 PC 몫을 거는 보조다 — 다른 PC 사용은 계정 숫자(account.json)에만 보이고, 그래서 계정 바닥을 함께 본다.
- * - 몫(요금제 월 검색 수의 비율, 2026-11-10 사용자 결정): 계정 바닥 50%(남은 검색이 이 아래로 내려가지 않게 — 다른 프로젝트와 계정을
- *   나눠 쓴다) · 색인 20% · AI 개요 25% · 여유 5%. 호출마다 기능 몫 · 바닥 · 시간당 남은 수를 검사한다. 어림 남은 수 = 마지막 계정 값 −
+ * - 몫(요금제 월 검색 수의 비율, 2026-11-10 사용자 결정 · 11-23 네이버 몫 추가 · 바닥 조정): 계정 바닥 30%(남은 검색이 이 아래로 내려가지
+ *   않게 — 다른 프로젝트와 계정을 나눠 쓴다) · 색인 15% · AI 개요 35% · 네이버 AI 브리핑 15% · 여유 5%. 호출마다 기능 몫 · 바닥 · 시간당 남은 수를 검사한다. 어림 남은 수 = 마지막 계정 값 −
  *   그 뒤 이 프로세스가 보낸 수. 계정은 60초가 지났거나 10회 보낸 뒤 다시 읽는다(실패면 보내지 않음).
  * - 프로세스 전역 순차 줄: 한 번에 하나, 앞 요청이 끝나고 1초 뒤에 다음 요청. 시간 초과 30초 — 끊어도 SerpAPI 쪽에서는 과금됐을 수
  *   있으므로 다시 보내지 않는다(장부에는 1회로 센다).
  */
 
-export type SerpFeature = 'index' | 'aio';
-/** 장부 · 몫을 가진 기능 — 'index'는 색인 자동 확인(server/indexAuto.ts), 'aio'는 구글 AI 개요 시범(server/googleAio.ts)이 부른다. */
-export const SERP_FEATURES: readonly SerpFeature[] = ['index', 'aio'];
-export const FEATURE_LABEL: Record<SerpFeature, string> = { index: '색인 자동 확인', aio: '구글 AI 개요 시범' };
+export type SerpFeature = 'index' | 'aio' | 'naver';
+/**
+ * 장부 · 몫을 가진 기능 — 'index'는 색인 자동 확인(server/indexAuto.ts), 'aio'는 구글 AI 개요 시범, 'naver'는 네이버 AI 브리핑 시범(둘 다
+ * server/googleAio.ts — 검색 면만 다르다)이 부른다.
+ */
+export const SERP_FEATURES: readonly SerpFeature[] = ['index', 'aio', 'naver'];
+export const FEATURE_LABEL: Record<SerpFeature, string> = { index: '색인 자동 확인', aio: '구글 AI 개요 시범', naver: '네이버 AI 브리핑 시범' };
 
 export const SERPAPI_DEFAULT_BASE = 'https://serpapi.com';
-/** 요금제 월 검색 수(searches_per_month)에 대한 비율(%) — 바닥은 계정 전체, 기능 몫은 이 PC의 결제 주기 사용. 합 100. */
-export const SERPAPI_BUDGET_PCT = { floor: 50, index: 20, aio: 25, slack: 5 } as const;
+/**
+ * 요금제 월 검색 수(searches_per_month)에 대한 비율(%) — 바닥은 계정 전체, 기능 몫은 이 PC의 결제 주기 사용. 합 100. 2026-11-23 사용자 결정(D2):
+ * 바닥을 50%에서 30%로 낮춰 쓸 수 있는 몫 700회를 색인 15 · AI 개요 35(3개 브랜드 월 1회) · 네이버 AI 브리핑 15(군산각 2주 1회) · 여유 5로
+ * 나눴다(다른 PC · 프로젝트는 2026-12-08 주기에 약 130회를 썼다).
+ */
+export const SERPAPI_BUDGET_PCT = { floor: 30, index: 15, aio: 35, naver: 15, slack: 5 } as const;
 export const SERPAPI_USAGE_FORMAT = 'serpapi-usage/1';
 const USAGE_FILE = stateFilePath('serpapi-usage.json');
 const USAGE_LOCK = 'serpapi-usage/*';
@@ -329,12 +336,13 @@ export async function serpAccount(opts: { fresh?: boolean } = {}): Promise<SerpA
 // ── 몫 ────────────────────────────────────────────────────────────────────────
 
 /** 요금제 월 검색 수 → 결제 주기당 회수. 기능 몫은 내림, 바닥은 올림(어느 쪽이든 덜 쓰는 쪽). */
-export function serpQuota(searchesPerMonth: number): { floor: number; index: number; aio: number; slack: number } {
+export function serpQuota(searchesPerMonth: number): { floor: number; index: number; aio: number; naver: number; slack: number } {
   const share = (pct: number) => Math.floor((searchesPerMonth * pct) / 100);
   return {
     floor: Math.ceil((searchesPerMonth * SERPAPI_BUDGET_PCT.floor) / 100),
     index: share(SERPAPI_BUDGET_PCT.index),
     aio: share(SERPAPI_BUDGET_PCT.aio),
+    naver: share(SERPAPI_BUDGET_PCT.naver),
     slack: share(SERPAPI_BUDGET_PCT.slack),
   };
 }
@@ -728,7 +736,7 @@ async function assertRunLockHeld(feature: SerpFeature): Promise<void> {
 }
 
 /**
- * 앱 전체에서 SerpAPI를 쓰는 실행(색인 자동 확인 · 구글 AI 개요 시범)은 한 번에 하나 — 두 실행이 시간당 한도 · 몫을 나눠 셈하지 않게. 앱을
+ * 앱 전체에서 SerpAPI를 쓰는 실행(색인 자동 확인 · 구글 AI 개요 시범 · 네이버 AI 브리핑 시범)은 한 번에 하나 — 두 실행이 시간당 한도 · 몫을 나눠 셈하지 않게. 앱을
  * 두 번 켠 두 서버 사이에도 하나다(잠금 파일). 잡으면 놓는 함수를 돌려주고(두 번 불러도 한 번만 놓는다, 잃은 잠금은 남의 파일이라 지우지
  * 않는다), 이미 누가 잡았으면 null. 잠금 파일을 다루지 못하면 SerpApiError('ledger')(시작하지 않는다).
  */

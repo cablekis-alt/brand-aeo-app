@@ -1429,13 +1429,13 @@ const shownItems = (r: AioRun) => r.items.filter((i) => i.status === 'shown')
     { state: reset.run.state, stop: reset.run.stopReason, req: reset.requests.length },
   )
 
-  const floor = await core(['deferred', 'deferred', 'absent'], { account: { total_searches_left: 503 } })
+  const floor = await core(['deferred', 'deferred', 'absent'], { account: { total_searches_left: 303 } })
   ok(
     'C 멈춤 — 실행 중 계정 바닥에 닿으면 후속을 보내지 않고 그 질문은 「못 읽음」, 멈춘다(요청 · 장부 3)',
     floor.run.state === 'partial' && floor.run.stopReason === 'floor' && floor.requests.length === 3 && floor.sent === 3 && same(floor.run.items.map((i) => [i.status, i.reason ?? null]), [['shown', null], ['unreadable', 'follow-up-blocked']]),
     { stop: floor.run.stopReason, req: floor.requests.length, sent: floor.sent, items: floor.run.items.map((i) => [i.status, i.reason]) },
   )
-  const cap = await core(['absent', 'absent'], { ledger: { format: 'serpapi-usage/1', cycles: { [CYCLE]: { aio: { sent: 249 } } }, pending: [] } })
+  const cap = await core(['absent', 'absent'], { ledger: { format: 'serpapi-usage/1', cycles: { [CYCLE]: { aio: { sent: 349 } } }, pending: [] } })
   ok('C 멈춤 — 이 PC 시범 몫(이번 결제 주기)에 닿으면 다음 검색을 보내지 않는다(feature-cap)', cap.run.stopReason === 'feature-cap' && cap.requests.length === 1 && cap.sent === 1 && cap.run.items.length === 1, { stop: cap.run.stopReason, req: cap.requests.length })
   writeFileSync(LEDGER_C, JSON.stringify({ format: 'serpapi-usage/1', cycles: {}, pending: [] }))
   const hour = await core(['absent', 'absent'], { account: { this_hour_searches: 199 } })
@@ -1561,7 +1561,7 @@ const shownItems = (r: AioRun) => r.items.filter((i) => i.status === 'shown')
   const p0 = await aio.planGoogleAio(TENANT_C, {})
   ok(
     'C 계획 — 검색 0 · 질문 3 · 최대 검색 M = 2n + 2⌈0.1n⌉ · 몫은 계정 비율에서(이번 주기 aio 몫)',
-    typeof p0.planId === 'string' && p0.questions === 3 && p0.maxSearches === aioMaxSearches(3) && p0.quota?.cap === 250 && p0.quota.floor === 500 && p0.blocked === null && searchesSeen().length === before,
+    typeof p0.planId === 'string' && p0.questions === 3 && p0.maxSearches === aioMaxSearches(3) && p0.quota?.cap === 350 && p0.quota.floor === 300 && p0.blocked === null && searchesSeen().length === before,
     p0,
   )
   const lockFile = path.join(dirC, 'serpapi-run.lock')
@@ -1582,7 +1582,7 @@ const shownItems = (r: AioRun) => r.items.filter((i) => i.status === 'shown')
   writeJson(BANK_C, bankOf('v1', C_QS))
   ok('C 다시 보기 — 계획 뒤 질문지가 바뀌면(질문 지문) 실행 409 plan-changed(검색 0 · 잠금 놓음)', r2?.status === 409 && r2.code === 'plan-changed' && searchesSeen().length === before && released(), r2)
   const p3 = await aio.planGoogleAio(TENANT_C, {})
-  accountBody = account({ total_searches_left: 505 })
+  accountBody = account({ total_searches_left: 305 })
   const r3 = await errOf(aio.startGoogleAio(TENANT_C, { planId: p3.planId }))
   accountBody = account()
   ok('C 다시 보기 — 계획 뒤 계정 남은 수가 줄어 M에 못 미치면 실행 409 limit(검색 0 · 잠금 놓음 · 회차를 줄이지 않음)', r3?.status === 409 && r3.code === 'limit' && searchesSeen().length === before && released(), r3)
@@ -2101,7 +2101,7 @@ try {
     pNb.status === 200 && pNb.body.planId === null && pNb.body.blocked?.kind === 'bank' && /측정을 한 번 한 뒤 재세요/.test(pNb.body.blocked.message) && !existsSync(dataB('vaio-nobank', 'question-bank')),
     pNb.body,
   )
-  accountBody = account({ total_searches_left: 505 })
+  accountBody = account({ total_searches_left: 305 })
   const pLow = await plan('vaio-a')
   accountBody = account()
   ok(
@@ -2117,8 +2117,8 @@ try {
   const sentBefore = ledgerSent(LEDGER_B)
   const p1 = await plan('vaio-a')
   ok(
-    'B 계획 — 검색 0 · 점수에 세는 이름 없는 질문만(브랜드 · 실증 질문 빼고 5) · M 12 · 판정 최대 5 · 몫(aio 250 · 바닥 500)은 계정에서 · 확인창 재료',
-    p1.status === 200 && typeof p1.body.planId === 'string' && p1.body.questions === 5 && p1.body.maxSearches === 12 && p1.body.maxJudgeCalls === 5 && p1.body.quota?.cap === 250 && p1.body.quota.floor === 500 && p1.body.quota.hourLeft === 200 && p1.body.judge.ready === true && p1.body.lastRunAt === null && p1.body.expectedMinutes.length === 2 && searchesSeen().length === before,
+    'B 계획 — 검색 0 · 점수에 세는 이름 없는 질문만(브랜드 · 실증 질문 빼고 5) · M 12 · 판정 최대 5 · 몫(aio 350 · 바닥 300)은 계정에서 · 확인창 재료',
+    p1.status === 200 && typeof p1.body.planId === 'string' && p1.body.questions === 5 && p1.body.maxSearches === 12 && p1.body.maxJudgeCalls === 5 && p1.body.quota?.cap === 350 && p1.body.quota.floor === 300 && p1.body.quota.hourLeft === 200 && p1.body.judge.ready === true && p1.body.lastRunAt === null && p1.body.expectedMinutes.length === 2 && searchesSeen().length === before,
     p1.body,
   )
   ok('B 계획 — 요금제 「Starter Plan」이면 검색당 환산이 나온다($25 / 월 1,000회)', near(p1.body.perSearchUsd ?? NaN, 0.025), p1.body.perSearchUsd)

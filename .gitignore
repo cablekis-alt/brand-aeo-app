@@ -50,4 +50,5 @@ server/serpapi-usage.json
 server/serpapi-run.lock
 server/index-auto.json
 server/google-aio-settings.json
+server/naver-aib-settings.json
 .claude/launch.json

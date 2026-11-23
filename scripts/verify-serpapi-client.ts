@@ -22,7 +22,7 @@
  * - 장부(serpapi-usage.json): 결제 주기(plan_renewal_date)마다 기능별로 센다. 보내기 전에 sent+1 · pending을 적고, 응답(성공 · 오류 · 시간
  *   초과) 뒤 pending만 지운다. 끊긴 프로세스의 pending은 다음에 지운다(sent는 그대로). 깨졌으면 부르지 않고 덮어쓰지 않는다. 모르는 칸은
  *   버리지 않는다. 최근 6주기만 둔다.
- * - 몫(요금제 월 검색 수의 비율): 계정 바닥 50% · 색인 20% · AI 개요 25% · 여유 5%. 호출마다 기능 몫 · 바닥 · 시간당 남은 수를 검사하고,
+ * - 몫(요금제 월 검색 수의 비율): 계정 바닥 30% · 색인 15% · AI 개요 35% · 네이버 AI 브리핑 15% · 여유 5%. 호출마다 기능 몫 · 바닥 · 시간당 남은 수를 검사하고,
  *   10회마다 계정을 다시 읽는다(실패면 멈춤).
  * - 순차 줄(동시 1 · 앞 요청이 끝난 뒤 1초), 시간 초과(30초 — 시험은 SERPAPI_TIMEOUT_MS로 짧게)는 다시 보내지 않음, 오류 분류(401 · 403 ·
  *   429 두 가지 · 400 · 5xx · JSON 아님).
@@ -310,13 +310,13 @@ try {
   const q1 = serp.serpQuota(1000)
   const q5 = serp.serpQuota(5000)
   ok(
-    '몫 — 바닥 50% · 색인 20% · AI 개요 25% · 여유 5%(Starter 1,000 → 500 · 200 · 250 · 50, Developer 5,000 → 2,500 · 1,000 · 1,250 · 250)',
-    JSON.stringify(serp.SERPAPI_BUDGET_PCT) === JSON.stringify({ floor: 50, index: 20, aio: 25, slack: 5 }) &&
-      JSON.stringify(q1) === JSON.stringify({ floor: 500, index: 200, aio: 250, slack: 50 }) &&
-      JSON.stringify(q5) === JSON.stringify({ floor: 2500, index: 1000, aio: 1250, slack: 250 }),
+    '몫 — 바닥 30% · 색인 15% · AI 개요 35% · 네이버 15% · 여유 5%(Starter 1,000 → 300 · 150 · 350 · 150 · 50, Developer 5,000 → 1,500 · 750 · 1,750 · 750 · 250)',
+    JSON.stringify(serp.SERPAPI_BUDGET_PCT) === JSON.stringify({ floor: 30, index: 15, aio: 35, naver: 15, slack: 5 }) &&
+      JSON.stringify(q1) === JSON.stringify({ floor: 300, index: 150, aio: 350, naver: 150, slack: 50 }) &&
+      JSON.stringify(q5) === JSON.stringify({ floor: 1500, index: 750, aio: 1750, naver: 750, slack: 250 }),
     { q1, q5 },
   )
-  ok('기능 — index(색인 자동 확인) · aio(구글 AI 개요 시범)', JSON.stringify(serp.SERP_FEATURES) === JSON.stringify(['index', 'aio']))
+  ok('기능 — index(색인 자동 확인) · aio(구글 AI 개요 시범) · naver(네이버 AI 브리핑 시범)', JSON.stringify(serp.SERP_FEATURES) === JSON.stringify(['index', 'aio', 'naver']))
 
   // ── 2. 막힌 쪽 주소 · 키 없음 — 요청 0 ─────────────────────────────────────
   for (const bad of ['', 'http://localhost:4196', 'https://example.com', 'https://serpapi.com', 'http://127.0.0.1:4196/x']) {
@@ -403,9 +403,9 @@ try {
   ok(
     '계정 보기 — 몫 · 이번 주기 기능별 사용(장부 없음 = 0) · 지금 보낼 수 있는 수',
     view.configError === null && view.accountError === null && view.usageError === null &&
-      JSON.stringify(view.budget) === JSON.stringify({ pct: { floor: 50, index: 20, aio: 25, slack: 5 }, searches: { floor: 500, index: 200, aio: 250, slack: 50 } }) &&
-      view.usage?.cycle === '2026-12-08' && view.usage.features.index.sent === 0 && view.usage.features.index.cap === 200 &&
-      view.usage.features.index.allowed === 200 && view.usage.features.aio.cap === 250 && view.usage.aboveFloor === 490 && view.usage.hourLeft === 200,
+      JSON.stringify(view.budget) === JSON.stringify({ pct: { floor: 30, index: 15, aio: 35, naver: 15, slack: 5 }, searches: { floor: 300, index: 150, aio: 350, naver: 150, slack: 50 } }) &&
+      view.usage?.cycle === '2026-12-08' && view.usage.features.index.sent === 0 && view.usage.features.index.cap === 150 &&
+      view.usage.features.index.allowed === 150 && view.usage.features.aio.cap === 350 && view.usage.features.naver.cap === 150 && view.usage.aboveFloor === 690 && view.usage.hourLeft === 200,
     view,
   )
   ok('계정 — 처음 한 번 부르고 장부 파일은 만들지 않는다(읽기만)', accountCalls() === 1 && searches().length === 0 && !existsSync(LEDGER))
@@ -490,13 +490,13 @@ try {
   ok('3xx — 계정 응답의 리디렉트도 따라가지 않고 account(닿는 곳이 받은 요청 0)', redirAccount?.kind === 'account' && landed() === 0, redirAccount)
 
   // ── 8. 몫 — 바닥 · 시간당 · 기능 몫, 결제 주기 ──────────────────────────────
-  accountBody = account({ total_searches_left: 501 })
+  accountBody = account({ total_searches_left: 301 })
   await serp.serpAccount({ fresh: true })
   const sentBefore = readLedger().cycles['2026-12-08']?.index?.sent ?? -1
   await okSearch('floor1')
   const floorErr = await caught(okSearch('floor2'))
   ok(
-    '바닥 — 남은 501회면 1회 보내고(500 남김), 다음은 SerpApiBudgetError floor · 보내지 않음',
+    '바닥 — 남은 301회면 1회 보내고(300 남김), 다음은 SerpApiBudgetError floor · 보내지 않음',
     floorErr?.name === 'SerpApiBudgetError' && floorErr.kind === 'floor' && !searches().some((s) => s.q === 'floor2') && readLedger().cycles['2026-12-08']?.index?.sent === sentBefore + 1,
     floorErr,
   )
@@ -737,8 +737,8 @@ try {
       '서버 — GET /api/serpapi/account: 허용 칸 · 몫 · 이 PC 장부(기능별)',
       r.status === 200 && v.configured === true && v.configError === null && v.account?.planName === 'Starter' &&
         JSON.stringify(Object.keys(v.account ?? {}).sort()) === JSON.stringify(ACCOUNT_KEYS) &&
-        v.usage?.cycle === '2026-12-08' && v.usage.features.index.sent === 7 && v.usage.features.index.cap === 200 && v.usage.features.index.left === 193 &&
-        v.usage.features.aio.sent === 3 && v.usage.features.aio.left === 247 && v.budget.searches?.floor === 500,
+        v.usage?.cycle === '2026-12-08' && v.usage.features.index.sent === 7 && v.usage.features.index.cap === 150 && v.usage.features.index.left === 143 &&
+        v.usage.features.aio.sent === 3 && v.usage.features.aio.left === 347 && v.budget.searches?.floor === 300,
       r,
     )
     ok('서버 — 계정 보기는 검색하지 않는다(계정만 1번)', searches().length === searchesBeforeServer && accountCalls() === accountBeforeServer + 1)
