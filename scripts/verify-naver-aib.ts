@@ -264,7 +264,7 @@ const search: AioSearchFn = async (params) => {
 // ══ C. 몫 · 연결 ═════════════════════════════════════════════════════════════════
 
 ok('C 기능 — naver가 SerpAPI 기능 목록 · 이름에 있다', serp.SERP_FEATURES.includes('naver') && serp.FEATURE_LABEL.naver === '네이버 AI 브리핑 시범')
-ok('C 몫 — 월 1,000회면 바닥 300 · 네이버 150 · AI 개요 350 · 색인 150 · 여유 50(합 100%)', same(serp.serpQuota(1000), { floor: 300, index: 150, aio: 350, naver: 150, slack: 50 }) && Object.values(serp.SERPAPI_BUDGET_PCT).reduce((a, b) => a + b, 0) === 100)
+ok('C 몫 — 월 1,000회면 바닥 300 · 네이버 150 · AI 개요 400 · 색인 100 · 여유 50(합 100%)', same(serp.serpQuota(1000), { floor: 300, index: 100, aio: 400, naver: 150, slack: 50 }) && Object.values(serp.SERPAPI_BUDGET_PCT).reduce((a, b) => a + b, 0) === 100)
 
 // ══ D. 화면 연결(정적) ════════════════════════════════════════════════════════════
 

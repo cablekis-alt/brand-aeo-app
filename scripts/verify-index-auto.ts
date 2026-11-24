@@ -464,7 +464,7 @@ let accountBody: Record<string, unknown> = account()
 let accountMode: 'ok' | 'fail' = 'ok'
 let stopMode = '401'
 let hangMode = true
-/** 이 수만큼 검색을 받으면 계정 남은 수를 바닥(500)으로 낮춘다(바닥 시험). */
+/** 이 수만큼 검색을 받으면 계정 남은 수를 바닥(300)으로 낮춘다(바닥 시험). */
 let floorAfter = Infinity
 const searches = () => seen.filter((s) => s.path === '/search.json')
 const EMPTY = { search_metadata: { status: 'Success' }, error: GOOGLE_NO_RESULTS }
@@ -489,7 +489,7 @@ const mock = http.createServer((req, res2) => {
     return send(200, accountBody)
   }
   if (url.pathname !== '/search.json') return send(404, { error: 'not found' })
-  if (searches().length >= floorAfter) accountBody = account({ total_searches_left: 500 })
+  if (searches().length >= floorAfter) accountBody = account({ total_searches_left: 300 })
   switch (s.first) {
     case 'found.tistory.com/2':
       return send(200, res(['https://found.tistory.com/m/2', 'https://found.tistory.com/21']))
@@ -857,8 +857,8 @@ try {
     { status: p1.status, keys: p1Keys, body: { ...p1.body, targets: undefined } },
   )
   ok(
-    '계획 — 이번 결제 주기 색인 몫 · 계정 남은 검색을 함께 보인다(Starter 1,000 → 색인 200 · 바닥 500)',
-    p1.body.quota?.cycle === '2026-12-08' && p1.body.quota.cap === 200 && p1.body.quota.used === 0 && p1.body.quota.floor === 500 && p1.body.quota.accountLeft === 990 && p1.body.quota.planName === 'Starter',
+    '계획 — 이번 결제 주기 색인 몫 · 계정 남은 검색을 함께 보인다(Starter 1,000 → 색인 100 · 바닥 300)',
+    p1.body.quota?.cycle === '2026-12-08' && p1.body.quota.cap === 100 && p1.body.quota.used === 0 && p1.body.quota.floor === 300 && p1.body.quota.accountLeft === 990 && p1.body.quota.planName === 'Starter',
     p1.body.quota,
   )
   ok('계획 — 같은 주소 두 브랜드는 설정 순 첫 브랜드 줄 · 앱 글 + 앱 밖 글은 앱 글 줄에 적는다', p1.body.targets.find((t) => t.key === tk(URLS.shared))?.tenantId === 'vauto-a' && p1.body.targets.find((t) => t.key === tk(URLS.mix))?.tenantId === 'vauto-c')
@@ -1052,20 +1052,20 @@ try {
   // ── C6. 몫 · 바닥 · 계정 ──
   withLedger([post('p-vm01', 'https://budget.tistory.com/1', D(14), '가상 몫 글'), post('p-vm02', 'https://budget.tistory.com/2', D(14), '가상 몫 글 2')])
   const ledgerNow = readJson<{ format: string; cycles: Record<string, Record<string, unknown>>; pending: unknown[] }>(LEDGER)
-  writeFileSync(LEDGER, JSON.stringify({ ...ledgerNow, cycles: { ...ledgerNow.cycles, '2026-12-08': { index: { sent: 200 }, aio: { sent: 7 } } } }))
+  writeFileSync(LEDGER, JSON.stringify({ ...ledgerNow, cycles: { ...ledgerNow.cycles, '2026-12-08': { index: { sent: 100 }, aio: { sent: 7 } } } }))
   const before7 = searches().length
   const capPlan = await makePlan()
-  ok('몫 — 이번 주기 색인 200회를 다 쓰면 계획 0 · 계획 id 없음 · 까닭(feature-cap)', capPlan.body.searches === 0 && capPlan.body.planId === null && capPlan.body.limitedBy === 'feature-cap' && capPlan.body.candidates === 2, { ...capPlan.body, targets: undefined })
-  writeFileSync(LEDGER, JSON.stringify({ ...ledgerNow, cycles: { ...ledgerNow.cycles, '2026-12-08': { index: { sent: 199 }, aio: { sent: 7 } } } }))
+  ok('몫 — 이번 주기 색인 100회를 다 쓰면 계획 0 · 계획 id 없음 · 까닭(feature-cap)', capPlan.body.searches === 0 && capPlan.body.planId === null && capPlan.body.limitedBy === 'feature-cap' && capPlan.body.candidates === 2, { ...capPlan.body, targets: undefined })
+  writeFileSync(LEDGER, JSON.stringify({ ...ledgerNow, cycles: { ...ledgerNow.cycles, '2026-12-08': { index: { sent: 99 }, aio: { sent: 7 } } } }))
   const onePlan = await makePlan()
-  ok('몫 — 1회 남으면 1편만(AI 개요 사용은 색인 몫에 안 섞임)', onePlan.body.searches === 1 && onePlan.body.limitedBy === 'feature-cap' && onePlan.body.quota?.used === 199)
+  ok('몫 — 1회 남으면 1편만(AI 개요 사용은 색인 몫에 안 섞임)', onePlan.body.searches === 1 && onePlan.body.limitedBy === 'feature-cap' && onePlan.body.quota?.used === 99)
   await runPlan(onePlan.body.planId)
   await waitRun()
-  ok('몫 — 그 1회만 보냈다', searches().length === before7 + 1 && sentInLedger() === 200)
+  ok('몫 — 그 1회만 보냈다', searches().length === before7 + 1 && sentInLedger() === 100)
   writeFileSync(LEDGER, JSON.stringify({ ...ledgerNow, cycles: { ...ledgerNow.cycles, '2026-12-08': { index: { sent: 20 } } } }))
-  accountBody = account({ total_searches_left: 500 })
+  accountBody = account({ total_searches_left: 300 })
   const floorPlan = await makePlan()
-  ok('바닥 — 계정 남은 검색이 바닥(500)이면 계획 0 · 까닭 floor', floorPlan.body.searches === 0 && floorPlan.body.limitedBy === 'floor' && floorPlan.body.planId === null, { ...floorPlan.body, targets: undefined })
+  ok('바닥 — 계정 남은 검색이 바닥(300)이면 계획 0 · 까닭 floor', floorPlan.body.searches === 0 && floorPlan.body.limitedBy === 'floor' && floorPlan.body.planId === null, { ...floorPlan.body, targets: undefined })
   accountBody = account({ account_status: 'Suspended' })
   const suspended = await makePlan()
   ok('계정 — Active가 아니면 계획 0 · 까닭을 알린다', suspended.body.searches === 0 && suspended.body.planId === null && /활성/.test(suspended.body.blocked ?? ''), suspended.body.blocked)
