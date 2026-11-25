@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { getIsoWeekString } from './dateUtil.js';
+import { hostOnlyOwned } from '../src/lib/ownedEntry.js';
 
 /**
  * Site AEO Score의 주차별 기록 — data/<tenant>/site-scores.json.
@@ -92,7 +93,8 @@ export function urlBelongsToTenant(
   };
   const host = hostOf(url);
   if (!host) return false;
-  const owned = [...(tenant.ownedDomains ?? []), tenant.brandPageUrl ?? '']
+  // 블로그 아이디까지 적은 자사 주소(blog.naver.com/아이디)는 호스트로 맞추면 남의 블로그까지 들어오므로 뺀다.
+  const owned = [...hostOnlyOwned(tenant.ownedDomains ?? []), tenant.brandPageUrl ?? '']
     .map(hostOf)
     .filter((h): h is string => Boolean(h));
   return owned.some((d) => host === d || host.endsWith(`.${d}`));

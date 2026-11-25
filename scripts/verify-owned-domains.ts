@@ -257,6 +257,57 @@ try {
   await editor.saveOwnedDomains('or', { extra: ['another.example'], applyPast: true }, pr2.key, store)
   ok('빼기와 더하기를 함께 하면 회차 지문은 그대로(끊김 표시 유지)', readJson<{ contextFingerprint: string }>('data/or/2026-W40/runs/r1/run.json').contextFingerprint === fpOr2)
 
+  // ── 네이버 블로그는 아이디까지(2026-11-25 군산각 blog.naver.com/gunsangak) ──
+  {
+    const entry = await import('../src/lib/ownedEntry')
+    const { ownedUrl } = await import('../src/lib/publishStatus')
+    const { isOwnedPhotoHost } = await import('../src/lib/articlePhotos')
+    ok('줄 표기: 글 주소 · 모바일 · blogId 질의 → blog.naver.com/아이디',
+      entry.ownedEntryKey('https://m.blog.naver.com/OkBlog/22') === 'blog.naver.com/okblog' &&
+      entry.ownedEntryKey('blog.naver.com/PostView.naver?blogId=okblog&logNo=1') === 'blog.naver.com/okblog' &&
+      entry.ownedEntryKey('https://www.Side.example/x') === 'side.example')
+    const own = ['oc.example', 'blog.naver.com/okblog']
+    ok('주소 맞춤: 같은 아이디 글 · 모바일 · PostView는 자사',
+      entry.urlOwnedBy('https://blog.naver.com/okblog/223', own) && entry.urlOwnedBy('https://m.blog.naver.com/okblog/1', own) &&
+      entry.urlOwnedBy('https://blog.naver.com/PostView.naver?blogId=okblog&logNo=9', own))
+    ok('주소 맞춤: 다른 아이디 블로그 · 블로그 첫 화면 아님 · 다른 네이버 서비스는 자사 아님',
+      !entry.urlOwnedBy('https://blog.naver.com/other/223', own) && !entry.urlOwnedBy('https://blog.naver.com/', own) &&
+      !entry.urlOwnedBy('https://cafe.naver.com/okblog', own))
+    ok('아이디 없는 blog.naver.com 줄은 어떤 주소도 자사로 보지 않는다', !entry.urlOwnedBy('https://blog.naver.com/okblog/1', ['blog.naver.com']))
+    ok('발행 현황 · 구글 AI 개요 맞춤(ownedUrl)도 아이디로', ownedUrl('https://blog.naver.com/okblog/5', own) && !ownedUrl('https://blog.naver.com/x/5', own))
+    ok('사진 출처 · 호스트 맞춤은 블로그 줄을 뺀다', !isOwnedPhotoHost('https://blog.naver.com/a.png', own) && entry.hostOnlyOwned(own).join() === 'oc.example')
+    const m = entry.ownedUrlMatcher(['big.example'], ['shop.big.example', 'other.example'])
+    ok('판정 고정: 남이 가진 더 구체적인 하위 주소는 자사로 고정하지 않는다',
+      m('https://big.example/a') && m('https://m.big.example/a') && !m('https://shop.big.example/a') && !m('https://other.example/'))
+
+    // 편집기: 거절 · 받기 · 지난 기록은 그 아이디 글만 자사로
+    const rejectOc = async (raw: string, want: string) =>
+      (await editor.planOwnedDomains('oc', { extra: [raw], applyPast: false }, store)).errors.some((e) => e.includes(want))
+    ok('거절: 아이디 없는 blog.naver.com', await rejectOc('https://blog.naver.com/', '아이디까지'))
+    writeJson('data/oc/question-bank/v1.json', { version: 'v1', generatedAt: '2026-10-01', questions })
+    const ocAnalyses = [
+      analysis('q1', false, [cite('https://blog.naver.com/okblog/1', 'third-party-ugc'), cite('https://blog.naver.com/other/2', 'third-party-ugc')]),
+      analysis('q2', false, [cite('https://m.blog.naver.com/PostView.naver?blogId=okblog&logNo=3', 'unknown')]),
+      analysis('q3', false, [cite('https://blog.naver.com/okblog/4', 'brand-owned')]),
+      analysis('q4', true, [cite('https://oc.example/', 'brand-owned')]),
+    ]
+    const cOc = { ...cardFor('2026-W40', ocAnalyses, [], 'oc', '다른 고객'), industry: '민박' }
+    writeJson('data/oc/2026-W40/question-analyses.json', ocAnalyses)
+    writeJson('data/oc/2026-W40/scorecard.json', cOc)
+    writeJson('data/oc/scorecard-history.json', [cOc])
+    const inputOc = { extra: ['https://blog.naver.com/okblog/1'], applyPast: true }
+    const pOc = await editor.planOwnedDomains('oc', inputOc, store)
+    ok('받기: 글 주소를 넣어도 blog.naver.com/okblog로', pOc.errors.length === 0 && pOc.extra.join() === 'blog.naver.com/okblog')
+    ok('지난 기록 미리보기: 그 아이디 글 2건만 자사로(이미 자사 1건 · 남의 블로그 제외)', pOc.past?.promoted === 2)
+    await editor.saveOwnedDomains('oc', inputOc, pOc.key, store)
+    const afterOc = readJson<Analysis[]>('data/oc/2026-W40/question-analyses.json')
+    ok('저장 뒤: okblog 글은 자사, other 블로그는 그대로',
+      afterOc[0]!.citations[0]!.ownerType === 'brand-owned' && afterOc[0]!.citations[1]!.ownerType === 'third-party-ugc' &&
+      afterOc[1]!.citations[0]!.ownerType === 'brand-owned')
+    ok('저장 뒤: 더한 주소 파일에 아이디까지', (await editor.describeOwnedDomains('oc')).extra.join() === 'blog.naver.com/okblog')
+    ok('런타임 자사 주소에도 아이디까지', ((await reg.loadRuntimeTenants()).find((t) => t.tenantId === 'oc')?.ownedDomains ?? []).includes('blog.naver.com/okblog'))
+  }
+
   // 더한 주소가 나중에 설정에도 들어간 경우 — 고정 주소로 보이고, 뺄 수 있는 목록에는 없다.
   writeJson('data/oc/owned-domains.json', { extra: ['oc.example', 'oc-old.example'], updatedAt: '2026-10-27' })
   const oc = await editor.describeOwnedDomains('oc')

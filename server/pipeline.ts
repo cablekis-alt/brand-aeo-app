@@ -19,6 +19,7 @@ import {
 import type { Engine } from '../src/prompts/types.js';
 import { comparableWith } from '../src/lib/comparability.js';
 import { withoutProbes } from '../src/lib/questionScope.js';
+import { ownedUrlMatcher } from '../src/lib/ownedEntry.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { collectLimit, collectRpm, mapWithConcurrency } from './concurrency.js';
 import { thoughtTokensOf } from './usageStats.js';
@@ -502,6 +503,7 @@ async function analyzeRawCall(
   tenant: TenantConfig,
   call: RawCallRecord,
   rankingEntities: string[],
+  isOwnedUrl: (url: string) => boolean,
 ): Promise<QuestionRepeatAnalysis> {
   const judge = getJudgeClient();
   const brand = toBrandContext(tenant);
@@ -576,6 +578,15 @@ async function analyzeRawCall(
   const totalMentions = targetCount + competitorTotal;
 
   const brandRankEntry = rank?.ranking.find((r) => r.entity === tenant.brandName) ?? null;
+  // 자사 주소 목록에 드는 주소는 판정 모델 답과 관계없이 자사다 — 같은 주소가 회차 안에서 자사 · 「알 수 없음」으로 갈리던 것을 막는다
+  // (2026-11-25 스테이,머뭄 stay-web-mauve.vercel.app 4 · 9). 블로그 줄(blog.naver.com/아이디)은 그 아이디 글만(ownedEntry.ts).
+  const citations = (citation?.citations ?? []).map((c) => ({
+    raw: c.raw,
+    // 판정 모델이 적은 domain은 같은 URL도 호스트·상위 도메인으로 오락가락한다 — URL에서 뽑는다.
+    domain: urlHost(c.raw) ?? c.domain,
+    ownerType: isOwnedUrl(c.raw) ? ('brand-owned' as const) : c.ownerType,
+    supportsBrandMention: c.supportsBrandMention,
+  }));
 
   return {
     questionId: call.questionId,
@@ -585,19 +596,13 @@ async function analyzeRawCall(
     mentionSentences: (mention?.targetBrand.mentions ?? []).map((m) => ({ sentence: m.sentence, sentiment: m.sentiment })),
     competitorMentions,
     shareOfMention: totalMentions > 0 ? targetCount / totalMentions : 0,
-    citations: (citation?.citations ?? []).map((c) => ({
-      raw: c.raw,
-      // 판정 모델이 적은 domain은 같은 URL도 호스트·상위 도메인으로 오락가락한다 — URL에서 뽑는다.
-      domain: urlHost(c.raw) ?? c.domain,
-      ownerType: c.ownerType,
-      supportsBrandMention: c.supportsBrandMention,
-    })),
+    citations,
     topRecommendation: rank?.topRecommendation ?? null,
     brandRank: brandRankEntry?.rank ?? null,
     factualityClaims,
     factualitySupported: factualityClaims.filter((c) => c.verdict === 'supported').length,
     factualityContradicted: factualityClaims.filter((c) => c.verdict === 'contradicted').length,
-    brandOwnedCitation: citation?.citations.some((c) => c.ownerType === 'brand-owned') ?? false,
+    brandOwnedCitation: citations.some((c) => c.ownerType === 'brand-owned'),
     clarifying: isClarifyingResponse(call.rawText),
     timing: {
       startedAt,
@@ -838,13 +843,22 @@ export async function runWeeklyPipeline(
   const enginesUsed = [...new Set(rawCalls.map((c) => c.engine))];
 
   // 추천 순위는 코호트 전원이 같은 병원 목록으로 매긴다(server/cohortEntities.ts).
-  const rankingEntities = cohortRankingEntities(tenant, await loadRuntimeTenants());
+  const runtimeTenants = await loadRuntimeTenants();
+  const rankingEntities = cohortRankingEntities(tenant, runtimeTenants);
+  // 자사 주소 고정 — 같은 홈페이지를 쓰는 범위 변형은 같은 곳이라 빼지 않고, 다른 브랜드 · 경쟁사의 더 구체적인 주소만 뺀다.
+  const primary = (tenant.ownedDomains ?? [])[0];
+  const isOwnedUrl = ownedUrlMatcher(tenant.ownedDomains ?? [], [
+    ...runtimeTenants
+      .filter((t) => t.tenantId !== tenant.tenantId && !(primary && (t.ownedDomains ?? [])[0] === primary))
+      .flatMap((t) => t.ownedDomains ?? []),
+    ...(tenant.competitors ?? []).flatMap((c) => c.domains ?? []),
+  ]);
   let analyzed = 0;
   updateActiveMeasure(tenant.tenantId, { stage: '분석', done: 0, total: rawCalls.length });
   // 결과는 원래 자리에 되돌려 저장 순서(question-analyses.json)를 지금과 같게 둔다 — 건끼리 의존하지 않는다(analyzeRawCall).
   const order = analysisOrder(rawCalls);
   const judged = await mapWithConcurrency(order, ANALYSIS_CONCURRENCY, async (index) => {
-    const out = await analyzeRawCall(tenant, rawCalls[index], rankingEntities);
+    const out = await analyzeRawCall(tenant, rawCalls[index], rankingEntities, isOwnedUrl);
     updateActiveMeasure(tenant.tenantId, { done: ++analyzed });
     return out;
   });

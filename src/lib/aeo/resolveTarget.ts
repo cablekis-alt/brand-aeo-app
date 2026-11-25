@@ -1,5 +1,6 @@
 import type { TenantSummary } from '../api'
 import { hostKey, sharesSite } from '../brandVariant'
+import { hostOnlyOwned } from '../ownedEntry'
 
 /**
  * Site AEO 진단 대상 결정 — 입력이 URL이면 그대로, 상호면 도메인을 찾는다.
@@ -123,7 +124,8 @@ export function findTenantByDomain(url: string, tenants: TenantSummary[], prefer
   }
   let best: { tenant: TenantSummary; length: number } | null = null
   for (const t of preferred ? [preferred, ...tenants] : tenants) {
-    for (const raw of t.ownedDomains ?? []) {
+    // 블로그 아이디까지 적은 자사 주소(blog.naver.com/아이디)는 호스트로 맞추면 남의 블로그도 이 브랜드가 된다 — 뺀다.
+    for (const raw of hostOnlyOwned(t.ownedDomains ?? [])) {
       const d = hostKey(raw)
       if (!d || (host !== d && !host.endsWith(`.${d}`))) continue
       // 길이가 같으면 먼저 본 브랜드(고른 브랜드 → 목록 순서)가 남는다.

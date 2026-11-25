@@ -16,6 +16,7 @@ import { writeJsonAtomic } from './tenantWriteQueue.js';
 import { configuredOwnedDomains, loadRuntimeTenants } from './tenantRegistry.js';
 import { hostKey, ownedHostKey } from '../src/lib/brandVariant.js';
 import { isSharedPlatformHost } from '../src/lib/sharedHosts.js';
+import { isBlogEntry, isBlogPathHost, ownedEntryKey, urlMatchesOwnedEntry } from '../src/lib/ownedEntry.js';
 import { isMultiTenantRoot, isPublicSuffix } from '../src/lib/siteGroup.js';
 import type { WeeklyScorecard } from '../src/prompts/b8-report.js';
 import type { QuestionBank, ResultStore, RunMeta } from './store.js';
@@ -35,6 +36,9 @@ import type { QuestionRepeatAnalysis, TenantConfig } from './types.js';
  *   - 회차의 판정 맥락 지문은 지금 설정의 옛 지문과 같은 회차만 새 지문으로 — 다음 측정이 「판정 맥락 바뀜」으로 끊기지 않게.
  *   - 점수가 바뀐 주는 코호트 순위를 다시 센다(경쟁사 카드도 바뀐다).
  * 빼기는 다음 측정부터다 — 지난 기록의 원래 성격을 모르므로 되돌리지 않는다.
+ *
+ * 네이버 블로그는 「blog.naver.com/아이디」로 받는다(src/lib/ownedEntry.ts) — 호스트만 받으면 남의 블로그까지 자사가 된다. 지난 기록도
+ * 그 아이디의 글 주소만 자사로 바꾼다(2026-11-25 군산각 blog.naver.com/gunsangak).
  */
 
 export interface OwnedDomainsState {
@@ -114,7 +118,7 @@ async function loadContext(tenantId: string): Promise<Context> {
   // 고정 주소는 설정에서 읽는다 — 런타임 목록에서 더한 주소를 빼면, 같은 주소가 나중에 설정에도 들어간 경우 그 주소를 뺄 수 있는
   // 더한 주소로 잘못 보여 준다(빼도 설정에 남아 바뀌지 않는다).
   const configured = await configuredOwnedDomains(tenantId);
-  const fixed = [...new Set(configured.map(hostKey).filter(Boolean))];
+  const fixed = [...new Set(configured.map(ownedEntryKey).filter(Boolean))];
   const extra = ((await readExtraOwnedDomains(tenantId)) ?? []).filter((d) => !fixed.includes(d));
   const primary = fixed[0] ?? null;
   let reason: string | null = null;
@@ -144,7 +148,8 @@ export function normalizeOwnedDomainsInput(raw: unknown): OwnedDomainsInput {
   }
   const extra: string[] = [];
   for (const d of r.extra as string[]) {
-    const key = ownedHostKey(d);
+    // 네이버 블로그는 아이디까지(blog.naver.com/아이디), 그 밖은 호스트로.
+    const key = isBlogPathHost(hostKey(d)) ? ownedEntryKey(d) : ownedHostKey(d);
     if (key && !extra.includes(key)) extra.push(key);
   }
   return { extra, applyPast: r.applyPast === true };
@@ -152,8 +157,25 @@ export function normalizeOwnedDomainsInput(raw: unknown): OwnedDomainsInput {
 
 const ownsHost = (host: string, domain: string) => host === domain || host.endsWith(`.${domain}`);
 
+/** 블로그 아이디까지 적은 줄을 받을 수 있는지 — 같은 줄이 이미 있거나 다른 브랜드 · 경쟁사 것이면 안 된다. */
+function rejectBlogReason(entry: string, ctx: Context): string | null {
+  if (!isBlogEntry(entry)) return `${entry} — 블로그 플랫폼 주소는 아이디까지 적어 주세요(예: blog.naver.com/my-blog) — 그 아이디의 글만 자사로 봐요.`;
+  if (ctx.fixed.includes(entry)) return `${entry} — 이미 자사 주소에 들어 있어요.`;
+  for (const t of ctx.runtime) {
+    if (t.tenantId === ctx.tenant.tenantId) continue;
+    const domains = (t.ownedDomains ?? []).map(ownedEntryKey);
+    if (ctx.primary && hostKey(t.ownedDomains?.[0] ?? '') === ctx.primary) continue;
+    if (domains.includes(entry)) return `${entry} — ${t.brandName}의 자사 주소예요.`;
+  }
+  for (const c of ctx.tenant.competitors ?? []) {
+    if ((c.domains ?? []).map(ownedEntryKey).includes(entry)) return `${entry} — 경쟁사 ${c.name}의 주소예요.`;
+  }
+  return null;
+}
+
 /** 한 주소를 받을 수 있는지 — 안 되면 사람이 읽을 이유. */
 function rejectReason(host: string, ctx: Context): string | null {
+  if (isBlogPathHost(hostKey(host))) return rejectBlogReason(host, ctx);
   if (!HOST_RE.test(host)) return `${host} — 주소 형식이 아니에요(예: example.com).`;
   const inFixed = ctx.fixed.find((d) => ownsHost(host, d));
   if (inFixed) return `${host} — 이미 자사 주소(${inFixed})에 들어 있어요.`;
@@ -201,7 +223,9 @@ function promote(analyses: QuestionRepeatAnalysis[], added: string[]): { analyse
   for (const a of next) {
     for (const c of a.citations ?? []) {
       const host = hostKey((c.raw ? urlHost(c.raw) : null) ?? c.domain ?? '');
-      if (host && c.ownerType !== 'brand-owned' && added.some((d) => ownsHost(host, d))) {
+      // 블로그 아이디까지 적은 줄은 주소(raw)로만 맞춘다 — 호스트(blog.naver.com)로는 남의 블로그와 가리지 못한다.
+      const hit = (d: string) => (isBlogEntry(d) ? Boolean(c.raw) && urlMatchesOwnedEntry(c.raw, d) : Boolean(host) && ownsHost(host, d));
+      if (c.ownerType !== 'brand-owned' && added.some(hit)) {
         c.ownerType = 'brand-owned';
         promoted += 1;
       }

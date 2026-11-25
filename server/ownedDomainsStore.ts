@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PIPELINE_DATA_DIR } from './appPaths.js';
 import { writeJsonAtomic } from './tenantWriteQueue.js';
-import { hostKey } from '../src/lib/brandVariant.js';
+import { ownedEntryKey } from '../src/lib/ownedEntry.js';
 
 /**
  * 더한 자사 주소 — data/<tenant>/owned-domains.json.
@@ -32,7 +32,7 @@ export async function readExtraOwnedDomains(tenantId: string): Promise<string[] 
   }
   try {
     const extra = (JSON.parse(text) as Partial<OwnedDomainsFile>).extra;
-    return Array.isArray(extra) ? extra.filter((d): d is string => typeof d === 'string' && d.trim() !== '').map(hostKey) : [];
+    return Array.isArray(extra) ? extra.filter((d): d is string => typeof d === 'string' && d.trim() !== '').map(ownedEntryKey).filter(Boolean) : [];
   } catch (err) {
     console.error(`[ownedDomainsStore] ${tenantId}/owned-domains.json을 읽지 못해 더한 주소 없이 갑니다:`, err);
     return null;
@@ -44,13 +44,16 @@ export async function writeExtraOwnedDomains(tenantId: string, extra: string[]):
   await writeJsonAtomic(filePathFor(tenantId), body);
 }
 
-/** 기존 목록 뒤에 더한 주소를 붙인다 — 같은 호스트는 한 번만, 앞 순서는 그대로(판정 맥락 지문이 순서째 해시한다). */
+/**
+ * 기존 목록 뒤에 더한 주소를 붙인다 — 같은 줄은 한 번만, 앞 순서는 그대로(판정 맥락 지문이 순서째 해시한다).
+ * 줄 표기는 ownedEntryKey — 블로그 아이디까지 적은 줄(blog.naver.com/아이디)이 호스트로 줄지 않게.
+ */
 export function mergeOwnedDomains(base: string[], extra: string[] | null): string[] {
   if (!extra || extra.length === 0) return base;
-  const seen = new Set(base.map(hostKey));
+  const seen = new Set(base.map(ownedEntryKey));
   const out = [...base];
   for (const d of extra) {
-    const key = hostKey(d);
+    const key = ownedEntryKey(d);
     if (!key || seen.has(key)) continue;
     seen.add(key);
     out.push(key);

@@ -9,6 +9,7 @@
  * (src/lib/screenCapture.ts는 DOM 없이 자사 화면의 앱 주소만 본다).
  */
 import { MAP_CREDIT, mapCaptionLines, mapPickExportable } from './mapImage.js'
+import { hostOnlyOwned } from './ownedEntry.js'
 import { parseOwnerPhotoAppSrc } from './ownerPhotos.js'
 import { screenExportable } from './screenCapture.js'
 
@@ -177,7 +178,8 @@ function hostOf(src: string): string | null {
 export function isOwnedPhotoHost(src: string, ownedDomains: readonly string[] | undefined): boolean {
   const host = hostOf(src)
   if (!host) return false
-  return (ownedDomains ?? []).some((raw) => {
+  // 블로그 아이디까지 적은 줄(blog.naver.com/아이디)은 호스트로 맞추면 남의 블로그 사진까지 자사가 된다 — 뺀다.
+  return hostOnlyOwned(ownedDomains ?? []).some((raw) => {
     const d = raw.trim().toLowerCase().replace(/^https?:\/\//, '').split(/[/?#:]/)[0]!.replace(/^www\./, '').replace(/\.$/, '')
     return Boolean(d) && (host === d || host.endsWith(`.${d}`))
   })

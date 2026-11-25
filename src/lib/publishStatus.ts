@@ -35,6 +35,7 @@
  * 서버가 import하므로 상대 import는 .js로 쓰고, 화면 모듈은 끌어오지 않는다.
  */
 import { externalIndexBasis, externalRegistrationCheck, type ExternalPostView, type TakedownRowLike } from './externalPosts.js'
+import { hostOnlyOwned, urlOwnedBy } from './ownedEntry.js'
 import { kstDate, todayKst, TRACKING_PARAM, trackingKey } from './publishedUrl.js'
 import { planWriters, writerArticle, type PlanWriter, type WriterPlan, type WriterPlanArticle } from './probePlan.js'
 
@@ -133,7 +134,8 @@ function hostOfUrl(url: string): string | null {
   }
 }
 
-const ownedBy = (host: string, ownedDomains: readonly string[]) => ownedDomains.some((d) => ownedHost(d) && under(host, ownedHost(d)))
+// 블로그 아이디까지 적은 줄(blog.naver.com/아이디 — ownedEntry.ts)은 호스트로 맞추면 남의 블로그까지 잡히므로 뺀다.
+const ownedBy = (host: string, ownedDomains: readonly string[]) => hostOnlyOwned(ownedDomains).some((d) => ownedHost(d) && under(host, ownedHost(d)))
 
 /** 올린 주소의 플랫폼 — 알려진 플랫폼 → 브랜드 자사 사이트(하위 도메인 포함) → 그 밖(호스트). http(s) 주소가 아니면 null. */
 export function platformOf(url: string, ownedDomains: readonly string[]): Platform | null {
@@ -151,8 +153,7 @@ export function platformOf(url: string, ownedDomains: readonly string[]): Platfo
  * 함께 쓰는 플랫폼 호스트는 그쪽이 뺀다). http(s) 주소가 아니면 false.
  */
 export function ownedUrl(url: string, ownedDomains: readonly string[]): boolean {
-  const host = hostOfUrl(url)
-  return host !== null && ownedBy(host, ownedDomains)
+  return hostOfUrl(url) !== null && urlOwnedBy(url, ownedDomains)
 }
 
 // ── 한 편으로 묶기 ───────────────────────────────────────────────────────────
