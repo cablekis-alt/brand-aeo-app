@@ -14,6 +14,7 @@ import {
 import { comparableRun, compareConditions, conditionSummary } from './comparability'
 import { formatRank, weekLabel } from './format'
 import { platformGroupHost } from './hostNames'
+import { isBlogEntry, ownedEntryKey, urlMatchesOwnedEntry } from './ownedEntry'
 import { isProbe, isScoredAgnostic } from './questionScope'
 import { roundedPoints } from './reportTiles'
 import { kstStamp } from './runTrend'
@@ -442,6 +443,7 @@ const bareHost = (d: string) => d.toLowerCase().replace(/^www\./, '')
  * www만 다른 주소는 하나로 합치고, 인용 하나는 맞는 등록 주소 가운데 가장 구체적인 주소 하나에만 센다(eng.banobagi.com 인용은 그 줄에만) —
  * 주소마다 따로 세면 같은 인용이 두 줄에 들어갔다. 질문지에 없는 질문의 인용은 세지 않는다(어느 쪽인지 모른다). 실증 질문의 인용도
  * 세지 않는다 — 위 출처 표(서버 기본 보기 · ?questions=unnamed)가 실증 응답을 빼므로 같은 기준으로 둔다.
+ * 블로그 아이디까지 적은 주소(blog.naver.com/아이디 — ownedEntry.ts)는 인용 주소로 그 아이디 글만 센다(호스트로는 남의 블로그와 못 가른다).
  */
 export function ownedDomainCitations(
   analyses: QuestionRepeatAnalysis[],
@@ -450,10 +452,11 @@ export function ownedDomainCitations(
 ): { domain: string; named: number; unnamed: number; total: number }[] | null {
   if (!bank || ownedDomains.length === 0 || analyses.length === 0) return null
   const byId = new Map(bank.questions.map((q) => [q.questionId, q]))
-  const regs: { domain: string; key: string }[] = []
+  const regs: { domain: string; key: string; blog: boolean }[] = []
   for (const d of ownedDomains) {
-    const key = bareHost(d)
-    if (!regs.some((r) => r.key === key)) regs.push({ domain: d, key })
+    const blog = isBlogEntry(d)
+    const key = blog ? ownedEntryKey(d) : bareHost(d)
+    if (!regs.some((r) => r.key === key)) regs.push({ domain: d, key, blog })
   }
   const rows = regs.map((r) => ({ domain: r.domain, named: 0, unnamed: 0, total: 0 }))
   for (const a of analyses) {
@@ -464,7 +467,8 @@ export function ownedDomainCitations(
       const host = bareHost(c.domain)
       let best = -1
       regs.forEach((r, i) => {
-        if ((host === r.key || host.endsWith(`.${r.key}`)) && (best < 0 || r.key.length > regs[best]!.key.length)) best = i
+        const hit = r.blog ? urlMatchesOwnedEntry(c.raw, r.key) : host === r.key || host.endsWith(`.${r.key}`)
+        if (hit && (best < 0 || r.key.length > regs[best]!.key.length)) best = i
       })
       if (best < 0) continue
       const row = rows[best]!

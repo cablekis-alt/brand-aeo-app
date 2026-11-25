@@ -2264,6 +2264,10 @@ tbody tr.selected {
 :is(.cohort-compare, .mention-section, .citation-top, .site-breakdown, .runs-section) caption { text-align: left; }
 /* 출처 절은 이름 없이 물은 질문 표와 모든 질문 표 두 장 — 사이를 띄운다. */
 .citation-top .table-wrap + .table-wrap { margin-top: 12px; }
+/* 자사 출처를 질문 종류로 나눈 표 — 합계 줄은 위와 굵은 선으로 가르고, 숫자 칸 머리도 오른쪽에 맞춘다. */
+.owned-split thead th:not(:first-child):not(:last-child) { text-align: right; }
+.owned-split tfoot :is(th, td) { border-top: 2px solid var(--line-strong); font-weight: 600; text-align: left; }
+.owned-split tfoot td.num { text-align: right; }
 /* 점수 풀이 — 줄 이름(구성 · 몰림 · 계단 …)과 문장 두 칸. 좁으면 한 칸으로 쌓는다. */
 .explain-list { margin: 0 0 8px; display: grid; gap: 8px; }
 .explain-list > div {

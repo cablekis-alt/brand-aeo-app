@@ -11,7 +11,7 @@
 import { buildPeriodicReport } from '../src/lib/b9-report'
 import { measureConditionParts, measureConditionPlain } from '../src/lib/format'
 import { buildRecommendationEvidence } from '../src/lib/recommendationEvidence'
-import { citationTop, cohortRows, ownPostCitations, ownPostsInDomain, selfReview, trustChecks } from '../src/lib/reviewReport'
+import { citationTop, cohortRows, ownedCitationSplit, ownPostCitations, ownPostsInDomain, selfReview, trustChecks } from '../src/lib/reviewReport'
 import type { CitationBreakdownRow, QuestionBank, QuestionRepeatAnalysis } from '../src/lib/types'
 import type { WeeklyScorecard } from '../src/prompts/b8-report'
 
@@ -169,6 +169,36 @@ ok(
   '출처: 남의 도메인 줄 속 자사 판정 인용은 「도메인/아이디 · 자사」 줄로 떼고 원래 줄에서 뺀다 · 자사 합 = 판정 합',
   splitOwned?.count === 27 && splitOwned.isOwned && split.top.find((r) => r.domain === 'blog.naver.com')?.count === 96 && split.owned === 79 + 27 && split.total === 400 + 123 + 79,
 )
+
+// 6a) 자사 출처를 질문 종류로 나눈다(2026-11-25 군산각 W48 — 자사 167건 중 이름 없이 물은 질문은 27건) · 줄 이름은 citationTop과 같게
+{
+  const kindBank = {
+    questions: [
+      { questionId: 'u1', text: '이름 없음', category: 'category-agnostic', containsBrandName: false },
+      { questionId: 'n1', text: '이름 넣음', category: 'brand-direct', containsBrandName: true },
+      { questionId: 'p1', text: '실증', category: 'category-agnostic', containsBrandName: false, probe: true },
+    ],
+  } as unknown as QuestionBank
+  const cite = (raw: string, ownerType: string) => ({ raw, domain: null, ownerType, supportsBrandMention: false })
+  const kindAnalyses = [
+    { questionId: 'u1', engine: 'perplexity', citations: [cite('https://www.me.example/a', 'brand-owned'), cite('https://blog.naver.com/fakebrand/1', 'brand-owned'), cite('https://gov.example/x', 'third-party-authority')] },
+    { questionId: 'u1', engine: 'openai', citations: [cite('https://m.me.example/b', 'brand-owned')] },
+    { questionId: 'n1', engine: 'gemini', citations: [cite('https://me.example/c', 'brand-owned'), cite('https://blog.naver.com/fakebrand/2', 'brand-owned')] },
+    { questionId: 'p1', engine: 'perplexity', citations: [cite('https://me.example/probe', 'brand-owned')] },
+  ] as unknown as QuestionRepeatAnalysis[]
+  const ks = ownedCitationSplit([crow('gov.example', 1, 'third-party-authority'), mixedRow, crow('me.example', 3, 'brand-owned')], kindAnalyses, kindBank)!
+  const me = ks.rows.find((r) => r.domain === 'me.example')
+  const blog = ks.rows.find((r) => r.domain === 'blog.naver.com/fakebrand')
+  ok('자사 출처 나누기: 줄 이름은 citationTop과 같다(www. · m. 접음, 남의 도메인 속 자사는 「도메인/아이디」)', !!me && !!blog && ks.rows.length === 2)
+  ok('자사 출처 나누기: 이름 넣은 · 이름 없이 물은 질문으로 나누고 실증 질문은 뺀다', me!.named === 1 && me!.unnamed === 2 && blog!.named === 1 && blog!.unnamed === 1 && ks.total === 5 && ks.named === 2 && ks.unnamed === 3)
+  ok('자사 출처 나누기: 이름 없이 물은 질문에서 인용한 AI(많은 순)', me!.unnamedEngines.map((e) => `${e.engine}${e.count}`).join() === 'openai1,perplexity1')
+  ok('자사 출처 나누기: 그 주 질문지가 없으면 null', ownedCitationSplit([], kindAnalyses, null) === null)
+  // 등록 자사 주소 줄 — 블로그 아이디까지 적은 주소는 그 아이디 글만(호스트로 세면 「0건」으로 잘못 보였다, 2026-11-25)
+  const { ownedDomainCitations } = await import('../src/lib/reportExplain')
+  const withDomain = kindAnalyses.map((x) => ({ ...x, citations: x.citations.map((c) => ({ ...c, domain: new URL(c.raw).hostname })) }))
+  const reg = ownedDomainCitations(withDomain as unknown as QuestionRepeatAnalysis[], kindBank, ['me.example', 'blog.naver.com/fakebrand'])!
+  ok('등록 자사 주소 줄: blog.naver.com/아이디는 그 아이디 글을 센다(실증 제외)', reg.find((r) => r.domain === 'blog.naver.com/fakebrand')?.total === 2 && reg.find((r) => r.domain === 'me.example')?.total === 3)
+}
 
 // 6b) 불린 질문 유형별 줄은 이름을 넣어 물은 질문만 · 우리 글 인용(2026-11-16 — 보고서에서 이름 없는 질문과 섞여 읽히던 것)
 const mixedBank = {

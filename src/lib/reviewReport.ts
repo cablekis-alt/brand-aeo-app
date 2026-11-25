@@ -313,6 +313,81 @@ export function citationTop(rows: CitationBreakdownRow[]): { total: number; owne
   }
 }
 
+/** 자사 출처 한 줄을 질문 종류로 나눈 값 — 이름 없이 물은 질문에서는 어느 AI가 인용했는지도. */
+export interface OwnedCitationSplitRow {
+  domain: string
+  total: number
+  named: number
+  unnamed: number
+  /** 이름 없이 물은 질문에서 이 출처를 인용한 엔진별 수(많은 순). */
+  unnamedEngines: { engine: string; count: number }[]
+}
+
+export interface OwnedCitationSplit {
+  rows: OwnedCitationSplitRow[]
+  total: number
+  named: number
+  unnamed: number
+}
+
+/** 서버 인용 표(server/queries.ts getCitationBreakdown)와 같은 줄 키 — URL 호스트를 먼저 쓰고 www. · m.을 접는다. */
+function breakdownHost(raw: string, domain: string | null | undefined): string {
+  let host: string | null = null
+  if (/^https?:\/\//i.test(raw.trim())) {
+    try {
+      host = new URL(raw.trim()).hostname || null
+    } catch {
+      // URL로 해석되지 않는 값 — 서버처럼 판정 값으로 넘긴다.
+      host = null
+    }
+  }
+  const base = (host ?? domain ?? raw).trim()
+  return (base.split('/')[0] ?? base).toLowerCase().replace(/\.$/, '').replace(/^(?:www|m)\./, '')
+}
+
+/**
+ * 자사 출처를 질문 종류로 나눈다 — 「모든 질문 · 자사 n건」이 이름을 넣어 물은 질문과 이름 없이 물은 질문에서 각각 몇 건인지(2026-11-25
+ * 군산각 W48 — 자사 167건 가운데 이름 없이 물은 질문은 27건뿐이었는데 표로는 읽을 수 없었다). 모집단은 citationTop과 같다(실증 질문 제외).
+ * 줄 이름도 citationTop과 같게 — 남의 도메인 줄에 섞인 자사 인용은 「blog.naver.com/아이디」로. 그 주 질문지가 없으면 null(나누지 못함).
+ */
+export function ownedCitationSplit(
+  rows: CitationBreakdownRow[],
+  analyses: QuestionRepeatAnalysis[],
+  bank: QuestionBank | null,
+): OwnedCitationSplit | null {
+  if (!bank) return null
+  const byId = new Map(bank.questions.map((q) => [q.questionId, q]))
+  const nameOf = new Map(rows.map((r) => [r.domain, r.ownerType === 'brand-owned' ? r.domain : ownedSplitName(r)]))
+  const acc = new Map<string, { named: number; unnamed: number; engines: Map<string, number> }>()
+  for (const a of withoutProbes(analyses, bank.questions)) {
+    const q = byId.get(a.questionId)
+    if (!q) return null
+    for (const c of a.citations) {
+      if (c.ownerType !== 'brand-owned') continue
+      const host = breakdownHost(c.raw, c.domain)
+      const name = nameOf.get(host) ?? host
+      const row = acc.get(name) ?? { named: 0, unnamed: 0, engines: new Map<string, number>() }
+      if (q.containsBrandName) row.named += 1
+      else {
+        row.unnamed += 1
+        row.engines.set(a.engine, (row.engines.get(a.engine) ?? 0) + 1)
+      }
+      acc.set(name, row)
+    }
+  }
+  const out = [...acc].map(([domain, r]) => ({
+    domain,
+    total: r.named + r.unnamed,
+    named: r.named,
+    unnamed: r.unnamed,
+    unnamedEngines: [...r.engines].map(([engine, count]) => ({ engine, count })).sort((x, y) => y.count - x.count || x.engine.localeCompare(y.engine)),
+  }))
+  out.sort((x, y) => y.total - x.total || x.domain.localeCompare(y.domain))
+  const named = out.reduce((s, r) => s + r.named, 0)
+  const unnamed = out.reduce((s, r) => s + r.unnamed, 0)
+  return { rows: out, total: named + unnamed, named, unnamed }
+}
+
 /**
  * 측정 신뢰도 점검 — 순위 · 점수를 그대로 읽어도 되는지. 운영자가 보는 점검이다(고객 종이에는 싣지 않는다).
  *

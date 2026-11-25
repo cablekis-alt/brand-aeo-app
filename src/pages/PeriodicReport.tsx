@@ -28,7 +28,7 @@ import {
   type PublishedPost,
   type SiteScoreRecord,
 } from '../lib/api'
-import { citationTop, cohortRows, ownPostCitations, selfReview, trustChecks } from '../lib/reviewReport'
+import { citationTop, cohortRows, ownedCitationSplit, ownPostCitations, selfReview, trustChecks } from '../lib/reviewReport'
 import { questionCoverage, unnamedOwnedCitation } from '../lib/answerInsights'
 import { resolveBankVersion } from '../lib/bankVersion'
 import {
@@ -532,6 +532,11 @@ export default function PeriodicReport() {
     [card, cohort, cohortLoaded, history, self],
   )
   const topCitations = useMemo(() => (evidence && evidence.citationRows.length > 0 ? citationTop(evidence.citationRows) : null), [evidence])
+  // 자사 출처를 질문 종류로 — 위 표의 자사 건수와 같은 모집단(실증 질문 제외). 그 주 질문지를 못 찾으면 null.
+  const ownedSplit = useMemo(
+    () => (evidence && evidence.citationRows.length > 0 ? ownedCitationSplit(evidence.citationRows, evidence.analyses, evidence.bank) : null),
+    [evidence],
+  )
   // 이름 없이 물은 질문 기준 출처 상위 — 그 주를 측정한 질문지를 못 찾아 나누지 못했으면(bankVersion null) 싣지 않는다(「출처 없음」이 아니다).
   const unnamedTop = useMemo(
     () => (evidence?.unnamedCitations?.questionScope?.bankVersion ? topSourceDomains(evidence.unnamedCitations) : []),
@@ -1300,6 +1305,7 @@ export default function PeriodicReport() {
               unnamedTop={unnamedTop}
               homepage={homepage}
               ownPosts={ownPosts}
+              ownedSplit={ownedSplit}
             />
           )}
           {siteNow && siteNow.categories.length > 0 && <SiteBreakdownSection site={siteNow} />}

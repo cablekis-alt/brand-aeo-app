@@ -2,7 +2,7 @@ import type { SiteScoreRecord } from '../lib/api'
 import { ENGINE_LABEL, formatRankWithCount, weekLabel } from '../lib/format'
 import { hostName } from '../lib/hostNames'
 import { runLabel, stepScaleTop, type ExplainLine, type RecentRuns, type ScoreExplainData } from '../lib/reportExplain'
-import { ownPostsInDomain, type CheckStatus, type CitationRow, type CohortRow, type OwnPostCitations, type SelfReview, type TrustCheck } from '../lib/reviewReport'
+import { ownPostsInDomain, type CheckStatus, type CitationRow, type CohortRow, type OwnedCitationSplit, type OwnPostCitations, type SelfReview, type TrustCheck } from '../lib/reviewReport'
 
 /*
  * 정기진단 보고서의 점검 · 비교 절 — 예전 「검토 리포트」 상자와 HTML 파일에 있던 내용을 보고서 본문 자리로 나눠 둔다
@@ -258,6 +258,7 @@ export function CitationSourcesSection({
   unnamedTop,
   homepage,
   ownPosts,
+  ownedSplit,
 }: {
   top: CitationRow[]
   total: number
@@ -267,7 +268,11 @@ export function CitationSourcesSection({
   homepage?: { domain: string; named: number; unnamed: number; total: number }[] | null
   /** 우리가 올린 글(블로그 등)이 그 주 출처로 쓰인 횟수 — 기록을 못 읽었거나 웹이면 null(줄을 싣지 않는다). */
   ownPosts?: OwnPostCitations | null
+  /** 자사 출처를 질문 종류로 나눈 값(reviewReport.ts ownedCitationSplit) — 그 주 질문지를 못 찾았으면 null(표를 싣지 않는다). */
+  ownedSplit?: OwnedCitationSplit | null
 }) {
+  // 나눈 합이 위 표의 자사 건수와 다르면(모집단이 어긋남) 싣지 않는다 — 두 표가 서로 다른 숫자를 말하지 않게.
+  const split = ownedSplit && ownedSplit.total === owned && ownedSplit.rows.length > 0 ? ownedSplit : null
   return (
     <section className="citation-top">
       <h3>AI가 근거로 쓴 출처</h3>
@@ -323,6 +328,49 @@ export function CitationSourcesSection({
           </tbody>
         </table>
       </div>
+      {split && (
+        <div className="table-wrap">
+          <table className="owned-split">
+            <caption className="muted">
+              {weekLabel(weekOf)} · 자사 출처 {split.total.toLocaleString()}건 — 어떤 질문의 답에서 쓰였나: 이름을 넣어 물은 질문{' '}
+              {split.named.toLocaleString()}건 · 이름 없이 물은 질문 {split.unnamed.toLocaleString()}건
+            </caption>
+            <thead>
+              <tr>
+                <th>자사 출처</th>
+                <th>합계</th>
+                <th>이름을 넣어 물은 질문</th>
+                <th>이름 없이 물은 질문</th>
+                <th>이름 없이 물은 질문에서 인용한 AI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {split.rows.map((r) => (
+                <tr key={r.domain}>
+                  <td className="cell-text">
+                    <SourceName domain={r.domain} />
+                  </td>
+                  <td className="num">{r.total.toLocaleString()}</td>
+                  <td className="num">{r.named.toLocaleString()}</td>
+                  <td className="num">{r.unnamed > 0 ? <strong>{r.unnamed.toLocaleString()}</strong> : '0'}</td>
+                  <td>{r.unnamedEngines.length > 0 ? r.unnamedEngines.map((e) => `${ENGINE_LABEL[e.engine] ?? e.engine} ${e.count}`).join(' · ') : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">합계</th>
+                <td className="num">{split.total.toLocaleString()}</td>
+                <td className="num">{split.named.toLocaleString()}</td>
+                <td className="num">
+                  <strong>{split.unnamed.toLocaleString()}</strong>
+                </td>
+                <td />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
       {ownPosts && (
         <p className="hint">
           우리가 올린 글이 출처로 쓰인 인용: {ownPosts.all.toLocaleString()}건
@@ -330,7 +378,16 @@ export function CitationSourcesSection({
           {ownPosts.posts > 0 && ` · 글 ${ownPosts.posts}편`} — 블로그 등에 올린 글은 자사 주소가 아니라 위 「자사」 칸에는 들어가지 않습니다.
         </p>
       )}
-      {homepage && homepage.length > 0 && (
+      {split && homepage && homepage.some((h) => h.total === 0) && (
+        <p className="hint">
+          아직 인용되지 않은 등록 자사 주소:{' '}
+          {homepage
+            .filter((h) => h.total === 0)
+            .map((h) => h.domain)
+            .join(' · ')}
+        </p>
+      )}
+      {!split && homepage && homepage.length > 0 && (
         <p className="hint">
           등록된 자사 주소로 연결된 인용:{' '}
           {homepage
