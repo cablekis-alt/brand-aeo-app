@@ -216,6 +216,8 @@ export interface OwnPostCitations {
   unnamed: number | null
   /** 이름 없는 질문 인용 — 글 주소의 호스트별(「cablekis.tistory.com」). */
   unnamedByHost: { host: string; count: number }[]
+  /** 그 주 인용된 글의 주소 키 — 집행 표의 판단(여러 주 · 한 주 인용)을 붙일 때 쓴다. */
+  citedKeys: string[]
 }
 
 /**
@@ -227,13 +229,13 @@ export function ownPostCitations(history: PublishedHistory | null, weekOf: strin
   if (!history) return null
   const i = history.weeks.findIndex((w) => w.weekOf === weekOf)
   if (i < 0) return null
-  const byKey = new Map<string, { url: string; tally: NonNullable<NonNullable<PublishedHistory['posts'][number]['cells'][number]>['tally']> }>()
+  const byKey = new Map<string, { key: string; url: string; tally: NonNullable<NonNullable<PublishedHistory['posts'][number]['cells'][number]>['tally']> }>()
   for (const p of history.posts) {
     const tally = p.cells[i]?.tally
     if (!tally) continue
     const key = p.post.key ?? p.post.url
     const cur = byKey.get(key)
-    if (!cur || tally.all.cited > cur.tally.all.cited) byKey.set(key, { url: p.post.url, tally })
+    if (!cur || tally.all.cited > cur.tally.all.cited) byKey.set(key, { key, url: p.post.url, tally })
   }
   const rows = [...byKey.values()]
   const known = rows.every((r) => r.tally.named !== null && r.tally.unnamed !== null)
@@ -255,6 +257,7 @@ export function ownPostCitations(history: PublishedHistory | null, weekOf: strin
     named: known ? rows.reduce((s, r) => s + (r.tally.named?.cited ?? 0), 0) : null,
     unnamed: known ? rows.reduce((s, r) => s + (r.tally.unnamed?.cited ?? 0), 0) : null,
     unnamedByHost: [...hosts].map(([host, count]) => ({ host, count })).sort((a, b) => b.count - a.count || a.host.localeCompare(b.host)),
+    citedKeys: rows.filter((r) => r.tally.all.cited > 0).map((r) => r.key),
   }
 }
 

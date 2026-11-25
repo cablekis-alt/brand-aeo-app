@@ -611,6 +611,16 @@ export default function PeriodicReport() {
     const indexing = pending.filter((r) => r.summary.tier === 'indexing').length
     const waiting = pending.length - indexing
     const pendingLabel = [indexing > 0 ? `색인 대기 ${indexing}편` : '', waiting > 0 ? `측정 대기 ${waiting}편` : ''].filter(Boolean).join(' · ')
+    // 판단이 나온 글 가운데 인용된 글(여러 주 · 한 주)만 펼쳐 둔다 — 인용 없는 글까지 모두 펼치면 표가 수십 줄이 되어 인용된 글을 찾기
+    // 어려웠다(군산각 W48 92편 중 인용 22편, 2026-11-25). 인용 없는 글은 접고, 모든 글의 상태는 발행 현황에 있다.
+    const isCited = (t: PostTier) => t === 'repeated' || t === 'once'
+    const cited = decided.filter((r) => isCited(r.summary.tier))
+    const uncited = decided.filter((r) => !isCited(r.summary.tier))
+    const uncitedCounts = new Map<PostTier, number>()
+    for (const r of uncited) uncitedCounts.set(r.summary.tier, (uncitedCounts.get(r.summary.tier) ?? 0) + 1)
+    const uncitedLabel = EXEC_TIER_ORDER.filter((t) => uncitedCounts.has(t))
+      .map((t) => `${EXEC_TIER_SHORT[t]} ${uncitedCounts.get(t)}편`)
+      .join(' · ')
     // 주별 열 — 가장 이른 올린 주부터 최근 EXEC_WEEKS주까지(모든 글이 「올리기 전」인 앞 주는 열을 만들지 않는다).
     const firstWeek = rows
       .map((r) => (r.post.publishedOn ? isoWeekOf(r.post.publishedOn) : null))
@@ -621,8 +631,26 @@ export default function PeriodicReport() {
       .filter((w) => !firstWeek || w >= firstWeek)
       .slice(-EXEC_WEEKS)
     const changed = new Set(weeks.filter((w) => w.changes.length > 0).map((w) => w.weekOf))
-    return { rows, decided, pending, pendingLabel, shownWeeks, changed, line: executionSummaryLine(rows.map((r) => r.summary), weekLabel(until)) }
+    return { rows, decided, cited, uncited, uncitedLabel, pending, pendingLabel, shownWeeks, changed, line: executionSummaryLine(rows.map((r) => r.summary), weekLabel(until)) }
   }, [published.history, judgedWeek, card?.weekOf])
+
+  // 출처 절 「글 n편」 옆에 붙일 집행 표 판단 — 같은 주소가 여러 행(올린 날이 다름)이면 판단이 가장 앞선 행으로.
+  const ownPostsTiers = useMemo(() => {
+    if (!ownPosts || !execution || ownPosts.citedKeys.length === 0) return null
+    const best = new Map<string, PostTier>()
+    for (const r of execution.rows) {
+      const k = r.post.key ?? r.post.url
+      const cur = best.get(k)
+      if (!cur || EXEC_TIER_ORDER.indexOf(r.summary.tier) < EXEC_TIER_ORDER.indexOf(cur)) best.set(k, r.summary.tier)
+    }
+    const counts = new Map<PostTier, number>()
+    for (const k of ownPosts.citedKeys) {
+      const t = best.get(k)
+      if (t) counts.set(t, (counts.get(t) ?? 0) + 1)
+    }
+    const parts = EXEC_TIER_ORDER.filter((t) => counts.has(t)).map((t) => `${EXEC_TIER_SHORT[t]} ${counts.get(t)}`)
+    return parts.length > 0 ? parts.join(' · ') : null
+  }, [ownPosts, execution])
 
   // 보고 주 칸(그 주 회차를 합친 값)에서 올린 뒤 인용된 기록 — 개선제안의 「인용됨」이 집행 표와 같은 칸을 보게 한다.
   const citedPostIds = useMemo(
@@ -1162,8 +1190,24 @@ export default function PeriodicReport() {
             <section className="report-exec">
               <h3>집행한 글과 인용</h3>
               {execution.line && <p className="report-exec-line">{execution.line}</p>}
-              {/* 판단이 나온 글 먼저 — 기다리면 풀리는 색인 대기 · 측정 대기는 화면에서 접고 종이에는 편수만 적는다. */}
-              {execution.decided.length > 0 && <ExecTable rows={execution.decided} weeks={execution.shownWeeks} changed={execution.changed} />}
+              {/*
+                인용된 글(여러 주 · 한 주)만 펼친다 — 인용 없는 글과 기다리면 풀리는 색인 대기 · 측정 대기는 화면에서 접고 종이에는 편수만
+                적는다. 모든 글의 상태는 발행 현황에 있다.
+              */}
+              {execution.cited.length > 0 ? (
+                <ExecTable rows={execution.cited} weeks={execution.shownWeeks} changed={execution.changed} />
+              ) : (
+                execution.decided.length > 0 && <p className="hint">올린 뒤 인용된 글은 아직 없습니다.</p>
+              )}
+              {execution.uncited.length > 0 && (
+                <>
+                  <details className="exec-pending no-print">
+                    <summary>{execution.uncitedLabel} 보기</summary>
+                    <ExecTable rows={execution.uncited} weeks={execution.shownWeeks} changed={execution.changed} />
+                  </details>
+                  <p className="hint print-only">{execution.uncitedLabel} — 목록은 생략했습니다(발행 현황에서 볼 수 있습니다).</p>
+                </>
+              )}
               {execution.pending.length > 0 && (
                 <>
                   <details className="exec-pending no-print" open={execution.decided.length === 0 || undefined}>
@@ -1306,6 +1350,7 @@ export default function PeriodicReport() {
               homepage={homepage}
               ownPosts={ownPosts}
               ownedSplit={ownedSplit}
+              ownPostsTiers={ownPostsTiers}
             />
           )}
           {siteNow && siteNow.categories.length > 0 && <SiteBreakdownSection site={siteNow} />}

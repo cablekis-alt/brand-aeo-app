@@ -242,6 +242,7 @@ ok(
   '우리 글 인용: 이름 없는 질문은 호스트별(m. 뗌) · 출처 도메인 줄에 그 아래 호스트를 더한다',
   ownPostsInDomain(own, 'tistory.com') === 1 && ownPostsInDomain(own, 'blog.naver.com') === 2 && ownPostsInDomain(own, 'naver.com') === 2 && ownPostsInDomain(own, 'gunsan.go.kr') === 0,
 )
+ok('우리 글 인용: 그 주 인용된 글의 주소 키(집행 표 판단을 붙일 때)', own.citedKeys.slice().sort().join() === 'a.tistory.com/1,m.blog.naver.com/x/1')
 ok('우리 글 인용: 기록에 없는 주 · 기록 없음은 null', ownPostCitations(history, '2026-W40') === null && ownPostCitations(null, '2026-W47') === null)
 ok(
   '우리 글 인용: 질문 은행을 못 읽은 칸이 있으면 갈래는 확인 불가(null)',

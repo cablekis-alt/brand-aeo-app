@@ -259,6 +259,7 @@ export function CitationSourcesSection({
   homepage,
   ownPosts,
   ownedSplit,
+  ownPostsTiers,
 }: {
   top: CitationRow[]
   total: number
@@ -270,6 +271,8 @@ export function CitationSourcesSection({
   ownPosts?: OwnPostCitations | null
   /** 자사 출처를 질문 종류로 나눈 값(reviewReport.ts ownedCitationSplit) — 그 주 질문지를 못 찾았으면 null(표를 싣지 않는다). */
   ownedSplit?: OwnedCitationSplit | null
+  /** 그 주 인용된 우리 글의 집행 표 판단(「여러 주 인용 9 · 한 주 인용 1」) — 집행 표가 없으면 null. */
+  ownPostsTiers?: string | null
 }) {
   // 나눈 합이 위 표의 자사 건수와 다르면(모집단이 어긋남) 싣지 않는다 — 두 표가 서로 다른 숫자를 말하지 않게.
   const split = ownedSplit && ownedSplit.total === owned && ownedSplit.rows.length > 0 ? ownedSplit : null
@@ -375,7 +378,7 @@ export function CitationSourcesSection({
         <p className="hint">
           우리가 올린 글이 출처로 쓰인 인용: {ownPosts.all.toLocaleString()}건
           {ownPosts.named !== null && ownPosts.unnamed !== null && `(이름을 넣어 물은 질문 ${ownPosts.named} · 이름 없이 물은 질문 ${ownPosts.unnamed})`}
-          {ownPosts.posts > 0 && ` · 글 ${ownPosts.posts}편`} — 블로그 등에 올린 글은 자사 주소가 아니라 위 「자사」 칸에는 들어가지 않습니다.
+          {ownPosts.posts > 0 && ` · 글 ${ownPosts.posts}편${ownPostsTiers ? `(아래 집행 표 판단: ${ownPostsTiers})` : ''}`} — 블로그 등에 올린 글은 자사 주소가 아니라 위 「자사」 칸에는 들어가지 않습니다.
         </p>
       )}
       {split && homepage && homepage.some((h) => h.total === 0) && (
