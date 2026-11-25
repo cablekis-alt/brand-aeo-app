@@ -111,15 +111,42 @@ export function urlOwnedBy(url: string, owned: readonly string[]): boolean {
  */
 export function ownedUrlMatcher(owned: readonly string[], others: readonly string[]): (url: string) => boolean {
   const own = owned.map(ownedEntryKey).filter(Boolean)
-  const nested = others
-    .map(ownedEntryKey)
+  const nested = nestedUnder(own, others)
+  return (url) => urlOwnedBy(url, own) && !urlOwnedBy(url, nested)
+}
+
+/** others 가운데 자사 주소 아래에 든 더 구체적인 줄(자사 주소와 같은 줄은 빼고). */
+function nestedUnder(own: readonly string[], others: readonly string[]): string[] {
+  return [...new Set(others.map(ownedEntryKey))]
     .filter((o) => o && !own.includes(o))
     .filter((o) => {
       const e = parseOwnedEntry(o)!
       const sample = e.blogId ? `https://${e.host}/${e.blogId}` : `https://${e.host}/`
       return urlOwnedBy(sample, own)
     })
-  return (url) => urlOwnedBy(url, own) && !urlOwnedBy(url, nested)
+}
+
+/** 자사 주소 · 경쟁사 주소를 가진 브랜드 — 서버 TenantConfig와 화면 브랜드 요약이 모두 이 모양을 가진다. */
+export interface OwnedHolder {
+  tenantId: string
+  ownedDomains?: readonly string[]
+  competitors?: readonly { domains?: readonly string[] }[]
+}
+
+/**
+ * 이 브랜드 자사 주소 아래에 든 남의 주소(다른 브랜드 · 이 브랜드의 경쟁사) — 자사로 세지 않을 줄. 같은 홈페이지를 쓰는 범위 변형
+ * (군산각 지역형 · 전국형)은 같은 곳이라 넣지 않는다. 측정 판정 고정 · 구글/네이버 AI 개요 · 발행 현황이 같은 목록을 쓴다.
+ */
+export function nestedOwnedExclusions(self: OwnedHolder, all: readonly OwnedHolder[]): string[] {
+  const own = (self.ownedDomains ?? []).map(ownedEntryKey).filter(Boolean)
+  const primary = own[0]
+  const others = [
+    ...all
+      .filter((t) => t.tenantId !== self.tenantId && !(primary && ownedEntryKey((t.ownedDomains ?? [])[0] ?? '') === primary))
+      .flatMap((t) => t.ownedDomains ?? []),
+    ...(self.competitors ?? []).flatMap((c) => c.domains ?? []),
+  ]
+  return nestedUnder(own, others)
 }
 
 /** 호스트로만 비교하는 곳에 넘길 목록 — 블로그 플랫폼 줄(아이디 유무와 관계없이)을 뺀다. */

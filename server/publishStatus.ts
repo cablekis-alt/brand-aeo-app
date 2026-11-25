@@ -2,6 +2,7 @@ import { brandLabel } from '../src/lib/brandVariant.js';
 import { externalViews } from '../src/lib/externalPosts.js';
 import { todayKst } from '../src/lib/publishedUrl.js';
 import { buildTenantStatus, orderRows, type PublishStatus, type TenantChecks, type TenantIssue } from '../src/lib/publishStatus.js';
+import { nestedOwnedExclusions } from '../src/lib/ownedEntry.js';
 import type { WriterPlan } from '../src/lib/probePlan.js';
 import { readExternalPostsInQueue } from './externalPosts.js';
 import { readIndexChecksInQueue } from './indexChecks.js';
@@ -78,6 +79,7 @@ export async function readPublishStatusSnapshot(tenants: TenantConfig[], now = D
       tenantId: p.t.tenantId,
       brand: p.brand,
       ownedDomains: p.t.ownedDomains ?? [],
+      ownedExcluded: nestedOwnedExclusions(p.t, tenants),
       posts: posts.value,
       plan: p.plan,
       planUnreadable: p.planUnreadable,

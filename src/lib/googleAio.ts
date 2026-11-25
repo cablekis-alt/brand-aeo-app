@@ -1156,13 +1156,13 @@ export interface AioSourceMark {
 }
 
 /** 문항의 출처(references)와 본문 안 링크(snippet_links)마다 자사 · 올린 글 표시. upPosts는 aioPostsUpDuring의 결과. */
-export function aioSourceMarks(item: AioItem, ownedDomains: readonly string[], upPosts: readonly AioPost[]): AioSourceMark[] {
+export function aioSourceMarks(item: AioItem, ownedDomains: readonly string[], upPosts: readonly AioPost[], ownedExcluded: readonly string[] = []): AioSourceMark[] {
   const owned = ownedDomains.map((d) => d.trim()).filter(Boolean)
   const mark = (kind: AioSourceMark['kind'], link: string, title: string | null, source: string | null): AioSourceMark => {
     const key = trackingKey(link)
     const post = key ? (upPosts.find((p) => p.key === key) ?? null) : null
     const variant = !post && key !== null && upPosts.some((p) => matchKind(p.key, key) === 'query-variant')
-    return { kind, link, title, source, owned: owned.length > 0 && ownedUrl(link, owned), post: post ? { key: post.key, origin: post.origin, writerKey: post.writerKey } : null, variant }
+    return { kind, link, title, source, owned: owned.length > 0 && ownedUrl(link, owned, ownedExcluded), post: post ? { key: post.key, origin: post.origin, writerKey: post.writerKey } : null, variant }
   }
   return [...(item.references ?? []).map((r) => mark('reference', r.link, r.title, r.source)), ...(item.links ?? []).map((l) => mark('link', l, null, null))]
 }
@@ -1195,6 +1195,8 @@ export interface AioReadContext {
   brandName: string
   aliases: string[]
   ownedDomains: string[]
+  /** 자사 주소 아래 남의 더 구체적인 주소(ownedEntry.ts nestedOwnedExclusions) — 자사 출처로 세지 않는다. 없으면 []. */
+  ownedExcluded?: string[]
   competitors: string[]
   posts: AioPost[] | null
 }
@@ -1263,7 +1265,7 @@ export function summarizeAioRun(run: AioRun, ctx: AioReadContext): AioRunSummary
 
   const noList: AioSourceReason = shown.length > 0 ? 'no-source-list' : 'no-overview'
   const owned = ctx.ownedDomains.map((d) => d.trim()).filter(Boolean)
-  const ownK = owned.length ? listed.filter((i) => linksOfItem(i).some((l) => ownedUrl(l, owned))).length : 0
+  const ownK = owned.length ? listed.filter((i) => linksOfItem(i).some((l) => ownedUrl(l, owned, ctx.ownedExcluded ?? []))).length : 0
   const ownSource: AioSourceRatio =
     owned.length === 0
       ? { k: 0, n: listed.length, rate: null, reason: 'no-owned' }

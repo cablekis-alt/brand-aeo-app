@@ -19,7 +19,7 @@ import {
 import type { Engine } from '../src/prompts/types.js';
 import { comparableWith } from '../src/lib/comparability.js';
 import { withoutProbes } from '../src/lib/questionScope.js';
-import { ownedUrlMatcher } from '../src/lib/ownedEntry.js';
+import { nestedOwnedExclusions, urlOwnedBy } from '../src/lib/ownedEntry.js';
 import type { BrandMentionResult, CitationResult, FactCheckResult, RecommendationOrderResult } from './analysisTypes.js';
 import { collectLimit, collectRpm, mapWithConcurrency } from './concurrency.js';
 import { thoughtTokensOf } from './usageStats.js';
@@ -846,13 +846,8 @@ export async function runWeeklyPipeline(
   const runtimeTenants = await loadRuntimeTenants();
   const rankingEntities = cohortRankingEntities(tenant, runtimeTenants);
   // 자사 주소 고정 — 같은 홈페이지를 쓰는 범위 변형은 같은 곳이라 빼지 않고, 다른 브랜드 · 경쟁사의 더 구체적인 주소만 뺀다.
-  const primary = (tenant.ownedDomains ?? [])[0];
-  const isOwnedUrl = ownedUrlMatcher(tenant.ownedDomains ?? [], [
-    ...runtimeTenants
-      .filter((t) => t.tenantId !== tenant.tenantId && !(primary && (t.ownedDomains ?? [])[0] === primary))
-      .flatMap((t) => t.ownedDomains ?? []),
-    ...(tenant.competitors ?? []).flatMap((c) => c.domains ?? []),
-  ]);
+  const ownedExcluded = nestedOwnedExclusions(tenant, runtimeTenants);
+  const isOwnedUrl = (url: string) => urlOwnedBy(url, tenant.ownedDomains ?? []) && !urlOwnedBy(url, ownedExcluded);
   let analyzed = 0;
   updateActiveMeasure(tenant.tenantId, { stage: '분석', done: 0, total: rawCalls.length });
   // 결과는 원래 자리에 되돌려 저장 순서(question-analyses.json)를 지금과 같게 둔다 — 건끼리 의존하지 않는다(analyzeRawCall).

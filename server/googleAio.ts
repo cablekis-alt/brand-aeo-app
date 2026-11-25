@@ -59,6 +59,7 @@ import {
   type AioUnreadableReason,
   type AioView,
 } from '../src/lib/googleAio.js';
+import { nestedOwnedExclusions } from '../src/lib/ownedEntry.js';
 import { planArticleOf } from '../src/lib/publishStatus.js';
 import { kstDate, todayKst } from '../src/lib/publishedUrl.js';
 import { buildBrandMentionPrompt } from '../src/prompts/b5a-brand-mention.js';
@@ -72,6 +73,7 @@ import { readExternalPostsInQueue } from './externalPosts.js';
 import { parseJsonLoose } from './jsonParse.js';
 import { measureInFlight } from './measureTracker.js';
 import { readProbePlan } from './probePlanStore.js';
+import { loadRuntimeTenants } from './tenantRegistry.js';
 import { readPublishedPostsInQueue } from './publishedPosts.js';
 import {
   claimSerpRun,
@@ -1007,7 +1009,13 @@ async function readContextInQueue(tenant: TenantConfig): Promise<AioReadContext>
   } catch (err) {
     console.warn(`[googleAio] ${tenant.tenantId} 원장 · 앱 밖 글을 읽지 못해 올린 글 출처를 확인 불가로 둡니다:`, errText(err));
   }
-  return { brandName: tenant.brandName, aliases: [...tenant.aliases], ownedDomains: [...tenant.ownedDomains], competitors: tenant.competitors.map((c) => c.name), posts };
+  let ownedExcluded: string[] = [];
+  try {
+    ownedExcluded = nestedOwnedExclusions(tenant, await loadRuntimeTenants());
+  } catch (err) {
+    console.warn(`[googleAio] ${tenant.tenantId} 브랜드 목록을 읽지 못해 자사 주소 아래 남의 주소를 빼지 않고 셉니다:`, errText(err));
+  }
+  return { brandName: tenant.brandName, aliases: [...tenant.aliases], ownedDomains: [...tenant.ownedDomains], ownedExcluded, competitors: tenant.competitors.map((c) => c.name), posts };
 }
 
 /** 진행 — 숫자는 모두 「이번 실행」 기준이다(이어 재기면 이번에 보낸 질문 · 검색 · 받은 문항만 — 확인창의 「검색 최대 n회」와 같은 기준). */
@@ -1188,7 +1196,7 @@ export async function googleAioRunDetail(tenant: TenantConfig, runId: string, sf
     items: items.map(({ rawBlock, ...item }) => ({
       ...item,
       hasRawBlock: rawBlock !== undefined && rawBlock !== null,
-      sources: aioSourceMarks(item, ctx.ownedDomains, upPosts),
+      sources: aioSourceMarks(item, ctx.ownedDomains, upPosts, ctx.ownedExcluded ?? []),
       sourceOnly: sourceOnlyOf(item, ctx),
     })),
     postsUnreadable: ctx.posts === null,

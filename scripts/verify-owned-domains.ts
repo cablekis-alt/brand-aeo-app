@@ -277,6 +277,21 @@ try {
     ok('발행 현황 · 구글 AI 개요 맞춤(ownedUrl)도 아이디로', ownedUrl('https://blog.naver.com/okblog/5', own) && !ownedUrl('https://blog.naver.com/x/5', own))
     ok('사진 출처 · 호스트 맞춤은 블로그 줄을 뺀다', !isOwnedPhotoHost('https://blog.naver.com/a.png', own) && entry.hostOnlyOwned(own).join() === 'oc.example')
     const m = entry.ownedUrlMatcher(['big.example'], ['shop.big.example', 'other.example'])
+    // 남의 하위 주소 목록(o2osolution.ai 아래 web4ai.o2osolution.ai) — 측정 · AI 개요 · 발행 현황이 같은 목록을 쓴다.
+    const { platformOf } = await import('../src/lib/publishStatus')
+    const { aioSourceMarks } = await import('../src/lib/googleAio')
+    const holders = [
+      { tenantId: 'big', ownedDomains: ['big.example'], competitors: [{ domains: ['rival.big.example'] }] },
+      { tenantId: 'shop', ownedDomains: ['shop.big.example'] },
+      { tenantId: 'big-national', ownedDomains: ['big.example', 'deep.big.example'] },
+      { tenantId: 'far', ownedDomains: ['far.example'] },
+    ]
+    const ex = entry.nestedOwnedExclusions(holders[0]!, holders)
+    ok('남의 하위 주소: 다른 브랜드 · 경쟁사 하위 주소만, 같은 홈페이지 범위 변형은 빼지 않음', ex.slice().sort().join() === 'rival.big.example,shop.big.example')
+    ok('AI 개요 · 발행 현황 맞춤(ownedUrl)도 남의 하위 주소를 뺀다', ownedUrl('https://big.example/a', ['big.example'], ex) && !ownedUrl('https://shop.big.example/a', ['big.example'], ex))
+    ok('발행 현황 플랫폼: 남의 하위 주소는 「자사 사이트」 아님', platformOf('https://shop.big.example/p', ['big.example'], ex)?.key === 'other' && platformOf('https://m.big.example/p', ['big.example'], ex)?.key === 'owned')
+    const marks = aioSourceMarks({ references: [{ index: 0, title: 't', link: 'https://shop.big.example/1', source: 's' }, { index: 1, title: 't', link: 'https://big.example/2', source: 's' }], links: [] } as never, ['big.example'], [], ex)
+    ok('AI 개요 출처 표시: 남의 하위 주소 출처는 자사 아님', marks.map((m) => m.owned).join() === 'false,true')
     ok('판정 고정: 남이 가진 더 구체적인 하위 주소는 자사로 고정하지 않는다',
       m('https://big.example/a') && m('https://m.big.example/a') && !m('https://shop.big.example/a') && !m('https://other.example/'))
 

@@ -135,15 +135,17 @@ function hostOfUrl(url: string): string | null {
 }
 
 // 블로그 아이디까지 적은 줄(blog.naver.com/아이디 — ownedEntry.ts)은 호스트로 맞추면 남의 블로그까지 잡히므로 뺀다.
-const ownedBy = (host: string, ownedDomains: readonly string[]) => hostOnlyOwned(ownedDomains).some((d) => ownedHost(d) && under(host, ownedHost(d)))
+const hostIn = (host: string, list: readonly string[]) => hostOnlyOwned(list).some((d) => ownedHost(d) && under(host, ownedHost(d)))
+// excluded: 자사 주소 아래 남의 더 구체적인 주소(ownedEntry.ts nestedOwnedExclusions) — 자사로 세지 않는다.
+const ownedBy = (host: string, ownedDomains: readonly string[], excluded: readonly string[] = []) => hostIn(host, ownedDomains) && !hostIn(host, excluded)
 
 /** 올린 주소의 플랫폼 — 알려진 플랫폼 → 브랜드 자사 사이트(하위 도메인 포함) → 그 밖(호스트). http(s) 주소가 아니면 null. */
-export function platformOf(url: string, ownedDomains: readonly string[]): Platform | null {
+export function platformOf(url: string, ownedDomains: readonly string[], excluded: readonly string[] = []): Platform | null {
   const host = hostOfUrl(url)
   if (host === null) return null
   const known = PLATFORMS.find((p) => p.test(host))
   if (known) return { key: known.key, label: known.label }
-  if (ownedBy(host, ownedDomains)) return { key: 'owned', label: '자사 사이트' }
+  if (ownedBy(host, ownedDomains, excluded)) return { key: 'owned', label: '자사 사이트' }
   return { key: 'other', label: host }
 }
 
@@ -152,8 +154,8 @@ export function platformOf(url: string, ownedDomains: readonly string[]): Platfo
  * 자사 주소로 넣은 브랜드면 그 블로그 글도 자사 주소다). 앱 밖 글을 붙일 브랜드를 미리 고를 때 쓴다(src/lib/postImport.ts ownedBrandsOf — 여럿이
  * 함께 쓰는 플랫폼 호스트는 그쪽이 뺀다). http(s) 주소가 아니면 false.
  */
-export function ownedUrl(url: string, ownedDomains: readonly string[]): boolean {
-  return hostOfUrl(url) !== null && urlOwnedBy(url, ownedDomains)
+export function ownedUrl(url: string, ownedDomains: readonly string[], excluded: readonly string[] = []): boolean {
+  return hostOfUrl(url) !== null && urlOwnedBy(url, ownedDomains) && !urlOwnedBy(url, excluded)
 }
 
 // ── 한 편으로 묶기 ───────────────────────────────────────────────────────────
@@ -368,6 +370,8 @@ export interface TenantStatusInput {
   tenantId: string
   brand: string
   ownedDomains: readonly string[]
+  /** 자사 주소 아래 남의 더 구체적인 주소(ownedEntry.ts nestedOwnedExclusions) — 「자사 사이트」로 보지 않는다. 없으면 []. */
+  ownedExcluded?: readonly string[]
   posts: LedgerPostLike[]
   plan: WriterPlan | null
   /** 배정 파일이 있는데 읽지 못했다. */
@@ -415,7 +419,7 @@ export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStat
       writer: assigned ? { ...assigned.writer } : null,
       writerUnknown: input.planUnreadable ? 'plan-unreadable' : match === 'bank-unknown' ? 'bank-unknown' : null,
       postedUnknown: false,
-      platform: platformOf(post.url, input.ownedDomains),
+      platform: platformOf(post.url, input.ownedDomains, input.ownedExcluded),
       url: post.url,
       publishedOn: post.publishedOn,
       recheckFrom: post.publishedOn,
@@ -445,7 +449,7 @@ export function buildTenantStatus(input: TenantStatusInput): { rows: PublishStat
       writer: null,
       writerUnknown: null,
       postedUnknown: false,
-      platform: platformOf(x.url, input.ownedDomains),
+      platform: platformOf(x.url, input.ownedDomains, input.ownedExcluded),
       url: x.url,
       publishedOn: x.publishedOn,
       recheckFrom: laterDay(x.publishedOn, trackedOn),
